@@ -1,10 +1,9 @@
-
 import { useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Mic, MicOff, Play, Pause, Volume2, Waveform } from "lucide-react";
+import { Mic, MicOff, Play, Pause, Volume2, AudioWaveform } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 const VoiceCompatibility = () => {
@@ -118,7 +117,7 @@ const VoiceCompatibility = () => {
             {isRecording ? (
               <div className="text-center">
                 <div className="animate-pulse">
-                  <Waveform className="h-16 w-16 text-red-500 mx-auto mb-4" />
+                  <AudioWaveform className="h-16 w-16 text-red-500 mx-auto mb-4" />
                 </div>
                 <p className="text-lg font-medium text-red-600">Recording in progress...</p>
                 <Button 
