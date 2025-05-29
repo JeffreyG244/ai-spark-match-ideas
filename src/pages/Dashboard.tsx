@@ -4,11 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Heart, MessageCircle, Brain, Zap, Users, TrendingUp } from "lucide-react";
+import { Heart, MessageCircle, Brain, Zap, Users, TrendingUp, Shield, Target } from "lucide-react";
 import AIMatchingEngine from "@/components/AIMatchingEngine";
 import PersonalityAnalysis from "@/components/PersonalityAnalysis";
 import VoiceCompatibility from "@/components/VoiceCompatibility";
 import CompatibilityPredictor from "@/components/CompatibilityPredictor";
+import SoulSyncAI from "@/components/SoulSyncAI";
+import AuthentiDate from "@/components/AuthentiDate";
+import LifeStageMatch from "@/components/LifeStageMatch";
+import MindMeld from "@/components/MindMeld";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("matches");
@@ -86,7 +90,11 @@ const Dashboard = () => {
             { id: "matches", label: "AI Matches", icon: Heart },
             { id: "personality", label: "Personality Analysis", icon: Brain },
             { id: "voice", label: "Voice Compatibility", icon: MessageCircle },
-            { id: "predictor", label: "Compatibility Predictor", icon: TrendingUp }
+            { id: "predictor", label: "Compatibility Predictor", icon: TrendingUp },
+            { id: "soulsync", label: "SoulSync AI", icon: Brain },
+            { id: "authentidate", label: "AuthentiDate", icon: Shield },
+            { id: "lifestage", label: "LifeStage Match", icon: Target },
+            { id: "mindmeld", label: "MindMeld", icon: Zap }
           ].map((tab) => (
             <Button
               key={tab.id}
@@ -106,6 +114,10 @@ const Dashboard = () => {
           {activeTab === "personality" && <PersonalityAnalysis />}
           {activeTab === "voice" && <VoiceCompatibility />}
           {activeTab === "predictor" && <CompatibilityPredictor />}
+          {activeTab === "soulsync" && <SoulSyncAI />}
+          {activeTab === "authentidate" && <AuthentiDate />}
+          {activeTab === "lifestage" && <LifeStageMatch />}
+          {activeTab === "mindmeld" && <MindMeld />}
         </div>
       </div>
     </div>
