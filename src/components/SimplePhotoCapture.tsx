@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, X } from 'lucide-react';
+import { Camera, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,19 +15,8 @@ const SimplePhotoCapture = () => {
   const [cameraStarted, setCameraStarted] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isStartingCamera, setIsStartingCamera] = useState(false);
-  const [isComponentMounted, setIsComponentMounted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const maxPhotos = 5;
-
-  // Ensure component is fully mounted
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsComponentMounted(true);
-      console.log('✅ Component mounted and ready');
-    }, 50);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   // Cleanup camera stream on unmount
   useEffect(() => {
@@ -39,57 +28,10 @@ const SimplePhotoCapture = () => {
     };
   }, [stream]);
 
-  // Wait for video element with immediate DOM check
-  const waitForVideoElement = (): Promise<HTMLVideoElement> => {
-    return new Promise((resolve, reject) => {
-      // Immediate check first
-      if (videoRef.current && document.contains(videoRef.current)) {
-        console.log('✅ Video element immediately available');
-        resolve(videoRef.current);
-        return;
-      }
-
-      let attempts = 0;
-      const maxAttempts = 50; // Increased attempts
-      
-      const checkVideo = () => {
-        attempts++;
-        console.log(`🔍 Checking for video element (attempt ${attempts}/${maxAttempts})`);
-        
-        if (videoRef.current && document.contains(videoRef.current)) {
-          console.log('✅ Video element found and in DOM');
-          resolve(videoRef.current);
-          return;
-        }
-        
-        if (attempts >= maxAttempts) {
-          console.error('❌ Video element not found after maximum attempts');
-          reject(new Error('Video element not available - DOM not ready'));
-          return;
-        }
-        
-        setTimeout(checkVideo, 50); // Reduced interval for faster detection
-      };
-      
-      // Start checking immediately
-      checkVideo();
-    });
-  };
-
-  // Start camera with improved DOM timing
+  // Simple DOM-ready approach like vanilla JS
   const startCamera = async () => {
-    if (isStartingCamera) {
-      console.log('⚠️ Camera start already in progress');
-      return;
-    }
-
-    if (!isComponentMounted) {
-      console.error('❌ Component not mounted yet');
-      toast({
-        title: 'Camera Error',
-        description: 'Please wait for the page to fully load and try again.',
-        variant: 'destructive'
-      });
+    if (isStartingCamera || !user) {
+      console.log('⚠️ Camera start blocked - already starting or no user');
       return;
     }
 
@@ -97,12 +39,12 @@ const SimplePhotoCapture = () => {
     setIsStartingCamera(true);
     
     try {
-      // Check browser support first
+      // Check browser support
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error('Camera not supported in this browser');
       }
 
-      // Request camera permission first (before waiting for video element)
+      // Get camera permission first
       console.log('📷 Requesting camera permission...');
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
@@ -112,25 +54,25 @@ const SimplePhotoCapture = () => {
         } 
       });
       
-      console.log('✅ Camera permission granted, stream obtained');
+      console.log('✅ Camera permission granted');
 
-      // Now wait for video element
-      console.log('⏳ Waiting for video element...');
-      const video = await waitForVideoElement();
-      
+      // Wait for video element to be ready in DOM (simple check)
+      if (!videoRef.current) {
+        throw new Error('Video element not found in DOM');
+      }
+
+      const video = videoRef.current;
       setStream(mediaStream);
 
-      // Set up video with the stream
+      // Set up video with promise-based approach
       await new Promise<void>((resolve, reject) => {
         let resolved = false;
-        let timeoutId: NodeJS.Timeout;
         
         const handleSuccess = () => {
           if (resolved) return;
           resolved = true;
-          console.log('✅ Video setup completed successfully');
+          console.log('✅ Video setup completed');
           setCameraStarted(true);
-          clearTimeout(timeoutId);
           cleanup();
           resolve();
         };
@@ -139,7 +81,6 @@ const SimplePhotoCapture = () => {
           if (resolved) return;
           resolved = true;
           console.error('❌ Video setup failed:', error);
-          clearTimeout(timeoutId);
           cleanup();
           reject(new Error(error));
         };
@@ -153,14 +94,12 @@ const SimplePhotoCapture = () => {
         const onLoadedMetadata = () => {
           console.log('📐 Video metadata loaded:', {
             width: video.videoWidth,
-            height: video.videoHeight,
-            readyState: video.readyState
+            height: video.videoHeight
           });
         };
 
         const onCanPlay = () => {
-          console.log('▶️ Video can play, starting playback...');
-          
+          console.log('▶️ Video ready to play');
           video.play()
             .then(() => {
               console.log('🎬 Video playing successfully');
@@ -172,12 +111,9 @@ const SimplePhotoCapture = () => {
             });
         };
 
-        const onVideoError = (event: Event) => {
-          console.error('❌ Video element error:', event);
-          const target = event.target as HTMLVideoElement;
-          const errorCode = target.error?.code;
-          const errorMessage = target.error?.message || 'Unknown video error';
-          handleError(`Video element error: ${errorMessage} (code: ${errorCode})`);
+        const onVideoError = () => {
+          console.error('❌ Video element error');
+          handleError('Video element error occurred');
         };
 
         // Add event listeners
@@ -185,15 +121,15 @@ const SimplePhotoCapture = () => {
         video.addEventListener('canplay', onCanPlay);
         video.addEventListener('error', onVideoError);
         
-        // Set the stream and load
-        console.log('🔗 Connecting stream to video element...');
+        // Set stream and load
+        console.log('🔗 Connecting stream to video...');
         video.srcObject = mediaStream;
         video.load();
         
         // Timeout fallback
-        timeoutId = setTimeout(() => {
+        setTimeout(() => {
           if (!resolved) {
-            handleError('Video setup timeout - took too long to initialize');
+            handleError('Video setup timeout after 10 seconds');
           }
         }, 10000);
       });
@@ -201,7 +137,7 @@ const SimplePhotoCapture = () => {
     } catch (err: any) {
       console.error('💥 Camera setup failed:', err);
       
-      // Clean up stream if it was created
+      // Clean up stream if created
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
         setStream(null);
@@ -226,7 +162,7 @@ const SimplePhotoCapture = () => {
     }
   };
 
-  // Stop camera with proper cleanup
+  // Stop camera
   const stopCamera = () => {
     console.log('🛑 Stopping camera...');
     
@@ -244,10 +180,10 @@ const SimplePhotoCapture = () => {
     }
     
     setCameraStarted(false);
-    console.log('✅ Camera stopped successfully');
+    console.log('✅ Camera stopped');
   };
 
-  // Take photo with comprehensive validation
+  // Take photo
   const takePhoto = async () => {
     if (photoCount >= maxPhotos) {
       toast({
@@ -258,14 +194,8 @@ const SimplePhotoCapture = () => {
       return;
     }
 
-    if (!videoRef.current || !user || !stream || !cameraStarted || !isComponentMounted) {
-      console.error('❌ Prerequisites not met:', {
-        hasVideo: !!videoRef.current,
-        hasUser: !!user,
-        hasStream: !!stream,
-        cameraStarted,
-        isComponentMounted
-      });
+    if (!videoRef.current || !user || !stream || !cameraStarted) {
+      console.error('❌ Prerequisites not met for photo capture');
       toast({
         title: 'Error',
         description: 'Camera not ready or user not authenticated.',
@@ -279,43 +209,31 @@ const SimplePhotoCapture = () => {
     try {
       const video = videoRef.current;
       
-      // Comprehensive video validation
-      if (video.readyState < 2) {
-        throw new Error('Video not ready - insufficient metadata');
-      }
-      
-      if (video.videoWidth === 0 || video.videoHeight === 0) {
-        throw new Error('Invalid video dimensions - camera not properly initialized');
+      // Check video state
+      if (video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0) {
+        throw new Error('Video not ready for capture');
       }
 
-      if (video.paused || video.ended) {
-        throw new Error('Video not playing - camera stream interrupted');
-      }
-
-      console.log(`📸 Taking photo ${photoCount + 1}...`, {
-        videoSize: `${video.videoWidth}x${video.videoHeight}`,
-        readyState: video.readyState,
-        playing: !video.paused
-      });
+      console.log(`📸 Taking photo ${photoCount + 1}...`);
       
-      // Create canvas and capture frame
+      // Create canvas and capture
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
       if (!ctx) {
-        throw new Error('Cannot get canvas 2D context - browser compatibility issue');
+        throw new Error('Cannot get canvas context');
       }
       
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0);
 
-      // Compress the image
+      // Resize for compression
       const resizedCanvas = document.createElement('canvas');
       const resizedCtx = resizedCanvas.getContext('2d');
       
       if (!resizedCtx) {
-        throw new Error('Cannot get resized canvas 2D context');
+        throw new Error('Cannot get resized canvas context');
       }
       
       const scale = 0.4;
@@ -328,7 +246,6 @@ const SimplePhotoCapture = () => {
         resizedCanvas.toBlob(
           (blob) => {
             if (blob) {
-              console.log('📷 Photo blob created:', { size: blob.size, type: blob.type });
               resolve(blob);
             } else {
               reject(new Error('Failed to create image blob'));
@@ -341,7 +258,7 @@ const SimplePhotoCapture = () => {
 
       console.log('💾 Uploading to Supabase...');
 
-      // Upload to Supabase storage
+      // Upload to Supabase
       const timestamp = Date.now();
       const filename = `${user.id}/${timestamp}_photo_${photoCount + 1}.jpg`;
       
@@ -353,7 +270,6 @@ const SimplePhotoCapture = () => {
         });
 
       if (uploadError) {
-        console.error('❌ Upload error:', uploadError);
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
@@ -361,8 +277,6 @@ const SimplePhotoCapture = () => {
       const { data: { publicUrl } } = supabase.storage
         .from('profile-photos')
         .getPublicUrl(filename);
-
-      console.log('🔗 Public URL generated:', publicUrl);
 
       // Update user profile
       const { data: currentProfile } = await supabase
@@ -384,7 +298,6 @@ const SimplePhotoCapture = () => {
         });
 
       if (updateError) {
-        console.error('❌ Profile update error:', updateError);
         throw new Error(`Profile update failed: ${updateError.message}`);
       }
 
@@ -392,7 +305,7 @@ const SimplePhotoCapture = () => {
       setPhotos(updatedPhotos);
       setPhotoCount(photoCount + 1);
       
-      console.log('✅ Photo captured and uploaded successfully');
+      console.log('✅ Photo captured successfully');
       toast({
         title: 'Photo Captured!',
         description: `Photo ${photoCount + 1}/5 uploaded successfully.`,
@@ -410,7 +323,7 @@ const SimplePhotoCapture = () => {
     }
   };
 
-  // Remove photo function
+  // Remove photo
   const removePhoto = async (photoUrl: string, index: number) => {
     if (!user) return;
 
@@ -485,22 +398,21 @@ const SimplePhotoCapture = () => {
           <div className="text-center space-y-4">
             <Button 
               onClick={startCamera}
-              disabled={isStartingCamera || !isComponentMounted}
+              disabled={isStartingCamera || !user}
               className="bg-purple-600 hover:bg-purple-700"
               size="lg"
             >
               <Camera className="h-4 w-4 mr-2" />
-              {isStartingCamera ? 'Starting Camera...' : 
-               !isComponentMounted ? 'Loading...' : 'Start Camera'}
+              {isStartingCamera ? 'Starting Camera...' : 'Start Camera'}
             </Button>
             {isStartingCamera && (
               <p className="text-sm text-gray-600">
                 Please allow camera access when prompted
               </p>
             )}
-            {!isComponentMounted && (
-              <p className="text-sm text-gray-500">
-                Preparing camera interface...
+            {!user && (
+              <p className="text-sm text-red-600">
+                Please log in to take photos
               </p>
             )}
           </div>
