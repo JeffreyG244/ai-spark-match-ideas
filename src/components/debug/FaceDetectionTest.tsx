@@ -60,8 +60,7 @@ const FaceDetectionTest = () => {
         {
           runtime: 'tfjs',
           refineLandmarks: false,
-          maxFaces: 1,
-          shouldLoadIrisModel: false
+          maxFaces: 1
         }
       );
       
