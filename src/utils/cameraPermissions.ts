@@ -16,19 +16,7 @@ export const requestCameraPermission = async (): Promise<MediaStream> => {
     return stream;
   } catch (error: any) {
     logToConsole('❌ SIMPLE: Camera permission failed', error);
-    
-    let userMessage = 'Camera access failed: ';
-    if (error.name === 'NotAllowedError') {
-      userMessage += 'Permission denied. Please allow camera access and try again.';
-    } else if (error.name === 'NotFoundError') {
-      userMessage += 'No camera found. Please check your device has a camera.';
-    } else if (error.name === 'NotReadableError') {
-      userMessage += 'Camera is being used by another application. Please close other apps and try again.';
-    } else {
-      userMessage += error.message || 'Unknown camera error';
-    }
-    
-    throw new Error(userMessage);
+    throw error;
   }
 };
 
@@ -47,39 +35,27 @@ export const setupVideo = async (
   logToConsole('🧪 SIMPLE: Setting up video...');
   
   return new Promise((resolve, reject) => {
-    const timeoutId = setTimeout(() => {
-      logToConsole('❌ SIMPLE: Video setup timeout');
-      reject(new Error('Video setup timeout'));
-    }, 5000);
-
-    const checkVideo = () => {
-      if (videoRef.current) {
-        const video = videoRef.current;
-        video.srcObject = stream;
-        
-        video.onloadedmetadata = () => {
-          logToConsole('✅ SIMPLE: Video metadata loaded');
-          logToConsole('📐 SIMPLE: Video dimensions:', `${video.videoWidth}x${video.videoHeight}`);
-          clearTimeout(timeoutId);
-          video.play().then(() => {
-            resolve();
-          }).catch((playError) => {
-            logToConsole('❌ SIMPLE: Video play failed', playError);
-            clearTimeout(timeoutId);
-            reject(new Error('Video play failed: ' + playError.message));
-          });
-        };
-        
-        video.onerror = (error) => {
-          logToConsole('❌ SIMPLE: Video error', error);
-          clearTimeout(timeoutId);
-          reject(new Error('Video playback failed'));
-        };
-      } else {
-        setTimeout(checkVideo, 100);
-      }
-    };
-
-    checkVideo();
+    if (videoRef.current) {
+      const video = videoRef.current;
+      video.srcObject = stream;
+      
+      video.onloadedmetadata = () => {
+        logToConsole('✅ SIMPLE: Video metadata loaded');
+        logToConsole('📐 SIMPLE: Video dimensions:', `${video.videoWidth}x${video.videoHeight}`);
+        video.play().then(() => {
+          resolve();
+        }).catch((playError) => {
+          logToConsole('❌ SIMPLE: Video play failed', playError);
+          reject(new Error('Video play failed: ' + playError.message));
+        });
+      };
+      
+      video.onerror = (error) => {
+        logToConsole('❌ SIMPLE: Video error', error);
+        reject(new Error('Video playback failed'));
+      };
+    } else {
+      reject(new Error('Video element not available'));
+    }
   });
 };
