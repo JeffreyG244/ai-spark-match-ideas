@@ -16,7 +16,7 @@ const FacialVerificationCapture = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
-  // EXACT SAME STATE as debug component - no extra complexity
+  // Simple state - exactly like debug component
   const [status, setStatus] = useState('Click Start Camera to begin');
   const [model, setModel] = useState<faceLandmarksDetection.FaceLandmarksDetector | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -33,7 +33,7 @@ const FacialVerificationCapture = () => {
   // Debug state
   const [showTestMode, setShowTestMode] = useState(false);
 
-  // EXACT SAME FUNCTION as debug component - copy the working runTest logic
+  // EXACT SAME FUNCTION as debug component - copy the working logic exactly
   const startCamera = async () => {
     try {
       setStatus('Step 1: Requesting camera...');
@@ -91,7 +91,7 @@ const FacialVerificationCapture = () => {
       console.log('✅ MAIN: Model loaded successfully');
       setStatus('Step 5: Testing face detection...');
       
-      // Start face detection loop - EXACT SAME as debug
+      // Simple one-time test - EXACT SAME as debug component
       setTimeout(async () => {
         if (videoRef.current && loadedModel) {
           try {
@@ -107,8 +107,8 @@ const FacialVerificationCapture = () => {
               description: 'Face detection is now active. Position your face in the camera.',
             });
             
-            // Start continuous detection
-            startContinuousDetection(loadedModel);
+            // Start simple detection loop - NO complex function call
+            startSimpleDetectionLoop(loadedModel);
             
           } catch (detectionError) {
             console.error('❌ MAIN: Face detection test failed:', detectionError);
@@ -128,8 +128,10 @@ const FacialVerificationCapture = () => {
     }
   };
 
-  // Continuous detection - simplified version
-  const startContinuousDetection = (faceDetector: faceLandmarksDetection.FaceLandmarksDetector) => {
+  // Simple detection loop - inline, no complex external function
+  const startSimpleDetectionLoop = (faceDetector: faceLandmarksDetection.FaceLandmarksDetector) => {
+    console.log('🔄 MAIN: Starting simple detection loop...');
+    
     const detectFaces = async () => {
       if (!videoRef.current || !faceDetector || isUploading) return;
       
@@ -165,7 +167,7 @@ const FacialVerificationCapture = () => {
       }
     };
     
-    // Start detection interval - same timing as debug test
+    // Start detection interval
     setInterval(detectFaces, 2000);
   };
 
