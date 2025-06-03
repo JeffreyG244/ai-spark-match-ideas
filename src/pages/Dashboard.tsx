@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +14,7 @@ import LifeStageMatch from "@/components/LifeStageMatch";
 import MindMeld from "@/components/MindMeld";
 import ProfileBuilder from "@/components/ProfileBuilder";
 import SafetyScanner from "@/components/SafetyScanner";
+import SecurityMonitor from "@/components/SecurityMonitor";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState("profile-builder");
@@ -45,9 +45,9 @@ const Dashboard = () => {
       priority: "core"
     },
     {
-      title: "MindMeld Connection",
-      description: "Text-first meaningful conversations",
-      icon: MessageCircle,
+      title: "Secure Profile Builder",
+      description: "AI-validated profile creation",
+      icon: Star,
       accuracy: 94,
       status: "active",
       priority: "core"
@@ -59,15 +59,20 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-              <Heart className="h-7 w-7 text-white" />
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+                  <Heart className="h-7 w-7 text-white" />
+                </div>
+                SoulSync
+              </h1>
+              <p className="text-lg text-gray-600">
+                Secure AI-powered deep connections for serious professionals (30-45yo)
+              </p>
             </div>
-            SoulSync
-          </h1>
-          <p className="text-lg text-gray-600">
-            AI-powered deep connections for serious professionals (30-45yo)
-          </p>
+            <SecurityMonitor />
+          </div>
         </div>
 
         {/* Core Features Overview */}
@@ -101,7 +106,7 @@ const Dashboard = () => {
         {/* Main Navigation */}
         <div className="flex flex-wrap gap-4 mb-6">
           {[
-            { id: "profile-builder", label: "Build-A-Match Profile", icon: Star },
+            { id: "profile-builder", label: "Secure Profile Builder", icon: Star },
             { id: "soulsync", label: "SoulSync Core", icon: Brain },
             { id: "safety", label: "Safety Scanner", icon: Shield },
             { id: "mindmeld", label: "MindMeld", icon: MessageCircle },

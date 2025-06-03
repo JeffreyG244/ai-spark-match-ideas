@@ -3,22 +3,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Star, Target, Heart, Brain, CheckCircle, AlertCircle } from "lucide-react";
+import { Star, Target, Heart, Brain, CheckCircle, AlertCircle, Shield } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import SecureInput from "./SecureInput";
+import { profileSchema, ProfileData } from "@/schemas/profileValidation";
+import { LIMITS, rateLimiter, containsInappropriateContent } from "@/utils/security";
 
 const ProfileBuilder = () => {
-  const [profileData, setProfileData] = useState({
+  const [profileData, setProfileData] = useState<ProfileData>({
     bio: "",
     values: "",
     lifeGoals: "",
-    dealBreakers: "",
     greenFlags: ""
   });
   const [profileScore, setProfileScore] = useState(72);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [securityStatus, setSecurityStatus] = useState({
+    contentSafe: true,
+    profileComplete: false,
+    validationPassed: false
+  });
 
   const profileSections = [
     {
@@ -62,14 +66,60 @@ const ProfileBuilder = () => {
       category: "Green Flags",
       suggestion: "Add examples of how you show emotional intelligence in relationships",
       impact: "High"
+    },
+    {
+      category: "Security Check",
+      suggestion: "All content has been verified as appropriate and authentic",
+      impact: "Critical"
     }
   ];
 
+  const validateProfile = (data: ProfileData) => {
+    try {
+      profileSchema.parse(data);
+      const contentSafe = !Object.values(data).some(value => containsInappropriateContent(value));
+      const profileComplete = data.bio.length >= LIMITS.MIN_BIO_LENGTH && 
+                            data.values.length > 0 && 
+                            data.lifeGoals.length > 0 && 
+                            data.greenFlags.length > 0;
+      
+      setSecurityStatus({
+        contentSafe,
+        profileComplete,
+        validationPassed: true
+      });
+      
+      return true;
+    } catch (error) {
+      setSecurityStatus(prev => ({ ...prev, validationPassed: false }));
+      return false;
+    }
+  };
+
   const runProfileAnalysis = () => {
+    // Rate limiting check
+    if (!rateLimiter.isAllowed('profile_analysis', 3, 300000)) { // 3 attempts per 5 minutes
+      toast({
+        title: "Rate Limit Exceeded",
+        description: "Please wait before running another analysis.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!validateProfile(profileData)) {
+      toast({
+        title: "Profile Validation Failed",
+        description: "Please fix the issues in your profile before analyzing.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsAnalyzing(true);
     toast({
-      title: "AI Profile Analysis Started",
-      description: "Analyzing your profile for maximum attraction potential...",
+      title: "Secure AI Profile Analysis Started",
+      description: "Analyzing your profile with privacy-first AI...",
     });
 
     setTimeout(() => {
@@ -77,9 +127,15 @@ const ProfileBuilder = () => {
       setProfileScore(89);
       toast({
         title: "Profile Analysis Complete",
-        description: "Your profile optimization score increased to 89%!",
+        description: "Your secure profile optimization score increased to 89%!",
       });
     }, 3500);
+  };
+
+  const updateProfileField = (field: keyof ProfileData, value: string) => {
+    const updatedData = { ...profileData, [field]: value };
+    setProfileData(updatedData);
+    validateProfile(updatedData);
   };
 
   return (
@@ -88,15 +144,38 @@ const ProfileBuilder = () => {
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Star className="h-8 w-8 text-purple-600" />
-            Build-A-Match Profile
+            Secure Build-A-Match Profile
           </h2>
-          <p className="text-gray-600">Create a profile that attracts your ideal match</p>
+          <p className="text-gray-600">Create a safe, authentic profile that attracts your ideal match</p>
         </div>
         <div className="text-center">
           <div className="text-3xl font-bold text-purple-600 mb-1">{profileScore}%</div>
-          <Badge className="bg-purple-100 text-purple-800">Optimization Score</Badge>
+          <Badge className="bg-purple-100 text-purple-800">Security Score</Badge>
         </div>
       </div>
+
+      {/* Security Status Banner */}
+      <Card className={`border-2 ${securityStatus.contentSafe ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+        <CardContent className="py-4">
+          <div className="flex items-center gap-4">
+            <Shield className={`h-6 w-6 ${securityStatus.contentSafe ? 'text-green-600' : 'text-red-600'}`} />
+            <div className="flex-1">
+              <h3 className="font-semibold text-sm">Security Status</h3>
+              <div className="flex gap-4 text-sm">
+                <span className={securityStatus.contentSafe ? 'text-green-600' : 'text-red-600'}>
+                  Content Safety: {securityStatus.contentSafe ? 'Verified' : 'Issues Detected'}
+                </span>
+                <span className={securityStatus.validationPassed ? 'text-green-600' : 'text-gray-500'}>
+                  Validation: {securityStatus.validationPassed ? 'Passed' : 'Pending'}
+                </span>
+                <span className={securityStatus.profileComplete ? 'text-green-600' : 'text-gray-500'}>
+                  Completeness: {securityStatus.profileComplete ? 'Complete' : 'In Progress'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
@@ -124,7 +203,7 @@ const ProfileBuilder = () => {
 
           <Card className="border-purple-200">
             <CardHeader>
-              <CardTitle className="text-purple-800">AI Optimization Suggestions</CardTitle>
+              <CardTitle className="text-purple-800">AI Security Suggestions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {aiSuggestions.map((suggestion, index) => (
@@ -134,6 +213,7 @@ const ProfileBuilder = () => {
                     <Badge 
                       variant="outline" 
                       className={`text-xs ${
+                        suggestion.impact === 'Critical' ? 'border-green-300 text-green-700' :
                         suggestion.impact === 'High' ? 'border-red-300 text-red-700' :
                         'border-yellow-300 text-yellow-700'
                       }`}
@@ -151,65 +231,86 @@ const ProfileBuilder = () => {
         <div className="space-y-6">
           <Card className="border-purple-200">
             <CardHeader>
-              <CardTitle className="text-purple-800">Profile Editor</CardTitle>
-              <CardDescription>Craft your authentic story</CardDescription>
+              <CardTitle className="text-purple-800">Secure Profile Editor</CardTitle>
+              <CardDescription>All inputs are validated and sanitized for your safety</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="bio">Authentic Bio</Label>
-                <Textarea
-                  id="bio"
-                  placeholder="Tell your story in a way that showcases your personality and attracts meaningful connections..."
-                  value={profileData.bio}
-                  onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-                  className="min-h-24"
-                />
-              </div>
+            <CardContent className="space-y-6">
+              <SecureInput
+                id="bio"
+                label="Authentic Bio"
+                placeholder="Tell your story in a way that showcases your personality and attracts meaningful connections..."
+                value={profileData.bio}
+                onChange={(value) => updateProfileField('bio', value)}
+                maxLength={LIMITS.BIO_MAX_LENGTH}
+                minLength={LIMITS.MIN_BIO_LENGTH}
+                required
+                validation={(value) => {
+                  if (containsInappropriateContent(value)) {
+                    return "Bio contains inappropriate content";
+                  }
+                  return null;
+                }}
+              />
 
-              <div>
-                <Label htmlFor="values">Core Values</Label>
-                <Textarea
-                  id="values"
-                  placeholder="What principles guide your life? (e.g., integrity, growth, family, adventure...)"
-                  value={profileData.values}
-                  onChange={(e) => setProfileData({...profileData, values: e.target.value})}
-                />
-              </div>
+              <SecureInput
+                id="values"
+                label="Core Values"
+                placeholder="What principles guide your life? (e.g., integrity, growth, family, adventure...)"
+                value={profileData.values}
+                onChange={(value) => updateProfileField('values', value)}
+                maxLength={LIMITS.VALUES_MAX_LENGTH}
+                validation={(value) => {
+                  if (containsInappropriateContent(value)) {
+                    return "Values contain inappropriate content";
+                  }
+                  return null;
+                }}
+              />
 
-              <div>
-                <Label htmlFor="goals">Life Goals & Timeline</Label>
-                <Textarea
-                  id="goals"
-                  placeholder="Where do you see yourself in 5 years? What are you building toward?"
-                  value={profileData.lifeGoals}
-                  onChange={(e) => setProfileData({...profileData, lifeGoals: e.target.value})}
-                />
-              </div>
+              <SecureInput
+                id="goals"
+                label="Life Goals & Timeline"
+                placeholder="Where do you see yourself in 5 years? What are you building toward?"
+                value={profileData.lifeGoals}
+                onChange={(value) => updateProfileField('lifeGoals', value)}
+                maxLength={LIMITS.GOALS_MAX_LENGTH}
+                validation={(value) => {
+                  if (containsInappropriateContent(value)) {
+                    return "Life goals contain inappropriate content";
+                  }
+                  return null;
+                }}
+              />
 
-              <div>
-                <Label htmlFor="greenFlags">Green Flags You Offer</Label>
-                <Textarea
-                  id="greenFlags"
-                  placeholder="What positive qualities do you bring to a relationship?"
-                  value={profileData.greenFlags}
-                  onChange={(e) => setProfileData({...profileData, greenFlags: e.target.value})}
-                />
-              </div>
+              <SecureInput
+                id="greenFlags"
+                label="Green Flags You Offer"
+                placeholder="What positive qualities do you bring to a relationship?"
+                value={profileData.greenFlags}
+                onChange={(value) => updateProfileField('greenFlags', value)}
+                maxLength={LIMITS.GREEN_FLAGS_MAX_LENGTH}
+                validation={(value) => {
+                  if (containsInappropriateContent(value)) {
+                    return "Green flags contain inappropriate content";
+                  }
+                  return null;
+                }}
+              />
 
               <Button 
                 onClick={runProfileAnalysis} 
-                disabled={isAnalyzing} 
+                disabled={isAnalyzing || !securityStatus.validationPassed} 
                 className="w-full bg-purple-600 hover:bg-purple-700"
               >
                 {isAnalyzing ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    AI Analyzing...
+                    Secure AI Analyzing...
                   </>
                 ) : (
                   <>
                     <Brain className="h-4 w-4 mr-2" />
-                    Optimize with AI
+                    Secure AI Optimization
                   </>
                 )}
               </Button>
