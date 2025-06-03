@@ -28,7 +28,7 @@ const SimplePhotoCapture = () => {
     };
   }, [stream]);
 
-  // Simple camera start function
+  // Simple camera start function with proper DOM access
   const startCamera = async () => {
     if (isStartingCamera || !user) {
       console.log('⚠️ Camera start blocked');
@@ -44,16 +44,9 @@ const SimplePhotoCapture = () => {
         throw new Error('Camera not supported in this browser');
       }
 
-      // Step 2: Wait for video element to exist in DOM
-      console.log('🔍 Checking for video element...');
-      let attempts = 0;
-      while (!videoRef.current && attempts < 50) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
-      }
-
+      // Step 2: Video element should exist since we always render it
       if (!videoRef.current) {
-        throw new Error('Video element not found in DOM after waiting');
+        throw new Error('Video element not available');
       }
 
       const video = videoRef.current;
@@ -343,7 +336,22 @@ const SimplePhotoCapture = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         
-        {/* Camera Section */}
+        {/* Always render video element to ensure DOM availability */}
+        <div className="relative">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full max-w-sm mx-auto rounded-lg border-2 border-purple-200"
+            style={{ 
+              transform: 'scaleX(-1)',
+              display: cameraStarted ? 'block' : 'none'
+            }}
+          />
+        </div>
+
+        {/* Camera Controls */}
         {!cameraStarted ? (
           <div className="text-center space-y-4">
             <Button 
@@ -367,45 +375,32 @@ const SimplePhotoCapture = () => {
             )}
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="relative">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full max-w-sm mx-auto rounded-lg border-2 border-purple-200"
-                style={{ transform: 'scaleX(-1)' }}
-              />
-            </div>
-
-            <div className="text-center space-y-2">
-              <Button
-                onClick={takePhoto}
-                disabled={isUploading || photoCount >= maxPhotos}
-                className="bg-purple-600 hover:bg-purple-700"
-                size="lg"
-              >
-                {isUploading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    📸 Take Photo
-                  </>
-                )}
-              </Button>
-              
-              <Button
-                onClick={stopCamera}
-                variant="outline"
-                size="sm"
-              >
-                Stop Camera
-              </Button>
-            </div>
+          <div className="text-center space-y-2">
+            <Button
+              onClick={takePhoto}
+              disabled={isUploading || photoCount >= maxPhotos}
+              className="bg-purple-600 hover:bg-purple-700"
+              size="lg"
+            >
+              {isUploading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  📸 Take Photo
+                </>
+              )}
+            </Button>
+            
+            <Button
+              onClick={stopCamera}
+              variant="outline"
+              size="sm"
+            >
+              Stop Camera
+            </Button>
           </div>
         )}
 
