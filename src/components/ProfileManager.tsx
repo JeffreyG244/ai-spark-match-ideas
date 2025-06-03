@@ -145,6 +145,61 @@ const ProfileManager = () => {
         "Deep, introspective talks about purpose, dreams, and goals",
         "Playful banter, witty comebacks, and light teasing"
       ]
+    },
+    {
+      id: 11,
+      question: "Which Compatibility Qualities Matter Most to You in a Match?",
+      options: [
+        "Physical vibe (height, fitness level, style)",
+        "Financial values (spender vs. saver, investment mindset)",
+        "Parenting/family goals (kids now or in future, family dynamics)",
+        "Political or social beliefs (aligning on major issues)",
+        "Career ambition or work-life balance preferences",
+        "Pet love (dog person, cat person, or pet allergies)",
+        "Health & fitness routine (gym goer, outdoor enthusiast, wellness-focused)",
+        "Emotional maturity & communication style"
+      ]
+    },
+    {
+      id: 12,
+      question: "How Do You Most Enjoy Expressing Your Personality to New People?",
+      options: [
+        "A short, candid video clip sharing my passions",
+        "A voice message with a genuine \"hello\" and fun fact",
+        "A creative written bio with humor and heartfelt details",
+        "An AI-crafted introduction highlighting my top traits",
+        "An interactive mini-quiz about my quirks and preferences"
+      ]
+    },
+    {
+      id: 13,
+      question: "How Open Are You to an Age Gap?",
+      options: [
+        "Only within my own decade for life-stage alignment",
+        "Up to a 5-year difference if energy matches",
+        "Comfortable with 10+ years if we vibe well",
+        "Age doesn't matter—if the connection is real, it works"
+      ]
+    },
+    {
+      id: 14,
+      question: "Social Media Sharing Preferences:",
+      options: [
+        "Linking socials (Instagram, TikTok, LinkedIn) to show my world",
+        "Sharing only curated posts or private story highlights",
+        "No social links now—keeping it just within the app",
+        "Will share after building trust and seeing genuine interest"
+      ]
+    },
+    {
+      id: 15,
+      question: "What's Your Date Planning Style?",
+      options: [
+        "Spontaneous \"surprise\" dates—live in the moment",
+        "Meticulous planning—reservations, itineraries, and backups",
+        "Hybrid approach—basic plan with room for fun detours",
+        "Thoughtful gestures matter more than agendas (flowers, notes, songs)"
+      ]
     }
   ];
 
