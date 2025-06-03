@@ -1,7 +1,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Brain } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Brain, Save } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { compatibilityQuestions } from '@/data/compatibilityQuestions';
@@ -9,11 +10,19 @@ import { compatibilityQuestions } from '@/data/compatibilityQuestions';
 interface CompatibilityQuestionsProps {
   questionAnswers: Record<number, string>;
   handleQuestionAnswer: (questionId: number, answer: string) => void;
+  onSaveAnswers: () => void;
+  isSaving: boolean;
 }
 
-const CompatibilityQuestions = ({ questionAnswers, handleQuestionAnswer }: CompatibilityQuestionsProps) => {
+const CompatibilityQuestions = ({ 
+  questionAnswers, 
+  handleQuestionAnswer, 
+  onSaveAnswers, 
+  isSaving 
+}: CompatibilityQuestionsProps) => {
   const answeredQuestions = Object.keys(questionAnswers).length;
   const totalQuestions = compatibilityQuestions.length;
+  const compatibilityScore = Math.round((answeredQuestions / totalQuestions) * 100);
 
   return (
     <div className="space-y-8">
@@ -57,15 +66,42 @@ const CompatibilityQuestions = ({ questionAnswers, handleQuestionAnswer }: Compa
         </Card>
       ))}
 
-      <div className="text-center p-4 bg-gray-50 rounded-lg">
-        <p className="text-sm text-gray-600 mb-2">
-          Questions answered: {answeredQuestions} of {totalQuestions}
-        </p>
-        <Badge 
-          className={`${answeredQuestions === totalQuestions ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
-        >
-          {answeredQuestions === totalQuestions ? 'Complete!' : 'In Progress'}
-        </Badge>
+      <div className="space-y-4">
+        <div className="text-center p-4 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-600 mb-2">
+            Questions answered: {answeredQuestions} of {totalQuestions}
+          </p>
+          <div className="flex items-center justify-center gap-4">
+            <Badge 
+              className={`${answeredQuestions === totalQuestions ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}
+            >
+              {answeredQuestions === totalQuestions ? 'Complete!' : 'In Progress'}
+            </Badge>
+            <Badge className="bg-purple-100 text-purple-800">
+              Compatibility Score: {compatibilityScore}%
+            </Badge>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <Button 
+            onClick={onSaveAnswers}
+            disabled={isSaving || answeredQuestions === 0}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            {isSaving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Saving Answers...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save Compatibility Answers
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );

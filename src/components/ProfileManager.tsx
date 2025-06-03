@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { User, Brain } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { profileSchema, ProfileData } from '@/schemas/profileValidation';
 import { compatibilityQuestions } from '@/data/compatibilityQuestions';
 import ProfileHeader from './profile/ProfileHeader';
@@ -24,6 +23,7 @@ const ProfileManager = () => {
   const [profileExists, setProfileExists] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingAnswers, setIsSavingAnswers] = useState(false);
   const [activeSection, setActiveSection] = useState<'profile' | 'questions'>('profile');
 
   useEffect(() => {
@@ -146,6 +146,64 @@ const ProfileManager = () => {
     }
   };
 
+  const saveCompatibilityAnswers = async () => {
+    if (!user || Object.keys(questionAnswers).length === 0) return;
+
+    setIsSavingAnswers(true);
+    try {
+      const answersPayload = {
+        user_id: user.id,
+        answers: questionAnswers,
+        completed_at: new Date().toISOString()
+      };
+
+      // Check if compatibility answers already exist
+      const { data: existingAnswers } = await supabase
+        .from('compatibility_answers')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      let result;
+      if (existingAnswers) {
+        result = await supabase
+          .from('compatibility_answers')
+          .update(answersPayload)
+          .eq('user_id', user.id);
+      } else {
+        result = await supabase
+          .from('compatibility_answers')
+          .insert([answersPayload]);
+      }
+
+      if (result.error) {
+        console.error('Error saving compatibility answers:', result.error);
+        toast({
+          title: 'Error Saving Answers',
+          description: result.error.message,
+          variant: 'destructive'
+        });
+      } else {
+        const answeredCount = Object.keys(questionAnswers).length;
+        const score = Math.round((answeredCount / compatibilityQuestions.length) * 100);
+        
+        toast({
+          title: 'Compatibility Answers Saved',
+          description: `Your compatibility score: ${score}%. Answers saved successfully!`,
+        });
+      }
+    } catch (error) {
+      console.error('Error saving compatibility answers:', error);
+      toast({
+        title: 'Error Saving Answers',
+        description: 'An unexpected error occurred.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsSavingAnswers(false);
+    }
+  };
+
   const updateProfileField = (field: keyof ProfileData, value: string) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
   };
@@ -208,6 +266,8 @@ const ProfileManager = () => {
             <CompatibilityQuestions
               questionAnswers={questionAnswers}
               handleQuestionAnswer={handleQuestionAnswer}
+              onSaveAnswers={saveCompatibilityAnswers}
+              isSaving={isSavingAnswers}
             />
           )}
         </CardContent>

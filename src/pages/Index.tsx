@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, Brain, Shield, Target, MessageCircle, Star, CheckCircle, Users, Lock } from "lucide-react";
@@ -89,7 +88,7 @@ const Index = () => {
             Find Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Soul Match</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            AI-powered deep connections for serious professionals (30-45). No swiping, no games - just authentic, meaningful relationships built on compatibility.
+            AI-powered deep connections for serious professionals. No swiping, no games - just authentic, meaningful relationships built on compatibility.
           </p>
           <div className="flex gap-4 justify-center">
             {user ? (
