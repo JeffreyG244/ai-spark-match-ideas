@@ -34,7 +34,7 @@ export const useCameraSetup = () => {
     console.log(`[${timestamp}] ${logLevel}: ${message}`, data || '');
   };
 
-  const performCameraSetup = async (attemptNumber: number) => {
+  const performCameraSetup = useCallback(async (attemptNumber: number) => {
     logToConsole(`=== Starting camera setup process (Attempt ${attemptNumber}/${maxRetries}) ===`);
     
     if (!checkCameraSupport()) {
@@ -57,7 +57,10 @@ export const useCameraSetup = () => {
         status: 'Step 2/5: Setting up video display...' 
       }));
 
-      logToConsole('=== STEP 2: Setting up video element ===');
+      // Small delay to ensure component has mounted and ref is available
+      logToConsole('=== STEP 2: Waiting for component mount and setting up video element ===');
+      await new Promise(resolve => setTimeout(resolve, 250));
+      
       await setupVideo(stream, videoRef);
       setState(prev => ({ 
         ...prev, 
@@ -100,7 +103,7 @@ export const useCameraSetup = () => {
       logToConsole(`Camera setup failed on attempt ${attemptNumber}:`, error);
       throw new Error(errorMessage);
     }
-  };
+  }, [videoRef, maxRetries, isProduction]);
 
   const startCamera = useCallback(async () => {
     const currentRetry = state.retryCount + 1;
@@ -136,7 +139,7 @@ export const useCameraSetup = () => {
         });
       }
     }
-  }, [state.retryCount]);
+  }, [state.retryCount, performCameraSetup, maxRetries]);
 
   const stopCamera = useCallback(() => {
     logToConsole('Stopping camera...');
@@ -169,7 +172,7 @@ export const useCameraSetup = () => {
         state.stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [state.stream]);
 
   return {
     videoRef,

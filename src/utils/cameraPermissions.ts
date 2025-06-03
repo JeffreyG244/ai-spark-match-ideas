@@ -60,6 +60,51 @@ export const requestCameraPermission = async (): Promise<MediaStream> => {
   }
 };
 
+const waitForVideoElement = async (
+  videoRef: React.RefObject<HTMLVideoElement>,
+  maxWaitTime = 10000
+): Promise<HTMLVideoElement> => {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  const logToConsole = (message: string, data?: any) => {
+    const timestamp = new Date().toISOString();
+    const logLevel = isProduction ? 'PROD' : 'DEV';
+    console.log(`[${timestamp}] ${logLevel}: ${message}`, data || '');
+  };
+
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+    
+    const checkElement = () => {
+      logToConsole('Checking for video element...', { 
+        hasRef: !!videoRef,
+        hasCurrent: !!videoRef.current,
+        elapsed: Date.now() - startTime
+      });
+      
+      if (videoRef.current) {
+        logToConsole('Video element found successfully', { 
+          readyState: videoRef.current.readyState,
+          width: videoRef.current.clientWidth,
+          height: videoRef.current.clientHeight
+        });
+        resolve(videoRef.current);
+        return;
+      }
+      
+      if (Date.now() - startTime > maxWaitTime) {
+        logToConsole('Video element wait timeout', { elapsed: Date.now() - startTime });
+        reject(new Error('Video element not available after waiting ' + maxWaitTime + 'ms'));
+        return;
+      }
+      
+      setTimeout(checkElement, 100);
+    };
+    
+    checkElement();
+  });
+};
+
 export const setupVideo = async (
   stream: MediaStream,
   videoRef: React.RefObject<HTMLVideoElement>
@@ -74,20 +119,16 @@ export const setupVideo = async (
 
   logToConsole('Setting up video element...');
   
-  return new Promise(async (resolve, reject) => {
-    try {
-      if (!videoRef.current) {
-        reject(new Error('Video element not available'));
-        return;
-      }
-
-      const video = videoRef.current;
-      video.srcObject = stream;
-      
+  try {
+    // Wait for video element to be available
+    logToConsole('Waiting for video element to be available...');
+    const video = await waitForVideoElement(videoRef);
+    
+    return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {
-        logToConsole('Video setup timeout after 10 seconds');
+        logToConsole('Video setup timeout after 15 seconds');
         reject(new Error('Video setup timeout - camera may not be responding'));
-      }, 10000);
+      }, 15000);
 
       const onLoadedData = () => {
         clearTimeout(timeoutId);
@@ -121,6 +162,12 @@ export const setupVideo = async (
       video.addEventListener('loadeddata', onLoadedData);
       video.addEventListener('error', onVideoError);
 
+      // Set up the video source
+      logToConsole('Setting video srcObject...');
+      video.srcObject = stream;
+
+      // Start playing the video
+      logToConsole('Starting video playback...');
       video.play().catch((playError) => {
         clearTimeout(timeoutId);
         logToConsole('Video play failed', playError);
@@ -128,9 +175,9 @@ export const setupVideo = async (
         video.removeEventListener('error', onVideoError);
         reject(new Error('Video play failed: ' + playError.message));
       });
-    } catch (error) {
-      logToConsole('Video element setup failed', error);
-      reject(error);
-    }
-  });
+    });
+  } catch (error) {
+    logToConsole('Video element setup failed', error);
+    throw error;
+  }
 };
