@@ -1,8 +1,7 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, RotateCcw, AlertCircle } from 'lucide-react';
+import { Camera, RotateCcw, AlertCircle, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useCamera } from '@/hooks/useCamera';
@@ -17,6 +16,7 @@ const FacialVerificationCapture = () => {
   const [isCapturing, setIsCapturing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [photoCount, setPhotoCount] = useState(0);
+  const [showDiagnostics, setShowDiagnostics] = useState(false);
 
   const {
     videoRef,
@@ -36,6 +36,33 @@ const FacialVerificationCapture = () => {
     detectionAttempts,
     resetDetection
   } = useFaceDetection(detector, videoRef, isInitialized, isCapturing, cameraError);
+
+  // Camera diagnostics
+  const runDiagnostics = async () => {
+    setShowDiagnostics(true);
+    console.log('🔧 Running camera diagnostics...');
+    
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(d => d.kind === 'videoinput');
+      console.log('📹 Available video devices:', videoDevices);
+      
+      const permissions = await navigator.permissions.query({ name: 'camera' as PermissionName });
+      console.log('🔐 Camera permission state:', permissions.state);
+      
+      toast({
+        title: 'Diagnostics Complete',
+        description: `Found ${videoDevices.length} camera(s). Permission: ${permissions.state}`,
+      });
+    } catch (error) {
+      console.error('❌ Diagnostics error:', error);
+      toast({
+        title: 'Diagnostics Failed',
+        description: 'Unable to check camera status',
+        variant: 'destructive'
+      });
+    }
+  };
 
   const captureAndUploadPhoto = async () => {
     if (!detector || !videoRef.current || !canvasRef.current || !user) {
@@ -68,7 +95,7 @@ const FacialVerificationCapture = () => {
       // Final face detection before capture
       const faces = await detector.estimateFaces(video);
       if (faces.length === 0) {
-        console.log('⚠️ No face detected during capture, but proceeding anyway for Android compatibility');
+        console.log('⚠️ No face detected during capture, but proceeding anyway for compatibility');
       }
 
       const blob = await capturePhotoFromVideo(video, canvas);
@@ -107,7 +134,7 @@ const FacialVerificationCapture = () => {
     return () => stopCamera();
   }, [stopCamera]);
 
-  const canCapture = (faceDetected || detectionAttempts > 15) && photoCount < 5 && !isCapturing && !isUploading && !cameraError;
+  const canCapture = (faceDetected || detectionAttempts > 20) && photoCount < 5 && !isCapturing && !isUploading && !cameraError;
 
   return (
     <Card className="border-purple-200">
@@ -125,16 +152,25 @@ const FacialVerificationCapture = () => {
               <p className="text-red-800 font-medium">Camera Error</p>
               <p className="text-red-600 text-sm mt-1">{cameraError}</p>
             </div>
-            <Button 
-              onClick={retryCamera}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Retry Camera
-            </Button>
+            <div className="flex gap-2 justify-center">
+              <Button 
+                onClick={retryCamera}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Retry Camera
+              </Button>
+              <Button 
+                onClick={runDiagnostics}
+                variant="outline"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Run Diagnostics
+              </Button>
+            </div>
           </div>
         ) : !isInitialized ? (
-          <div className="text-center">
+          <div className="text-center space-y-4">
             <Button 
               onClick={initializeCamera} 
               disabled={isModelLoading}
@@ -152,6 +188,17 @@ const FacialVerificationCapture = () => {
                 </>
               )}
             </Button>
+            
+            {!isModelLoading && (
+              <Button 
+                onClick={runDiagnostics}
+                variant="outline"
+                size="sm"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Camera Diagnostics
+              </Button>
+            )}
           </div>
         ) : (
           <>

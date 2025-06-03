@@ -12,21 +12,35 @@ export interface CameraConstraints {
   audio: boolean;
 }
 
-export const getAndroidOptimizedConstraints = (): CameraConstraints => ({
+export const getOptimizedConstraints = (): CameraConstraints => ({
   video: { 
-    width: { ideal: 480, min: 240, max: 640 }, 
-    height: { ideal: 360, min: 180, max: 480 }, 
+    width: { ideal: 640, min: 320, max: 1280 }, 
+    height: { ideal: 480, min: 240, max: 720 }, 
     facingMode: 'user',
-    frameRate: { ideal: 10, min: 5, max: 15 }
+    frameRate: { ideal: 15, min: 10, max: 30 }
   },
   audio: false
 });
 
 export const initializeTensorFlow = async (): Promise<faceLandmarksDetection.FaceLandmarksDetector> => {
   console.log('🧠 Initializing TensorFlow.js...');
-  await tf.setBackend('cpu');
-  await tf.ready();
-  console.log('✅ TensorFlow.js ready with CPU backend');
+  
+  try {
+    // Try WebGL first, fallback to CPU if needed
+    await tf.setBackend('webgl');
+    await tf.ready();
+    console.log('✅ TensorFlow.js ready with WebGL backend');
+  } catch (webglError) {
+    console.warn('⚠️ WebGL backend failed, falling back to CPU:', webglError);
+    try {
+      await tf.setBackend('cpu');
+      await tf.ready();
+      console.log('✅ TensorFlow.js ready with CPU backend');
+    } catch (cpuError) {
+      console.error('❌ Both WebGL and CPU backends failed:', cpuError);
+      throw new Error('TensorFlow.js initialization failed');
+    }
+  }
   
   console.log('🔍 Loading face detection model...');
   const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
@@ -47,12 +61,45 @@ export const setupVideoStream = async (
   videoRef: React.RefObject<HTMLVideoElement>,
   constraints: CameraConstraints
 ): Promise<MediaStream> => {
+  console.log('📷 Checking camera availability...');
+  
+  // Check if mediaDevices is supported
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw new Error('Camera not supported on this device');
   }
 
+  // Check available devices first
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    console.log(`📹 Found ${videoDevices.length} video input devices`);
+    
+    if (videoDevices.length === 0) {
+      throw new Error('No camera devices found on this system');
+    }
+  } catch (deviceError) {
+    console.error('❌ Error checking camera devices:', deviceError);
+    throw new Error('Cannot access camera devices');
+  }
+
   console.log('📷 Requesting camera with constraints:', constraints);
-  const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+  
+  let mediaStream: MediaStream;
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+    console.log('✅ Camera permission granted, stream obtained');
+  } catch (permissionError) {
+    console.error('❌ Camera permission error:', permissionError);
+    if (permissionError.name === 'NotAllowedError') {
+      throw new Error('Camera permission denied. Please allow camera access in your browser settings.');
+    } else if (permissionError.name === 'NotFoundError') {
+      throw new Error('No camera found. Please connect a camera device.');
+    } else if (permissionError.name === 'NotReadableError') {
+      throw new Error('Camera is being used by another application. Please close other camera apps.');
+    } else {
+      throw new Error(`Camera error: ${permissionError.message}`);
+    }
+  }
   
   if (videoRef.current) {
     videoRef.current.srcObject = mediaStream;
@@ -60,20 +107,44 @@ export const setupVideoStream = async (
     await new Promise<void>((resolve, reject) => {
       if (videoRef.current) {
         const video = videoRef.current;
-        video.onloadedmetadata = () => {
+        
+        const handleLoadedMetadata = () => {
           console.log('📹 Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
+          if (video.videoWidth === 0 || video.videoHeight === 0) {
+            reject(new Error('Camera stream has invalid dimensions'));
+            return;
+          }
+          
           video.play()
             .then(() => {
               console.log('▶️ Video playing successfully');
               resolve();
             })
-            .catch(reject);
+            .catch(playError => {
+              console.error('❌ Video play error:', playError);
+              reject(new Error('Failed to start video playback'));
+            });
         };
-        video.onerror = () => reject(new Error('Video loading error'));
+        
+        const handleError = (error: Event) => {
+          console.error('❌ Video loading error:', error);
+          reject(new Error('Video stream loading failed'));
+        };
+        
+        video.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
+        video.addEventListener('error', handleError, { once: true });
+        
+        // Timeout after 10 seconds
+        setTimeout(() => {
+          video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+          video.removeEventListener('error', handleError);
+          reject(new Error('Camera initialization timeout'));
+        }, 10000);
       }
     });
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Additional delay to ensure stream is stable
+    await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   return mediaStream;

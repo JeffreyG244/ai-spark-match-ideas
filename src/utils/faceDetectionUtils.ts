@@ -22,7 +22,7 @@ export const validateFaceDetection = (
         const faceSize = Math.min(face.box.width, face.box.height);
         console.log('📏 Face size:', faceSize);
         
-        if (faceSize > 50) {
+        if (faceSize > 80) {
           return {
             faceDetected: true,
             instruction: '✅ Perfect! Face detected clearly. Ready to capture.',
@@ -50,7 +50,7 @@ export const validateFaceDetection = (
       };
     }
   } else {
-    if (detectionAttempts > 10) {
+    if (detectionAttempts > 15) {
       return {
         faceDetected: false,
         instruction: '🔄 Having trouble detecting face - try better lighting or restart camera',
@@ -70,10 +70,15 @@ export const performFaceDetection = async (
   detector: faceLandmarksDetection.FaceLandmarksDetector,
   video: HTMLVideoElement
 ): Promise<faceLandmarksDetection.Face[]> => {
-  const detectionPromise = detector.estimateFaces(video);
-  const timeoutPromise = new Promise<never>((_, reject) => 
-    setTimeout(() => reject(new Error('Detection timeout')), 2000)
-  );
-  
-  return await Promise.race([detectionPromise, timeoutPromise]);
+  try {
+    // Use the correct API for the loaded model
+    const faces = await detector.estimateFaces(video, {
+      flipHorizontal: false,
+      staticImageMode: false
+    });
+    return faces;
+  } catch (error) {
+    console.error('❌ Face detection error:', error);
+    throw error;
+  }
 };

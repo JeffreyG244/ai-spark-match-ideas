@@ -29,16 +29,24 @@ export const uploadPhotoToStorage = async (
   const timestamp = Date.now();
   const filename = `${userId}/${timestamp}_photo_${photoCount + 1}.jpg`;
 
+  console.log('📤 Uploading to profile-photos bucket:', filename);
+
   const { error: uploadError } = await supabase.storage
     .from('profile-photos')
-    .upload(filename, blob);
+    .upload(filename, blob, {
+      contentType: 'image/jpeg'
+    });
 
-  if (uploadError) throw uploadError;
+  if (uploadError) {
+    console.error('❌ Upload error:', uploadError);
+    throw uploadError;
+  }
 
   const { data: { publicUrl } } = supabase.storage
     .from('profile-photos')
     .getPublicUrl(filename);
 
+  console.log('✅ Photo uploaded successfully:', publicUrl);
   return publicUrl;
 };
 
