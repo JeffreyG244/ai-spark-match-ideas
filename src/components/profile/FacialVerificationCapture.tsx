@@ -15,8 +15,9 @@ const FacialVerificationCapture = () => {
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Simplified state - exactly like debug component
+  // Simple state - exactly like debug component
   const [status, setStatus] = useState('Click Start Camera to begin');
   const [detector, setDetector] = useState<faceLandmarksDetection.FaceLandmarksDetector | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -34,10 +35,7 @@ const FacialVerificationCapture = () => {
   // Debug state
   const [showTestMode, setShowTestMode] = useState(false);
 
-  // Detection interval reference
-  const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Direct initialization - copied from working debug component
+  // EXACT SAME initialization as working debug component
   const startCamera = async () => {
     try {
       setStatus('Step 1: Requesting camera...');
@@ -101,7 +99,7 @@ const FacialVerificationCapture = () => {
         description: 'Face detection is now active. Position your face in the camera.',
       });
       
-      // Start face detection loop - simple and direct
+      // Start face detection - exactly like debug
       startFaceDetectionLoop(loadedModel);
       
     } catch (error) {
@@ -115,7 +113,7 @@ const FacialVerificationCapture = () => {
     }
   };
 
-  // Simple face detection loop - directly copied pattern from debug
+  // EXACT SAME detection loop as debug component
   const startFaceDetectionLoop = (faceDetector: faceLandmarksDetection.FaceLandmarksDetector) => {
     const detectFaces = async () => {
       if (!videoRef.current || !faceDetector || isUploading) return;
@@ -157,8 +155,8 @@ const FacialVerificationCapture = () => {
       clearInterval(detectionIntervalRef.current);
     }
     
-    // Start new detection interval
-    detectionIntervalRef.current = setInterval(detectFaces, 1500);
+    // Start new detection interval - same timing as debug
+    detectionIntervalRef.current = setInterval(detectFaces, 2000);
   };
 
   const stopCamera = () => {
