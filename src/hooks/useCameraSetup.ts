@@ -32,44 +32,70 @@ export const useCameraSetup = () => {
   };
 
   const checkCameraSupport = (): boolean => {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      logToConsole('Camera API not supported in this browser');
+    logToConsole('Checking camera support...');
+    
+    if (!navigator.mediaDevices) {
+      logToConsole('navigator.mediaDevices not available');
       return false;
     }
+    
+    if (!navigator.mediaDevices.getUserMedia) {
+      logToConsole('getUserMedia not available');
+      return false;
+    }
+    
+    logToConsole('Camera support confirmed');
     return true;
   };
 
   const requestCameraPermission = async (): Promise<MediaStream> => {
+    logToConsole('Starting camera permission request...');
+    
     try {
-      logToConsole('Requesting camera permission...');
-      
       const constraints = {
         video: {
-          width: { ideal: 640 },
-          height: { ideal: 480 },
+          width: { ideal: 640, min: 320 },
+          height: { ideal: 480, min: 240 },
           facingMode: 'user'
         }
       };
 
+      logToConsole('Calling getUserMedia with constraints:', constraints);
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      logToConsole('Camera permission granted', { 
+      
+      logToConsole('Camera permission granted successfully', { 
         tracks: stream.getVideoTracks().length,
-        settings: stream.getVideoTracks()[0]?.getSettings()
+        active: stream.active
       });
+      
+      if (stream.getVideoTracks().length === 0) {
+        throw new Error('No video tracks in stream');
+      }
       
       return stream;
     } catch (error: any) {
-      logToConsole('Camera permission error', error);
+      logToConsole('Camera permission failed', error);
       
-      let userMessage = 'Camera access denied. ';
+      let userMessage = 'Camera access failed: ';
       if (error.name === 'NotAllowedError') {
-        userMessage += 'Please allow camera access and refresh the page.';
+        userMessage += 'Permission denied. Please allow camera access and try again.';
       } else if (error.name === 'NotFoundError') {
-        userMessage += 'No camera found on this device.';
+        userMessage += 'No camera found. Please check your device has a camera.';
       } else if (error.name === 'NotReadableError') {
-        userMessage += 'Camera is being used by another application.';
+        userMessage += 'Camera is being used by another application. Please close other apps and try again.';
+      } else if (error.name === 'OverconstrainedError') {
+        userMessage += 'Camera constraints not supported. Trying with basic settings...';
+        // Try again with minimal constraints
+        try {
+          const basicStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          logToConsole('Basic camera access successful');
+          return basicStream;
+        } catch (basicError) {
+          logToConsole('Basic camera access also failed', basicError);
+          throw new Error('Camera not accessible with any settings');
+        }
       } else {
-        userMessage += 'Please check camera permissions in browser settings.';
+        userMessage += error.message || 'Unknown camera error';
       }
       
       throw new Error(userMessage);
@@ -77,71 +103,104 @@ export const useCameraSetup = () => {
   };
 
   const setupVideo = async (stream: MediaStream): Promise<void> => {
+    logToConsole('Setting up video element...');
+    
     return new Promise((resolve, reject) => {
       if (!videoRef.current) {
-        reject(new Error('Video element not available'));
+        const error = 'Video element not available';
+        logToConsole(error);
+        reject(new Error(error));
         return;
       }
 
       const video = videoRef.current;
       video.srcObject = stream;
       
+      // Set up timeout
       const timeoutId = setTimeout(() => {
-        reject(new Error('Video setup timeout'));
+        logToConsole('Video setup timeout after 10 seconds');
+        reject(new Error('Video setup timeout - camera may not be responding'));
       }, 10000);
 
-      video.onloadeddata = () => {
+      // Handle successful video load
+      const onLoadedData = () => {
         clearTimeout(timeoutId);
-        logToConsole('Video loaded', {
+        logToConsole('Video data loaded successfully', {
           width: video.videoWidth,
           height: video.videoHeight,
           readyState: video.readyState
         });
         
         if (video.videoWidth === 0 || video.videoHeight === 0) {
-          reject(new Error('Invalid video dimensions'));
+          const error = 'Invalid video dimensions - camera may not be working';
+          logToConsole(error);
+          reject(new Error(error));
           return;
         }
         
+        video.removeEventListener('loadeddata', onLoadedData);
+        video.removeEventListener('error', onVideoError);
         resolve();
       };
 
-      video.onerror = (error) => {
+      // Handle video errors
+      const onVideoError = (event: Event) => {
         clearTimeout(timeoutId);
-        logToConsole('Video error', error);
-        reject(new Error('Video playback failed'));
+        const error = 'Video playback failed';
+        logToConsole(error, event);
+        video.removeEventListener('loadeddata', onLoadedData);
+        video.removeEventListener('error', onVideoError);
+        reject(new Error(error));
       };
 
-      video.play().catch(reject);
+      video.addEventListener('loadeddata', onLoadedData);
+      video.addEventListener('error', onVideoError);
+
+      // Start playing the video
+      video.play().catch((playError) => {
+        clearTimeout(timeoutId);
+        logToConsole('Video play failed', playError);
+        video.removeEventListener('loadeddata', onLoadedData);
+        video.removeEventListener('error', onVideoError);
+        reject(new Error('Video play failed: ' + playError.message));
+      });
     });
   };
 
   const setupTensorflow = async (): Promise<void> => {
+    logToConsole('Setting up TensorFlow backend...');
+    
     try {
-      logToConsole('Setting up TensorFlow backend...');
-      
-      // Try WebGL first, fallback to CPU
+      // Try WebGL first
       try {
+        logToConsole('Attempting WebGL backend...');
         await tf.setBackend('webgl');
         await tf.ready();
-        logToConsole('WebGL backend ready');
+        logToConsole('WebGL backend ready successfully');
       } catch (webglError) {
-        logToConsole('WebGL failed, using CPU backend', webglError);
+        logToConsole('WebGL failed, falling back to CPU backend', webglError);
         await tf.setBackend('cpu');
         await tf.ready();
+        logToConsole('CPU backend ready');
       }
       
-      logToConsole('TensorFlow backend active', { backend: tf.getBackend() });
+      const currentBackend = tf.getBackend();
+      logToConsole('TensorFlow backend active:', currentBackend);
+      
+      if (!currentBackend) {
+        throw new Error('No TensorFlow backend available');
+      }
+      
     } catch (error) {
-      logToConsole('TensorFlow setup failed', error);
-      throw new Error('AI backend initialization failed');
+      logToConsole('TensorFlow setup completely failed', error);
+      throw new Error('AI backend initialization failed: ' + (error as Error).message);
     }
   };
 
   const loadFaceModel = async (): Promise<faceLandmarksDetection.FaceLandmarksDetector> => {
+    logToConsole('Loading face detection model...');
+    
     try {
-      logToConsole('Loading face detection model...');
-      
       const model = await faceLandmarksDetection.createDetector(
         faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh,
         {
@@ -155,67 +214,110 @@ export const useCameraSetup = () => {
       return model;
     } catch (error) {
       logToConsole('Face model loading failed', error);
-      throw new Error('Face detection model failed to load');
+      throw new Error('Face detection model failed to load: ' + (error as Error).message);
     }
   };
 
   const testModelWithVideo = async (model: faceLandmarksDetection.FaceLandmarksDetector): Promise<void> => {
-    if (!videoRef.current) throw new Error('Video not ready for testing');
+    logToConsole('Testing face detection with video...');
+    
+    if (!videoRef.current) {
+      throw new Error('Video not ready for testing');
+    }
     
     try {
-      logToConsole('Testing face detection...');
-      const faces = await model.estimateFaces(videoRef.current, {
+      const video = videoRef.current;
+      
+      // Wait a moment for video to be fully ready
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const faces = await model.estimateFaces(video, {
         flipHorizontal: false,
         staticImageMode: false
       });
       
-      logToConsole('Face detection test completed', { facesFound: faces.length });
+      logToConsole('Face detection test completed successfully', { 
+        facesFound: faces.length,
+        videoReady: video.readyState >= 2,
+        videoDimensions: `${video.videoWidth}x${video.videoHeight}`
+      });
+      
     } catch (error) {
       logToConsole('Face detection test failed', error);
-      throw new Error('Face detection test failed');
+      throw new Error('Face detection test failed: ' + (error as Error).message);
     }
   };
 
   const startCamera = useCallback(async () => {
+    logToConsole('=== Starting camera setup process ===');
+    
     if (!checkCameraSupport()) {
-      setState(prev => ({ ...prev, error: 'Camera not supported in this browser' }));
+      setState(prev => ({ 
+        ...prev, 
+        error: 'Camera not supported in this browser',
+        status: '❌ Camera not supported' 
+      }));
       return;
     }
 
-    const retryAttempt = state.retryCount + 1;
+    const currentRetry = state.retryCount + 1;
+    logToConsole(`Starting attempt ${currentRetry}/${maxRetries}`);
     
     try {
+      // Clear any previous errors
       setState(prev => ({ 
         ...prev, 
-        status: `Step 1: Requesting camera access... (Attempt ${retryAttempt}/${maxRetries})`,
         error: null,
-        retryCount: retryAttempt
+        retryCount: currentRetry,
+        status: `Step 1/5: Requesting camera access... (Attempt ${currentRetry}/${maxRetries})`
       }));
 
       // Step 1: Get camera stream
+      logToConsole('=== STEP 1: Requesting camera permission ===');
       const stream = await requestCameraPermission();
-      setState(prev => ({ ...prev, stream, status: 'Step 2: Setting up video...' }));
+      setState(prev => ({ 
+        ...prev, 
+        stream, 
+        status: 'Step 2/5: Setting up video display...' 
+      }));
 
       // Step 2: Setup video element
+      logToConsole('=== STEP 2: Setting up video element ===');
       await setupVideo(stream);
-      setState(prev => ({ ...prev, status: 'Step 3: Initializing AI backend...' }));
+      setState(prev => ({ 
+        ...prev, 
+        status: 'Step 3/5: Initializing AI backend...' 
+      }));
 
       // Step 3: Setup TensorFlow
+      logToConsole('=== STEP 3: Setting up TensorFlow ===');
       await setupTensorflow();
-      setState(prev => ({ ...prev, status: 'Step 4: Loading face detection model...' }));
+      setState(prev => ({ 
+        ...prev, 
+        status: 'Step 4/5: Loading face detection model...' 
+      }));
 
       // Step 4: Load face detection model
+      logToConsole('=== STEP 4: Loading face detection model ===');
       const model = await loadFaceModel();
-      setState(prev => ({ ...prev, model, status: 'Step 5: Testing face detection...' }));
+      setState(prev => ({ 
+        ...prev, 
+        model, 
+        status: 'Step 5/5: Testing face detection...' 
+      }));
 
       // Step 5: Test the model
+      logToConsole('=== STEP 5: Testing face detection ===');
       await testModelWithVideo(model);
       
+      // Success!
       setState(prev => ({ 
         ...prev, 
         status: '✅ Camera ready! Face detection active',
         retryCount: 0
       }));
+
+      logToConsole('=== CAMERA SETUP COMPLETE ===');
 
       toast({
         title: 'Camera Ready',
@@ -223,21 +325,23 @@ export const useCameraSetup = () => {
       });
 
     } catch (error: any) {
-      logToConsole('Camera setup failed', error);
-      
       const errorMessage = error.message || 'Unknown camera error';
+      logToConsole(`Camera setup failed on attempt ${currentRetry}:`, error);
+      
       setState(prev => ({ ...prev, error: errorMessage }));
 
       // Retry logic
-      if (retryAttempt < maxRetries) {
+      if (currentRetry < maxRetries) {
+        const retryDelay = currentRetry * 1000; // Increasing delay
         setState(prev => ({ 
           ...prev, 
-          status: `Error: ${errorMessage}. Retrying in 2 seconds...` 
+          status: `❌ ${errorMessage}. Retrying in ${retryDelay/1000} seconds...` 
         }));
         
+        logToConsole(`Will retry in ${retryDelay}ms`);
         setTimeout(() => {
           startCamera();
-        }, 2000);
+        }, retryDelay);
       } else {
         setState(prev => ({ 
           ...prev, 
@@ -252,7 +356,7 @@ export const useCameraSetup = () => {
         });
       }
     }
-  }, [state.retryCount, maxRetries]);
+  }, [state.retryCount]);
 
   const stopCamera = useCallback(() => {
     logToConsole('Stopping camera...');
@@ -275,11 +379,17 @@ export const useCameraSetup = () => {
       error: null,
       retryCount: 0
     });
+    
+    logToConsole('Camera stopped successfully');
   }, [state.stream]);
 
   useEffect(() => {
-    return () => stopCamera();
-  }, [stopCamera]);
+    return () => {
+      if (state.stream) {
+        state.stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
 
   return {
     videoRef,
