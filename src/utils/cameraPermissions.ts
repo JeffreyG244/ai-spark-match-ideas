@@ -59,9 +59,15 @@ export const setupVideo = async (
         
         video.onloadedmetadata = () => {
           logToConsole('✅ SIMPLE: Video metadata loaded');
-          logToConsole('📐 SIMPLE: Video dimensions:', video.videoWidth, 'x', video.videoHeight);
+          logToConsole('📐 SIMPLE: Video dimensions:', `${video.videoWidth}x${video.videoHeight}`);
           clearTimeout(timeoutId);
-          resolve();
+          video.play().then(() => {
+            resolve();
+          }).catch((playError) => {
+            logToConsole('❌ SIMPLE: Video play failed', playError);
+            clearTimeout(timeoutId);
+            reject(new Error('Video play failed: ' + playError.message));
+          });
         };
         
         video.onerror = (error) => {
@@ -69,12 +75,6 @@ export const setupVideo = async (
           clearTimeout(timeoutId);
           reject(new Error('Video playback failed'));
         };
-        
-        video.play().catch((playError) => {
-          logToConsole('❌ SIMPLE: Video play failed', playError);
-          clearTimeout(timeoutId);
-          reject(new Error('Video play failed: ' + playError.message));
-        });
       } else {
         setTimeout(checkVideo, 100);
       }
