@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -138,7 +137,7 @@ const SimplePhotoCapture = () => {
     console.log('✅ Camera stopped');
   };
 
-  // Take photo with DOM safety checks
+  // Take photo with improved profile handling
   const takePhoto = async () => {
     if (photoCount >= maxPhotos) {
       toast({
@@ -221,7 +220,7 @@ const SimplePhotoCapture = () => {
         .from('profile-photos')
         .getPublicUrl(filename);
 
-      // Update user profile
+      // Get current profile photos
       const { data: currentProfile } = await supabase
         .from('user_profiles')
         .select('photos')
@@ -231,14 +230,14 @@ const SimplePhotoCapture = () => {
       const currentPhotos = currentProfile?.photos || [];
       const updatedPhotos = [...currentPhotos, publicUrl];
 
+      // Update only the photos array, don't try to create new profile
       const { error: updateError } = await supabase
         .from('user_profiles')
-        .upsert({
-          user_id: user.id,
-          email: user.email || '',
+        .update({
           photos: updatedPhotos,
           updated_at: new Date().toISOString()
-        });
+        })
+        .eq('user_id', user.id);
 
       if (updateError) {
         throw new Error(`Profile update failed: ${updateError.message}`);
