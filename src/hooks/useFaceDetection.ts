@@ -16,23 +16,54 @@ export const useFaceDetection = (
 
   const detectFace = useCallback(async () => {
     if (!detector || !videoRef.current || !isInitialized || isCapturing) {
+      console.log('🔍 Skipping detection - prerequisites not met:', {
+        hasDetector: !!detector,
+        hasVideo: !!videoRef.current,
+        isInitialized,
+        isCapturing
+      });
       return;
     }
 
     try {
       const video = videoRef.current;
       
-      // More thorough video readiness check
-      if (video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0 || video.paused || video.ended) {
-        console.log('⏳ Video not ready for detection, readyState:', video.readyState, 'dimensions:', video.videoWidth, 'x', video.videoHeight);
-        setCurrentInstruction('Loading camera...');
+      // Enhanced video readiness check with detailed logging
+      const videoReady = video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0 && !video.paused && !video.ended;
+      
+      if (!videoReady) {
+        console.log('⏳ Video not ready for detection:', {
+          readyState: video.readyState,
+          dimensions: `${video.videoWidth}x${video.videoHeight}`,
+          paused: video.paused,
+          ended: video.ended,
+          currentTime: video.currentTime
+        });
+        setCurrentInstruction('Preparing camera...');
         return;
       }
 
-      setDetectionAttempts(prev => prev + 1);
-      console.log(`🔍 Face detection attempt #${detectionAttempts + 1}`);
+      setDetectionAttempts(prev => {
+        const newAttempts = prev + 1;
+        console.log(`🔍 Face detection attempt #${newAttempts}`);
+        return newAttempts;
+      });
 
       const faces = await performFaceDetection(detector, video);
+      console.log(`👥 Detection result: ${faces.length} faces found`);
+      
+      if (faces.length > 0) {
+        console.log('😊 Face details:', {
+          keypoints: faces[0].keypoints?.length || 0,
+          box: faces[0].box ? {
+            width: faces[0].box.width,
+            height: faces[0].box.height,
+            xMin: faces[0].box.xMin,
+            yMin: faces[0].box.yMin
+          } : 'No bounding box'
+        });
+      }
+      
       const result = validateFaceDetection(faces, detectionAttempts);
       
       setFaceDetected(result.faceDetected);
@@ -57,10 +88,10 @@ export const useFaceDetection = (
     
     if (isInitialized && !isCapturing && detector && !cameraError) {
       console.log('🔄 Starting face detection loop...');
-      // Start detection after a short delay to ensure video is stable
+      // Start detection after a longer delay to ensure everything is stable
       setTimeout(() => {
-        detectionInterval = setInterval(detectFace, 1000);
-      }, 2000);
+        detectionInterval = setInterval(detectFace, 1500); // Slower detection rate for debugging
+      }, 3000);
     }
     
     return () => {
@@ -72,6 +103,7 @@ export const useFaceDetection = (
   }, [detectFace, isInitialized, isCapturing, detector, cameraError]);
 
   const resetDetection = () => {
+    console.log('🔄 Resetting face detection state');
     setCurrentInstruction('Look straight at the camera');
     setFaceDetected(false);
     setDetectionAttempts(0);

@@ -14,46 +14,84 @@ export const useCamera = () => {
 
   const initializeCamera = useCallback(async () => {
     try {
-      console.log('🚀 Starting camera initialization...');
+      console.log('🚀 === CAMERA INITIALIZATION STARTED ===');
       setIsModelLoading(true);
       setCameraError(null);
       setIsInitialized(false);
       
+      // Log browser and device info
+      console.log('🌐 Browser info:', {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        cookieEnabled: navigator.cookieEnabled,
+        onLine: navigator.onLine
+      });
+      
+      // Check HTTPS requirement
+      console.log('🔒 Security context:', {
+        protocol: window.location.protocol,
+        hostname: window.location.hostname,
+        isSecureContext: window.isSecureContext
+      });
+      
+      if (!window.isSecureContext && window.location.hostname !== 'localhost') {
+        throw new Error('Camera requires HTTPS. Please access this site via HTTPS.');
+      }
+      
       // Get camera constraints
       const constraints = getOptimizedConstraints();
-      console.log('🎯 Setting up video stream...');
+      console.log('📋 Using camera constraints:', constraints);
       
-      // Setup video stream first (this will request permission)
+      // Setup video stream first
+      console.log('📹 === VIDEO STREAM SETUP ===');
       const mediaStream = await setupVideoStream(videoRef, constraints);
       setStream(mediaStream);
-      console.log('📹 Video stream established successfully');
+      console.log('✅ Video stream setup complete');
 
-      // Wait a bit more for video to stabilize
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Check if video is actually working
+      // Wait for video to be truly ready
       if (videoRef.current) {
         const video = videoRef.current;
-        if (video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0) {
-          throw new Error('Video stream not ready after initialization');
+        let attempts = 0;
+        const maxAttempts = 50;
+        
+        console.log('⏳ Waiting for video to be ready...');
+        while (attempts < maxAttempts) {
+          if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0 && !video.paused) {
+            console.log(`✅ Video ready after ${attempts} attempts`);
+            break;
+          }
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
         }
-        console.log('✅ Video stream verified and ready');
+        
+        if (attempts >= maxAttempts) {
+          throw new Error('Video stream not ready after waiting');
+        }
+        
+        console.log('🎬 Final video verification:', {
+          readyState: video.readyState,
+          videoWidth: video.videoWidth,
+          videoHeight: video.videoHeight,
+          paused: video.paused,
+          ended: video.ended
+        });
       }
 
       // Then initialize TensorFlow and load the model
-      console.log('🧠 Initializing face detection model...');
+      console.log('🧠 === TENSORFLOW INITIALIZATION ===');
       const faceDetector = await initializeTensorFlow();
       setDetector(faceDetector);
       setIsInitialized(true);
       setIsModelLoading(false);
       
-      console.log('✅ Camera and face detection fully initialized');
+      console.log('🎉 === CAMERA AND AI FULLY INITIALIZED ===');
       toast({
         title: 'Camera Ready',
         description: 'Face detection is now active. Position your face in the camera.',
       });
     } catch (error) {
-      console.error('❌ Camera initialization error:', error);
+      console.error('❌ === CAMERA INITIALIZATION FAILED ===');
+      console.error('Error details:', error);
       setIsModelLoading(false);
       setIsInitialized(false);
       
@@ -72,10 +110,10 @@ export const useCamera = () => {
   }, []);
 
   const stopCamera = useCallback(() => {
-    console.log('🛑 Stopping camera...');
+    console.log('🛑 === STOPPING CAMERA ===');
     if (stream) {
       stream.getTracks().forEach(track => {
-        console.log(`⏹️ Stopping track: ${track.kind}`);
+        console.log(`⏹️ Stopping track: ${track.kind} (${track.label})`);
         track.stop();
       });
       setStream(null);
@@ -86,14 +124,15 @@ export const useCamera = () => {
     setIsInitialized(false);
     setDetector(null);
     setCameraError(null);
+    console.log('✅ Camera stopped successfully');
   }, [stream]);
 
   const retryCamera = useCallback(() => {
-    console.log('🔄 Retrying camera initialization...');
+    console.log('🔄 === RETRYING CAMERA INITIALIZATION ===');
     stopCamera();
     setTimeout(() => {
       initializeCamera();
-    }, 1000);
+    }, 1500);
   }, [stopCamera, initializeCamera]);
 
   return {

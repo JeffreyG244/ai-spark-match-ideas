@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, RotateCcw, AlertCircle, Settings } from 'lucide-react';
+import { Camera, RotateCcw, AlertCircle, Settings, Bug } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useCamera } from '@/hooks/useCamera';
@@ -9,6 +9,7 @@ import { useFaceDetection } from '@/hooks/useFaceDetection';
 import { capturePhotoFromVideo, uploadPhotoToStorage, updateUserProfile } from '@/utils/photoCapture';
 import CameraControls from './CameraControls';
 import CameraStatus from './CameraStatus';
+import FaceDetectionTest from '../debug/FaceDetectionTest';
 
 const FacialVerificationCapture = () => {
   const { user } = useAuth();
@@ -17,6 +18,7 @@ const FacialVerificationCapture = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [photoCount, setPhotoCount] = useState(0);
   const [showDiagnostics, setShowDiagnostics] = useState(false);
+  const [showTestMode, setShowTestMode] = useState(false);
 
   const {
     videoRef,
@@ -37,22 +39,52 @@ const FacialVerificationCapture = () => {
     resetDetection
   } = useFaceDetection(detector, videoRef, isInitialized, isCapturing, cameraError);
 
-  // Camera diagnostics
+  // Enhanced camera diagnostics
   const runDiagnostics = async () => {
     setShowDiagnostics(true);
-    console.log('🔧 Running camera diagnostics...');
+    console.log('🔧 === RUNNING COMPREHENSIVE DIAGNOSTICS ===');
     
     try {
+      // Check basic browser support
+      console.log('🌐 Browser support check:');
+      console.log('- getUserMedia supported:', !!navigator.mediaDevices?.getUserMedia);
+      console.log('- MediaDevices supported:', !!navigator.mediaDevices);
+      console.log('- Secure context:', window.isSecureContext);
+      console.log('- Protocol:', window.location.protocol);
+      
+      // Check permissions
+      try {
+        const permissions = await navigator.permissions.query({ name: 'camera' as PermissionName });
+        console.log('🔐 Camera permission state:', permissions.state);
+      } catch (permError) {
+        console.log('⚠️ Could not check camera permissions:', permError);
+      }
+      
+      // Enumerate devices
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter(d => d.kind === 'videoinput');
-      console.log('📹 Available video devices:', videoDevices);
+      console.log('📹 Video devices found:', videoDevices.length);
+      videoDevices.forEach((device, index) => {
+        console.log(`  Device ${index + 1}:`, {
+          deviceId: device.deviceId,
+          label: device.label || 'Unknown',
+          groupId: device.groupId
+        });
+      });
       
-      const permissions = await navigator.permissions.query({ name: 'camera' as PermissionName });
-      console.log('🔐 Camera permission state:', permissions.state);
+      // Test basic camera access
+      try {
+        console.log('🧪 Testing basic camera access...');
+        const testStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        console.log('✅ Basic camera test successful');
+        testStream.getTracks().forEach(track => track.stop());
+      } catch (testError) {
+        console.error('❌ Basic camera test failed:', testError);
+      }
       
       toast({
         title: 'Diagnostics Complete',
-        description: `Found ${videoDevices.length} camera(s). Permission: ${permissions.state}`,
+        description: `Found ${videoDevices.length} camera(s). Check console for details.`,
       });
     } catch (error) {
       console.error('❌ Diagnostics error:', error);
@@ -136,6 +168,17 @@ const FacialVerificationCapture = () => {
 
   const canCapture = (faceDetected || detectionAttempts > 20) && photoCount < 5 && !isCapturing && !isUploading && !cameraError;
 
+  if (showTestMode) {
+    return (
+      <div className="space-y-4">
+        <Button onClick={() => setShowTestMode(false)} variant="outline">
+          ← Back to Main Camera
+        </Button>
+        <FaceDetectionTest />
+      </div>
+    );
+  }
+
   return (
     <Card className="border-purple-200">
       <CardHeader>
@@ -152,7 +195,7 @@ const FacialVerificationCapture = () => {
               <p className="text-red-800 font-medium">Camera Error</p>
               <p className="text-red-600 text-sm mt-1">{cameraError}</p>
             </div>
-            <div className="flex gap-2 justify-center">
+            <div className="flex gap-2 justify-center flex-wrap">
               <Button 
                 onClick={retryCamera}
                 className="bg-purple-600 hover:bg-purple-700"
@@ -166,6 +209,13 @@ const FacialVerificationCapture = () => {
               >
                 <Settings className="h-4 w-4 mr-2" />
                 Run Diagnostics
+              </Button>
+              <Button 
+                onClick={() => setShowTestMode(true)}
+                variant="outline"
+              >
+                <Bug className="h-4 w-4 mr-2" />
+                Test Mode
               </Button>
             </div>
           </div>
@@ -190,14 +240,24 @@ const FacialVerificationCapture = () => {
             </Button>
             
             {!isModelLoading && (
-              <Button 
-                onClick={runDiagnostics}
-                variant="outline"
-                size="sm"
-              >
-                <Settings className="h-4 w-4 mr-2" />
-                Camera Diagnostics
-              </Button>
+              <div className="flex gap-2 justify-center">
+                <Button 
+                  onClick={runDiagnostics}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Camera Diagnostics
+                </Button>
+                <Button 
+                  onClick={() => setShowTestMode(true)}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Bug className="h-4 w-4 mr-2" />
+                  Test Mode
+                </Button>
+              </div>
             )}
           </div>
         ) : (
@@ -237,6 +297,17 @@ const FacialVerificationCapture = () => {
                   </p>
                 </div>
               )}
+              
+              <div className="text-center">
+                <Button 
+                  onClick={() => setShowTestMode(true)}
+                  variant="ghost"
+                  size="sm"
+                >
+                  <Bug className="h-4 w-4 mr-2" />
+                  Debug Test Mode
+                </Button>
+              </div>
             </div>
           </>
         )}
