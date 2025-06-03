@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,10 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
+            <div className="flex items-center gap-3 mb-2">
+              <Heart className="h-8 w-8 text-purple-600" />
+              <h2 className="text-2xl font-bold text-purple-600">SoulSync</h2>
+            </div>
             <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
             <p className="text-gray-600">Welcome back, {user?.email}</p>
           </div>

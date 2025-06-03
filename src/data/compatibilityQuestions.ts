@@ -184,5 +184,22 @@ export const compatibilityQuestions: QuestionData[] = [
       "Transgender",
       "Prefer not to say"
     ]
+  },
+  {
+    id: 17,
+    question: "How did you hear about SoulSync?",
+    options: [
+      "Social media (Instagram, TikTok, Facebook)",
+      "Friend or family recommendation",
+      "Google search",
+      "Dating app advertisement",
+      "News article or blog post",
+      "Podcast or YouTube video",
+      "Dating coach or relationship expert",
+      "Other dating app recommendation",
+      "Online community or forum",
+      "Word of mouth",
+      "Other"
+    ]
   }
 ];
