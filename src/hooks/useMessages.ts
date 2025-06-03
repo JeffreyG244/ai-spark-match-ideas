@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -17,6 +17,7 @@ export const useMessages = (conversationId: string | null) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const channelRef = useRef<any>(null);
 
   const loadMessages = async () => {
     if (!conversationId) {
@@ -77,12 +78,21 @@ export const useMessages = (conversationId: string | null) => {
   };
 
   useEffect(() => {
-    if (!conversationId) return;
+    if (!conversationId) {
+      setMessages([]);
+      setIsLoading(false);
+      return;
+    }
 
     loadMessages();
 
+    // Clean up existing channel if it exists
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
+
     // Subscribe to new messages
-    const channel = supabase
+    channelRef.current = supabase
       .channel(`messages-${conversationId}`)
       .on(
         'postgres_changes',
@@ -117,9 +127,12 @@ export const useMessages = (conversationId: string | null) => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [conversationId]);
+  }, [conversationId]); // Only depend on conversationId
 
   return {
     messages,

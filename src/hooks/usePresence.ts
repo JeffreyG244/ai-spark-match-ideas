@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -14,6 +14,7 @@ export const usePresence = () => {
   const { user } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<UserPresence[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const channelRef = useRef<any>(null);
 
   // Update user's online status
   const updatePresence = async (isOnline: boolean) => {
@@ -53,8 +54,13 @@ export const usePresence = () => {
     updatePresence(true);
     loadPresence();
 
+    // Clean up existing channel if it exists
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
+
     // Subscribe to presence changes
-    const channel = supabase
+    channelRef.current = supabase
       .channel('user-presence-changes')
       .on(
         'postgres_changes',
@@ -77,9 +83,12 @@ export const usePresence = () => {
     return () => {
       updatePresence(false);
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      supabase.removeChannel(channel);
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
     };
-  }, [user]);
+  }, [user?.id]); // Only depend on user.id to prevent unnecessary re-subscriptions
 
   const isUserOnline = (userId: string) => {
     const userPresence = onlineUsers.find(p => p.user_id === userId);
