@@ -1,7 +1,8 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, RotateCcw, AlertCircle, Settings, Bug, Upload } from 'lucide-react';
+import { Camera, RotateCcw, AlertCircle, Bug, Upload } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import * as tf from '@tensorflow/tfjs';
@@ -15,12 +16,11 @@ const FacialVerificationCapture = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
-  // State management
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
+  // Simplified state - exactly like debug component
+  const [status, setStatus] = useState('Click Start Camera to begin');
   const [detector, setDetector] = useState<faceLandmarksDetection.FaceLandmarksDetector | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
   
   // Face detection state
   const [faceDetected, setFaceDetected] = useState(false);
@@ -28,72 +28,61 @@ const FacialVerificationCapture = () => {
   const [detectionAttempts, setDetectionAttempts] = useState(0);
   
   // Capture state
-  const [isCapturing, setIsCapturing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [photoCount, setPhotoCount] = useState(0);
   
   // Debug state
   const [showTestMode, setShowTestMode] = useState(false);
 
-  // Direct camera initialization (similar to working debug component)
-  const initializeCamera = async () => {
+  // Detection interval reference
+  const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Direct initialization - copied from working debug component
+  const startCamera = async () => {
     try {
-      console.log('🚀 Starting camera initialization...');
-      setIsInitializing(true);
-      setCameraError(null);
-      setIsInitialized(false);
+      setStatus('Step 1: Requesting camera...');
+      console.log('🧪 MAIN: Requesting camera...');
       
-      // Step 1: Get camera stream
-      console.log('📷 Requesting camera access...');
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          width: { ideal: 640, min: 320, max: 1280 }, 
-          height: { ideal: 480, min: 240, max: 720 }, 
-          facingMode: 'user',
-          frameRate: { ideal: 15, min: 10, max: 30 }
-        },
-        audio: false
-      });
+      const testStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      console.log('✅ MAIN: Camera stream OK');
+      setStream(testStream);
       
-      console.log('✅ Camera stream obtained');
-      setStream(mediaStream);
-      
-      // Step 2: Setup video element
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
+        videoRef.current.srcObject = testStream;
         await videoRef.current.play();
+        setStatus('Step 2: Camera active, setting up AI...');
         
-        // Wait for video to be ready
-        await new Promise<void>((resolve) => {
+        // Wait for video metadata - exactly like debug
+        await new Promise((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = () => {
-              console.log('📹 Video metadata loaded:', {
-                width: videoRef.current?.videoWidth,
-                height: videoRef.current?.videoHeight
-              });
-              resolve();
+              console.log('✅ MAIN: Video metadata loaded');
+              console.log('📐 MAIN: Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
+              resolve(true);
             };
           }
         });
       }
       
-      // Step 3: Initialize TensorFlow
-      console.log('🧠 Setting up TensorFlow...');
+      setStatus('Step 3: Setting TFJS backend...');
+      console.log('🧪 MAIN: Setting TFJS backend to WebGL...');
+      
       try {
         await tf.setBackend('webgl');
         await tf.ready();
-        console.log('✅ WebGL backend ready');
+        console.log('✅ MAIN: WebGL backend ready');
       } catch (webglError) {
-        console.warn('⚠️ WebGL failed, using CPU:', webglError);
+        console.warn('⚠️ MAIN: WebGL failed, using CPU:', webglError);
         await tf.setBackend('cpu');
         await tf.ready();
       }
       
-      console.log('🔍 Current backend:', tf.getBackend());
+      console.log('🔍 MAIN: Current backend:', tf.getBackend());
       
-      // Step 4: Load face detection model
-      console.log('📦 Loading face detection model...');
-      const faceDetector = await faceLandmarksDetection.createDetector(
+      setStatus('Step 4: Loading face detection model...');
+      console.log('🧪 MAIN: Loading FaceMesh model...');
+      
+      const loadedModel = await faceLandmarksDetection.createDetector(
         faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh,
         {
           runtime: 'tfjs',
@@ -102,42 +91,34 @@ const FacialVerificationCapture = () => {
         }
       );
       
-      setDetector(faceDetector);
-      setIsInitialized(true);
-      setIsInitializing(false);
+      setDetector(loadedModel);
+      console.log('✅ MAIN: Model loaded successfully');
+      setStatus('✅ Camera ready! Face detection active');
+      setIsRunning(true);
       
-      console.log('🎉 Camera and AI fully initialized');
       toast({
         title: 'Camera Ready',
         description: 'Face detection is now active. Position your face in the camera.',
       });
       
-      // Start face detection loop
-      startFaceDetection(faceDetector);
+      // Start face detection loop - simple and direct
+      startFaceDetectionLoop(loadedModel);
       
     } catch (error) {
-      console.error('❌ Camera initialization failed:', error);
-      setIsInitializing(false);
-      setIsInitialized(false);
-      
-      let errorMessage = 'Unable to access camera or initialize face detection.';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      
-      setCameraError(errorMessage);
+      console.error('❌ MAIN: Error:', error);
+      setStatus(`❌ Camera failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       toast({
         title: 'Camera Error',
-        description: errorMessage,
+        description: error instanceof Error ? error.message : 'Camera initialization failed',
         variant: 'destructive'
       });
     }
   };
 
-  // Face detection loop
-  const startFaceDetection = (faceDetector: faceLandmarksDetection.FaceLandmarksDetector) => {
+  // Simple face detection loop - directly copied pattern from debug
+  const startFaceDetectionLoop = (faceDetector: faceLandmarksDetection.FaceLandmarksDetector) => {
     const detectFaces = async () => {
-      if (!videoRef.current || !faceDetector || isCapturing) return;
+      if (!videoRef.current || !faceDetector || isUploading) return;
       
       try {
         const video = videoRef.current;
@@ -149,7 +130,7 @@ const FacialVerificationCapture = () => {
             staticImageMode: false
           });
           
-          console.log(`👥 Detection result: ${faces.length} faces found`);
+          console.log(`👥 MAIN: Detection result: ${faces.length} faces found`);
           
           if (faces.length > 0) {
             setFaceDetected(true);
@@ -158,28 +139,37 @@ const FacialVerificationCapture = () => {
           } else {
             setFaceDetected(false);
             if (detectionAttempts > 15) {
-              setCurrentInstruction('🔄 Having trouble detecting face - try better lighting or restart camera');
+              setCurrentInstruction('🔄 Having trouble detecting face - try better lighting');
             } else {
               setCurrentInstruction('👁️ No face detected - look directly at the camera');
             }
           }
         }
       } catch (error) {
-        console.error('❌ Face detection error:', error);
+        console.error('❌ MAIN: Face detection error:', error);
         setFaceDetected(false);
         setCurrentInstruction('🔧 Detection error - try restarting the camera');
       }
     };
     
-    // Start detection loop
-    const detectionInterval = setInterval(detectFaces, 1000);
+    // Clear any existing interval
+    if (detectionIntervalRef.current) {
+      clearInterval(detectionIntervalRef.current);
+    }
     
-    // Store interval for cleanup
-    return () => clearInterval(detectionInterval);
+    // Start new detection interval
+    detectionIntervalRef.current = setInterval(detectFaces, 1500);
   };
 
   const stopCamera = () => {
-    console.log('🛑 Stopping camera...');
+    console.log('🛑 MAIN: Stopping camera...');
+    
+    // Clear detection interval
+    if (detectionIntervalRef.current) {
+      clearInterval(detectionIntervalRef.current);
+      detectionIntervalRef.current = null;
+    }
+    
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
@@ -187,9 +177,9 @@ const FacialVerificationCapture = () => {
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
-    setIsInitialized(false);
     setDetector(null);
-    setCameraError(null);
+    setIsRunning(false);
+    setStatus('Camera stopped');
     setFaceDetected(false);
     setCurrentInstruction('Look straight at the camera');
     setDetectionAttempts(0);
@@ -214,17 +204,16 @@ const FacialVerificationCapture = () => {
       return;
     }
 
-    setIsCapturing(true);
     setIsUploading(true);
 
     try {
       const video = videoRef.current;
       const canvas = canvasRef.current;
 
-      console.log('📸 Capturing photo...');
+      console.log('📸 MAIN: Capturing photo...');
       const blob = await capturePhotoFromVideo(video, canvas);
       
-      console.log('📤 Uploading photo to storage...');
+      console.log('📤 MAIN: Uploading photo to storage...');
       const publicUrl = await uploadPhotoToStorage(user.id, photoCount, blob);
       await updateUserProfile(user.id, user.email || '', publicUrl);
 
@@ -236,14 +225,13 @@ const FacialVerificationCapture = () => {
       });
 
     } catch (error) {
-      console.error('❌ Error capturing/uploading photo:', error);
+      console.error('❌ MAIN: Error capturing/uploading photo:', error);
       toast({
         title: 'Upload Failed',
         description: error instanceof Error ? error.message : 'Failed to capture or upload photo.',
         variant: 'destructive'
       });
     } finally {
-      setIsCapturing(false);
       setIsUploading(false);
     }
   };
@@ -252,14 +240,16 @@ const FacialVerificationCapture = () => {
     setCurrentInstruction('Look straight at the camera');
     setFaceDetected(false);
     setDetectionAttempts(0);
-    setCameraError(null);
   };
 
+  // Cleanup on unmount
   useEffect(() => {
-    return () => stopCamera();
+    return () => {
+      stopCamera();
+    };
   }, []);
 
-  const canCapture = (faceDetected || detectionAttempts > 20) && photoCount < 5 && !isCapturing && !isUploading && !cameraError;
+  const canCapture = (faceDetected || detectionAttempts > 20) && photoCount < 5 && !isUploading && isRunning;
 
   if (showTestMode) {
     return (
@@ -281,45 +271,22 @@ const FacialVerificationCapture = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {cameraError ? (
+        {!isRunning ? (
           <div className="text-center space-y-4">
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="h-6 w-6 text-red-600 mx-auto mb-2" />
-              <p className="text-red-800 font-medium">Camera Error</p>
-              <p className="text-red-600 text-sm mt-1">{cameraError}</p>
+            <div className="text-sm font-medium p-2 bg-gray-100 rounded">
+              Status: {status}
             </div>
-            <div className="flex gap-2 justify-center flex-wrap">
-              <Button onClick={initializeCamera} className="bg-purple-600 hover:bg-purple-700">
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Retry Camera
-              </Button>
-              <Button onClick={() => setShowTestMode(true)} variant="outline">
-                <Bug className="h-4 w-4 mr-2" />
-                Test Mode
-              </Button>
-            </div>
-          </div>
-        ) : !isInitialized ? (
-          <div className="text-center space-y-4">
-            <Button 
-              onClick={initializeCamera} 
-              disabled={isInitializing}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {isInitializing ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white mr-2"></div>
-                  Loading Camera & AI...
-                </>
-              ) : (
-                <>
-                  <Camera className="h-4 w-4 mr-2" />
-                  Start Camera
-                </>
-              )}
-            </Button>
             
-            {!isInitializing && (
+            <div className="flex gap-2 justify-center">
+              <Button 
+                onClick={startCamera} 
+                disabled={!!stream}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                Start Camera
+              </Button>
+              
               <Button 
                 onClick={() => setShowTestMode(true)}
                 variant="outline"
@@ -328,7 +295,7 @@ const FacialVerificationCapture = () => {
                 <Bug className="h-4 w-4 mr-2" />
                 Test Mode
               </Button>
-            )}
+            </div>
           </div>
         ) : (
           <>
@@ -384,7 +351,7 @@ const FacialVerificationCapture = () => {
 
                   <Button variant="outline" onClick={stopCamera}>
                     <Camera className="h-4 w-4 mr-2" />
-                    Restart Camera
+                    Stop Camera
                   </Button>
                 </div>
               </div>
