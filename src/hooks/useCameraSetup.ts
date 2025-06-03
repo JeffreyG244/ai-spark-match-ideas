@@ -48,6 +48,34 @@ export const useCameraSetup = () => {
     return true;
   };
 
+  const waitForVideoElement = async (maxWaitTime = 5000): Promise<HTMLVideoElement> => {
+    return new Promise((resolve, reject) => {
+      const startTime = Date.now();
+      
+      const checkElement = () => {
+        if (videoRef.current) {
+          logToConsole('Video element found', { 
+            readyState: videoRef.current.readyState,
+            currentTime: Date.now() - startTime 
+          });
+          resolve(videoRef.current);
+          return;
+        }
+        
+        if (Date.now() - startTime > maxWaitTime) {
+          logToConsole('Video element wait timeout');
+          reject(new Error('Video element not available after waiting'));
+          return;
+        }
+        
+        // Check again in 100ms
+        setTimeout(checkElement, 100);
+      };
+      
+      checkElement();
+    });
+  };
+
   const requestCameraPermission = async (): Promise<MediaStream> => {
     logToConsole('Starting camera permission request...');
     
@@ -105,65 +133,65 @@ export const useCameraSetup = () => {
   const setupVideo = async (stream: MediaStream): Promise<void> => {
     logToConsole('Setting up video element...');
     
-    return new Promise((resolve, reject) => {
-      if (!videoRef.current) {
-        const error = 'Video element not available';
-        logToConsole(error);
-        reject(new Error(error));
-        return;
-      }
-
-      const video = videoRef.current;
-      video.srcObject = stream;
-      
-      // Set up timeout
-      const timeoutId = setTimeout(() => {
-        logToConsole('Video setup timeout after 10 seconds');
-        reject(new Error('Video setup timeout - camera may not be responding'));
-      }, 10000);
-
-      // Handle successful video load
-      const onLoadedData = () => {
-        clearTimeout(timeoutId);
-        logToConsole('Video data loaded successfully', {
-          width: video.videoWidth,
-          height: video.videoHeight,
-          readyState: video.readyState
-        });
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Wait for video element to be available
+        const video = await waitForVideoElement();
         
-        if (video.videoWidth === 0 || video.videoHeight === 0) {
-          const error = 'Invalid video dimensions - camera may not be working';
-          logToConsole(error);
+        video.srcObject = stream;
+        
+        // Set up timeout
+        const timeoutId = setTimeout(() => {
+          logToConsole('Video setup timeout after 10 seconds');
+          reject(new Error('Video setup timeout - camera may not be responding'));
+        }, 10000);
+
+        // Handle successful video load
+        const onLoadedData = () => {
+          clearTimeout(timeoutId);
+          logToConsole('Video data loaded successfully', {
+            width: video.videoWidth,
+            height: video.videoHeight,
+            readyState: video.readyState
+          });
+          
+          if (video.videoWidth === 0 || video.videoHeight === 0) {
+            const error = 'Invalid video dimensions - camera may not be working';
+            logToConsole(error);
+            reject(new Error(error));
+            return;
+          }
+          
+          video.removeEventListener('loadeddata', onLoadedData);
+          video.removeEventListener('error', onVideoError);
+          resolve();
+        };
+
+        // Handle video errors
+        const onVideoError = (event: Event) => {
+          clearTimeout(timeoutId);
+          const error = 'Video playback failed';
+          logToConsole(error, event);
+          video.removeEventListener('loadeddata', onLoadedData);
+          video.removeEventListener('error', onVideoError);
           reject(new Error(error));
-          return;
-        }
-        
-        video.removeEventListener('loadeddata', onLoadedData);
-        video.removeEventListener('error', onVideoError);
-        resolve();
-      };
+        };
 
-      // Handle video errors
-      const onVideoError = (event: Event) => {
-        clearTimeout(timeoutId);
-        const error = 'Video playback failed';
-        logToConsole(error, event);
-        video.removeEventListener('loadeddata', onLoadedData);
-        video.removeEventListener('error', onVideoError);
-        reject(new Error(error));
-      };
+        video.addEventListener('loadeddata', onLoadedData);
+        video.addEventListener('error', onVideoError);
 
-      video.addEventListener('loadeddata', onLoadedData);
-      video.addEventListener('error', onVideoError);
-
-      // Start playing the video
-      video.play().catch((playError) => {
-        clearTimeout(timeoutId);
-        logToConsole('Video play failed', playError);
-        video.removeEventListener('loadeddata', onLoadedData);
-        video.removeEventListener('error', onVideoError);
-        reject(new Error('Video play failed: ' + playError.message));
-      });
+        // Start playing the video
+        video.play().catch((playError) => {
+          clearTimeout(timeoutId);
+          logToConsole('Video play failed', playError);
+          video.removeEventListener('loadeddata', onLoadedData);
+          video.removeEventListener('error', onVideoError);
+          reject(new Error('Video play failed: ' + playError.message));
+        });
+      } catch (error) {
+        logToConsole('Video element setup failed', error);
+        reject(error);
+      }
     });
   };
 
@@ -221,12 +249,9 @@ export const useCameraSetup = () => {
   const testModelWithVideo = async (model: faceLandmarksDetection.FaceLandmarksDetector): Promise<void> => {
     logToConsole('Testing face detection with video...');
     
-    if (!videoRef.current) {
-      throw new Error('Video not ready for testing');
-    }
-    
     try {
-      const video = videoRef.current;
+      // Wait for video element to be available
+      const video = await waitForVideoElement();
       
       // Wait a moment for video to be fully ready
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -248,28 +273,20 @@ export const useCameraSetup = () => {
     }
   };
 
-  const startCamera = useCallback(async () => {
-    logToConsole('=== Starting camera setup process ===');
+  const performCameraSetup = async (attemptNumber: number) => {
+    logToConsole(`=== Starting camera setup process (Attempt ${attemptNumber}/${maxRetries}) ===`);
     
     if (!checkCameraSupport()) {
-      setState(prev => ({ 
-        ...prev, 
-        error: 'Camera not supported in this browser',
-        status: '❌ Camera not supported' 
-      }));
-      return;
+      throw new Error('Camera not supported in this browser');
     }
 
-    const currentRetry = state.retryCount + 1;
-    logToConsole(`Starting attempt ${currentRetry}/${maxRetries}`);
-    
     try {
       // Clear any previous errors
       setState(prev => ({ 
         ...prev, 
         error: null,
-        retryCount: currentRetry,
-        status: `Step 1/5: Requesting camera access... (Attempt ${currentRetry}/${maxRetries})`
+        retryCount: attemptNumber,
+        status: `Step 1/5: Requesting camera access... (Attempt ${attemptNumber}/${maxRetries})`
       }));
 
       // Step 1: Get camera stream
@@ -326,8 +343,18 @@ export const useCameraSetup = () => {
 
     } catch (error: any) {
       const errorMessage = error.message || 'Unknown camera error';
-      logToConsole(`Camera setup failed on attempt ${currentRetry}:`, error);
-      
+      logToConsole(`Camera setup failed on attempt ${attemptNumber}:`, error);
+      throw new Error(errorMessage);
+    }
+  };
+
+  const startCamera = useCallback(async () => {
+    const currentRetry = state.retryCount + 1;
+    
+    try {
+      await performCameraSetup(currentRetry);
+    } catch (error: any) {
+      const errorMessage = error.message || 'Unknown camera error';
       setState(prev => ({ ...prev, error: errorMessage }));
 
       // Retry logic
@@ -356,7 +383,7 @@ export const useCameraSetup = () => {
         });
       }
     }
-  }, [state.retryCount]);
+  }, []); // Remove dependency on state.retryCount to prevent recreation
 
   const stopCamera = useCallback(() => {
     logToConsole('Stopping camera...');
