@@ -173,5 +173,16 @@ export const compatibilityQuestions: QuestionData[] = [
       "Hybrid approach—basic plan with room for fun detours",
       "Thoughtful gestures matter more than agendas (flowers, notes, songs)"
     ]
+  },
+  {
+    id: 16,
+    question: "What is your sexual orientation?",
+    options: [
+      "Straight",
+      "Gay",
+      "Bisexual",
+      "Transgender",
+      "Prefer not to say"
+    ]
   }
 ];

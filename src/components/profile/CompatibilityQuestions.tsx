@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Brain, Save } from 'lucide-react';
+import { Brain, Save, Heart } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { compatibilityQuestions } from '@/data/compatibilityQuestions';
@@ -33,6 +33,19 @@ const CompatibilityQuestions = ({
             <h3 className="font-semibold text-blue-800">AI Compatibility Matching</h3>
             <p className="text-sm text-blue-600">
               Answer these questions to improve your match accuracy and find deeper connections
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Professional Statement */}
+      <div className="p-6 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+        <div className="flex items-start gap-4">
+          <Heart className="h-6 w-6 text-purple-600 flex-shrink-0 mt-1" />
+          <div>
+            <h3 className="font-semibold text-purple-800 mb-2">Maximize Your Match Potential</h3>
+            <p className="text-purple-700 leading-relaxed">
+              The more thoughtfully and authentically you respond to these questions, the more precisely our AI can identify your ideal match. Detailed, honest answers unlock deeper compatibility insights and connect you with someone who truly aligns with your values and relationship goals.
             </p>
           </div>
         </div>
