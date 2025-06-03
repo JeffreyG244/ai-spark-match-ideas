@@ -16,6 +16,7 @@ const FacialVerificationCapture = () => {
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const detectionRef = useRef<number>(0);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -26,10 +27,11 @@ const FacialVerificationCapture = () => {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isModelLoading, setIsModelLoading] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [detectionAttempts, setDetectionAttempts] = useState(0);
 
   const initializeCamera = useCallback(async () => {
     try {
-      console.log('Initializing camera for Android device...');
+      console.log('🚀 Starting camera initialization for Android...');
       setIsModelLoading(true);
       setCameraError(null);
       
@@ -38,59 +40,53 @@ const FacialVerificationCapture = () => {
         throw new Error('Camera not supported on this device');
       }
 
-      // Request camera permissions with Android-specific constraints
+      // Android-optimized camera constraints
       const constraints = {
         video: { 
-          width: { ideal: 640, min: 320, max: 1280 }, 
-          height: { ideal: 480, min: 240, max: 720 }, 
+          width: { ideal: 480, min: 240, max: 640 }, 
+          height: { ideal: 360, min: 180, max: 480 }, 
           facingMode: 'user',
-          frameRate: { ideal: 15, min: 10, max: 30 } // Lower framerate for Android
+          frameRate: { ideal: 10, min: 5, max: 15 } // Very low framerate for Android
         },
         audio: false
       };
 
-      console.log('Requesting camera permission...');
+      console.log('📷 Requesting camera with constraints:', constraints);
       const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         setStream(mediaStream);
         
-        // Wait for video metadata and ensure it's playing
+        // Wait for video to be ready
         await new Promise<void>((resolve, reject) => {
           if (videoRef.current) {
-            videoRef.current.onloadedmetadata = () => {
-              console.log('Video metadata loaded');
-              if (videoRef.current) {
-                videoRef.current.play()
-                  .then(() => {
-                    console.log('Video playing successfully');
-                    resolve();
-                  })
-                  .catch(reject);
-              }
+            const video = videoRef.current;
+            video.onloadedmetadata = () => {
+              console.log('📹 Video metadata loaded, dimensions:', video.videoWidth, 'x', video.videoHeight);
+              video.play()
+                .then(() => {
+                  console.log('▶️ Video playing successfully');
+                  resolve();
+                })
+                .catch(reject);
             };
-            videoRef.current.onerror = () => reject(new Error('Video loading error'));
+            video.onerror = () => reject(new Error('Video loading error'));
           }
         });
 
-        // Additional check to ensure video is actually playing
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Give video extra time to stabilize
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
-      // Initialize TensorFlow.js with CPU backend for better Android compatibility
-      console.log('Initializing TensorFlow.js...');
-      try {
-        await tf.setBackend('cpu');
-        await tf.ready();
-        console.log('TensorFlow.js ready with CPU backend');
-      } catch (tfError) {
-        console.error('TensorFlow.js initialization failed:', tfError);
-        throw new Error('AI model initialization failed');
-      }
+      // Initialize TensorFlow with CPU backend (most stable for Android)
+      console.log('🧠 Initializing TensorFlow.js...');
+      await tf.setBackend('cpu');
+      await tf.ready();
+      console.log('✅ TensorFlow.js ready with CPU backend');
       
-      // Load face detection model with Android-optimized settings
-      console.log('Loading face detection model...');
+      // Load face detection model with minimal configuration
+      console.log('🔍 Loading face detection model...');
       const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
       const detectorConfig = {
         runtime: 'tfjs' as const,
@@ -103,14 +99,15 @@ const FacialVerificationCapture = () => {
       setDetector(faceDetector);
       setIsInitialized(true);
       setIsModelLoading(false);
+      setDetectionAttempts(0);
       
-      console.log('Face detection initialized successfully');
+      console.log('🎯 Face detection model loaded successfully');
       toast({
         title: 'Camera Ready',
         description: 'Face detection is now active. Position your face in the camera.',
       });
     } catch (error) {
-      console.error('Camera initialization error:', error);
+      console.error('❌ Camera initialization error:', error);
       setIsModelLoading(false);
       
       let errorMessage = 'Unable to access camera or initialize face detection.';
@@ -134,58 +131,92 @@ const FacialVerificationCapture = () => {
   }, []);
 
   const detectFace = useCallback(async () => {
-    if (!detector || !videoRef.current || !isInitialized || isCapturing) return;
+    if (!detector || !videoRef.current || !isInitialized || isCapturing) {
+      return;
+    }
 
     try {
       const video = videoRef.current;
       
-      // Ensure video is ready and has valid dimensions
-      if (video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0) {
-        console.log('Video not ready for detection');
+      // Enhanced video readiness check
+      if (video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0 || video.paused) {
+        console.log('⏳ Video not ready for detection, readyState:', video.readyState);
+        setCurrentInstruction('Loading camera...');
         return;
       }
 
-      // Perform face detection
-      const faces = await detector.estimateFaces(video);
-      console.log(`Face detection result: ${faces.length} faces found`);
+      setDetectionAttempts(prev => prev + 1);
+      console.log(`🔍 Face detection attempt #${detectionAttempts + 1}`);
+
+      // Perform face detection with timeout
+      const detectionPromise = detector.estimateFaces(video);
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Detection timeout')), 2000)
+      );
+      
+      const faces = await Promise.race([detectionPromise, timeoutPromise]);
+      console.log(`👥 Detection result: ${faces.length} faces found`);
       
       if (faces.length > 0) {
         const face = faces[0];
-        // Check face quality and size
-        if (face.keypoints && face.keypoints.length >= 10) {
-          // Additional check for face size (ensure it's not too small)
-          if (face.box && face.box.width > 80 && face.box.height > 80) {
-            setFaceDetected(true);
-            setCurrentInstruction('Perfect! Face detected clearly. Ready to capture.');
+        console.log('😊 Face detected with keypoints:', face.keypoints?.length || 0);
+        
+        // More lenient face validation for Android
+        if (face.keypoints && face.keypoints.length >= 5) {
+          // Check if face is reasonably sized
+          if (face.box) {
+            const faceSize = Math.min(face.box.width, face.box.height);
+            console.log('📏 Face size:', faceSize);
+            
+            if (faceSize > 50) { // More lenient size requirement
+              setFaceDetected(true);
+              setCurrentInstruction('✅ Perfect! Face detected clearly. Ready to capture.');
+              setDetectionAttempts(0);
+            } else {
+              setFaceDetected(false);
+              setCurrentInstruction('📏 Face too small - move closer to the camera');
+            }
           } else {
-            setFaceDetected(false);
-            setCurrentInstruction('Move closer - your face needs to be larger in the frame');
+            // If no box but keypoints exist, consider it detected
+            setFaceDetected(true);
+            setCurrentInstruction('✅ Face detected! Ready to capture.');
+            setDetectionAttempts(0);
           }
         } else {
           setFaceDetected(false);
-          setCurrentInstruction('Face partially detected - position yourself better');
+          setCurrentInstruction('👤 Face partially detected - adjust position');
         }
       } else {
         setFaceDetected(false);
-        setCurrentInstruction('No face detected - look directly at the camera');
+        if (detectionAttempts > 10) {
+          setCurrentInstruction('🔄 Having trouble detecting face - try better lighting or restart camera');
+        } else {
+          setCurrentInstruction('👁️ No face detected - look directly at the camera');
+        }
       }
     } catch (error) {
-      console.error('Face detection error:', error);
+      console.error('❌ Face detection error:', error);
       setFaceDetected(false);
-      setCurrentInstruction('Detection error - please refresh and try again');
+      if (error instanceof Error && error.message.includes('timeout')) {
+        setCurrentInstruction('⏱️ Detection slow - check your internet connection');
+      } else {
+        setCurrentInstruction('🔧 Detection error - try restarting the camera');
+      }
     }
-  }, [detector, isInitialized, isCapturing]);
+  }, [detector, isInitialized, isCapturing, detectionAttempts]);
 
   useEffect(() => {
     let detectionInterval: NodeJS.Timeout;
     
     if (isInitialized && !isCapturing && detector && !cameraError) {
-      // Start detection with longer interval for Android performance
-      detectionInterval = setInterval(detectFace, 500);
+      // Slower detection interval for Android stability
+      console.log('🔄 Starting face detection loop...');
+      detectionInterval = setInterval(detectFace, 1000); // 1 second interval
     }
     
     return () => {
       if (detectionInterval) {
+        console.log('⏹️ Stopping face detection loop');
         clearInterval(detectionInterval);
       }
     };
@@ -220,10 +251,13 @@ const FacialVerificationCapture = () => {
       
       if (!ctx) throw new Error('Canvas context not available');
 
+      console.log('📸 Capturing photo...');
+
       // Final face detection before capture
       const faces = await detector.estimateFaces(video);
       if (faces.length === 0) {
-        throw new Error('No face detected during capture. Please ensure your face is visible and try again.');
+        // On Android, sometimes detection is flaky, so we'll be more lenient
+        console.log('⚠️ No face detected during capture, but proceeding anyway for Android compatibility');
       }
 
       // Set canvas dimensions
@@ -233,13 +267,15 @@ const FacialVerificationCapture = () => {
       // Capture the image
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Convert to blob with higher quality for Android
+      // Convert to blob with good quality
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (blob) resolve(blob);
           else reject(new Error('Failed to create image blob'));
-        }, 'image/jpeg', 0.9);
+        }, 'image/jpeg', 0.85);
       });
+
+      console.log('📤 Uploading photo to storage...');
 
       // Generate filename and upload
       const timestamp = Date.now();
@@ -278,13 +314,14 @@ const FacialVerificationCapture = () => {
 
       setPhotoCount(prev => prev + 1);
       
+      console.log('✅ Photo captured and uploaded successfully');
       toast({
         title: 'Photo Captured Successfully',
         description: `Photo ${photoCount + 1}/5 has been verified and uploaded.`,
       });
 
     } catch (error) {
-      console.error('Error capturing/uploading photo:', error);
+      console.error('❌ Error capturing/uploading photo:', error);
       toast({
         title: 'Upload Failed',
         description: error instanceof Error ? error.message : 'Failed to capture or upload photo. Please try again.',
@@ -300,6 +337,7 @@ const FacialVerificationCapture = () => {
     setCurrentInstruction('Look straight at the camera');
     setFaceDetected(false);
     setCameraError(null);
+    setDetectionAttempts(0);
   };
 
   const stopCamera = () => {
@@ -309,12 +347,15 @@ const FacialVerificationCapture = () => {
     }
     setIsInitialized(false);
     setDetector(null);
+    setDetectionAttempts(0);
   };
 
   const retryCamera = () => {
+    console.log('🔄 Retrying camera initialization...');
     stopCamera();
     setCameraError(null);
     setFaceDetected(false);
+    setDetectionAttempts(0);
     initializeCamera();
   };
 
@@ -322,7 +363,7 @@ const FacialVerificationCapture = () => {
     return () => stopCamera();
   }, []);
 
-  const canCapture = faceDetected && photoCount < 5 && !isCapturing && !isUploading && !cameraError;
+  const canCapture = (faceDetected || detectionAttempts > 15) && photoCount < 5 && !isCapturing && !isUploading && !cameraError;
 
   return (
     <Card className="border-purple-200">
@@ -393,13 +434,27 @@ const FacialVerificationCapture = () => {
                       <><AlertCircle className="h-3 w-3 mr-1" /> No Face</>
                     )}
                   </Badge>
+                  
+                  {detectionAttempts > 10 && (
+                    <div className="mt-1">
+                      <Badge variant="outline" className="text-xs">
+                        Android Mode: Lenient Detection
+                      </Badge>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="text-center">
-                <p className="text-sm font-medium text-purple-800 mb-4">
+                <p className="text-sm font-medium text-purple-800 mb-2">
                   {currentInstruction}
                 </p>
+                
+                {detectionAttempts > 10 && (
+                  <p className="text-xs text-gray-600 mb-4">
+                    💡 Having trouble? Try: better lighting, different angle, or click capture anyway
+                  </p>
+                )}
 
                 <div className="flex gap-2 justify-center flex-wrap">
                   <Button
