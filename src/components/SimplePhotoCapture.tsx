@@ -14,6 +14,7 @@ const SimplePhotoCapture = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [cameraStarted, setCameraStarted] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [isStartingCamera, setIsStartingCamera] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const maxPhotos = 5;
 
@@ -21,21 +22,58 @@ const SimplePhotoCapture = () => {
   useEffect(() => {
     return () => {
       if (stream) {
+        console.log('🧹 Cleaning up camera stream on unmount');
         stream.getTracks().forEach(track => track.stop());
       }
     };
   }, [stream]);
 
-  // Start camera with proper error handling
+  // Wait for video element to be ready
+  const waitForVideoElement = (): Promise<HTMLVideoElement> => {
+    return new Promise((resolve, reject) => {
+      const checkVideo = () => {
+        if (videoRef.current) {
+          console.log('✅ Video element found');
+          resolve(videoRef.current);
+        } else {
+          console.log('⏳ Waiting for video element...');
+          setTimeout(checkVideo, 100);
+        }
+      };
+      
+      // Start checking immediately
+      checkVideo();
+      
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        reject(new Error('Video element not available after 5 seconds'));
+      }, 5000);
+    });
+  };
+
+  // Start camera with proper error handling and timing
   const startCamera = async () => {
+    if (isStartingCamera) {
+      console.log('⚠️ Camera start already in progress');
+      return;
+    }
+
+    setIsStartingCamera(true);
+    
     try {
-      console.log('🎥 Starting camera...');
+      console.log('🎥 Starting camera process...');
       
       // Check if camera is supported
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('Camera not supported in this browser');
       }
 
+      // Step 1: Wait for video element to be available
+      console.log('🔍 Waiting for video element...');
+      const video = await waitForVideoElement();
+      
+      // Step 2: Request camera permission and get stream
+      console.log('🎥 Requesting camera access...');
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           width: { ideal: 640 },
@@ -47,54 +85,100 @@ const SimplePhotoCapture = () => {
       console.log('✅ Camera stream obtained');
       setStream(mediaStream);
 
-      // Wait for video element to be ready
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        
-        // Wait for metadata to load, then play
-        videoRef.current.onloadedmetadata = () => {
-          console.log('📐 Video metadata loaded');
-          if (videoRef.current) {
-            videoRef.current.play()
-              .then(() => {
-                console.log('▶️ Video playing');
-                setCameraStarted(true);
-              })
-              .catch((playError) => {
-                console.error('❌ Video play failed:', playError);
-                toast({
-                  title: 'Video Error',
-                  description: 'Failed to start video playback.',
-                  variant: 'destructive'
-                });
-              });
-          }
+      // Step 3: Set up video element with proper event handling
+      return new Promise<void>((resolve, reject) => {
+        const cleanup = () => {
+          video.removeEventListener('loadedmetadata', onLoadedMetadata);
+          video.removeEventListener('error', onVideoError);
         };
-      } else {
-        throw new Error('Video element not available');
-      }
+
+        const onLoadedMetadata = () => {
+          console.log('📐 Video metadata loaded:', {
+            width: video.videoWidth,
+            height: video.videoHeight,
+            readyState: video.readyState
+          });
+          
+          // Play the video
+          video.play()
+            .then(() => {
+              console.log('▶️ Video playing successfully');
+              setCameraStarted(true);
+              cleanup();
+              resolve();
+            })
+            .catch((playError) => {
+              console.error('❌ Video play failed:', playError);
+              cleanup();
+              reject(new Error(`Video play failed: ${playError.message}`));
+            });
+        };
+
+        const onVideoError = (error: Event) => {
+          console.error('❌ Video error:', error);
+          cleanup();
+          reject(new Error('Video element error'));
+        };
+
+        // Add event listeners
+        video.addEventListener('loadedmetadata', onLoadedMetadata);
+        video.addEventListener('error', onVideoError);
+        
+        // Set the stream
+        video.srcObject = mediaStream;
+        
+        // Timeout fallback
+        setTimeout(() => {
+          if (!cameraStarted) {
+            cleanup();
+            reject(new Error('Video setup timeout'));
+          }
+        }, 10000);
+      });
 
     } catch (err: any) {
-      console.error('❌ Camera error:', err);
+      console.error('❌ Camera setup error:', err);
+      
+      // Clean up stream if it was created
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
+      
       toast({
         title: 'Camera Error',
-        description: err.message || 'Camera access is required to take profile photos.',
+        description: err.message || 'Failed to access camera. Please check permissions.',
         variant: 'destructive'
       });
+    } finally {
+      setIsStartingCamera(false);
     }
   };
 
-  // Stop camera
+  // Stop camera with proper cleanup
   const stopCamera = () => {
+    console.log('🛑 Stopping camera...');
+    
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach(track => {
+        track.stop();
+        console.log('🔇 Stopped track:', track.kind);
+      });
       setStream(null);
     }
+    
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+      // Remove any lingering event listeners
+      videoRef.current.removeEventListener('loadedmetadata', () => {});
+      videoRef.current.removeEventListener('error', () => {});
+    }
+    
     setCameraStarted(false);
-    console.log('🛑 Camera stopped');
+    console.log('✅ Camera stopped successfully');
   };
 
-  // Take photo function with improved error handling
+  // Take photo function with improved validation and error handling
   const takePhoto = async () => {
     if (photoCount >= maxPhotos) {
       toast({
@@ -105,7 +189,12 @@ const SimplePhotoCapture = () => {
       return;
     }
 
-    if (!videoRef.current || !user) {
+    if (!videoRef.current || !user || !stream) {
+      console.error('❌ Prerequisites not met:', {
+        hasVideo: !!videoRef.current,
+        hasUser: !!user,
+        hasStream: !!stream
+      });
       toast({
         title: 'Error',
         description: 'Camera not ready or user not authenticated.',
@@ -119,12 +208,19 @@ const SimplePhotoCapture = () => {
     try {
       const video = videoRef.current;
       
-      // Validate video dimensions
+      // Validate video state
+      if (video.readyState < 2) {
+        throw new Error('Video not ready - insufficient metadata');
+      }
+      
       if (video.videoWidth === 0 || video.videoHeight === 0) {
-        throw new Error('Video not ready - invalid dimensions');
+        throw new Error('Invalid video dimensions');
       }
 
-      console.log(`📸 Taking photo ${photoCount + 1}...`);
+      console.log(`📸 Taking photo ${photoCount + 1}...`, {
+        videoSize: `${video.videoWidth}x${video.videoHeight}`,
+        readyState: video.readyState
+      });
       
       // Create canvas and capture frame
       const canvas = document.createElement('canvas');
@@ -133,36 +229,37 @@ const SimplePhotoCapture = () => {
 
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        throw new Error('Canvas context not available');
+        throw new Error('Cannot get canvas 2D context');
       }
       
       ctx.drawImage(video, 0, 0);
 
-      // Compress the image by resizing
+      // Compress the image
       const resizedCanvas = document.createElement('canvas');
-      const scale = 0.4; // Compress size ~40%
+      const scale = 0.4;
       resizedCanvas.width = canvas.width * scale;
       resizedCanvas.height = canvas.height * scale;
 
       const resizedCtx = resizedCanvas.getContext('2d');
       if (!resizedCtx) {
-        throw new Error('Resized canvas context not available');
+        throw new Error('Cannot get resized canvas 2D context');
       }
       
       resizedCtx.drawImage(canvas, 0, 0, resizedCanvas.width, resizedCanvas.height);
 
-      // Convert to blob for upload
+      // Convert to blob
       const blob = await new Promise<Blob>((resolve, reject) => {
         resizedCanvas.toBlob(
           (blob) => {
             if (blob) {
+              console.log('📷 Photo blob created:', { size: blob.size, type: blob.type });
               resolve(blob);
             } else {
-              reject(new Error('Failed to create blob'));
+              reject(new Error('Failed to create image blob'));
             }
           },
           'image/jpeg',
-          0.8 // 80% quality
+          0.8
         );
       });
 
@@ -181,7 +278,7 @@ const SimplePhotoCapture = () => {
 
       if (uploadError) {
         console.error('❌ Upload error:', uploadError);
-        throw uploadError;
+        throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
       // Get public URL
@@ -189,9 +286,9 @@ const SimplePhotoCapture = () => {
         .from('profile-photos')
         .getPublicUrl(filename);
 
-      console.log('🔗 Public URL:', publicUrl);
+      console.log('🔗 Public URL generated:', publicUrl);
 
-      // Update user profile with new photo
+      // Update user profile
       const { data: currentProfile } = await supabase
         .from('user_profiles')
         .select('photos')
@@ -212,24 +309,24 @@ const SimplePhotoCapture = () => {
 
       if (updateError) {
         console.error('❌ Profile update error:', updateError);
-        throw updateError;
+        throw new Error(`Profile update failed: ${updateError.message}`);
       }
 
       // Update local state
       setPhotos(updatedPhotos);
       setPhotoCount(photoCount + 1);
       
-      console.log('✅ Photo uploaded successfully');
+      console.log('✅ Photo captured and uploaded successfully');
       toast({
         title: 'Photo Captured!',
         description: `Photo ${photoCount + 1}/5 uploaded successfully.`,
       });
 
     } catch (error: any) {
-      console.error('💥 Upload failed:', error);
+      console.error('💥 Photo capture failed:', error);
       toast({
         title: 'Upload Failed',
-        description: error.message || 'Failed to upload photo.',
+        description: error.message || 'Failed to capture or upload photo.',
         variant: 'destructive'
       });
     } finally {
@@ -252,7 +349,7 @@ const SimplePhotoCapture = () => {
         })
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      if (error) throw new Error(`Remove failed: ${error.message}`);
 
       setPhotos(updatedPhotos);
       setPhotoCount(updatedPhotos.length);
@@ -266,7 +363,7 @@ const SimplePhotoCapture = () => {
       console.error('❌ Remove photo error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to remove photo.',
+        description: error.message || 'Failed to remove photo.',
         variant: 'destructive'
       });
     }
@@ -287,6 +384,7 @@ const SimplePhotoCapture = () => {
         if (data?.photos) {
           setPhotos(data.photos);
           setPhotoCount(data.photos.length);
+          console.log('📂 Loaded existing photos:', data.photos.length);
         }
       } catch (error) {
         console.error('❌ Error loading photos:', error);
@@ -311,12 +409,18 @@ const SimplePhotoCapture = () => {
           <div className="text-center space-y-4">
             <Button 
               onClick={startCamera}
+              disabled={isStartingCamera}
               className="bg-purple-600 hover:bg-purple-700"
               size="lg"
             >
               <Camera className="h-4 w-4 mr-2" />
-              Start Camera
+              {isStartingCamera ? 'Starting Camera...' : 'Start Camera'}
             </Button>
+            {isStartingCamera && (
+              <p className="text-sm text-gray-600">
+                Please allow camera access when prompted
+              </p>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
