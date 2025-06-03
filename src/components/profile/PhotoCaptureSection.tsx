@@ -1,24 +1,28 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, RotateCcw } from 'lucide-react';
+import { Upload, RotateCcw, Camera, Bug } from 'lucide-react';
 
-interface CameraControlsProps {
+interface PhotoCaptureSectionProps {
   canCapture: boolean;
   isUploading: boolean;
+  photoCount: number;
+  detectionAttempts: number;
   onCapture: () => void;
   onReset: () => void;
-  onRestart: () => void;
-  detectionAttempts: number;
+  onStop: () => void;
+  onShowTestMode: () => void;
 }
 
-const CameraControls: React.FC<CameraControlsProps> = ({
+const PhotoCaptureSection: React.FC<PhotoCaptureSectionProps> = ({
   canCapture,
   isUploading,
+  photoCount,
+  detectionAttempts,
   onCapture,
   onReset,
-  onRestart,
-  detectionAttempts
+  onStop,
+  onShowTestMode
 }) => {
   return (
     <div className="text-center">
@@ -52,13 +56,32 @@ const CameraControls: React.FC<CameraControlsProps> = ({
           Reset
         </Button>
 
-        <Button variant="outline" onClick={onRestart}>
+        <Button variant="outline" onClick={onStop}>
           <Camera className="h-4 w-4 mr-2" />
-          Restart Camera
+          Stop Camera
+        </Button>
+      </div>
+
+      {photoCount > 0 && (
+        <div className="mt-4 text-center">
+          <p className="text-sm text-green-700">
+            {photoCount}/5 verified photos uploaded successfully
+          </p>
+        </div>
+      )}
+      
+      <div className="text-center mt-4">
+        <Button 
+          onClick={onShowTestMode}
+          variant="ghost"
+          size="sm"
+        >
+          <Bug className="h-4 w-4 mr-2" />
+          Debug Test Mode
         </Button>
       </div>
     </div>
   );
 };
 
-export default CameraControls;
+export default PhotoCaptureSection;
