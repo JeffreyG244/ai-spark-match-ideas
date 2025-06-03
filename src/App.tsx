@@ -8,6 +8,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import AuthGuard from "./components/auth/AuthGuard";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import Messages from "./pages/Messages";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -42,6 +43,14 @@ const App = () => (
               element={
                 <AuthGuard requireAuth={true}>
                   <Dashboard />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/messages" 
+              element={
+                <AuthGuard requireAuth={true}>
+                  <Messages />
                 </AuthGuard>
               } 
             />
