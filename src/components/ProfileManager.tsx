@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, Brain } from 'lucide-react';
+import { User, Brain, Camera } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { compatibilityQuestions } from '@/data/compatibilityQuestions';
 import { useProfileData } from '@/hooks/useProfileData';
@@ -10,10 +10,11 @@ import { useCompatibilityAnswers } from '@/hooks/useCompatibilityAnswers';
 import ProfileHeader from './profile/ProfileHeader';
 import ProfileForm from './profile/ProfileForm';
 import CompatibilityQuestions from './profile/CompatibilityQuestions';
+import FacialVerificationCapture from './profile/FacialVerificationCapture';
 
 const ProfileManager = () => {
   const { user } = useAuth();
-  const [activeSection, setActiveSection] = useState<'profile' | 'questions'>('profile');
+  const [activeSection, setActiveSection] = useState<'profile' | 'questions' | 'photos'>('profile');
 
   const {
     profileData,
@@ -61,7 +62,7 @@ const ProfileManager = () => {
         <ProfileHeader completionPercentage={completionPercentage} />
         <CardContent>
           {/* Section Navigation */}
-          <div className="flex gap-4 mb-6">
+          <div className="flex flex-wrap gap-4 mb-6">
             <Button
               variant={activeSection === 'profile' ? 'default' : 'outline'}
               onClick={() => setActiveSection('profile')}
@@ -77,6 +78,14 @@ const ProfileManager = () => {
             >
               <Brain className="h-4 w-4" />
               Compatibility Questions ({answeredQuestions}/{totalQuestions})
+            </Button>
+            <Button
+              variant={activeSection === 'photos' ? 'default' : 'outline'}
+              onClick={() => setActiveSection('photos')}
+              className="flex items-center gap-2"
+            >
+              <Camera className="h-4 w-4" />
+              Verify Photos
             </Button>
           </div>
 
@@ -97,6 +106,10 @@ const ProfileManager = () => {
               onSaveAnswers={saveCompatibilityAnswers}
               isSaving={isSavingAnswers}
             />
+          )}
+
+          {activeSection === 'photos' && (
+            <FacialVerificationCapture />
           )}
         </CardContent>
       </Card>
