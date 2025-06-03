@@ -28,52 +28,54 @@ const SimplePhotoCapture = () => {
     };
   }, [stream]);
 
-  // Wait for video element to be ready
-  const waitForVideoElement = (): Promise<HTMLVideoElement> => {
+  // Improved video element waiting with better timing
+  const waitForVideoElement = async (): Promise<HTMLVideoElement> => {
     return new Promise((resolve, reject) => {
+      let attempts = 0;
+      const maxAttempts = 50; // 5 seconds with 100ms intervals
+      
       const checkVideo = () => {
+        attempts++;
+        console.log(`🔍 Checking for video element (attempt ${attempts}/${maxAttempts})`);
+        
         if (videoRef.current) {
-          console.log('✅ Video element found');
+          console.log('✅ Video element found successfully');
           resolve(videoRef.current);
-        } else {
-          console.log('⏳ Waiting for video element...');
-          setTimeout(checkVideo, 100);
+          return;
         }
+        
+        if (attempts >= maxAttempts) {
+          console.error('❌ Video element not found after maximum attempts');
+          reject(new Error('Video element not available - DOM not ready'));
+          return;
+        }
+        
+        setTimeout(checkVideo, 100);
       };
       
       // Start checking immediately
       checkVideo();
-      
-      // Timeout after 5 seconds
-      setTimeout(() => {
-        reject(new Error('Video element not available after 5 seconds'));
-      }, 5000);
     });
   };
 
-  // Start camera with proper error handling and timing
+  // Start camera with improved error handling and timing
   const startCamera = async () => {
     if (isStartingCamera) {
       console.log('⚠️ Camera start already in progress');
       return;
     }
 
+    console.log('🎥 Starting camera process...');
     setIsStartingCamera(true);
     
     try {
-      console.log('🎥 Starting camera process...');
-      
-      // Check if camera is supported
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      // Check browser support first
+      if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error('Camera not supported in this browser');
       }
 
-      // Step 1: Wait for video element to be available
-      console.log('🔍 Waiting for video element...');
-      const video = await waitForVideoElement();
-      
-      // Step 2: Request camera permission and get stream
-      console.log('🎥 Requesting camera access...');
+      // Request camera permission first
+      console.log('📷 Requesting camera permission...');
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           width: { ideal: 640 },
@@ -82,13 +84,37 @@ const SimplePhotoCapture = () => {
         } 
       });
       
-      console.log('✅ Camera stream obtained');
+      console.log('✅ Camera permission granted, stream obtained');
       setStream(mediaStream);
 
-      // Step 3: Set up video element with proper event handling
-      return new Promise<void>((resolve, reject) => {
+      // Wait for video element to be available
+      console.log('⏳ Waiting for video element...');
+      const video = await waitForVideoElement();
+      
+      // Set up video with proper event handling
+      await new Promise<void>((resolve, reject) => {
+        let resolved = false;
+        
+        const handleSuccess = () => {
+          if (resolved) return;
+          resolved = true;
+          console.log('✅ Video setup completed successfully');
+          setCameraStarted(true);
+          cleanup();
+          resolve();
+        };
+
+        const handleError = (error: string) => {
+          if (resolved) return;
+          resolved = true;
+          console.error('❌ Video setup failed:', error);
+          cleanup();
+          reject(new Error(error));
+        };
+
         const cleanup = () => {
           video.removeEventListener('loadedmetadata', onLoadedMetadata);
+          video.removeEventListener('canplay', onCanPlay);
           video.removeEventListener('error', onVideoError);
         };
 
@@ -98,46 +124,46 @@ const SimplePhotoCapture = () => {
             height: video.videoHeight,
             readyState: video.readyState
           });
-          
-          // Play the video
+        };
+
+        const onCanPlay = () => {
+          console.log('▶️ Video can play, starting playback...');
           video.play()
             .then(() => {
-              console.log('▶️ Video playing successfully');
-              setCameraStarted(true);
-              cleanup();
-              resolve();
+              console.log('🎬 Video playing successfully');
+              handleSuccess();
             })
             .catch((playError) => {
-              console.error('❌ Video play failed:', playError);
-              cleanup();
-              reject(new Error(`Video play failed: ${playError.message}`));
+              console.error('❌ Video play error:', playError);
+              handleError(`Video play failed: ${playError.message}`);
             });
         };
 
-        const onVideoError = (error: Event) => {
-          console.error('❌ Video error:', error);
-          cleanup();
-          reject(new Error('Video element error'));
+        const onVideoError = (event: Event) => {
+          console.error('❌ Video element error:', event);
+          handleError('Video element error occurred');
         };
 
         // Add event listeners
         video.addEventListener('loadedmetadata', onLoadedMetadata);
+        video.addEventListener('canplay', onCanPlay);
         video.addEventListener('error', onVideoError);
         
         // Set the stream
+        console.log('🔗 Connecting stream to video element...');
         video.srcObject = mediaStream;
+        video.load(); // Force load the video
         
         // Timeout fallback
         setTimeout(() => {
-          if (!cameraStarted) {
-            cleanup();
-            reject(new Error('Video setup timeout'));
+          if (!resolved) {
+            handleError('Video setup timeout - took too long to initialize');
           }
         }, 10000);
       });
 
     } catch (err: any) {
-      console.error('❌ Camera setup error:', err);
+      console.error('💥 Camera setup failed:', err);
       
       // Clean up stream if it was created
       if (stream) {
@@ -145,9 +171,18 @@ const SimplePhotoCapture = () => {
         setStream(null);
       }
       
+      let errorMessage = 'Failed to access camera';
+      if (err.name === 'NotAllowedError') {
+        errorMessage = 'Camera permission denied. Please allow camera access and try again.';
+      } else if (err.name === 'NotFoundError') {
+        errorMessage = 'No camera found. Please connect a camera and try again.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
       toast({
         title: 'Camera Error',
-        description: err.message || 'Failed to access camera. Please check permissions.',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {
@@ -169,16 +204,14 @@ const SimplePhotoCapture = () => {
     
     if (videoRef.current) {
       videoRef.current.srcObject = null;
-      // Remove any lingering event listeners
-      videoRef.current.removeEventListener('loadedmetadata', () => {});
-      videoRef.current.removeEventListener('error', () => {});
+      videoRef.current.load();
     }
     
     setCameraStarted(false);
     console.log('✅ Camera stopped successfully');
   };
 
-  // Take photo function with improved validation and error handling
+  // Take photo function with comprehensive validation
   const takePhoto = async () => {
     if (photoCount >= maxPhotos) {
       toast({
@@ -189,11 +222,12 @@ const SimplePhotoCapture = () => {
       return;
     }
 
-    if (!videoRef.current || !user || !stream) {
+    if (!videoRef.current || !user || !stream || !cameraStarted) {
       console.error('❌ Prerequisites not met:', {
         hasVideo: !!videoRef.current,
         hasUser: !!user,
-        hasStream: !!stream
+        hasStream: !!stream,
+        cameraStarted
       });
       toast({
         title: 'Error',
@@ -208,43 +242,48 @@ const SimplePhotoCapture = () => {
     try {
       const video = videoRef.current;
       
-      // Validate video state
+      // Comprehensive video validation
       if (video.readyState < 2) {
         throw new Error('Video not ready - insufficient metadata');
       }
       
       if (video.videoWidth === 0 || video.videoHeight === 0) {
-        throw new Error('Invalid video dimensions');
+        throw new Error('Invalid video dimensions - camera not properly initialized');
+      }
+
+      if (video.paused || video.ended) {
+        throw new Error('Video not playing - camera stream interrupted');
       }
 
       console.log(`📸 Taking photo ${photoCount + 1}...`, {
         videoSize: `${video.videoWidth}x${video.videoHeight}`,
-        readyState: video.readyState
+        readyState: video.readyState,
+        playing: !video.paused
       });
       
       // Create canvas and capture frame
       const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
       const ctx = canvas.getContext('2d');
+      
       if (!ctx) {
-        throw new Error('Cannot get canvas 2D context');
+        throw new Error('Cannot get canvas 2D context - browser compatibility issue');
       }
       
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0);
 
       // Compress the image
       const resizedCanvas = document.createElement('canvas');
-      const scale = 0.4;
-      resizedCanvas.width = canvas.width * scale;
-      resizedCanvas.height = canvas.height * scale;
-
       const resizedCtx = resizedCanvas.getContext('2d');
+      
       if (!resizedCtx) {
         throw new Error('Cannot get resized canvas 2D context');
       }
       
+      const scale = 0.4;
+      resizedCanvas.width = canvas.width * scale;
+      resizedCanvas.height = canvas.height * scale;
       resizedCtx.drawImage(canvas, 0, 0, resizedCanvas.width, resizedCanvas.height);
 
       // Convert to blob
