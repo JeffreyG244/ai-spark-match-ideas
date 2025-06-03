@@ -3,10 +3,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Circle } from 'lucide-react';
+import { Send, Circle, AlertTriangle } from 'lucide-react';
 import { useMessages } from '@/hooks/useMessages';
 import { usePresence } from '@/hooks/usePresence';
 import { useAuth } from '@/hooks/useAuth';
+import { sanitizeForDisplay, LIMITS } from '@/utils/security';
 
 interface ChatWindowProps {
   conversationId: string | null;
@@ -15,7 +16,7 @@ interface ChatWindowProps {
 
 const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId, otherUserId }) => {
   const { user } = useAuth();
-  const { messages, isLoading, sendMessage } = useMessages(conversationId);
+  const { messages, isLoading, isSending, sendMessage } = useMessages(conversationId);
   const { isUserOnline } = usePresence();
   const [newMessage, setNewMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -30,11 +31,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId, otherUserId }) 
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || isSending) return;
 
     await sendMessage(newMessage);
     setNewMessage('');
   };
+
+  const isMessageTooLong = newMessage.length > LIMITS.MESSAGE_MAX_LENGTH;
+  const charactersRemaining = LIMITS.MESSAGE_MAX_LENGTH - newMessage.length;
 
   if (!conversationId) {
     return (
@@ -103,7 +107,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId, otherUserId }) 
                       : 'bg-gray-200 text-gray-900'
                   }`}
                 >
-                  <p className="text-sm">{message.content}</p>
+                  <p 
+                    className="text-sm"
+                    dangerouslySetInnerHTML={{ 
+                      __html: sanitizeForDisplay(message.content) 
+                    }}
+                  />
                   <p className="text-xs mt-1 opacity-70">
                     {new Date(message.created_at).toLocaleTimeString([], {
                       hour: '2-digit',
@@ -119,16 +128,45 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId, otherUserId }) 
 
         {/* Message input */}
         <div className="border-t p-4">
-          <form onSubmit={handleSendMessage} className="flex gap-2">
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1"
-            />
-            <Button type="submit" size="icon">
-              <Send className="h-4 w-4" />
-            </Button>
+          <form onSubmit={handleSendMessage} className="space-y-2">
+            <div className="flex gap-2">
+              <div className="flex-1 relative">
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type a message..."
+                  className={`${isMessageTooLong ? 'border-red-500' : ''}`}
+                  disabled={isSending}
+                  maxLength={LIMITS.MESSAGE_MAX_LENGTH + 100} // Allow slight overflow for warning
+                />
+                {isMessageTooLong && (
+                  <AlertTriangle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-red-500" />
+                )}
+              </div>
+              <Button 
+                type="submit" 
+                size="icon" 
+                disabled={isSending || !newMessage.trim() || isMessageTooLong}
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {/* Character counter */}
+            <div className="flex justify-between text-xs text-gray-500">
+              <span></span>
+              <span className={charactersRemaining < 0 ? 'text-red-500 font-medium' : ''}>
+                {charactersRemaining} characters remaining
+              </span>
+            </div>
+            
+            {/* Warning for long messages */}
+            {isMessageTooLong && (
+              <p className="text-red-500 text-xs flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" />
+                Message is too long. Please keep it under {LIMITS.MESSAGE_MAX_LENGTH} characters.
+              </p>
+            )}
           </form>
         </div>
       </CardContent>

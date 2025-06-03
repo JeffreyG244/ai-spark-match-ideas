@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { profileSchema, ProfileData } from '@/schemas/profileValidation';
+import { sanitizeInput, logSecurityEvent } from '@/utils/security';
 
 export const useProfileData = () => {
   const { user } = useAuth();
@@ -30,6 +31,7 @@ export const useProfileData = () => {
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading profile:', error);
+        logSecurityEvent('profile_load_error', `User ${user.id}: ${error.message}`, 'medium');
         toast({
           title: 'Error Loading Profile',
           description: 'Failed to load your profile data.',
@@ -49,6 +51,7 @@ export const useProfileData = () => {
       }
     } catch (error) {
       console.error('Error loading profile:', error);
+      logSecurityEvent('profile_load_exception', `User ${user.id}: ${error}`, 'high');
     } finally {
       setIsLoading(false);
     }
@@ -60,6 +63,7 @@ export const useProfileData = () => {
       return { isValid: true, errors: [] };
     } catch (error: any) {
       const errors = error.errors?.map((e: any) => e.message) || ['Validation failed'];
+      logSecurityEvent('profile_validation_failed', `User ${user?.id}: ${errors.join(', ')}`, 'low');
       return { isValid: false, errors };
     }
   };
@@ -67,7 +71,15 @@ export const useProfileData = () => {
   const saveProfile = async () => {
     if (!user) return;
 
-    const validation = validateProfile(profileData);
+    // Sanitize all inputs
+    const sanitizedData = {
+      bio: sanitizeInput(profileData.bio),
+      values: sanitizeInput(profileData.values),
+      lifeGoals: sanitizeInput(profileData.lifeGoals),
+      greenFlags: sanitizeInput(profileData.greenFlags)
+    };
+
+    const validation = validateProfile(sanitizedData);
     if (!validation.isValid) {
       toast({
         title: 'Validation Error',
@@ -82,10 +94,10 @@ export const useProfileData = () => {
       const profilePayload = {
         user_id: user.id,
         email: user.email || '',
-        bio: profileData.bio,
-        values: profileData.values,
-        life_goals: profileData.lifeGoals,
-        green_flags: profileData.greenFlags,
+        bio: sanitizedData.bio,
+        values: sanitizedData.values,
+        life_goals: sanitizedData.lifeGoals,
+        green_flags: sanitizedData.greenFlags,
         verified: false,
         updated_at: new Date().toISOString()
       };
@@ -107,6 +119,7 @@ export const useProfileData = () => {
 
       if (result.error) {
         console.error('Error saving profile:', result.error);
+        logSecurityEvent('profile_save_error', `User ${user.id}: ${result.error.message}`, 'medium');
         toast({
           title: 'Error Saving Profile',
           description: result.error.message,
@@ -114,6 +127,8 @@ export const useProfileData = () => {
         });
       } else {
         setProfileExists(true);
+        setProfileData(sanitizedData);
+        logSecurityEvent('profile_saved', `User ${user.id} updated profile`, 'low');
         toast({
           title: 'Profile Saved Successfully',
           description: 'Your secure profile has been updated.',
@@ -121,6 +136,7 @@ export const useProfileData = () => {
       }
     } catch (error) {
       console.error('Error saving profile:', error);
+      logSecurityEvent('profile_save_exception', `User ${user.id}: ${error}`, 'high');
       toast({
         title: 'Error Saving Profile',
         description: 'An unexpected error occurred.',

@@ -125,6 +125,30 @@ export type Database = {
         }
         Relationships: []
       }
+      message_rate_limits: {
+        Row: {
+          id: string
+          last_message_at: string
+          message_count: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          id?: string
+          last_message_at?: string
+          message_count?: number
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          id?: string
+          last_message_at?: string
+          message_count?: number
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -440,6 +464,10 @@ export type Database = {
           p_algorithm?: string
         }
         Returns: undefined
+      }
+      check_message_rate_limit: {
+        Args: { p_user_id: string }
+        Returns: boolean
       }
       check_password_reuse: {
         Args: { p_user_id: string; p_new_password_hash: string }
