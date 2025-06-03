@@ -10,30 +10,21 @@ export const setupTensorflow = async (): Promise<void> => {
     console.log(`[${timestamp}] ${logLevel}: ${message}`, data || '');
   };
 
-  logToConsole('Setting up TensorFlow backend...');
+  logToConsole('🧪 SIMPLE: Setting TFJS backend to WebGL...');
   
   try {
-    try {
-      logToConsole('Attempting WebGL backend...');
-      await tf.setBackend('webgl');
-      await tf.ready();
-      logToConsole('WebGL backend ready successfully');
-    } catch (webglError) {
-      logToConsole('WebGL failed, falling back to CPU backend', webglError);
-      await tf.setBackend('cpu');
-      await tf.ready();
-      logToConsole('CPU backend ready');
-    }
-    
-    const currentBackend = tf.getBackend();
-    logToConsole('TensorFlow backend active:', currentBackend);
-    
-    if (!currentBackend) {
-      throw new Error('No TensorFlow backend available');
-    }
-    
-  } catch (error) {
-    logToConsole('TensorFlow setup completely failed', error);
-    throw new Error('AI backend initialization failed: ' + (error as Error).message);
+    await tf.setBackend('webgl');
+    await tf.ready();
+    logToConsole('✅ SIMPLE: WebGL backend ready');
+  } catch (webglError) {
+    logToConsole('⚠️ SIMPLE: WebGL failed, using CPU:', webglError);
+    await tf.setBackend('cpu');
+    await tf.ready();
+  }
+  
+  logToConsole('🔍 SIMPLE: Current backend:', tf.getBackend());
+  
+  if (!tf.getBackend()) {
+    throw new Error('No TensorFlow backend available');
   }
 };

@@ -11,7 +11,7 @@ export const loadFaceModel = async (): Promise<faceLandmarksDetection.FaceLandma
     console.log(`[${timestamp}] ${logLevel}: ${message}`, data || '');
   };
 
-  logToConsole('Loading face detection model...');
+  logToConsole('🧪 SIMPLE: Loading FaceMesh model...');
   
   try {
     const model = await faceLandmarksDetection.createDetector(
@@ -23,10 +23,10 @@ export const loadFaceModel = async (): Promise<faceLandmarksDetection.FaceLandma
       }
     );
     
-    logToConsole('Face detection model loaded successfully');
+    logToConsole('✅ SIMPLE: Model loaded successfully');
     return model;
   } catch (error) {
-    logToConsole('Face model loading failed', error);
+    logToConsole('❌ SIMPLE: Face model loading failed', error);
     throw new Error('Face detection model failed to load: ' + (error as Error).message);
   }
 };
@@ -43,26 +43,26 @@ export const testModelWithVideo = async (
     console.log(`[${timestamp}] ${logLevel}: ${message}`, data || '');
   };
 
-  logToConsole('Testing face detection with video...');
+  logToConsole('🧪 SIMPLE: Testing face detection...');
+  
+  if (!videoRef.current) {
+    throw new Error('Video element not available for testing');
+  }
+
+  // Wait a moment for video to be ready
+  await new Promise(resolve => setTimeout(resolve, 2000));
   
   try {
-    const video = await waitForVideoElement(videoRef);
-    
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const faces = await model.estimateFaces(video, {
+    const faces = await model.estimateFaces(videoRef.current, {
       flipHorizontal: false,
       staticImageMode: false
     });
     
-    logToConsole('Face detection test completed successfully', { 
-      facesFound: faces.length,
-      videoReady: video.readyState >= 2,
-      videoDimensions: `${video.videoWidth}x${video.videoHeight}`
-    });
+    logToConsole('🧪 SIMPLE: Face detection result:', faces);
+    logToConsole(`✅ SIMPLE: Test complete! Found ${faces.length} face(s)`);
     
   } catch (error) {
-    logToConsole('Face detection test failed', error);
+    logToConsole('❌ SIMPLE: Face detection test failed', error);
     throw new Error('Face detection test failed: ' + (error as Error).message);
   }
 };
