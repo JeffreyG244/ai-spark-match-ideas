@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ const ProfileManager = () => {
   useEffect(() => {
     if (user) {
       loadProfile();
+      loadCompatibilityAnswers();
     }
   }, [user]);
 
@@ -66,6 +68,29 @@ const ProfileManager = () => {
       console.error('Error loading profile:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadCompatibilityAnswers = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('compatibility_answers')
+        .select('answers')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading compatibility answers:', error);
+        return;
+      }
+
+      if (data && data.answers) {
+        setQuestionAnswers(data.answers as Record<number, string>);
+      }
+    } catch (error) {
+      console.error('Error loading compatibility answers:', error);
     }
   };
 
