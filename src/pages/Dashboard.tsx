@@ -17,8 +17,10 @@ const Dashboard = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <Heart className="h-8 w-8 text-purple-600" />
-              <h2 className="text-2xl font-bold text-purple-600">SoulSync</h2>
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+                <Heart className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">SoulSync</h2>
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
             <p className="text-gray-600">Welcome back, {user?.email}</p>
