@@ -25,73 +25,109 @@ const FacialVerificationCapture = () => {
   const [detector, setDetector] = useState<faceLandmarksDetection.FaceLandmarksDetector | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isModelLoading, setIsModelLoading] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
 
   const initializeCamera = useCallback(async () => {
     try {
-      console.log('Initializing camera and TensorFlow.js...');
+      console.log('Initializing camera for Android device...');
       setIsModelLoading(true);
+      setCameraError(null);
       
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
+      // Check if camera is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera not supported on this device');
+      }
+
+      // Request camera permissions with Android-specific constraints
+      const constraints = {
         video: { 
-          width: { ideal: 640 }, 
-          height: { ideal: 480 }, 
+          width: { ideal: 640, min: 320, max: 1280 }, 
+          height: { ideal: 480, min: 240, max: 720 }, 
           facingMode: 'user',
-          frameRate: { ideal: 30 }
-        }
-      });
+          frameRate: { ideal: 15, min: 10, max: 30 } // Lower framerate for Android
+        },
+        audio: false
+      };
+
+      console.log('Requesting camera permission...');
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         setStream(mediaStream);
         
-        // Wait for video to be ready
-        await new Promise((resolve) => {
+        // Wait for video metadata and ensure it's playing
+        await new Promise<void>((resolve, reject) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = () => {
-              videoRef.current?.play();
-              resolve(true);
+              console.log('Video metadata loaded');
+              if (videoRef.current) {
+                videoRef.current.play()
+                  .then(() => {
+                    console.log('Video playing successfully');
+                    resolve();
+                  })
+                  .catch(reject);
+              }
             };
+            videoRef.current.onerror = () => reject(new Error('Video loading error'));
           }
         });
+
+        // Additional check to ensure video is actually playing
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
-      // Initialize TensorFlow.js with better backend selection
+      // Initialize TensorFlow.js with CPU backend for better Android compatibility
+      console.log('Initializing TensorFlow.js...');
       try {
-        await tf.setBackend('webgl');
-        await tf.ready();
-        console.log('TensorFlow.js ready with WebGL backend');
-      } catch (webglError) {
-        console.warn('WebGL failed, falling back to CPU:', webglError);
         await tf.setBackend('cpu');
         await tf.ready();
         console.log('TensorFlow.js ready with CPU backend');
+      } catch (tfError) {
+        console.error('TensorFlow.js initialization failed:', tfError);
+        throw new Error('AI model initialization failed');
       }
       
-      // Load face landmarks detection model with better configuration
+      // Load face detection model with Android-optimized settings
+      console.log('Loading face detection model...');
       const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
       const detectorConfig = {
         runtime: 'tfjs' as const,
-        refineLandmarks: false, // Set to false for better performance
+        refineLandmarks: false,
         maxFaces: 1,
-        shouldLoadIrisModel: false // Disable iris for better performance
+        shouldLoadIrisModel: false
       };
       
-      console.log('Loading face detection model...');
       const faceDetector = await faceLandmarksDetection.createDetector(model, detectorConfig);
       setDetector(faceDetector);
       setIsInitialized(true);
       setIsModelLoading(false);
       
+      console.log('Face detection initialized successfully');
       toast({
-        title: 'Camera Initialized',
-        description: 'Face detection is ready. You can now capture photos.',
+        title: 'Camera Ready',
+        description: 'Face detection is now active. Position your face in the camera.',
       });
     } catch (error) {
-      console.error('Error initializing camera:', error);
+      console.error('Camera initialization error:', error);
       setIsModelLoading(false);
+      
+      let errorMessage = 'Unable to access camera or initialize face detection.';
+      if (error instanceof Error) {
+        if (error.message.includes('Permission denied') || error.name === 'NotAllowedError') {
+          errorMessage = 'Camera permission denied. Please allow camera access and try again.';
+        } else if (error.message.includes('not found') || error.name === 'NotFoundError') {
+          errorMessage = 'No camera found on this device.';
+        } else if (error.message.includes('not supported')) {
+          errorMessage = 'Camera not supported on this device.';
+        }
+      }
+      
+      setCameraError(errorMessage);
       toast({
         title: 'Camera Error',
-        description: 'Unable to access camera or initialize face detection. Please check permissions.',
+        description: errorMessage,
         variant: 'destructive'
       });
     }
@@ -101,42 +137,51 @@ const FacialVerificationCapture = () => {
     if (!detector || !videoRef.current || !isInitialized || isCapturing) return;
 
     try {
-      // Ensure video is playing and has valid dimensions
-      if (videoRef.current.readyState !== 4 || 
-          videoRef.current.videoWidth === 0 || 
-          videoRef.current.videoHeight === 0) {
+      const video = videoRef.current;
+      
+      // Ensure video is ready and has valid dimensions
+      if (video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0) {
+        console.log('Video not ready for detection');
         return;
       }
 
-      const faces = await detector.estimateFaces(videoRef.current);
+      // Perform face detection
+      const faces = await detector.estimateFaces(video);
+      console.log(`Face detection result: ${faces.length} faces found`);
       
       if (faces.length > 0) {
         const face = faces[0];
-        // Check if face has sufficient keypoints for a good detection
-        if (face.keypoints && face.keypoints.length > 10) {
-          setFaceDetected(true);
-          setCurrentInstruction('Face detected! You can now capture photos.');
+        // Check face quality and size
+        if (face.keypoints && face.keypoints.length >= 10) {
+          // Additional check for face size (ensure it's not too small)
+          if (face.box && face.box.width > 80 && face.box.height > 80) {
+            setFaceDetected(true);
+            setCurrentInstruction('Perfect! Face detected clearly. Ready to capture.');
+          } else {
+            setFaceDetected(false);
+            setCurrentInstruction('Move closer - your face needs to be larger in the frame');
+          }
         } else {
           setFaceDetected(false);
-          setCurrentInstruction('Please position your face clearly in the camera');
+          setCurrentInstruction('Face partially detected - position yourself better');
         }
       } else {
         setFaceDetected(false);
-        setCurrentInstruction('Please position your face in the camera');
+        setCurrentInstruction('No face detected - look directly at the camera');
       }
     } catch (error) {
       console.error('Face detection error:', error);
       setFaceDetected(false);
-      setCurrentInstruction('Face detection error - please try again');
+      setCurrentInstruction('Detection error - please refresh and try again');
     }
   }, [detector, isInitialized, isCapturing]);
 
   useEffect(() => {
     let detectionInterval: NodeJS.Timeout;
     
-    if (isInitialized && !isCapturing && detector) {
-      // Use a slower interval to reduce CPU usage
-      detectionInterval = setInterval(detectFace, 200);
+    if (isInitialized && !isCapturing && detector && !cameraError) {
+      // Start detection with longer interval for Android performance
+      detectionInterval = setInterval(detectFace, 500);
     }
     
     return () => {
@@ -144,7 +189,7 @@ const FacialVerificationCapture = () => {
         clearInterval(detectionInterval);
       }
     };
-  }, [detectFace, isInitialized, isCapturing, detector]);
+  }, [detectFace, isInitialized, isCapturing, detector, cameraError]);
 
   const captureAndUploadPhoto = async () => {
     if (!detector || !videoRef.current || !canvasRef.current || !user) {
@@ -175,75 +220,42 @@ const FacialVerificationCapture = () => {
       
       if (!ctx) throw new Error('Canvas context not available');
 
-      // Perform one final face detection before capture
+      // Final face detection before capture
       const faces = await detector.estimateFaces(video);
       if (faces.length === 0) {
         throw new Error('No face detected during capture. Please ensure your face is visible and try again.');
       }
 
-      const face = faces[0];
-      
-      // Set canvas to video dimensions for full capture
+      // Set canvas dimensions
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
-      // Draw the full video frame to canvas
+      // Capture the image
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // If we have face detection data, we could crop around face
-      if (face.box && face.box.width > 50 && face.box.height > 50) {
-        // Add padding around face
-        const padding = 80;
-        const cropX = Math.max(0, face.box.xMin - padding);
-        const cropY = Math.max(0, face.box.yMin - padding);
-        const cropWidth = Math.min(video.videoWidth - cropX, face.box.width + 2 * padding);
-        const cropHeight = Math.min(video.videoHeight - cropY, face.box.height + 2 * padding);
-
-        // Create a new canvas for cropped image
-        const croppedCanvas = document.createElement('canvas');
-        const croppedCtx = croppedCanvas.getContext('2d');
-        if (croppedCtx) {
-          croppedCanvas.width = cropWidth;
-          croppedCanvas.height = cropHeight;
-          
-          croppedCtx.drawImage(
-            canvas,
-            cropX, cropY, cropWidth, cropHeight,
-            0, 0, cropWidth, cropHeight
-          );
-          
-          // Use cropped canvas
-          canvas.width = cropWidth;
-          canvas.height = cropHeight;
-          ctx.drawImage(croppedCanvas, 0, 0);
-        }
-      }
-
-      // Convert to compressed JPEG blob
+      // Convert to blob with higher quality for Android
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (blob) resolve(blob);
           else reject(new Error('Failed to create image blob'));
-        }, 'image/jpeg', 0.8);
+        }, 'image/jpeg', 0.9);
       });
 
-      // Generate timestamped filename
+      // Generate filename and upload
       const timestamp = Date.now();
       const filename = `${user.id}/${timestamp}_photo_${photoCount + 1}.jpg`;
 
-      // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('profile-photos')
         .upload(filename, blob);
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Get public URL and update profile
       const { data: { publicUrl } } = supabase.storage
         .from('profile-photos')
         .getPublicUrl(filename);
 
-      // Update user profile with new photo URL
       const { data: currentProfile } = await supabase
         .from('user_profiles')
         .select('photos')
@@ -267,7 +279,7 @@ const FacialVerificationCapture = () => {
       setPhotoCount(prev => prev + 1);
       
       toast({
-        title: 'Photo Uploaded Successfully',
+        title: 'Photo Captured Successfully',
         description: `Photo ${photoCount + 1}/5 has been verified and uploaded.`,
       });
 
@@ -287,6 +299,7 @@ const FacialVerificationCapture = () => {
   const resetVerification = () => {
     setCurrentInstruction('Look straight at the camera');
     setFaceDetected(false);
+    setCameraError(null);
   };
 
   const stopCamera = () => {
@@ -294,13 +307,22 @@ const FacialVerificationCapture = () => {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
+    setIsInitialized(false);
+    setDetector(null);
+  };
+
+  const retryCamera = () => {
+    stopCamera();
+    setCameraError(null);
+    setFaceDetected(false);
+    initializeCamera();
   };
 
   useEffect(() => {
     return () => stopCamera();
   }, []);
 
-  const canCapture = faceDetected && photoCount < 5 && !isCapturing && !isUploading;
+  const canCapture = faceDetected && photoCount < 5 && !isCapturing && !isUploading && !cameraError;
 
   return (
     <Card className="border-purple-200">
@@ -311,7 +333,22 @@ const FacialVerificationCapture = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!isInitialized ? (
+        {cameraError ? (
+          <div className="text-center space-y-4">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle className="h-6 w-6 text-red-600 mx-auto mb-2" />
+              <p className="text-red-800 font-medium">Camera Error</p>
+              <p className="text-red-600 text-sm mt-1">{cameraError}</p>
+            </div>
+            <Button 
+              onClick={retryCamera}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Retry Camera
+            </Button>
+          </div>
+        ) : !isInitialized ? (
           <div className="text-center">
             <Button 
               onClick={initializeCamera} 
@@ -321,7 +358,7 @@ const FacialVerificationCapture = () => {
               {isModelLoading ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white mr-2"></div>
-                  Loading AI Model...
+                  Loading Camera & AI...
                 </>
               ) : (
                 <>
@@ -364,7 +401,7 @@ const FacialVerificationCapture = () => {
                   {currentInstruction}
                 </p>
 
-                <div className="flex gap-2 justify-center">
+                <div className="flex gap-2 justify-center flex-wrap">
                   <Button
                     onClick={captureAndUploadPhoto}
                     disabled={!canCapture}
@@ -378,7 +415,7 @@ const FacialVerificationCapture = () => {
                     ) : (
                       <>
                         <Upload className="h-4 w-4 mr-2" />
-                        Capture & Upload Photo
+                        Capture Photo
                       </>
                     )}
                   </Button>
@@ -390,13 +427,21 @@ const FacialVerificationCapture = () => {
                     <RotateCcw className="h-4 w-4 mr-2" />
                     Reset
                   </Button>
+
+                  <Button
+                    variant="outline"
+                    onClick={retryCamera}
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Restart Camera
+                  </Button>
                 </div>
               </div>
 
               {photoCount > 0 && (
-                <div className="mt-4">
+                <div className="mt-4 text-center">
                   <p className="text-sm text-green-700">
-                    {photoCount}/5 verified photos uploaded
+                    {photoCount}/5 verified photos uploaded successfully
                   </p>
                 </div>
               )}
