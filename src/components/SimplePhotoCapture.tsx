@@ -15,8 +15,19 @@ const SimplePhotoCapture = () => {
   const [cameraStarted, setCameraStarted] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isStartingCamera, setIsStartingCamera] = useState(false);
+  const [isDOMReady, setIsDOMReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const maxPhotos = 5;
+
+  // Ensure DOM is ready before any camera operations
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsDOMReady(true);
+      console.log('✅ DOM ready state confirmed');
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Cleanup camera stream on unmount
   useEffect(() => {
@@ -28,18 +39,23 @@ const SimplePhotoCapture = () => {
     };
   }, [stream]);
 
-  // Improved video element waiting with better timing
+  // Wait for video element with better DOM readiness checks
   const waitForVideoElement = async (): Promise<HTMLVideoElement> => {
     return new Promise((resolve, reject) => {
+      if (!isDOMReady) {
+        reject(new Error('DOM not ready'));
+        return;
+      }
+
       let attempts = 0;
-      const maxAttempts = 50; // 5 seconds with 100ms intervals
+      const maxAttempts = 30;
       
       const checkVideo = () => {
         attempts++;
         console.log(`🔍 Checking for video element (attempt ${attempts}/${maxAttempts})`);
         
-        if (videoRef.current) {
-          console.log('✅ Video element found successfully');
+        if (videoRef.current && document.contains(videoRef.current)) {
+          console.log('✅ Video element found and in DOM');
           resolve(videoRef.current);
           return;
         }
@@ -53,15 +69,27 @@ const SimplePhotoCapture = () => {
         setTimeout(checkVideo, 100);
       };
       
-      // Start checking immediately
-      checkVideo();
+      // Use requestAnimationFrame to ensure DOM is painted
+      requestAnimationFrame(() => {
+        setTimeout(checkVideo, 50);
+      });
     });
   };
 
-  // Start camera with improved error handling and timing
+  // Start camera with proper DOM timing
   const startCamera = async () => {
     if (isStartingCamera) {
       console.log('⚠️ Camera start already in progress');
+      return;
+    }
+
+    if (!isDOMReady) {
+      console.error('❌ DOM not ready for camera start');
+      toast({
+        title: 'Camera Error',
+        description: 'Please wait for the page to fully load and try again.',
+        variant: 'destructive'
+      });
       return;
     }
 
@@ -74,7 +102,11 @@ const SimplePhotoCapture = () => {
         throw new Error('Camera not supported in this browser');
       }
 
-      // Request camera permission first
+      // Wait for video element first, before requesting camera
+      console.log('⏳ Waiting for video element...');
+      const video = await waitForVideoElement();
+      
+      // Now request camera permission
       console.log('📷 Requesting camera permission...');
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
@@ -87,19 +119,17 @@ const SimplePhotoCapture = () => {
       console.log('✅ Camera permission granted, stream obtained');
       setStream(mediaStream);
 
-      // Wait for video element to be available
-      console.log('⏳ Waiting for video element...');
-      const video = await waitForVideoElement();
-      
-      // Set up video with proper event handling
+      // Set up video with the stream
       await new Promise<void>((resolve, reject) => {
         let resolved = false;
+        let timeoutId: NodeJS.Timeout;
         
         const handleSuccess = () => {
           if (resolved) return;
           resolved = true;
           console.log('✅ Video setup completed successfully');
           setCameraStarted(true);
+          clearTimeout(timeoutId);
           cleanup();
           resolve();
         };
@@ -108,6 +138,7 @@ const SimplePhotoCapture = () => {
           if (resolved) return;
           resolved = true;
           console.error('❌ Video setup failed:', error);
+          clearTimeout(timeoutId);
           cleanup();
           reject(new Error(error));
         };
@@ -128,20 +159,36 @@ const SimplePhotoCapture = () => {
 
         const onCanPlay = () => {
           console.log('▶️ Video can play, starting playback...');
-          video.play()
-            .then(() => {
-              console.log('🎬 Video playing successfully');
-              handleSuccess();
-            })
-            .catch((playError) => {
-              console.error('❌ Video play error:', playError);
-              handleError(`Video play failed: ${playError.message}`);
-            });
+          const playPromise = video.play();
+          
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                console.log('🎬 Video playing successfully');
+                handleSuccess();
+              })
+              .catch((playError) => {
+                console.error('❌ Video play error:', playError);
+                handleError(`Video play failed: ${playError.message}`);
+              });
+          } else {
+            // Older browsers that don't return a promise
+            setTimeout(() => {
+              if (video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2) {
+                handleSuccess();
+              } else {
+                handleError('Video failed to start playing');
+              }
+            }, 500);
+          }
         };
 
         const onVideoError = (event: Event) => {
           console.error('❌ Video element error:', event);
-          handleError('Video element error occurred');
+          const target = event.target as HTMLVideoElement;
+          const errorCode = target.error?.code;
+          const errorMessage = target.error?.message || 'Unknown video error';
+          handleError(`Video element error: ${errorMessage} (code: ${errorCode})`);
         };
 
         // Add event listeners
@@ -149,13 +196,13 @@ const SimplePhotoCapture = () => {
         video.addEventListener('canplay', onCanPlay);
         video.addEventListener('error', onVideoError);
         
-        // Set the stream
+        // Set the stream and load
         console.log('🔗 Connecting stream to video element...');
         video.srcObject = mediaStream;
-        video.load(); // Force load the video
+        video.load();
         
         // Timeout fallback
-        setTimeout(() => {
+        timeoutId = setTimeout(() => {
           if (!resolved) {
             handleError('Video setup timeout - took too long to initialize');
           }
@@ -211,7 +258,7 @@ const SimplePhotoCapture = () => {
     console.log('✅ Camera stopped successfully');
   };
 
-  // Take photo function with comprehensive validation
+  // Take photo with comprehensive validation
   const takePhoto = async () => {
     if (photoCount >= maxPhotos) {
       toast({
@@ -222,12 +269,13 @@ const SimplePhotoCapture = () => {
       return;
     }
 
-    if (!videoRef.current || !user || !stream || !cameraStarted) {
+    if (!videoRef.current || !user || !stream || !cameraStarted || !isDOMReady) {
       console.error('❌ Prerequisites not met:', {
         hasVideo: !!videoRef.current,
         hasUser: !!user,
         hasStream: !!stream,
-        cameraStarted
+        cameraStarted,
+        isDOMReady
       });
       toast({
         title: 'Error',
@@ -448,16 +496,22 @@ const SimplePhotoCapture = () => {
           <div className="text-center space-y-4">
             <Button 
               onClick={startCamera}
-              disabled={isStartingCamera}
+              disabled={isStartingCamera || !isDOMReady}
               className="bg-purple-600 hover:bg-purple-700"
               size="lg"
             >
               <Camera className="h-4 w-4 mr-2" />
-              {isStartingCamera ? 'Starting Camera...' : 'Start Camera'}
+              {isStartingCamera ? 'Starting Camera...' : 
+               !isDOMReady ? 'Loading...' : 'Start Camera'}
             </Button>
             {isStartingCamera && (
               <p className="text-sm text-gray-600">
                 Please allow camera access when prompted
+              </p>
+            )}
+            {!isDOMReady && (
+              <p className="text-sm text-gray-500">
+                Preparing camera interface...
               </p>
             )}
           </div>
