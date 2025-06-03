@@ -7,6 +7,10 @@ import { Camera, Upload, CheckCircle, AlertCircle, RotateCcw } from 'lucide-reac
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+
+// Import TensorFlow.js and face detection models
+import '@tensorflow/tfjs-backend-webgl';
+import '@tensorflow/tfjs-backend-cpu';
 import * as tf from '@tensorflow/tfjs';
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 
@@ -38,6 +42,8 @@ const FacialVerificationCapture = () => {
 
   const initializeCamera = useCallback(async () => {
     try {
+      console.log('Initializing camera and TensorFlow.js...');
+      
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { width: 640, height: 480, facingMode: 'user' }
       });
@@ -49,6 +55,7 @@ const FacialVerificationCapture = () => {
 
       // Initialize TensorFlow.js
       await tf.ready();
+      console.log('TensorFlow.js ready');
       
       // Load face landmarks detection model
       const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
@@ -57,6 +64,7 @@ const FacialVerificationCapture = () => {
         refineLandmarks: true
       };
       
+      console.log('Loading face detection model...');
       const faceDetector = await faceLandmarksDetection.createDetector(model, detectorConfig);
       setDetector(faceDetector);
       setIsInitialized(true);
@@ -85,38 +93,39 @@ const FacialVerificationCapture = () => {
         setFaceDetected(true);
         const face = faces[0];
         
-        // Get key landmarks for head pose estimation
-        const noseTip = face.keypoints.find(p => p.name === 'noseTip');
-        const leftEye = face.keypoints.find(p => p.name === 'leftEye');
-        const rightEye = face.keypoints.find(p => p.name === 'rightEye');
-        
-        if (noseTip && leftEye && rightEye) {
-          const eyeCenter = {
-            x: (leftEye.x + rightEye.x) / 2,
-            y: (leftEye.y + rightEye.y) / 2
+        // Simple head pose estimation using bounding box center vs nose tip
+        if (face.keypoints && face.keypoints.length > 0) {
+          // Get face center from bounding box
+          const faceCenter = {
+            x: face.box.xMin + face.box.width / 2,
+            y: face.box.yMin + face.box.height / 2
           };
           
-          // Calculate head movement based on nose position relative to eye center
-          const deltaX = noseTip.x - eyeCenter.x;
-          const deltaY = noseTip.y - eyeCenter.y;
+          // Find nose tip (approximate center keypoint)
+          const noseTip = face.keypoints[9]; // MediaPipe nose tip index
           
-          const threshold = 30;
-          
-          setHeadMovements(prev => ({
-            left: prev.left || deltaX < -threshold,
-            right: prev.right || deltaX > threshold,
-            up: prev.up || deltaY < -threshold,
-            down: prev.down || deltaY > threshold
-          }));
-          
-          // Update instruction based on completed movements
-          const completed = Object.values(headMovements).filter(Boolean).length;
-          if (completed === 0) setCurrentInstruction('Look straight, then move head left');
-          else if (!headMovements.left) setCurrentInstruction('Move your head left');
-          else if (!headMovements.right) setCurrentInstruction('Move your head right');
-          else if (!headMovements.up) setCurrentInstruction('Move your head up');
-          else if (!headMovements.down) setCurrentInstruction('Move your head down');
-          else setCurrentInstruction('Perfect! You can now capture photos');
+          if (noseTip) {
+            const deltaX = noseTip.x - faceCenter.x;
+            const deltaY = noseTip.y - faceCenter.y;
+            
+            const threshold = 20;
+            
+            setHeadMovements(prev => ({
+              left: prev.left || deltaX < -threshold,
+              right: prev.right || deltaX > threshold,
+              up: prev.up || deltaY < -threshold,
+              down: prev.down || deltaY > threshold
+            }));
+            
+            // Update instruction based on completed movements
+            const completed = Object.values(headMovements).filter(Boolean).length;
+            if (completed === 0) setCurrentInstruction('Look straight, then move head left');
+            else if (!headMovements.left) setCurrentInstruction('Move your head left');
+            else if (!headMovements.right) setCurrentInstruction('Move your head right');
+            else if (!headMovements.up) setCurrentInstruction('Move your head up');
+            else if (!headMovements.down) setCurrentInstruction('Move your head down');
+            else setCurrentInstruction('Perfect! You can now capture photos');
+          }
         }
       } else {
         setFaceDetected(false);
