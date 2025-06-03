@@ -82,10 +82,15 @@ export const useMessages = (conversationId: string | null) => {
   useEffect(() => {
     // Clean up previous subscription if conversation changed
     if (currentConversationId.current !== conversationId) {
+      console.log('useMessages: Conversation changed, cleaning up previous subscription');
       if (channelRef.current && isSubscribedRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-        isSubscribedRef.current = false;
+        try {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+          isSubscribedRef.current = false;
+        } catch (error) {
+          console.error('Error cleaning up previous messages channel:', error);
+        }
       }
       currentConversationId.current = conversationId;
     }
@@ -96,53 +101,71 @@ export const useMessages = (conversationId: string | null) => {
       return;
     }
 
+    console.log('useMessages: Setting up for conversation', conversationId);
     loadMessages();
 
     // Only subscribe if not already subscribed for this conversation
     if (!isSubscribedRef.current) {
-      // Subscribe to new messages
-      channelRef.current = supabase
-        .channel(`messages-${conversationId}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'conversation_messages',
-            filter: `conversation_id=eq.${conversationId}`
-          },
-          (payload) => {
-            console.log('New message:', payload);
-            setMessages(prev => [...prev, payload.new as Message]);
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'conversation_messages',
-            filter: `conversation_id=eq.${conversationId}`
-          },
-          (payload) => {
-            console.log('Message updated:', payload);
-            setMessages(prev => 
-              prev.map(msg => 
-                msg.id === payload.new.id ? payload.new as Message : msg
-              )
-            );
-          }
-        )
-        .subscribe();
-
-      isSubscribedRef.current = true;
+      try {
+        // Subscribe to new messages with unique channel name
+        const channelName = `messages-${conversationId}-${Date.now()}`;
+        channelRef.current = supabase
+          .channel(channelName)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'conversation_messages',
+              filter: `conversation_id=eq.${conversationId}`
+            },
+            (payload) => {
+              console.log('New message:', payload);
+              setMessages(prev => [...prev, payload.new as Message]);
+            }
+          )
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'conversation_messages',
+              filter: `conversation_id=eq.${conversationId}`
+            },
+            (payload) => {
+              console.log('Message updated:', payload);
+              setMessages(prev => 
+                prev.map(msg => 
+                  msg.id === payload.new.id ? payload.new as Message : msg
+                )
+              );
+            }
+          )
+          .subscribe((status, err) => {
+            if (err) {
+              console.error('Messages subscription error:', err);
+            } else {
+              console.log('Messages subscription status:', status);
+              if (status === 'SUBSCRIBED') {
+                isSubscribedRef.current = true;
+              }
+            }
+          });
+      } catch (error) {
+        console.error('Error setting up messages subscription:', error);
+      }
     }
 
     return () => {
+      console.log('useMessages: Cleaning up');
       if (channelRef.current && isSubscribedRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-        isSubscribedRef.current = false;
+        try {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+          isSubscribedRef.current = false;
+        } catch (error) {
+          console.error('Error cleaning up messages channel:', error);
+        }
       }
     };
   }, [conversationId]);

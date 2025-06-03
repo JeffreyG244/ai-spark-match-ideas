@@ -83,40 +83,60 @@ export const useConversations = () => {
       return;
     }
 
+    console.log('useConversations: Setting up for user', user.id);
     loadConversations();
 
     // Only subscribe if not already subscribed
     if (!isSubscribedRef.current) {
-      // Clean up existing channel if it exists
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
+      try {
+        // Clean up existing channel if it exists
+        if (channelRef.current) {
+          console.log('useConversations: Cleaning up existing channel');
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+        }
+
+        // Subscribe to conversation changes with unique channel name
+        const channelName = `conversations-${user.id}-${Date.now()}`;
+        channelRef.current = supabase
+          .channel(channelName)
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'conversations'
+            },
+            (payload) => {
+              console.log('Conversation change:', payload);
+              loadConversations();
+            }
+          )
+          .subscribe((status, err) => {
+            if (err) {
+              console.error('Conversations subscription error:', err);
+            } else {
+              console.log('Conversations subscription status:', status);
+              if (status === 'SUBSCRIBED') {
+                isSubscribedRef.current = true;
+              }
+            }
+          });
+      } catch (error) {
+        console.error('Error setting up conversations subscription:', error);
       }
-
-      // Subscribe to conversation changes
-      channelRef.current = supabase
-        .channel('conversations-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'conversations'
-          },
-          () => {
-            loadConversations();
-          }
-        )
-        .subscribe();
-
-      isSubscribedRef.current = true;
     }
 
     return () => {
+      console.log('useConversations: Cleaning up');
       if (channelRef.current && isSubscribedRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-        isSubscribedRef.current = false;
+        try {
+          supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+          isSubscribedRef.current = false;
+        } catch (error) {
+          console.error('Error cleaning up conversations channel:', error);
+        }
       }
     };
   }, [user?.id]);
