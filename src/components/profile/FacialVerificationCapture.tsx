@@ -12,13 +12,6 @@ import { useAuth } from '@/hooks/useAuth';
 import * as tf from '@tensorflow/tfjs';
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 
-interface HeadMovement {
-  left: boolean;
-  right: boolean;
-  up: boolean;
-  down: boolean;
-}
-
 const FacialVerificationCapture = () => {
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -29,12 +22,6 @@ const FacialVerificationCapture = () => {
   const [faceDetected, setFaceDetected] = useState(false);
   const [photoCount, setPhotoCount] = useState(0);
   const [currentInstruction, setCurrentInstruction] = useState('Look straight at the camera');
-  const [headMovements, setHeadMovements] = useState<HeadMovement>({
-    left: false,
-    right: false,
-    up: false,
-    down: false
-  });
   const [detector, setDetector] = useState<faceLandmarksDetection.FaceLandmarksDetector | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
@@ -71,7 +58,7 @@ const FacialVerificationCapture = () => {
       
       toast({
         title: 'Camera Initialized',
-        description: 'Face detection is ready. Follow the instructions to capture photos.',
+        description: 'Face detection is ready. You can now capture photos.',
       });
     } catch (error) {
       console.error('Error initializing camera:', error);
@@ -91,42 +78,7 @@ const FacialVerificationCapture = () => {
       
       if (faces.length > 0) {
         setFaceDetected(true);
-        const face = faces[0];
-        
-        // Simple head pose estimation using bounding box center vs nose tip
-        if (face.keypoints && face.keypoints.length > 0) {
-          // Get face center from bounding box
-          const faceCenter = {
-            x: face.box.xMin + face.box.width / 2,
-            y: face.box.yMin + face.box.height / 2
-          };
-          
-          // Find nose tip (approximate center keypoint)
-          const noseTip = face.keypoints[9]; // MediaPipe nose tip index
-          
-          if (noseTip) {
-            const deltaX = noseTip.x - faceCenter.x;
-            const deltaY = noseTip.y - faceCenter.y;
-            
-            const threshold = 20;
-            
-            setHeadMovements(prev => ({
-              left: prev.left || deltaX < -threshold,
-              right: prev.right || deltaX > threshold,
-              up: prev.up || deltaY < -threshold,
-              down: prev.down || deltaY > threshold
-            }));
-            
-            // Update instruction based on completed movements
-            const completed = Object.values(headMovements).filter(Boolean).length;
-            if (completed === 0) setCurrentInstruction('Look straight, then move head left');
-            else if (!headMovements.left) setCurrentInstruction('Move your head left');
-            else if (!headMovements.right) setCurrentInstruction('Move your head right');
-            else if (!headMovements.up) setCurrentInstruction('Move your head up');
-            else if (!headMovements.down) setCurrentInstruction('Move your head down');
-            else setCurrentInstruction('Perfect! You can now capture photos');
-          }
-        }
+        setCurrentInstruction('Face detected! You can now capture photos.');
       } else {
         setFaceDetected(false);
         setCurrentInstruction('Please position your face in the camera');
@@ -134,7 +86,7 @@ const FacialVerificationCapture = () => {
     } catch (error) {
       console.error('Face detection error:', error);
     }
-  }, [detector, isInitialized, headMovements]);
+  }, [detector, isInitialized]);
 
   useEffect(() => {
     if (isInitialized && !isCapturing) {
@@ -148,16 +100,6 @@ const FacialVerificationCapture = () => {
       toast({
         title: 'Cannot Capture',
         description: 'Face not detected or camera not ready.',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    const allMovementsCompleted = Object.values(headMovements).every(Boolean);
-    if (!allMovementsCompleted) {
-      toast({
-        title: 'Complete Head Movements',
-        description: 'Please complete all head movements for liveness verification.',
         variant: 'destructive'
       });
       return;
@@ -272,7 +214,6 @@ const FacialVerificationCapture = () => {
   };
 
   const resetVerification = () => {
-    setHeadMovements({ left: false, right: false, up: false, down: false });
     setCurrentInstruction('Look straight at the camera');
   };
 
@@ -287,8 +228,7 @@ const FacialVerificationCapture = () => {
     return () => stopCamera();
   }, []);
 
-  const allMovementsCompleted = Object.values(headMovements).every(Boolean);
-  const canCapture = faceDetected && allMovementsCompleted && photoCount < 5;
+  const canCapture = faceDetected && photoCount < 5;
 
   return (
     <Card className="border-purple-200">
@@ -335,25 +275,9 @@ const FacialVerificationCapture = () => {
               </div>
 
               <div className="text-center">
-                <p className="text-sm font-medium text-purple-800 mb-2">
+                <p className="text-sm font-medium text-purple-800 mb-4">
                   {currentInstruction}
                 </p>
-                
-                <div className="flex justify-center gap-2 mb-4">
-                  {Object.entries(headMovements).map(([direction, completed]) => (
-                    <Badge
-                      key={direction}
-                      variant={completed ? "default" : "outline"}
-                      className={completed ? "bg-green-500" : ""}
-                    >
-                      {direction === 'left' && '←'}
-                      {direction === 'right' && '→'}
-                      {direction === 'up' && '↑'}
-                      {direction === 'down' && '↓'}
-                      {' '}{direction}
-                    </Badge>
-                  ))}
-                </div>
 
                 <div className="flex gap-2 justify-center">
                   <Button
