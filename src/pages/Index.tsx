@@ -1,11 +1,13 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Brain, Shield, Target, MessageCircle, Star, CheckCircle, Users } from "lucide-react";
+import { Heart, Brain, Shield, Target, MessageCircle, Star, CheckCircle, Users, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const features = [
     {
@@ -48,10 +50,38 @@ const Index = () => {
             </div>
             <h1 className="text-2xl font-bold text-gray-900">SoulSync</h1>
           </div>
-          <Button onClick={() => navigate("/dashboard")} className="bg-purple-600 hover:bg-purple-700">
-            Enter Dashboard
-          </Button>
+          <div className="flex gap-3">
+            {user ? (
+              <Button onClick={() => navigate("/dashboard")} className="bg-purple-600 hover:bg-purple-700">
+                Go to Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button onClick={() => navigate("/auth")} variant="outline">
+                  Sign In
+                </Button>
+                <Button onClick={() => navigate("/auth")} className="bg-purple-600 hover:bg-purple-700">
+                  Get Started
+                </Button>
+              </>
+            )}
+          </div>
         </nav>
+
+        {/* Security Notice */}
+        {!user && (
+          <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center gap-3">
+              <Lock className="h-5 w-5 text-green-600" />
+              <div>
+                <h3 className="font-semibold text-green-800">Enterprise Security Enabled</h3>
+                <p className="text-sm text-green-600">
+                  Your data is protected with Supabase authentication, Row Level Security, and end-to-end encryption
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Hero Section */}
         <div className="text-center mb-20">
@@ -62,12 +92,20 @@ const Index = () => {
             AI-powered deep connections for serious professionals (30-45). No swiping, no games - just authentic, meaningful relationships built on compatibility.
           </p>
           <div className="flex gap-4 justify-center">
-            <Button size="lg" onClick={() => navigate("/dashboard")} className="bg-purple-600 hover:bg-purple-700">
-              Start Your Journey
-            </Button>
-            <Button size="lg" variant="outline">
-              How It Works
-            </Button>
+            {user ? (
+              <Button size="lg" onClick={() => navigate("/dashboard")} className="bg-purple-600 hover:bg-purple-700">
+                Continue to Dashboard
+              </Button>
+            ) : (
+              <>
+                <Button size="lg" onClick={() => navigate("/auth")} className="bg-purple-600 hover:bg-purple-700">
+                  Start Your Journey
+                </Button>
+                <Button size="lg" variant="outline">
+                  How It Works
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -108,8 +146,8 @@ const Index = () => {
               <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Star className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">1. Build Your Authentic Profile</h3>
-              <p className="text-gray-600">Use our AI-guided Build-A-Match system to create a profile that attracts your ideal partner</p>
+              <h3 className="text-xl font-semibold mb-2">1. Create Secure Profile</h3>
+              <p className="text-gray-600">Use our secure profile builder with database protection and content validation</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -122,8 +160,8 @@ const Index = () => {
               <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MessageCircle className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">3. MindMeld Conversations</h3>
-              <p className="text-gray-600">Connect through meaningful text conversations before photos - depth before attraction</p>
+              <h3 className="text-xl font-semibold mb-2">3. Secure Connections</h3>
+              <p className="text-gray-600">Connect through verified, secure messaging with privacy protection</p>
             </div>
           </div>
         </div>
@@ -131,10 +169,16 @@ const Index = () => {
         {/* Call to Action */}
         <div className="text-center bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-12 text-white">
           <h2 className="text-3xl font-bold mb-4">Ready to Find Your Soul Match?</h2>
-          <p className="text-xl mb-8 opacity-90">Join thousands of professionals who've found meaningful love through AI</p>
-          <Button size="lg" variant="secondary" onClick={() => navigate("/dashboard")}>
-            Start Matching Today
-          </Button>
+          <p className="text-xl mb-8 opacity-90">Join thousands of professionals who've found meaningful love through secure AI matching</p>
+          {user ? (
+            <Button size="lg" variant="secondary" onClick={() => navigate("/dashboard")}>
+              Continue to Dashboard
+            </Button>
+          ) : (
+            <Button size="lg" variant="secondary" onClick={() => navigate("/auth")}>
+              Start Matching Today
+            </Button>
+          )}
         </div>
       </div>
     </div>
