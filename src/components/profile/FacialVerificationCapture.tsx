@@ -9,8 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
 // Import TensorFlow.js and face detection models
-import '@tensorflow/tfjs-backend-webgl';
-import '@tensorflow/tfjs-backend-cpu';
 import * as tf from '@tensorflow/tfjs';
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 
@@ -53,15 +51,17 @@ const FacialVerificationCapture = () => {
         setStream(mediaStream);
       }
 
-      // Initialize TensorFlow.js
+      // Initialize TensorFlow.js backends
+      await tf.setBackend('webgl');
       await tf.ready();
-      console.log('TensorFlow.js ready');
+      console.log('TensorFlow.js ready with backend:', tf.getBackend());
       
       // Load face landmarks detection model
       const model = faceLandmarksDetection.SupportedModels.MediaPipeFaceMesh;
       const detectorConfig = {
         runtime: 'tfjs' as const,
-        refineLandmarks: true
+        refineLandmarks: true,
+        maxFaces: 1
       };
       
       console.log('Loading face detection model...');
@@ -77,7 +77,7 @@ const FacialVerificationCapture = () => {
       console.error('Error initializing camera:', error);
       toast({
         title: 'Camera Error',
-        description: 'Unable to access camera. Please check permissions.',
+        description: 'Unable to access camera or initialize face detection. Please check permissions.',
         variant: 'destructive'
       });
     }
