@@ -18,33 +18,48 @@ const SimplePhotoCapture = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const maxPhotos = 5;
 
-  // Cleanup camera stream on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (stream) {
-        console.log('🧹 Cleaning up camera stream on unmount');
+        console.log('🧹 Cleaning up camera stream');
         stream.getTracks().forEach(track => track.stop());
       }
     };
   }, [stream]);
 
-  // Simple DOM-ready approach like vanilla JS
+  // Simple camera start function
   const startCamera = async () => {
     if (isStartingCamera || !user) {
-      console.log('⚠️ Camera start blocked - already starting or no user');
+      console.log('⚠️ Camera start blocked');
       return;
     }
 
-    console.log('🎥 Starting camera process...');
+    console.log('🎥 Starting camera...');
     setIsStartingCamera(true);
     
     try {
-      // Check browser support
+      // Step 1: Check browser support
       if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error('Camera not supported in this browser');
       }
 
-      // Get camera permission first
+      // Step 2: Wait for video element to exist in DOM
+      console.log('🔍 Checking for video element...');
+      let attempts = 0;
+      while (!videoRef.current && attempts < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+
+      if (!videoRef.current) {
+        throw new Error('Video element not found in DOM after waiting');
+      }
+
+      const video = videoRef.current;
+      console.log('✅ Video element found');
+
+      // Step 3: Get camera stream
       console.log('📷 Requesting camera permission...');
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
@@ -55,89 +70,40 @@ const SimplePhotoCapture = () => {
       });
       
       console.log('✅ Camera permission granted');
-
-      // Wait for video element to be ready in DOM (simple check)
-      if (!videoRef.current) {
-        throw new Error('Video element not found in DOM');
-      }
-
-      const video = videoRef.current;
       setStream(mediaStream);
 
-      // Set up video with promise-based approach
+      // Step 4: Connect stream to video element
+      console.log('🔗 Connecting stream to video...');
+      video.srcObject = mediaStream;
+
+      // Step 5: Wait for video to be ready
       await new Promise<void>((resolve, reject) => {
-        let resolved = false;
-        
-        const handleSuccess = () => {
-          if (resolved) return;
-          resolved = true;
-          console.log('✅ Video setup completed');
-          setCameraStarted(true);
-          cleanup();
-          resolve();
-        };
-
-        const handleError = (error: string) => {
-          if (resolved) return;
-          resolved = true;
-          console.error('❌ Video setup failed:', error);
-          cleanup();
-          reject(new Error(error));
-        };
-
-        const cleanup = () => {
-          video.removeEventListener('loadedmetadata', onLoadedMetadata);
-          video.removeEventListener('canplay', onCanPlay);
-          video.removeEventListener('error', onVideoError);
-        };
+        const timeout = setTimeout(() => {
+          reject(new Error('Video setup timeout'));
+        }, 10000);
 
         const onLoadedMetadata = () => {
-          console.log('📐 Video metadata loaded:', {
-            width: video.videoWidth,
-            height: video.videoHeight
-          });
-        };
-
-        const onCanPlay = () => {
-          console.log('▶️ Video ready to play');
+          console.log('📐 Video metadata loaded');
           video.play()
             .then(() => {
-              console.log('🎬 Video playing successfully');
-              handleSuccess();
+              console.log('🎬 Video playing');
+              clearTimeout(timeout);
+              setCameraStarted(true);
+              resolve();
             })
-            .catch((playError) => {
-              console.error('❌ Video play error:', playError);
-              handleError(`Video play failed: ${playError.message}`);
-            });
+            .catch(reject);
         };
 
-        const onVideoError = () => {
-          console.error('❌ Video element error');
-          handleError('Video element error occurred');
-        };
-
-        // Add event listeners
-        video.addEventListener('loadedmetadata', onLoadedMetadata);
-        video.addEventListener('canplay', onCanPlay);
-        video.addEventListener('error', onVideoError);
-        
-        // Set stream and load
-        console.log('🔗 Connecting stream to video...');
-        video.srcObject = mediaStream;
+        video.addEventListener('loadedmetadata', onLoadedMetadata, { once: true });
         video.load();
-        
-        // Timeout fallback
-        setTimeout(() => {
-          if (!resolved) {
-            handleError('Video setup timeout after 10 seconds');
-          }
-        }, 10000);
       });
+
+      console.log('✅ Camera setup complete');
 
     } catch (err: any) {
       console.error('💥 Camera setup failed:', err);
       
-      // Clean up stream if created
+      // Clean up on error
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
         setStream(null);
@@ -167,23 +133,19 @@ const SimplePhotoCapture = () => {
     console.log('🛑 Stopping camera...');
     
     if (stream) {
-      stream.getTracks().forEach(track => {
-        track.stop();
-        console.log('🔇 Stopped track:', track.kind);
-      });
+      stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
     
     if (videoRef.current) {
       videoRef.current.srcObject = null;
-      videoRef.current.load();
     }
     
     setCameraStarted(false);
     console.log('✅ Camera stopped');
   };
 
-  // Take photo
+  // Take photo with DOM safety checks
   const takePhoto = async () => {
     if (photoCount >= maxPhotos) {
       toast({
@@ -194,6 +156,7 @@ const SimplePhotoCapture = () => {
       return;
     }
 
+    // Check all required elements exist
     if (!videoRef.current || !user || !stream || !cameraStarted) {
       console.error('❌ Prerequisites not met for photo capture');
       toast({
@@ -209,14 +172,14 @@ const SimplePhotoCapture = () => {
     try {
       const video = videoRef.current;
       
-      // Check video state
-      if (video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0) {
+      // Verify video is ready
+      if (video.readyState < 2 || video.videoWidth === 0) {
         throw new Error('Video not ready for capture');
       }
 
       console.log(`📸 Taking photo ${photoCount + 1}...`);
       
-      // Create canvas and capture
+      // Create canvas for capture
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       
@@ -228,22 +191,9 @@ const SimplePhotoCapture = () => {
       canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0);
 
-      // Resize for compression
-      const resizedCanvas = document.createElement('canvas');
-      const resizedCtx = resizedCanvas.getContext('2d');
-      
-      if (!resizedCtx) {
-        throw new Error('Cannot get resized canvas context');
-      }
-      
-      const scale = 0.4;
-      resizedCanvas.width = canvas.width * scale;
-      resizedCanvas.height = canvas.height * scale;
-      resizedCtx.drawImage(canvas, 0, 0, resizedCanvas.width, resizedCanvas.height);
-
       // Convert to blob
       const blob = await new Promise<Blob>((resolve, reject) => {
-        resizedCanvas.toBlob(
+        canvas.toBlob(
           (blob) => {
             if (blob) {
               resolve(blob);
