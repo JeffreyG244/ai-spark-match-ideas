@@ -60,51 +60,6 @@ export const requestCameraPermission = async (): Promise<MediaStream> => {
   }
 };
 
-const waitForVideoElement = async (
-  videoRef: React.RefObject<HTMLVideoElement>,
-  maxWaitTime = 10000
-): Promise<HTMLVideoElement> => {
-  const isProduction = process.env.NODE_ENV === 'production';
-  
-  const logToConsole = (message: string, data?: any) => {
-    const timestamp = new Date().toISOString();
-    const logLevel = isProduction ? 'PROD' : 'DEV';
-    console.log(`[${timestamp}] ${logLevel}: ${message}`, data || '');
-  };
-
-  return new Promise((resolve, reject) => {
-    const startTime = Date.now();
-    
-    const checkElement = () => {
-      logToConsole('Checking for video element...', { 
-        hasRef: !!videoRef,
-        hasCurrent: !!videoRef.current,
-        elapsed: Date.now() - startTime
-      });
-      
-      if (videoRef.current) {
-        logToConsole('Video element found successfully', { 
-          readyState: videoRef.current.readyState,
-          width: videoRef.current.clientWidth,
-          height: videoRef.current.clientHeight
-        });
-        resolve(videoRef.current);
-        return;
-      }
-      
-      if (Date.now() - startTime > maxWaitTime) {
-        logToConsole('Video element wait timeout', { elapsed: Date.now() - startTime });
-        reject(new Error('Video element not available after waiting ' + maxWaitTime + 'ms'));
-        return;
-      }
-      
-      setTimeout(checkElement, 100);
-    };
-    
-    checkElement();
-  });
-};
-
 export const setupVideo = async (
   stream: MediaStream,
   videoRef: React.RefObject<HTMLVideoElement>
@@ -119,65 +74,73 @@ export const setupVideo = async (
 
   logToConsole('Setting up video element...');
   
-  try {
-    // Wait for video element to be available
-    logToConsole('Waiting for video element to be available...');
-    const video = await waitForVideoElement(videoRef);
-    
-    return new Promise((resolve, reject) => {
-      const timeoutId = setTimeout(() => {
-        logToConsole('Video setup timeout after 15 seconds');
-        reject(new Error('Video setup timeout - camera may not be responding'));
-      }, 15000);
+  return new Promise((resolve, reject) => {
+    const timeoutId = setTimeout(() => {
+      logToConsole('Video setup timeout after 10 seconds');
+      reject(new Error('Video setup timeout - video element not available'));
+    }, 10000);
 
-      const onLoadedData = () => {
-        clearTimeout(timeoutId);
-        logToConsole('Video data loaded successfully', {
-          width: video.videoWidth,
-          height: video.videoHeight,
-          readyState: video.readyState
+    const checkVideoElement = () => {
+      if (videoRef.current) {
+        const video = videoRef.current;
+        logToConsole('Video element found, setting up...', {
+          readyState: video.readyState,
+          width: video.clientWidth,
+          height: video.clientHeight
         });
-        
-        if (video.videoWidth === 0 || video.videoHeight === 0) {
-          const error = 'Invalid video dimensions - camera may not be working';
-          logToConsole(error);
+
+        // Set up the video source
+        video.srcObject = stream;
+
+        // Handle video metadata loaded
+        const onLoadedMetadata = () => {
+          logToConsole('Video metadata loaded', {
+            videoWidth: video.videoWidth,
+            videoHeight: video.videoHeight
+          });
+          
+          if (video.videoWidth === 0 || video.videoHeight === 0) {
+            clearTimeout(timeoutId);
+            video.removeEventListener('loadedmetadata', onLoadedMetadata);
+            video.removeEventListener('error', onVideoError);
+            reject(new Error('Invalid video dimensions - camera may not be working'));
+            return;
+          }
+          
+          clearTimeout(timeoutId);
+          video.removeEventListener('loadedmetadata', onLoadedMetadata);
+          video.removeEventListener('error', onVideoError);
+          logToConsole('Video setup completed successfully');
+          resolve();
+        };
+
+        const onVideoError = (event: Event) => {
+          clearTimeout(timeoutId);
+          const error = 'Video playback failed';
+          logToConsole(error, event);
+          video.removeEventListener('loadedmetadata', onLoadedMetadata);
+          video.removeEventListener('error', onVideoError);
           reject(new Error(error));
-          return;
-        }
-        
-        video.removeEventListener('loadeddata', onLoadedData);
-        video.removeEventListener('error', onVideoError);
-        resolve();
-      };
+        };
 
-      const onVideoError = (event: Event) => {
-        clearTimeout(timeoutId);
-        const error = 'Video playback failed';
-        logToConsole(error, event);
-        video.removeEventListener('loadeddata', onLoadedData);
-        video.removeEventListener('error', onVideoError);
-        reject(new Error(error));
-      };
+        video.addEventListener('loadedmetadata', onLoadedMetadata);
+        video.addEventListener('error', onVideoError);
 
-      video.addEventListener('loadeddata', onLoadedData);
-      video.addEventListener('error', onVideoError);
+        // Start playing the video
+        video.play().catch((playError) => {
+          clearTimeout(timeoutId);
+          logToConsole('Video play failed', playError);
+          video.removeEventListener('loadedmetadata', onLoadedMetadata);
+          video.removeEventListener('error', onVideoError);
+          reject(new Error('Video play failed: ' + playError.message));
+        });
+      } else {
+        // Video element not ready yet, check again in 100ms
+        setTimeout(checkVideoElement, 100);
+      }
+    };
 
-      // Set up the video source
-      logToConsole('Setting video srcObject...');
-      video.srcObject = stream;
-
-      // Start playing the video
-      logToConsole('Starting video playback...');
-      video.play().catch((playError) => {
-        clearTimeout(timeoutId);
-        logToConsole('Video play failed', playError);
-        video.removeEventListener('loadeddata', onLoadedData);
-        video.removeEventListener('error', onVideoError);
-        reject(new Error('Video play failed: ' + playError.message));
-      });
-    });
-  } catch (error) {
-    logToConsole('Video element setup failed', error);
-    throw error;
-  }
+    // Start checking for video element
+    checkVideoElement();
+  });
 };

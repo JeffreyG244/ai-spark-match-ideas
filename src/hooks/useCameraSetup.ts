@@ -1,4 +1,3 @@
-
 import { useState, useRef, useCallback, useEffect } from 'react';
 import * as faceLandmarksDetection from '@tensorflow-models/face-landmarks-detection';
 import { toast } from '@/hooks/use-toast';
@@ -57,10 +56,7 @@ export const useCameraSetup = () => {
         status: 'Step 2/5: Setting up video display...' 
       }));
 
-      // Small delay to ensure component has mounted and ref is available
-      logToConsole('=== STEP 2: Waiting for component mount and setting up video element ===');
-      await new Promise(resolve => setTimeout(resolve, 250));
-      
+      logToConsole('=== STEP 2: Setting up video element ===');
       await setupVideo(stream, videoRef);
       setState(prev => ({ 
         ...prev, 
