@@ -61,31 +61,18 @@ export const setupVideoStream = async (
   videoRef: React.RefObject<HTMLVideoElement>,
   constraints: CameraConstraints
 ): Promise<MediaStream> => {
-  console.log('📷 Checking camera availability...');
+  console.log('📷 Requesting camera access...');
   
   // Check if mediaDevices is supported
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw new Error('Camera not supported on this device');
   }
 
-  // Check available devices first
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const videoDevices = devices.filter(device => device.kind === 'videoinput');
-    console.log(`📹 Found ${videoDevices.length} video input devices`);
-    
-    if (videoDevices.length === 0) {
-      throw new Error('No camera devices found on this system');
-    }
-  } catch (deviceError) {
-    console.error('❌ Error checking camera devices:', deviceError);
-    throw new Error('Cannot access camera devices');
-  }
-
   console.log('📷 Requesting camera with constraints:', constraints);
   
   let mediaStream: MediaStream;
   try {
+    // Request camera permission first - this will trigger the permission dialog
     mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
     console.log('✅ Camera permission granted, stream obtained');
   } catch (permissionError) {
@@ -99,6 +86,15 @@ export const setupVideoStream = async (
     } else {
       throw new Error(`Camera error: ${permissionError.message}`);
     }
+  }
+
+  // Now check available devices AFTER getting permission
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter(device => device.kind === 'videoinput');
+    console.log(`📹 Found ${videoDevices.length} video input devices after permission granted`);
+  } catch (deviceError) {
+    console.warn('⚠️ Could not enumerate devices, but stream is working:', deviceError);
   }
   
   if (videoRef.current) {
@@ -118,7 +114,8 @@ export const setupVideoStream = async (
           video.play()
             .then(() => {
               console.log('▶️ Video playing successfully');
-              resolve();
+              // Give video a moment to stabilize before resolving
+              setTimeout(() => resolve(), 500);
             })
             .catch(playError => {
               console.error('❌ Video play error:', playError);
@@ -134,17 +131,14 @@ export const setupVideoStream = async (
         video.addEventListener('loadedmetadata', handleLoadedMetadata, { once: true });
         video.addEventListener('error', handleError, { once: true });
         
-        // Timeout after 10 seconds
+        // Timeout after 15 seconds
         setTimeout(() => {
           video.removeEventListener('loadedmetadata', handleLoadedMetadata);
           video.removeEventListener('error', handleError);
           reject(new Error('Camera initialization timeout'));
-        }, 10000);
+        }, 15000);
       }
     });
-
-    // Additional delay to ensure stream is stable
-    await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   return mediaStream;

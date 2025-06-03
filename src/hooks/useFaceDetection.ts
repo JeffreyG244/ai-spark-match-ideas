@@ -22,8 +22,9 @@ export const useFaceDetection = (
     try {
       const video = videoRef.current;
       
-      if (video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0 || video.paused) {
-        console.log('⏳ Video not ready for detection, readyState:', video.readyState);
+      // More thorough video readiness check
+      if (video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0 || video.paused || video.ended) {
+        console.log('⏳ Video not ready for detection, readyState:', video.readyState, 'dimensions:', video.videoWidth, 'x', video.videoHeight);
         setCurrentInstruction('Loading camera...');
         return;
       }
@@ -56,7 +57,10 @@ export const useFaceDetection = (
     
     if (isInitialized && !isCapturing && detector && !cameraError) {
       console.log('🔄 Starting face detection loop...');
-      detectionInterval = setInterval(detectFace, 1000);
+      // Start detection after a short delay to ensure video is stable
+      setTimeout(() => {
+        detectionInterval = setInterval(detectFace, 1000);
+      }, 2000);
     }
     
     return () => {

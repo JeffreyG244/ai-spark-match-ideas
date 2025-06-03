@@ -19,12 +19,26 @@ export const useCamera = () => {
       setCameraError(null);
       setIsInitialized(false);
       
-      // First check if we can access camera devices
+      // Get camera constraints
       const constraints = getOptimizedConstraints();
       console.log('🎯 Setting up video stream...');
+      
+      // Setup video stream first (this will request permission)
       const mediaStream = await setupVideoStream(videoRef, constraints);
       setStream(mediaStream);
       console.log('📹 Video stream established successfully');
+
+      // Wait a bit more for video to stabilize
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Check if video is actually working
+      if (videoRef.current) {
+        const video = videoRef.current;
+        if (video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0) {
+          throw new Error('Video stream not ready after initialization');
+        }
+        console.log('✅ Video stream verified and ready');
+      }
 
       // Then initialize TensorFlow and load the model
       console.log('🧠 Initializing face detection model...');
@@ -79,7 +93,7 @@ export const useCamera = () => {
     stopCamera();
     setTimeout(() => {
       initializeCamera();
-    }, 1000); // Small delay to ensure cleanup is complete
+    }, 1000);
   }, [stopCamera, initializeCamera]);
 
   return {
