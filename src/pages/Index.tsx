@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -44,7 +43,7 @@ const Index = () => {
     {
       name: "Sarah Chen",
       role: "Marketing Director",
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face",
+      image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face",
       comment: "After years of endless swiping and superficial matches on other apps, SoulSync was a breath of fresh air. The AI matching actually works - I met my partner through deep compatibility, not just looks."
     },
     {
