@@ -15,16 +15,16 @@ const SimplePhotoCapture = () => {
   const [cameraStarted, setCameraStarted] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isStartingCamera, setIsStartingCamera] = useState(false);
-  const [isDOMReady, setIsDOMReady] = useState(false);
+  const [isComponentMounted, setIsComponentMounted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const maxPhotos = 5;
 
-  // Ensure DOM is ready before any camera operations
+  // Ensure component is fully mounted
   useEffect(() => {
     const timer = setTimeout(() => {
-      setIsDOMReady(true);
-      console.log('✅ DOM ready state confirmed');
-    }, 100);
+      setIsComponentMounted(true);
+      console.log('✅ Component mounted and ready');
+    }, 50);
 
     return () => clearTimeout(timer);
   }, []);
@@ -39,16 +39,18 @@ const SimplePhotoCapture = () => {
     };
   }, [stream]);
 
-  // Wait for video element with better DOM readiness checks
-  const waitForVideoElement = async (): Promise<HTMLVideoElement> => {
+  // Wait for video element with immediate DOM check
+  const waitForVideoElement = (): Promise<HTMLVideoElement> => {
     return new Promise((resolve, reject) => {
-      if (!isDOMReady) {
-        reject(new Error('DOM not ready'));
+      // Immediate check first
+      if (videoRef.current && document.contains(videoRef.current)) {
+        console.log('✅ Video element immediately available');
+        resolve(videoRef.current);
         return;
       }
 
       let attempts = 0;
-      const maxAttempts = 30;
+      const maxAttempts = 50; // Increased attempts
       
       const checkVideo = () => {
         attempts++;
@@ -66,25 +68,23 @@ const SimplePhotoCapture = () => {
           return;
         }
         
-        setTimeout(checkVideo, 100);
+        setTimeout(checkVideo, 50); // Reduced interval for faster detection
       };
       
-      // Use requestAnimationFrame to ensure DOM is painted
-      requestAnimationFrame(() => {
-        setTimeout(checkVideo, 50);
-      });
+      // Start checking immediately
+      checkVideo();
     });
   };
 
-  // Start camera with proper DOM timing
+  // Start camera with improved DOM timing
   const startCamera = async () => {
     if (isStartingCamera) {
       console.log('⚠️ Camera start already in progress');
       return;
     }
 
-    if (!isDOMReady) {
-      console.error('❌ DOM not ready for camera start');
+    if (!isComponentMounted) {
+      console.error('❌ Component not mounted yet');
       toast({
         title: 'Camera Error',
         description: 'Please wait for the page to fully load and try again.',
@@ -102,11 +102,7 @@ const SimplePhotoCapture = () => {
         throw new Error('Camera not supported in this browser');
       }
 
-      // Wait for video element first, before requesting camera
-      console.log('⏳ Waiting for video element...');
-      const video = await waitForVideoElement();
-      
-      // Now request camera permission
+      // Request camera permission first (before waiting for video element)
       console.log('📷 Requesting camera permission...');
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
@@ -117,6 +113,11 @@ const SimplePhotoCapture = () => {
       });
       
       console.log('✅ Camera permission granted, stream obtained');
+
+      // Now wait for video element
+      console.log('⏳ Waiting for video element...');
+      const video = await waitForVideoElement();
+      
       setStream(mediaStream);
 
       // Set up video with the stream
@@ -159,28 +160,16 @@ const SimplePhotoCapture = () => {
 
         const onCanPlay = () => {
           console.log('▶️ Video can play, starting playback...');
-          const playPromise = video.play();
           
-          if (playPromise !== undefined) {
-            playPromise
-              .then(() => {
-                console.log('🎬 Video playing successfully');
-                handleSuccess();
-              })
-              .catch((playError) => {
-                console.error('❌ Video play error:', playError);
-                handleError(`Video play failed: ${playError.message}`);
-              });
-          } else {
-            // Older browsers that don't return a promise
-            setTimeout(() => {
-              if (video.currentTime > 0 && !video.paused && !video.ended && video.readyState > 2) {
-                handleSuccess();
-              } else {
-                handleError('Video failed to start playing');
-              }
-            }, 500);
-          }
+          video.play()
+            .then(() => {
+              console.log('🎬 Video playing successfully');
+              handleSuccess();
+            })
+            .catch((playError) => {
+              console.error('❌ Video play error:', playError);
+              handleError(`Video play failed: ${playError.message}`);
+            });
         };
 
         const onVideoError = (event: Event) => {
@@ -269,13 +258,13 @@ const SimplePhotoCapture = () => {
       return;
     }
 
-    if (!videoRef.current || !user || !stream || !cameraStarted || !isDOMReady) {
+    if (!videoRef.current || !user || !stream || !cameraStarted || !isComponentMounted) {
       console.error('❌ Prerequisites not met:', {
         hasVideo: !!videoRef.current,
         hasUser: !!user,
         hasStream: !!stream,
         cameraStarted,
-        isDOMReady
+        isComponentMounted
       });
       toast({
         title: 'Error',
@@ -496,20 +485,20 @@ const SimplePhotoCapture = () => {
           <div className="text-center space-y-4">
             <Button 
               onClick={startCamera}
-              disabled={isStartingCamera || !isDOMReady}
+              disabled={isStartingCamera || !isComponentMounted}
               className="bg-purple-600 hover:bg-purple-700"
               size="lg"
             >
               <Camera className="h-4 w-4 mr-2" />
               {isStartingCamera ? 'Starting Camera...' : 
-               !isDOMReady ? 'Loading...' : 'Start Camera'}
+               !isComponentMounted ? 'Loading...' : 'Start Camera'}
             </Button>
             {isStartingCamera && (
               <p className="text-sm text-gray-600">
                 Please allow camera access when prompted
               </p>
             )}
-            {!isDOMReady && (
+            {!isComponentMounted && (
               <p className="text-sm text-gray-500">
                 Preparing camera interface...
               </p>
