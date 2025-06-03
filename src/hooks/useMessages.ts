@@ -18,6 +18,8 @@ export const useMessages = (conversationId: string | null) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const channelRef = useRef<any>(null);
+  const isSubscribedRef = useRef(false);
+  const currentConversationId = useRef<string | null>(null);
 
   const loadMessages = async () => {
     if (!conversationId) {
@@ -78,6 +80,16 @@ export const useMessages = (conversationId: string | null) => {
   };
 
   useEffect(() => {
+    // Clean up previous subscription if conversation changed
+    if (currentConversationId.current !== conversationId) {
+      if (channelRef.current && isSubscribedRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+        isSubscribedRef.current = false;
+      }
+      currentConversationId.current = conversationId;
+    }
+
     if (!conversationId) {
       setMessages([]);
       setIsLoading(false);
@@ -86,53 +98,54 @@ export const useMessages = (conversationId: string | null) => {
 
     loadMessages();
 
-    // Clean up existing channel if it exists
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
+    // Only subscribe if not already subscribed for this conversation
+    if (!isSubscribedRef.current) {
+      // Subscribe to new messages
+      channelRef.current = supabase
+        .channel(`messages-${conversationId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'conversation_messages',
+            filter: `conversation_id=eq.${conversationId}`
+          },
+          (payload) => {
+            console.log('New message:', payload);
+            setMessages(prev => [...prev, payload.new as Message]);
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'conversation_messages',
+            filter: `conversation_id=eq.${conversationId}`
+          },
+          (payload) => {
+            console.log('Message updated:', payload);
+            setMessages(prev => 
+              prev.map(msg => 
+                msg.id === payload.new.id ? payload.new as Message : msg
+              )
+            );
+          }
+        )
+        .subscribe();
+
+      isSubscribedRef.current = true;
     }
 
-    // Subscribe to new messages
-    channelRef.current = supabase
-      .channel(`messages-${conversationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'conversation_messages',
-          filter: `conversation_id=eq.${conversationId}`
-        },
-        (payload) => {
-          console.log('New message:', payload);
-          setMessages(prev => [...prev, payload.new as Message]);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'conversation_messages',
-          filter: `conversation_id=eq.${conversationId}`
-        },
-        (payload) => {
-          console.log('Message updated:', payload);
-          setMessages(prev => 
-            prev.map(msg => 
-              msg.id === payload.new.id ? payload.new as Message : msg
-            )
-          );
-        }
-      )
-      .subscribe();
-
     return () => {
-      if (channelRef.current) {
+      if (channelRef.current && isSubscribedRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
+        isSubscribedRef.current = false;
       }
     };
-  }, [conversationId]); // Only depend on conversationId
+  }, [conversationId]);
 
   return {
     messages,

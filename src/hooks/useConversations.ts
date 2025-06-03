@@ -18,6 +18,7 @@ export const useConversations = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const channelRef = useRef<any>(null);
+  const isSubscribedRef = useRef(false);
 
   const loadConversations = async () => {
     if (!user) return;
@@ -77,38 +78,48 @@ export const useConversations = () => {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
 
     loadConversations();
 
-    // Clean up existing channel if it exists
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
-    }
-
-    // Subscribe to conversation changes
-    channelRef.current = supabase
-      .channel('conversations-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversations'
-        },
-        () => {
-          loadConversations();
-        }
-      )
-      .subscribe();
-
-    return () => {
+    // Only subscribe if not already subscribed
+    if (!isSubscribedRef.current) {
+      // Clean up existing channel if it exists
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
+
+      // Subscribe to conversation changes
+      channelRef.current = supabase
+        .channel('conversations-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'conversations'
+          },
+          () => {
+            loadConversations();
+          }
+        )
+        .subscribe();
+
+      isSubscribedRef.current = true;
+    }
+
+    return () => {
+      if (channelRef.current && isSubscribedRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+        isSubscribedRef.current = false;
+      }
     };
-  }, [user?.id]); // Only depend on user.id to prevent unnecessary re-subscriptions
+  }, [user?.id]);
 
   return {
     conversations,

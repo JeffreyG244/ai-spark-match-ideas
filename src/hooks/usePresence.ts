@@ -15,6 +15,7 @@ export const usePresence = () => {
   const [onlineUsers, setOnlineUsers] = useState<UserPresence[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const channelRef = useRef<any>(null);
+  const isSubscribedRef = useRef(false);
 
   // Update user's online status
   const updatePresence = async (isOnline: boolean) => {
@@ -48,33 +49,42 @@ export const usePresence = () => {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
 
     // Set user as online when component mounts
     updatePresence(true);
     loadPresence();
 
-    // Clean up existing channel if it exists
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
-    }
+    // Only subscribe if not already subscribed
+    if (!isSubscribedRef.current) {
+      // Clean up existing channel if it exists
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
 
-    // Subscribe to presence changes
-    channelRef.current = supabase
-      .channel('user-presence-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_presence'
-        },
-        (payload) => {
-          console.log('Presence change:', payload);
-          loadPresence();
-        }
-      )
-      .subscribe();
+      // Subscribe to presence changes
+      channelRef.current = supabase
+        .channel('user-presence-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_presence'
+          },
+          (payload) => {
+            console.log('Presence change:', payload);
+            loadPresence();
+          }
+        )
+        .subscribe();
+
+      isSubscribedRef.current = true;
+    }
 
     // Set user as offline when page is about to unload
     const handleBeforeUnload = () => updatePresence(false);
@@ -83,12 +93,13 @@ export const usePresence = () => {
     return () => {
       updatePresence(false);
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      if (channelRef.current) {
+      if (channelRef.current && isSubscribedRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
+        isSubscribedRef.current = false;
       }
     };
-  }, [user?.id]); // Only depend on user.id to prevent unnecessary re-subscriptions
+  }, [user?.id]);
 
   const isUserOnline = (userId: string) => {
     const userPresence = onlineUsers.find(p => p.user_id === userId);
