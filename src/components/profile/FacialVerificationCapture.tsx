@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -374,7 +373,9 @@ const FacialVerificationCapture = () => {
                       <>
                         <Upload className="h-4 w-4 mr-2" />
                         Capture Photo
-                      </Button>
+                      </>
+                    )}
+                  </Button>
 
                   <Button variant="outline" onClick={resetDetection}>
                     <RotateCcw className="h-4 w-4 mr-2" />
