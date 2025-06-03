@@ -79,7 +79,6 @@ const Dashboard = () => {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <SecurityMonitor />
               <Button onClick={handleSignOut} variant="outline" className="flex items-center gap-2">
                 <LogOut className="h-4 w-4" />
                 Sign Out
@@ -137,6 +136,7 @@ const Dashboard = () => {
         {/* Main Navigation */}
         <div className="flex flex-wrap gap-4 mb-6">
           {[
+            { id: "security", label: "Security", icon: Shield },
             { id: "profile-manager", label: "Profile Manager", icon: User },
             { id: "soulsync", label: "SoulSync Core", icon: Brain },
             { id: "safety", label: "Safety Scanner", icon: Shield },
@@ -159,6 +159,7 @@ const Dashboard = () => {
 
         {/* Dynamic Content */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
+          {activeTab === "security" && <SecurityMonitor />}
           {activeTab === "profile-manager" && <ProfileManager />}
           {activeTab === "soulsync" && <SoulSyncAI />}
           {activeTab === "safety" && <SafetyScanner />}
