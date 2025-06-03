@@ -13,28 +13,88 @@ const SimplePhotoCapture = () => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [cameraStarted, setCameraStarted] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const maxPhotos = 5;
 
-  // Start camera
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [stream]);
+
+  // Start camera with proper error handling
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setCameraStarted(true);
+      console.log('🎥 Starting camera...');
+      
+      // Check if camera is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Camera not supported in this browser');
       }
-    } catch (err) {
+
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'user'
+        } 
+      });
+      
+      console.log('✅ Camera stream obtained');
+      setStream(mediaStream);
+
+      // Wait for video element to be ready
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        
+        // Wait for metadata to load, then play
+        videoRef.current.onloadedmetadata = () => {
+          console.log('📐 Video metadata loaded');
+          if (videoRef.current) {
+            videoRef.current.play()
+              .then(() => {
+                console.log('▶️ Video playing');
+                setCameraStarted(true);
+              })
+              .catch((playError) => {
+                console.error('❌ Video play failed:', playError);
+                toast({
+                  title: 'Video Error',
+                  description: 'Failed to start video playback.',
+                  variant: 'destructive'
+                });
+              });
+          }
+        };
+      } else {
+        throw new Error('Video element not available');
+      }
+
+    } catch (err: any) {
+      console.error('❌ Camera error:', err);
       toast({
         title: 'Camera Error',
-        description: 'Camera access is required to take profile photos.',
+        description: err.message || 'Camera access is required to take profile photos.',
         variant: 'destructive'
       });
-      console.error(err);
     }
   };
 
-  // Take photo function
+  // Stop camera
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setCameraStarted(false);
+    console.log('🛑 Camera stopped');
+  };
+
+  // Take photo function with improved error handling
   const takePhoto = async () => {
     if (photoCount >= maxPhotos) {
       toast({
@@ -45,12 +105,26 @@ const SimplePhotoCapture = () => {
       return;
     }
 
-    if (!videoRef.current || !user) return;
+    if (!videoRef.current || !user) {
+      toast({
+        title: 'Error',
+        description: 'Camera not ready or user not authenticated.',
+        variant: 'destructive'
+      });
+      return;
+    }
 
     setIsUploading(true);
 
     try {
       const video = videoRef.current;
+      
+      // Validate video dimensions
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+        throw new Error('Video not ready - invalid dimensions');
+      }
+
+      console.log(`📸 Taking photo ${photoCount + 1}...`);
       
       // Create canvas and capture frame
       const canvas = document.createElement('canvas');
@@ -58,7 +132,9 @@ const SimplePhotoCapture = () => {
       canvas.height = video.videoHeight;
 
       const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Canvas context not available');
+      if (!ctx) {
+        throw new Error('Canvas context not available');
+      }
       
       ctx.drawImage(video, 0, 0);
 
@@ -69,18 +145,28 @@ const SimplePhotoCapture = () => {
       resizedCanvas.height = canvas.height * scale;
 
       const resizedCtx = resizedCanvas.getContext('2d');
-      if (!resizedCtx) throw new Error('Resized canvas context not available');
+      if (!resizedCtx) {
+        throw new Error('Resized canvas context not available');
+      }
       
       resizedCtx.drawImage(canvas, 0, 0, resizedCanvas.width, resizedCanvas.height);
 
       // Convert to blob for upload
       const blob = await new Promise<Blob>((resolve, reject) => {
         resizedCanvas.toBlob(
-          (blob) => blob ? resolve(blob) : reject(new Error('Failed to create blob')),
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Failed to create blob'));
+            }
+          },
           'image/jpeg',
           0.8 // 80% quality
         );
       });
+
+      console.log('💾 Uploading to Supabase...');
 
       // Upload to Supabase storage
       const timestamp = Date.now();
@@ -93,12 +179,17 @@ const SimplePhotoCapture = () => {
           upsert: false
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('❌ Upload error:', uploadError);
+        throw uploadError;
+      }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('profile-photos')
         .getPublicUrl(filename);
+
+      console.log('🔗 Public URL:', publicUrl);
 
       // Update user profile with new photo
       const { data: currentProfile } = await supabase
@@ -119,19 +210,23 @@ const SimplePhotoCapture = () => {
           updated_at: new Date().toISOString()
         });
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('❌ Profile update error:', updateError);
+        throw updateError;
+      }
 
       // Update local state
       setPhotos(updatedPhotos);
       setPhotoCount(photoCount + 1);
       
+      console.log('✅ Photo uploaded successfully');
       toast({
         title: 'Photo Captured!',
         description: `Photo ${photoCount + 1}/5 uploaded successfully.`,
       });
 
     } catch (error: any) {
-      console.error('Upload failed:', error);
+      console.error('💥 Upload failed:', error);
       toast({
         title: 'Upload Failed',
         description: error.message || 'Failed to upload photo.',
@@ -168,6 +263,7 @@ const SimplePhotoCapture = () => {
       });
 
     } catch (error: any) {
+      console.error('❌ Remove photo error:', error);
       toast({
         title: 'Error',
         description: 'Failed to remove photo.',
@@ -193,7 +289,7 @@ const SimplePhotoCapture = () => {
           setPhotoCount(data.photos.length);
         }
       } catch (error) {
-        console.error('Error loading photos:', error);
+        console.error('❌ Error loading photos:', error);
       }
     };
 
@@ -229,12 +325,13 @@ const SimplePhotoCapture = () => {
                 ref={videoRef}
                 autoPlay
                 playsInline
+                muted
                 className="w-full max-w-sm mx-auto rounded-lg border-2 border-purple-200"
                 style={{ transform: 'scaleX(-1)' }}
               />
             </div>
 
-            <div className="text-center">
+            <div className="text-center space-y-2">
               <Button
                 onClick={takePhoto}
                 disabled={isUploading || photoCount >= maxPhotos}
@@ -251,6 +348,14 @@ const SimplePhotoCapture = () => {
                     📸 Take Photo
                   </>
                 )}
+              </Button>
+              
+              <Button
+                onClick={stopCamera}
+                variant="outline"
+                size="sm"
+              >
+                Stop Camera
               </Button>
             </div>
           </div>
