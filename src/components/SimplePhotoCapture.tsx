@@ -1,87 +1,90 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Camera, Upload, X, Check } from 'lucide-react';
+import { Camera, Upload, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 const SimplePhotoCapture = () => {
   const { user } = useAuth();
-  const [isCapturing, setIsCapturing] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const [photoCount, setPhotoCount] = useState(0);
   const [photos, setPhotos] = useState<string[]>([]);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [cameraStarted, setCameraStarted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const maxPhotos = 5;
 
+  // Start camera
   const startCamera = async () => {
     try {
-      console.log('🔔 Starting camera...');
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          width: { ideal: 640 },
-          height: { ideal: 480 },
-          facingMode: 'user'
-        }
-      });
-      
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        setStream(mediaStream);
-        setIsCapturing(true);
-        console.log('✅ Camera started successfully');
+        videoRef.current.srcObject = stream;
+        setCameraStarted(true);
       }
-    } catch (error: any) {
-      console.error('❌ Camera error:', error);
+    } catch (err) {
       toast({
         title: 'Camera Error',
-        description: 'Could not access camera. Please check permissions.',
+        description: 'Camera access is required to take profile photos.',
         variant: 'destructive'
       });
+      console.error(err);
     }
   };
 
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach(track => track.stop());
-      setStream(null);
+  // Take photo function
+  const takePhoto = async () => {
+    if (photoCount >= maxPhotos) {
+      toast({
+        title: 'Photo Limit Reached',
+        description: 'You can only upload up to 5 photos.',
+        variant: 'destructive'
+      });
+      return;
     }
-    setIsCapturing(false);
-    console.log('📷 Camera stopped');
-  };
 
-  const capturePhoto = async () => {
-    if (!videoRef.current || !canvasRef.current || !user) return;
+    if (!videoRef.current || !user) return;
+
+    setIsUploading(true);
 
     try {
-      setIsUploading(true);
       const video = videoRef.current;
-      const canvas = canvasRef.current;
       
-      // Set canvas size to match video
+      // Create canvas and capture frame
+      const canvas = document.createElement('canvas');
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      
-      // Draw video frame to canvas
+
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Canvas context not available');
       
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(video, 0, 0);
+
+      // Compress the image by resizing
+      const resizedCanvas = document.createElement('canvas');
+      const scale = 0.4; // Compress size ~40%
+      resizedCanvas.width = canvas.width * scale;
+      resizedCanvas.height = canvas.height * scale;
+
+      const resizedCtx = resizedCanvas.getContext('2d');
+      if (!resizedCtx) throw new Error('Resized canvas context not available');
       
-      // Convert to blob
+      resizedCtx.drawImage(canvas, 0, 0, resizedCanvas.width, resizedCanvas.height);
+
+      // Convert to blob for upload
       const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob(
+        resizedCanvas.toBlob(
           (blob) => blob ? resolve(blob) : reject(new Error('Failed to create blob')),
           'image/jpeg',
-          0.8
+          0.8 // 80% quality
         );
       });
 
       // Upload to Supabase storage
       const timestamp = Date.now();
-      const filename = `${user.id}/${timestamp}_photo_${photos.length + 1}.jpg`;
+      const filename = `${user.id}/${timestamp}_photo_${photoCount + 1}.jpg`;
       
       const { error: uploadError } = await supabase.storage
         .from('profile-photos')
@@ -120,16 +123,15 @@ const SimplePhotoCapture = () => {
 
       // Update local state
       setPhotos(updatedPhotos);
+      setPhotoCount(photoCount + 1);
       
       toast({
         title: 'Photo Captured!',
-        description: `Photo ${photos.length + 1}/5 uploaded successfully.`,
+        description: `Photo ${photoCount + 1}/5 uploaded successfully.`,
       });
 
-      console.log(`✅ Photo ${photos.length + 1} uploaded successfully`);
-
     } catch (error: any) {
-      console.error('❌ Upload failed:', error);
+      console.error('Upload failed:', error);
       toast({
         title: 'Upload Failed',
         description: error.message || 'Failed to upload photo.',
@@ -140,6 +142,7 @@ const SimplePhotoCapture = () => {
     }
   };
 
+  // Remove photo function
   const removePhoto = async (photoUrl: string, index: number) => {
     if (!user) return;
 
@@ -157,6 +160,7 @@ const SimplePhotoCapture = () => {
       if (error) throw error;
 
       setPhotos(updatedPhotos);
+      setPhotoCount(updatedPhotos.length);
       
       toast({
         title: 'Photo Removed',
@@ -172,18 +176,42 @@ const SimplePhotoCapture = () => {
     }
   };
 
+  // Load existing photos on mount
+  useEffect(() => {
+    const loadExistingPhotos = async () => {
+      if (!user) return;
+
+      try {
+        const { data } = await supabase
+          .from('user_profiles')
+          .select('photos')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (data?.photos) {
+          setPhotos(data.photos);
+          setPhotoCount(data.photos.length);
+        }
+      } catch (error) {
+        console.error('Error loading photos:', error);
+      }
+    };
+
+    loadExistingPhotos();
+  }, [user]);
+
   return (
     <Card className="border-purple-200">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Camera className="h-5 w-5 text-purple-600" />
-          Upload Profile Photos ({photos.length}/5)
+          Take 3 to 5 Profile Photos
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         
         {/* Camera Section */}
-        {!isCapturing ? (
+        {!cameraStarted ? (
           <div className="text-center space-y-4">
             <Button 
               onClick={startCamera}
@@ -193,9 +221,6 @@ const SimplePhotoCapture = () => {
               <Camera className="h-4 w-4 mr-2" />
               Start Camera
             </Button>
-            <p className="text-sm text-gray-600">
-              Take up to 5 photos for your profile verification
-            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -204,18 +229,17 @@ const SimplePhotoCapture = () => {
                 ref={videoRef}
                 autoPlay
                 playsInline
-                muted
-                className="w-full max-w-md mx-auto rounded-lg border-2 border-purple-200"
+                className="w-full max-w-sm mx-auto rounded-lg border-2 border-purple-200"
                 style={{ transform: 'scaleX(-1)' }}
               />
-              <canvas ref={canvasRef} className="hidden" />
             </div>
 
-            <div className="flex gap-2 justify-center">
+            <div className="text-center">
               <Button
-                onClick={capturePhoto}
-                disabled={isUploading || photos.length >= 5}
+                onClick={takePhoto}
+                disabled={isUploading || photoCount >= maxPhotos}
                 className="bg-purple-600 hover:bg-purple-700"
+                size="lg"
               >
                 {isUploading ? (
                   <>
@@ -224,55 +248,50 @@ const SimplePhotoCapture = () => {
                   </>
                 ) : (
                   <>
-                    <Upload className="h-4 w-4 mr-2" />
-                    Capture Photo
+                    📸 Take Photo
                   </>
                 )}
-              </Button>
-
-              <Button variant="outline" onClick={stopCamera}>
-                Stop Camera
               </Button>
             </div>
           </div>
         )}
 
-        {/* Photos Grid */}
+        {/* Photo Counter */}
+        <p className="text-center text-sm text-gray-600">
+          Photos taken: {photoCount}/{maxPhotos}
+        </p>
+
+        {/* Photos Display */}
         {photos.length > 0 && (
           <div className="space-y-3">
-            <h3 className="font-medium text-purple-800">Your Photos</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <h4 className="font-medium text-purple-800">Your Photos</h4>
+            <div className="flex flex-wrap gap-2">
               {photos.map((photoUrl, index) => (
                 <div key={index} className="relative">
                   <img
                     src={photoUrl}
                     alt={`Profile photo ${index + 1}`}
-                    className="w-full h-32 object-cover rounded-lg border-2 border-purple-100"
+                    className="h-20 w-20 object-cover rounded border border-gray-300"
                   />
                   <Button
                     variant="destructive"
                     size="sm"
-                    className="absolute top-1 right-1 h-6 w-6 p-0"
+                    className="absolute -top-1 -right-1 h-5 w-5 p-0 rounded-full"
                     onClick={() => removePhoto(photoUrl, index)}
                   >
                     <X className="h-3 w-3" />
                   </Button>
-                  <div className="absolute bottom-1 left-1">
-                    <div className="bg-green-500 text-white rounded-full p-1">
-                      <Check className="h-3 w-3" />
-                    </div>
-                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Status */}
-        {photos.length >= 3 && (
+        {/* Success Message */}
+        {photoCount >= 3 && (
           <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
             <p className="text-green-700 font-medium">
-              ✅ Great! You have {photos.length} verified photos
+              ✅ Great! You have {photoCount} profile photos uploaded
             </p>
           </div>
         )}
