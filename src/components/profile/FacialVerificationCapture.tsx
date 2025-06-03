@@ -15,15 +15,13 @@ const FacialVerificationCapture = () => {
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const detectionIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Simple state - exactly like debug component
+  // EXACT SAME STATE as debug component - no extra complexity
   const [status, setStatus] = useState('Click Start Camera to begin');
-  const [detector, setDetector] = useState<faceLandmarksDetection.FaceLandmarksDetector | null>(null);
+  const [model, setModel] = useState<faceLandmarksDetection.FaceLandmarksDetector | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [isRunning, setIsRunning] = useState(false);
   
-  // Face detection state
+  // Face detection state - simple
   const [faceDetected, setFaceDetected] = useState(false);
   const [currentInstruction, setCurrentInstruction] = useState('Look straight at the camera');
   const [detectionAttempts, setDetectionAttempts] = useState(0);
@@ -35,7 +33,7 @@ const FacialVerificationCapture = () => {
   // Debug state
   const [showTestMode, setShowTestMode] = useState(false);
 
-  // EXACT SAME initialization as working debug component
+  // EXACT SAME FUNCTION as debug component - copy the working runTest logic
   const startCamera = async () => {
     try {
       setStatus('Step 1: Requesting camera...');
@@ -50,7 +48,7 @@ const FacialVerificationCapture = () => {
         await videoRef.current.play();
         setStatus('Step 2: Camera active, setting up AI...');
         
-        // Wait for video metadata - exactly like debug
+        // Wait for video metadata - EXACT SAME as debug
         await new Promise((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = () => {
@@ -89,18 +87,35 @@ const FacialVerificationCapture = () => {
         }
       );
       
-      setDetector(loadedModel);
+      setModel(loadedModel);
       console.log('✅ MAIN: Model loaded successfully');
-      setStatus('✅ Camera ready! Face detection active');
-      setIsRunning(true);
+      setStatus('Step 5: Testing face detection...');
       
-      toast({
-        title: 'Camera Ready',
-        description: 'Face detection is now active. Position your face in the camera.',
-      });
-      
-      // Start face detection - exactly like debug
-      startFaceDetectionLoop(loadedModel);
+      // Start face detection loop - EXACT SAME as debug
+      setTimeout(async () => {
+        if (videoRef.current && loadedModel) {
+          try {
+            const faces = await loadedModel.estimateFaces(videoRef.current, {
+              flipHorizontal: false,
+              staticImageMode: false
+            });
+            console.log('🧪 MAIN: Face detection test result:', faces);
+            setStatus(`✅ Camera ready! Face detection active`);
+            
+            toast({
+              title: 'Camera Ready',
+              description: 'Face detection is now active. Position your face in the camera.',
+            });
+            
+            // Start continuous detection
+            startContinuousDetection(loadedModel);
+            
+          } catch (detectionError) {
+            console.error('❌ MAIN: Face detection test failed:', detectionError);
+            setStatus('❌ Face detection test failed');
+          }
+        }
+      }, 2000);
       
     } catch (error) {
       console.error('❌ MAIN: Error:', error);
@@ -113,8 +128,8 @@ const FacialVerificationCapture = () => {
     }
   };
 
-  // EXACT SAME detection loop as debug component
-  const startFaceDetectionLoop = (faceDetector: faceLandmarksDetection.FaceLandmarksDetector) => {
+  // Continuous detection - simplified version
+  const startContinuousDetection = (faceDetector: faceLandmarksDetection.FaceLandmarksDetector) => {
     const detectFaces = async () => {
       if (!videoRef.current || !faceDetector || isUploading) return;
       
@@ -150,24 +165,12 @@ const FacialVerificationCapture = () => {
       }
     };
     
-    // Clear any existing interval
-    if (detectionIntervalRef.current) {
-      clearInterval(detectionIntervalRef.current);
-    }
-    
-    // Start new detection interval - same timing as debug
-    detectionIntervalRef.current = setInterval(detectFaces, 2000);
+    // Start detection interval - same timing as debug test
+    setInterval(detectFaces, 2000);
   };
 
   const stopCamera = () => {
     console.log('🛑 MAIN: Stopping camera...');
-    
-    // Clear detection interval
-    if (detectionIntervalRef.current) {
-      clearInterval(detectionIntervalRef.current);
-      detectionIntervalRef.current = null;
-    }
-    
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
@@ -175,8 +178,7 @@ const FacialVerificationCapture = () => {
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
-    setDetector(null);
-    setIsRunning(false);
+    setModel(null);
     setStatus('Camera stopped');
     setFaceDetected(false);
     setCurrentInstruction('Look straight at the camera');
@@ -184,7 +186,7 @@ const FacialVerificationCapture = () => {
   };
 
   const captureAndUploadPhoto = async () => {
-    if (!detector || !videoRef.current || !canvasRef.current || !user) {
+    if (!model || !videoRef.current || !canvasRef.current || !user) {
       toast({
         title: 'Cannot Capture',
         description: 'Camera or face detection not ready.',
@@ -242,12 +244,11 @@ const FacialVerificationCapture = () => {
 
   // Cleanup on unmount
   useEffect(() => {
-    return () => {
-      stopCamera();
-    };
+    return () => stopCamera();
   }, []);
 
-  const canCapture = (faceDetected || detectionAttempts > 20) && photoCount < 5 && !isUploading && isRunning;
+  const canCapture = (faceDetected || detectionAttempts > 20) && photoCount < 5 && !isUploading;
+  const isRunning = !!stream && !!model && status.includes('Camera ready');
 
   if (showTestMode) {
     return (
