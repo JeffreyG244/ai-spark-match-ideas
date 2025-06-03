@@ -1,3 +1,4 @@
+
 export interface QuestionData {
   id: number;
   question: string;
@@ -186,7 +187,7 @@ export const compatibilityQuestions: QuestionData[] = [
   },
   {
     id: 17,
-    question: "How did you hear about SoulSync?",
+    question: "How did you hear about Luvlang?",
     options: [
       "Social media (Instagram, TikTok, Facebook)",
       "Friend or family recommendation",
