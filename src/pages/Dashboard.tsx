@@ -20,7 +20,7 @@ const Dashboard = () => {
               <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
                 <Heart className="h-6 w-6 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">SoulSync</h2>
+              <h2 className="text-2xl font-bold text-gray-900">Luvlang</h2>
             </div>
             <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
             <p className="text-gray-600">Welcome back, {user?.email}</p>

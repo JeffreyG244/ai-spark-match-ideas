@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,7 +12,7 @@ const Index = () => {
   const features = [
     {
       icon: Brain,
-      title: "SoulSync AI Matching",
+      title: "Luvlang AI Matching",
       description: "Deep personality and values alignment using advanced AI psychology models"
     },
     {
@@ -45,13 +44,13 @@ const Index = () => {
       name: "Sarah Chen",
       role: "Marketing Director",
       image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face",
-      comment: "After years of endless swiping and superficial matches on other apps, SoulSync was a breath of fresh air. The AI matching actually works - I met my partner through deep compatibility, not just looks."
+      comment: "After years of endless swiping and superficial matches on other apps, Luvlang was a breath of fresh air. The AI matching actually works - I met my partner through deep compatibility, not just looks."
     },
     {
       name: "Michael Rodriguez",
       role: "Software Engineer",
       image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-      comment: "Other dating apps felt like a game where no one was serious. SoulSync's verification process and focus on values meant I could trust that people were genuinely looking for meaningful relationships."
+      comment: "Other dating apps felt like a game where no one was serious. Luvlang's verification process and focus on values meant I could trust that people were genuinely looking for meaningful relationships."
     },
     {
       name: "Emma Thompson",
@@ -62,7 +61,7 @@ const Index = () => {
     {
       name: "David Park",
       role: "Product Manager",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
+      image: "https://images.unsplash.com/photo-1507003211169-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
       comment: "The security features gave me confidence that wasn't possible on other platforms. No fake profiles, no scammers - just real professionals looking for authentic connections."
     },
     {
@@ -75,7 +74,7 @@ const Index = () => {
       name: "James Foster",
       role: "Consultant",
       image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face",
-      comment: "SoulSync solved the biggest problem with modern dating - authenticity. The personality analysis meant I could skip the games and connect with someone who truly understood me."
+      comment: "Luvlang solved the biggest problem with modern dating - authenticity. The personality analysis meant I could skip the games and connect with someone who truly understood me."
     }
   ];
 
@@ -88,7 +87,7 @@ const Index = () => {
             <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
               <Heart className="h-6 w-6 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">SoulSync</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Luvlang</h1>
           </div>
           <div className="flex gap-3">
             {user ? (
@@ -202,7 +201,7 @@ const Index = () => {
 
         {/* How It Works */}
         <div className="text-center mb-20">
-          <h2 className="text-4xl font-bold text-gray-900 mb-12">How SoulSync Works</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-12">How Luvlang Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -216,7 +215,7 @@ const Index = () => {
                 <Brain className="h-8 w-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold mb-2">2. AI Deep Matching</h3>
-              <p className="text-gray-600">Our SoulSync AI analyzes personality, values, and life goals for profound compatibility</p>
+              <p className="text-gray-600">Our Luvlang AI analyzes personality, values, and life goals for profound compatibility</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -240,7 +239,13 @@ const Index = () => {
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4 mb-4">
                     <Quote className="h-8 w-8 text-purple-600 flex-shrink-0 mt-1" />
-                    <p className="text-gray-700 italic leading-relaxed">{testimonial.comment}</p>
+                    <p className="text-gray-700 italic leading-relaxed">
+                      {index === 0 ? "After years of endless swiping and superficial matches on other apps, Luvlang was a breath of fresh air. The AI matching actually works - I met my partner through deep compatibility, not just looks." :
+                       index === 1 ? "Other dating apps felt like a game where no one was serious. Luvlang's verification process and focus on values meant I could trust that people were genuinely looking for meaningful relationships." :
+                       index === 4 ? "Finally, a dating platform that understands quality over quantity. Instead of hundreds of meaningless matches, I got 3 highly compatible connections that led to real relationships." :
+                       index === 5 ? "Luvlang solved the biggest problem with modern dating - authenticity. The personality analysis meant I could skip the games and connect with someone who truly understood me." :
+                       testimonial.comment}
+                    </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-12 w-12">
