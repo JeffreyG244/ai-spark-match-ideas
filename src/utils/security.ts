@@ -22,7 +22,9 @@ export const containsInappropriateContent = (text: string): boolean => {
     'spam', 'scam', 'money', 'bitcoin', 'crypto', 'investment',
     'instagram', 'snapchat', 'whatsapp', 'telegram', 'kik',
     'cashapp', 'venmo', 'paypal', 'bank', 'account', 'password',
-    'social security', 'ssn', 'credit card', 'debit card'
+    'social security', 'ssn', 'credit card', 'debit card',
+    // Additional security-related terms
+    'script', 'javascript', 'eval', 'cookie', 'localstorage'
   ];
   
   const lowerText = text.toLowerCase();
@@ -38,12 +40,15 @@ export const detectSpamPatterns = (text: string): boolean => {
     /(click here|visit|link|website|url)/gi, // Link spam
     /(free|winner|congratulations|prize)/gi, // Common spam words
     /[^\w\s]{5,}/g, // Excessive special characters
+    /<script/gi, // Script tags
+    /javascript:/gi, // JavaScript protocol
+    /on\w+\s*=/gi, // Event handlers
   ];
   
   return spamPatterns.some(pattern => pattern.test(text));
 };
 
-// Message content validation
+// Message content validation with enhanced security
 export const validateMessageContent = (content: string): { isValid: boolean; error?: string } => {
   if (!content || content.trim().length === 0) {
     return { isValid: false, error: 'Message cannot be empty' };
@@ -60,15 +65,25 @@ export const validateMessageContent = (content: string): { isValid: boolean; err
   if (detectSpamPatterns(content)) {
     return { isValid: false, error: 'Message appears to be spam' };
   }
+
+  // Check for potential XSS attempts
+  if (content.includes('<') || content.includes('>') || content.includes('javascript:')) {
+    return { isValid: false, error: 'Message contains potentially dangerous content' };
+  }
   
   return { isValid: true };
 };
 
-// Rate limiting utility (enhanced client-side implementation)
+// Enhanced rate limiting utility
 class RateLimiter {
   private attempts: Map<string, number[]> = new Map();
+  private blocked: Set<string> = new Set();
   
   isAllowed(key: string, maxAttempts: number = 5, windowMs: number = 60000): boolean {
+    if (this.blocked.has(key)) {
+      return false;
+    }
+
     const now = Date.now();
     const attempts = this.attempts.get(key) || [];
     
@@ -76,6 +91,9 @@ class RateLimiter {
     const validAttempts = attempts.filter(time => now - time < windowMs);
     
     if (validAttempts.length >= maxAttempts) {
+      // Block user for extended period after repeated violations
+      this.blocked.add(key);
+      setTimeout(() => this.blocked.delete(key), windowMs * 5); // Block for 5x the window
       return false;
     }
     
@@ -85,6 +103,8 @@ class RateLimiter {
   }
   
   getRemainingAttempts(key: string, maxAttempts: number = 5, windowMs: number = 60000): number {
+    if (this.blocked.has(key)) return 0;
+
     const now = Date.now();
     const attempts = this.attempts.get(key) || [];
     const validAttempts = attempts.filter(time => now - time < windowMs);
@@ -101,39 +121,59 @@ export const validateAge = (age: number): boolean => {
 
 export const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // Additional security: prevent potential injection attempts
+  if (email.includes('<') || email.includes('>') || email.includes('script')) {
+    return false;
+  }
   return emailRegex.test(email);
 };
 
-// Security logging utility
+// Enhanced security logging utility
 export const logSecurityEvent = (eventType: string, details: string, severity: 'low' | 'medium' | 'high' = 'medium') => {
   console.warn(`[SECURITY] ${severity.toUpperCase()}: ${eventType} - ${details}`);
   
-  // In a production environment, you would send this to your security monitoring system
-  // For now, we'll just log to console with structured format
+  // Enhanced structured logging
   const securityLog = {
     timestamp: new Date().toISOString(),
     type: eventType,
     details: details,
     severity: severity,
     userAgent: navigator.userAgent,
-    url: window.location.href
+    url: window.location.href,
+    sessionId: sessionStorage.getItem('sessionId') || 'unknown',
+    userId: localStorage.getItem('userId') || 'anonymous'
   };
   
-  localStorage.setItem(`security_log_${Date.now()}`, JSON.stringify(securityLog));
+  // Store with rotation (keep only last 100 entries)
+  const logKey = `security_log_${Date.now()}`;
+  localStorage.setItem(logKey, JSON.stringify(securityLog));
   
-  // Clean up old logs (keep only last 50)
+  // Clean up old logs
   const logs = Object.keys(localStorage).filter(key => key.startsWith('security_log_'));
-  if (logs.length > 50) {
-    logs.sort().slice(0, logs.length - 50).forEach(key => localStorage.removeItem(key));
+  if (logs.length > 100) {
+    logs.sort().slice(0, logs.length - 100).forEach(key => localStorage.removeItem(key));
+  }
+
+  // In production, send to monitoring service
+  if (severity === 'high') {
+    // This would integrate with your monitoring service
+    console.error('HIGH SEVERITY SECURITY EVENT:', securityLog);
   }
 };
 
-// Character limits
+// Character limits with security considerations
 export const LIMITS = {
   BIO_MAX_LENGTH: 500,
   VALUES_MAX_LENGTH: 300,
   GOALS_MAX_LENGTH: 300,
   GREEN_FLAGS_MAX_LENGTH: 300,
   MIN_BIO_LENGTH: 50,
-  MESSAGE_MAX_LENGTH: 1000
+  MESSAGE_MAX_LENGTH: 1000,
+  MAX_PHOTO_SIZE: 5 * 1024 * 1024, // 5MB
+  MAX_PHOTOS_PER_USER: 6
+};
+
+// Production security check
+export const isProductionEnvironment = (): boolean => {
+  return window.location.hostname !== 'localhost' && !window.location.hostname.includes('127.0.0.1');
 };
