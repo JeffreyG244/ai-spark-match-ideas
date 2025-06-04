@@ -19,6 +19,10 @@ import TermsOfService from '@/pages/legal/TermsOfService';
 import CommunityGuidelines from '@/pages/legal/CommunityGuidelines';
 import CookiePolicy from '@/pages/legal/CookiePolicy';
 import IntellectualProperty from '@/pages/legal/IntellectualProperty';
+import ContentModerationPolicy from '@/pages/legal/ContentModerationPolicy';
+import AgeVerificationPolicy from '@/pages/legal/AgeVerificationPolicy';
+import IdentityVerificationPolicy from '@/pages/legal/IdentityVerificationPolicy';
+import RomanceScamPrevention from '@/pages/legal/RomanceScamPrevention';
 
 import './App.css';
 
@@ -47,7 +51,7 @@ function App() {
               } 
             />
             
-            {/* Legal Routes */}
+            {/* Legal Routes - Implemented */}
             <Route path="/legal" element={<Legal />} />
             <Route path="/legal/privacy" element={<PrivacyPolicy />} />
             <Route path="/legal/safety" element={<SafetyGuidelines />} />
@@ -55,12 +59,12 @@ function App() {
             <Route path="/legal/community" element={<CommunityGuidelines />} />
             <Route path="/legal/cookies" element={<CookiePolicy />} />
             <Route path="/legal/ip" element={<IntellectualProperty />} />
+            <Route path="/legal/moderation" element={<ContentModerationPolicy />} />
+            <Route path="/legal/age-verification" element={<AgeVerificationPolicy />} />
+            <Route path="/legal/identity-verification" element={<IdentityVerificationPolicy />} />
+            <Route path="/legal/scam-prevention" element={<RomanceScamPrevention />} />
             
-            {/* Placeholder routes for other legal pages - Coming Soon */}
-            <Route path="/legal/moderation" element={<div>Content Moderation Policy - Coming Soon</div>} />
-            <Route path="/legal/age-verification" element={<div>Age Verification Policy - Coming Soon</div>} />
-            <Route path="/legal/identity-verification" element={<div>Identity Verification Policy - Coming Soon</div>} />
-            <Route path="/legal/scam-prevention" element={<div>Romance Scam Prevention - Coming Soon</div>} />
+            {/* Placeholder routes for remaining legal pages - Coming Soon */}
             <Route path="/legal/reporting" element={<div>Blocking & Reporting Policy - Coming Soon</div>} />
             <Route path="/legal/gdpr" element={<div>GDPR Compliance - Coming Soon</div>} />
             <Route path="/legal/ccpa" element={<div>CCPA Compliance - Coming Soon</div>} />
