@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { logSecurityEvent } from '@/utils/security';
 
@@ -6,23 +7,19 @@ import { logSecurityEvent } from '@/utils/security';
  */
 export const validateImageUrlSecurity = async (url: string): Promise<{ isValid: boolean; error?: string }> => {
   try {
-    // Client-side validation only since the database function doesn't exist yet
     if (!url || url.trim().length === 0) {
       return { isValid: false, error: 'URL cannot be empty' };
     }
 
-    // Check for valid HTTP/HTTPS protocols
     if (!url.match(/^https?:\/\//i)) {
       return { isValid: false, error: 'URL must use HTTP or HTTPS protocol' };
     }
 
-    // Block localhost and private IP ranges
     if (url.match(/(localhost|127\.0\.0\.1|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/i)) {
       logSecurityEvent('invalid_image_url', `Blocked potentially dangerous URL: ${url}`, 'high');
       return { isValid: false, error: 'URL points to private/local network' };
     }
 
-    // Block dangerous protocols
     if (url.match(/^(file|ftp|data|javascript):/i)) {
       logSecurityEvent('invalid_image_url', `Blocked dangerous protocol in URL: ${url}`, 'high');
       return { isValid: false, error: 'URL uses dangerous protocol' };
@@ -40,7 +37,6 @@ export const validateImageUrlSecurity = async (url: string): Promise<{ isValid: 
  */
 export const validatePasswordStrength = async (password: string): Promise<{ isValid: boolean; message: string }> => {
   try {
-    // Client-side password validation
     if (password.length < 12) {
       return { isValid: false, message: 'Password must be at least 12 characters long' };
     }
@@ -81,7 +77,6 @@ export const checkIpRateLimit = async (
   windowMinutes: number = 60
 ): Promise<boolean> => {
   try {
-    // Client-side rate limiting using localStorage
     const storageKey = `rate_limit_${action}`;
     const now = Date.now();
     const windowMs = windowMinutes * 60 * 1000;
@@ -89,7 +84,6 @@ export const checkIpRateLimit = async (
     const storedData = localStorage.getItem(storageKey);
     const attempts = storedData ? JSON.parse(storedData) : [];
     
-    // Remove old attempts outside the window
     const validAttempts = attempts.filter((time: number) => now - time < windowMs);
     
     if (validAttempts.length >= maxAttempts) {
@@ -97,14 +91,13 @@ export const checkIpRateLimit = async (
       return false;
     }
     
-    // Add current attempt
     validAttempts.push(now);
     localStorage.setItem(storageKey, JSON.stringify(validAttempts));
     
     return true;
   } catch (error) {
     logSecurityEvent('rate_limit_check_exception', `Exception checking rate limit: ${error}`, 'high');
-    return false; // Fail secure
+    return false;
   }
 };
 
@@ -115,7 +108,7 @@ export const getSecurityHeaders = () => {
   return {
     'Content-Security-Policy': [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Note: 'unsafe-inline' needed for React development
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "font-src 'self' data:",
@@ -147,7 +140,6 @@ export const validateSession = async (): Promise<{ isValid: boolean; shouldRefre
       return { isValid: false, shouldRefresh: false };
     }
     
-    // Check if session is close to expiring (within 5 minutes)
     const expiresAt = session.expires_at || 0;
     const now = Math.floor(Date.now() / 1000);
     const timeUntilExpiry = expiresAt - now;
@@ -157,7 +149,7 @@ export const validateSession = async (): Promise<{ isValid: boolean; shouldRefre
       return { isValid: false, shouldRefresh: false };
     }
     
-    if (timeUntilExpiry < 300) { // Less than 5 minutes
+    if (timeUntilExpiry < 300) {
       return { isValid: true, shouldRefresh: true };
     }
     
@@ -180,7 +172,6 @@ export const auditLog = async (
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
-    // Store audit log in localStorage for now since database function may not exist
     const auditEntry = {
       operation,
       resourceType,
@@ -193,7 +184,6 @@ export const auditLog = async (
     const existingLogs = JSON.parse(localStorage.getItem('audit_logs') || '[]');
     existingLogs.push(auditEntry);
     
-    // Keep only last 100 entries
     if (existingLogs.length > 100) {
       existingLogs.splice(0, existingLogs.length - 100);
     }
@@ -208,24 +198,29 @@ export const auditLog = async (
  * Device fingerprinting for additional security
  */
 export const generateDeviceFingerprint = (): string => {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    ctx.textBaseline = 'top';
-    ctx.font = '14px Arial';
-    ctx.fillText('Device fingerprint', 2, 2);
+  try {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.textBaseline = 'top';
+      ctx.font = '14px Arial';
+      ctx.fillText('Device fingerprint', 2, 2);
+    }
+    
+    const fingerprint = {
+      userAgent: navigator.userAgent,
+      language: navigator.language,
+      platform: navigator.platform,
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      screen: `${screen.width}x${screen.height}`,
+      canvas: canvas.toDataURL(),
+      cookieEnabled: navigator.cookieEnabled,
+      doNotTrack: navigator.doNotTrack
+    };
+    
+    return btoa(JSON.stringify(fingerprint)).slice(0, 64);
+  } catch (error) {
+    console.error('Error generating device fingerprint:', error);
+    return 'fallback-fingerprint';
   }
-  
-  const fingerprint = {
-    userAgent: navigator.userAgent,
-    language: navigator.language,
-    platform: navigator.platform,
-    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    screen: `${screen.width}x${screen.height}`,
-    canvas: canvas.toDataURL(),
-    cookieEnabled: navigator.cookieEnabled,
-    doNotTrack: navigator.doNotTrack
-  };
-  
-  return btoa(JSON.stringify(fingerprint)).slice(0, 64);
 };

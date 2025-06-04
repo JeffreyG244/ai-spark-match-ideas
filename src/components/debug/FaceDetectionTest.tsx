@@ -25,13 +25,12 @@ const FaceDetectionTest = () => {
         await videoRef.current.play();
         setStatus('Step 2: Camera active, setting up AI...');
         
-        // Wait for video metadata
-        await new Promise((resolve) => {
+        await new Promise<void>((resolve) => {
           if (videoRef.current) {
             videoRef.current.onloadedmetadata = () => {
               console.log('✅ TEST: Video metadata loaded');
               console.log('📐 TEST: Video dimensions:', videoRef.current?.videoWidth, 'x', videoRef.current?.videoHeight);
-              resolve(true);
+              resolve();
             };
           }
         });
@@ -68,7 +67,6 @@ const FaceDetectionTest = () => {
       console.log('✅ TEST: Model loaded successfully');
       setStatus('Step 5: Testing face detection...');
       
-      // Test face detection
       setTimeout(async () => {
         if (videoRef.current && loadedModel) {
           try {
@@ -105,7 +103,7 @@ const FaceDetectionTest = () => {
 
   useEffect(() => {
     return () => stopTest();
-  }, []);
+  }, [stream]);
 
   return (
     <Card className="max-w-md mx-auto">

@@ -58,15 +58,20 @@ export const useSecurityMonitoring = () => {
     const navigationEntries = performance.getEntriesByType('navigation');
     if (navigationEntries.length > 0) {
       const entry = navigationEntries[0] as PerformanceNavigationTiming;
-      // Fixed: Use fetchStart instead of navigationStart
       if (entry.loadEventEnd - entry.fetchStart < 100) {
         logSecurityEvent('suspicious_navigation', 'Extremely fast page load detected', 'medium');
       }
     }
 
     // Monitor for console manipulation attempts
-    if (window.console.clear.toString().includes('native code') === false) {
-      logSecurityEvent('console_manipulation', 'Console manipulation detected', 'high');
+    try {
+      if (window.console && window.console.clear && typeof window.console.clear.toString === 'function') {
+        if (!window.console.clear.toString().includes('native code')) {
+          logSecurityEvent('console_manipulation', 'Console manipulation detected', 'high');
+        }
+      }
+    } catch (error) {
+      // Silently handle console check errors
     }
   };
 

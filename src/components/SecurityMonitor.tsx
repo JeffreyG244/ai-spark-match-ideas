@@ -1,35 +1,35 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Shield, AlertTriangle, CheckCircle, Eye, Clock } from 'lucide-react';
 
 const SecurityMonitor = () => {
-  const [securityMetrics, setSecurityMetrics] = useState({
+  const [securityMetrics] = useState({
     totalScans: 1247,
     threatsBlocked: 23,
     profilesVerified: 156,
     activeMonitoring: true
   });
 
-  const [recentActivity, setRecentActivity] = useState([
+  const [recentActivity] = useState([
     {
       type: 'success',
       message: 'Profile content validated and approved',
       timestamp: new Date(Date.now() - 2 * 60 * 1000),
-      severity: 'low'
+      severity: 'low' as const
     },
     {
       type: 'warning',
       message: 'Suspicious link detected in message - blocked',
       timestamp: new Date(Date.now() - 15 * 60 * 1000),
-      severity: 'medium'
+      severity: 'medium' as const
     },
     {
       type: 'info',
       message: 'Photo verification completed successfully',
       timestamp: new Date(Date.now() - 30 * 60 * 1000),
-      severity: 'low'
+      severity: 'low' as const
     }
   ]);
 
