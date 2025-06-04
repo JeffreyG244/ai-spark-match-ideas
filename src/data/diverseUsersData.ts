@@ -1,0 +1,188 @@
+
+export interface DiverseUser {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  bio: string;
+  values: string;
+  lifeGoals: string;
+  greenFlags: string;
+  gender: string;
+  ageGroup: string;
+  ethnicity: string;
+  photos: string[];
+}
+
+export const diverseUsersData: DiverseUser[] = [
+  {
+    email: 'sophia.wong@example.com',
+    password: 'Password123!',
+    firstName: 'Sophia',
+    lastName: 'Wong',
+    bio: 'Software engineer with a passion for sustainable tech. Love hiking on weekends and experimenting with plant-based cooking.',
+    values: 'Compassion, innovation, and continuous learning guide my decisions.',
+    lifeGoals: 'Building technology that helps people connect meaningfully while reducing our environmental footprint.',
+    greenFlags: 'Someone who values deep conversations, respects different perspectives, and has their own passions.',
+    gender: 'female',
+    ageGroup: '25-35',
+    ethnicity: 'Asian',
+    photos: [
+      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1604072366595-e75dc92d6bdc?q=80&w=400&h=400&fit=crop'
+    ]
+  },
+  {
+    email: 'marcus.johnson@example.com',
+    password: 'Password123!',
+    firstName: 'Marcus',
+    lastName: 'Johnson',
+    bio: 'Music producer and amateur chef. Looking for someone who appreciates good food and soulful music.',
+    values: 'Creativity, authenticity, and bringing joy to others through art.',
+    lifeGoals: 'Open my own recording studio and teach music to underprivileged kids.',
+    greenFlags: 'Someone who isn\'t afraid to be silly, appreciates art, and treats everyone with respect.',
+    gender: 'male',
+    ageGroup: '30-40',
+    ethnicity: 'Black',
+    photos: [
+      'https://images.unsplash.com/photo-1504257432389-52343af06ae3?q=80&w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?q=80&w=400&h=400&fit=crop'
+    ]
+  },
+  {
+    email: 'elena.garcia@example.com',
+    password: 'Password123!',
+    firstName: 'Elena',
+    lastName: 'Garcia',
+    bio: 'Architect by day, salsa dancer by night. I believe in sustainable design and building communities through shared spaces.',
+    values: 'Family, cultural heritage, environmental responsibility, and artistic expression.',
+    lifeGoals: 'Design affordable eco-housing that brings people together rather than isolates them.',
+    greenFlags: 'Someone who appreciates culture, dances like no one is watching, and wants to make a difference.',
+    gender: 'female',
+    ageGroup: '30-40',
+    ethnicity: 'Hispanic',
+    photos: [
+      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=400&h=400&fit=crop'
+    ]
+  },
+  {
+    email: 'raj.patel@example.com',
+    password: 'Password123!',
+    firstName: 'Raj',
+    lastName: 'Patel',
+    bio: 'Doctor specializing in global health. I love traveling, trying new cuisines, and meaningful conversations about how we can improve healthcare access.',
+    values: 'Compassion, equity, continuous learning, and finding joy in everyday moments.',
+    lifeGoals: 'Establish medical clinics in underserved areas and advocate for healthcare as a human right.',
+    greenFlags: 'Someone with empathy, intellectual curiosity, and who challenges me to grow.',
+    gender: 'male',
+    ageGroup: '35-45',
+    ethnicity: 'South Asian',
+    photos: [
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=400&h=400&fit=crop'
+    ]
+  },
+  {
+    email: 'aisha.abdullah@example.com',
+    password: 'Password123!',
+    firstName: 'Aisha',
+    lastName: 'Abdullah',
+    bio: 'Fintech entrepreneur passionate about financial inclusion. When not working, you\'ll find me rock climbing or volunteering with youth programs.',
+    values: 'Innovation, social impact, resilience, and creating opportunities for others.',
+    lifeGoals: 'Build tech solutions that help people in developing countries access financial services and education.',
+    greenFlags: 'Someone ambitious but humble, who values giving back and isn\'t afraid of adventure.',
+    gender: 'female',
+    ageGroup: '25-35',
+    ethnicity: 'Middle Eastern',
+    photos: [
+      'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?q=80&w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1551836022-deb4988cc6c0?q=80&w=400&h=400&fit=crop'
+    ]
+  },
+  {
+    email: 'david.kim@example.com',
+    password: 'Password123!',
+    firstName: 'David',
+    lastName: 'Kim',
+    bio: 'Environmental scientist working on ocean conservation. I\'m happiest when I\'m diving, hiking, or having deep conversations about how we can protect our planet.',
+    values: 'Environmental stewardship, intellectual honesty, and finding purpose through protecting nature.',
+    lifeGoals: 'Develop innovative solutions for ocean plastic pollution and inspire the next generation of environmental advocates.',
+    greenFlags: 'Someone who loves the outdoors, asks thoughtful questions, and lives mindfully.',
+    gender: 'male',
+    ageGroup: '30-40',
+    ethnicity: 'East Asian',
+    photos: [
+      'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1568602471122-7832951cc4c5?q=80&w=400&h=400&fit=crop'
+    ]
+  },
+  {
+    email: 'maya.jackson@example.com',
+    password: 'Password123!',
+    firstName: 'Maya',
+    lastName: 'Jackson',
+    bio: 'Artist and educator focused on empowering youth through creative expression. I believe art can heal communities and bridge cultural divides.',
+    values: 'Creativity, empowerment, cultural appreciation, and finding beauty in diversity.',
+    lifeGoals: 'Create community art spaces in underserved neighborhoods and develop arts education programs that celebrate cultural heritage.',
+    greenFlags: 'Someone who appreciates diversity, supports my passion projects, and has their own creative pursuits.',
+    gender: 'female',
+    ageGroup: '25-35',
+    ethnicity: 'Mixed/Multiracial',
+    photos: [
+      'https://images.unsplash.com/photo-1542206395-9feb3edaa68d?q=80&w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=400&fit=crop'
+    ]
+  },
+  {
+    email: 'james.miller@example.com',
+    password: 'Password123!',
+    firstName: 'James',
+    lastName: 'Miller',
+    bio: 'Retired military now working in cybersecurity. I love woodworking, cooking for friends, and mentoring young professionals in my field.',
+    values: 'Integrity, service to others, lifelong learning, and finding purpose in my second career.',
+    lifeGoals: 'Build a sustainable homestead and create a mentorship program for veterans transitioning to tech careers.',
+    greenFlags: 'Someone grounded, authentic, who values emotional intelligence and has a good sense of humor.',
+    gender: 'male',
+    ageGroup: '45-55',
+    ethnicity: 'White',
+    photos: [
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=400&h=400&fit=crop'
+    ]
+  },
+  {
+    email: 'zara.hassan@example.com',
+    password: 'Password123!',
+    firstName: 'Zara',
+    lastName: 'Hassan',
+    bio: 'Pediatrician and children\'s book author. I believe in the healing power of stories and laughter. Looking for someone kind and thoughtful.',
+    values: 'Compassion, joy in simple things, work-life balance, and making a difference in children\'s lives.',
+    lifeGoals: 'Create a series of children\'s books that help kids understand and navigate big emotions.',
+    greenFlags: 'Someone patient, family-oriented, who can be silly and serious in equal measure.',
+    gender: 'female',
+    ageGroup: '35-45',
+    ethnicity: 'South Asian',
+    photos: [
+      'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?q=80&w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1548142813-c348350df52b?q=80&w=400&h=400&fit=crop'
+    ]
+  },
+  {
+    email: 'leo.rodriguez@example.com',
+    password: 'Password123!',
+    firstName: 'Leo',
+    lastName: 'Rodriguez',
+    bio: 'Sustainable urban farmer and community organizer. I grow food in city spaces and teach others to do the same. Let\'s build a greener future together.',
+    values: 'Environmental stewardship, community resilience, knowledge sharing, and finding joy in growing things.',
+    lifeGoals: 'Create a network of urban farms that provide fresh food and green jobs in cities across the country.',
+    greenFlags: 'Someone who doesn\'t mind dirt under their fingernails, cares about sustainability, and wants to build something meaningful.',
+    gender: 'male',
+    ageGroup: '30-40',
+    ethnicity: 'Hispanic',
+    photos: [
+      'https://images.unsplash.com/photo-1534614971-6be99a7a3ffd?q=80&w=400&h=400&fit=crop',
+      'https://images.unsplash.com/photo-1563452965085-2e77e5bf2607?q=80&w=400&h=400&fit=crop'
+    ]
+  }
+];
