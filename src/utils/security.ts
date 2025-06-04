@@ -3,13 +3,11 @@ import DOMPurify from 'dompurify';
 
 // Content sanitization utility
 export const sanitizeInput = (input: string): string => {
-  // First pass: DOMPurify to remove any HTML/script
   const purified = DOMPurify.sanitize(input, {
     ALLOWED_TAGS: [],
     ALLOWED_ATTR: []
   });
   
-  // Second pass: Encode any potentially harmful characters
   return purified
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -22,46 +20,29 @@ export const sanitizeInput = (input: string): string => {
 export const sanitizeForDisplay = (content: string): string => {
   if (!content) return '';
   
-  // Allow only specific formatting tags and no attributes
   const purified = DOMPurify.sanitize(content, {
     ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'br'],
     ALLOWED_ATTR: []
   });
   
-  // Additional protection for specific attack vectors
   return purified
     .replace(/javascript:/gi, 'blocked:')
     .replace(/data:/gi, 'blocked:')
     .replace(/vbscript:/gi, 'blocked:');
 };
 
-// Enhanced inappropriate content detection - including regexes for better pattern matching
+// Enhanced inappropriate content detection
 export const containsInappropriateContent = (text: string): boolean => {
   if (!text) return false;
   
   const inappropriatePatterns = [
-    // Scam/spam words
     /\b(spam|scam|money|bitcoin|crypto|investment)\b/i,
-    
-    // Contact info solicitation
     /\b(instagram|snapchat|whatsapp|telegram|kik)\b/i,
-    
-    // Financial solicitation
     /\b(cashapp|venmo|paypal|bank|account|password)\b/i,
-    
-    // Personal info solicitation
     /\b(social security|ssn|credit card|debit card)\b/i,
-    
-    // Script injection attempts
     /\b(script|javascript|eval|cookie|localstorage)\b/i,
-    
-    // External URLs
     /https?:\/\//i,
-    
-    // Email addresses
     /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i,
-    
-    // Phone numbers (various formats)
     /(\+\d{1,3}[ -]?)?\(?\d{3}\)?[ -]?\d{3}[ -]?\d{4}/
   ];
   
@@ -74,18 +55,18 @@ export const detectSpamPatterns = (text: string): boolean => {
   if (!text) return false;
   
   const spamPatterns = [
-    /(.)\1{4,}/g, // Repeated characters (aaaa, !!!!!)
-    /[A-Z]{10,}/g, // Excessive caps
-    /(\$|€|£|\d+)\s*(million|thousand|k|usd|dollars?)/gi, // Money amounts
-    /(click here|visit|link|website|url)/gi, // Link spam
-    /(free|winner|congratulations|prize)/gi, // Common spam words
-    /[^\w\s]{5,}/g, // Excessive special characters
-    /<script/gi, // Script tags
-    /javascript:/gi, // JavaScript protocol
-    /on\w+\s*=/gi, // Event handlers
-    /data:text\/html/gi, // Data URL HTML injection
-    /\b(eval|setTimeout|setInterval|Function)\s*\(/gi, // JavaScript execution
-    /document\s*\.\s*(cookie|write|location)/gi // DOM manipulation
+    /(.)\1{4,}/g,
+    /[A-Z]{10,}/g,
+    /(\$|€|£|\d+)\s*(million|thousand|k|usd|dollars?)/gi,
+    /(click here|visit|link|website|url)/gi,
+    /(free|winner|congratulations|prize)/gi,
+    /[^\w\s]{5,}/g,
+    /<script/gi,
+    /javascript:/gi,
+    /on\w+\s*=/gi,
+    /data:text\/html/gi,
+    /\b(eval|setTimeout|setInterval|Function)\s*\(/gi,
+    /document\s*\.\s*(cookie|write|location)/gi
   ];
   
   return spamPatterns.some(pattern => pattern.test(text));
@@ -109,15 +90,14 @@ export const validateMessageContent = (content: string): { isValid: boolean; err
     return { isValid: false, error: 'Message appears to be spam' };
   }
 
-  // Check for potential XSS attempts with more thorough pattern matching
   const xssPatterns = [
-    /<[^>]*>/g, // Any HTML tags
-    /javascript:/gi, // JavaScript protocol
-    /data:text\/html/gi, // Data URL HTML injection
-    /on\w+\s*=/gi, // DOM event handlers
-    /&#/gi, // HTML entity encoding
-    /\\u00[0-9A-F]{2}/gi, // Unicode escapes
-    /\\x[0-9A-F]{2}/gi // Hex escapes
+    /<[^>]*>/g,
+    /javascript:/gi,
+    /data:text\/html/gi,
+    /on\w+\s*=/gi,
+    /&#/gi,
+    /\\u00[0-9A-F]{2}/gi,
+    /\\x[0-9A-F]{2}/gi
   ];
   
   if (xssPatterns.some(pattern => pattern.test(content))) {
@@ -127,20 +107,18 @@ export const validateMessageContent = (content: string): { isValid: boolean; err
   return { isValid: true };
 };
 
-// Enhanced rate limiting utility with exponential backoff and persistent blocking
+// Enhanced rate limiting utility
 class RateLimiter {
   private attempts: Map<string, number[]> = new Map();
-  private blocked: Map<string, number> = new Map(); // Map of key to unblock time
+  private blocked: Map<string, number> = new Map();
   
   constructor() {
-    // Load blocked state from localStorage if available
     try {
       const blockedData = localStorage.getItem('rate_limiter_blocks');
       if (blockedData) {
         const parsed = JSON.parse(blockedData);
         this.blocked = new Map(Object.entries(parsed));
         
-        // Clean expired blocks
         const now = Date.now();
         this.blocked.forEach((expiry, key) => {
           if (expiry < now) {
@@ -154,7 +132,6 @@ class RateLimiter {
   }
   
   private saveBlockedState(): void {
-    // Save blocked state to localStorage
     try {
       const blockedObj = Object.fromEntries(this.blocked);
       localStorage.setItem('rate_limiter_blocks', JSON.stringify(blockedObj));
@@ -164,33 +141,26 @@ class RateLimiter {
   }
   
   isAllowed(key: string, maxAttempts: number = 5, windowMs: number = 60000): boolean {
-    // Check if currently blocked
     const now = Date.now();
     const blockExpiry = this.blocked.get(key);
     
     if (blockExpiry && blockExpiry > now) {
       return false;
     } else if (blockExpiry) {
-      // Clear expired block
       this.blocked.delete(key);
       this.saveBlockedState();
     }
 
     const attempts = this.attempts.get(key) || [];
-    
-    // Remove old attempts outside the window
     const validAttempts = attempts.filter(time => now - time < windowMs);
     
     if (validAttempts.length >= maxAttempts) {
-      // Calculate exponential backoff based on violation count
       const violationCount = Math.floor(validAttempts.length / maxAttempts);
-      const blockDuration = Math.min(windowMs * Math.pow(2, violationCount), 24 * 60 * 60 * 1000); // Cap at 24 hours
+      const blockDuration = Math.min(windowMs * Math.pow(2, violationCount), 24 * 60 * 60 * 1000);
       
-      // Block user with exponential backoff
       this.blocked.set(key, now + blockDuration);
       this.saveBlockedState();
       
-      // Log security event for repeated violations
       if (violationCount > 1) {
         logSecurityEvent('rate_limit_blocked', 
           `${key} blocked for ${blockDuration/1000}s after ${violationCount} violations`, 'high');
@@ -205,7 +175,6 @@ class RateLimiter {
   }
   
   getRemainingAttempts(key: string, maxAttempts: number = 5, windowMs: number = 60000): number {
-    // Check if currently blocked
     const now = Date.now();
     const blockExpiry = this.blocked.get(key);
     
@@ -223,7 +192,7 @@ class RateLimiter {
     const blockExpiry = this.blocked.get(key);
     
     if (blockExpiry && blockExpiry > now) {
-      return Math.ceil((blockExpiry - now) / 1000); // Return seconds
+      return Math.ceil((blockExpiry - now) / 1000);
     }
     
     return 0;
@@ -245,17 +214,14 @@ export const validateAge = (age: number): boolean => {
 export const validateEmail = (email: string): boolean => {
   if (!email || typeof email !== 'string') return false;
   
-  // Basic email format check
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   
-  // Additional security: prevent potential injection attempts
   if (email.includes('<') || email.includes('>') || 
       email.includes('script') || email.includes('&') ||
       email.includes('"') || email.includes("'")) {
     return false;
   }
   
-  // Check length to prevent DOS attacks
   if (email.length > 254) {
     return false;
   }
@@ -263,12 +229,11 @@ export const validateEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
-// Enhanced security logging utility with better storage strategy
+// Enhanced security logging utility
 export const logSecurityEvent = (eventType: string, details: string, severity: 'low' | 'medium' | 'high' = 'medium') => {
   console.warn(`[SECURITY] ${severity.toUpperCase()}: ${eventType} - ${details}`);
   
   try {
-    // Enhanced structured logging with more context
     const securityLog = {
       timestamp: new Date().toISOString(),
       type: eventType,
@@ -281,13 +246,11 @@ export const logSecurityEvent = (eventType: string, details: string, severity: '
       fingerprint: generateSimpleFingerprint()
     };
     
-    // Store logs more efficiently - use structured array instead of multiple keys
     let logs = [];
     try {
       const storedLogs = localStorage.getItem('security_logs');
       logs = storedLogs ? JSON.parse(storedLogs) : [];
       
-      // Validate logs is an array
       if (!Array.isArray(logs)) {
         logs = [];
       }
@@ -295,36 +258,28 @@ export const logSecurityEvent = (eventType: string, details: string, severity: '
       logs = [];
     }
     
-    // Add new log and maintain size limit
     logs.push(securityLog);
     if (logs.length > 100) {
-      logs = logs.slice(-100); // Keep only the latest 100 entries
+      logs = logs.slice(-100);
     }
     
     localStorage.setItem('security_logs', JSON.stringify(logs));
 
-    // In production, send to monitoring service
     if (severity === 'high') {
-      // This would integrate with your monitoring service
       console.error('HIGH SEVERITY SECURITY EVENT:', securityLog);
       
-      // Optionally send to server if available
-      if (typeof supabase !== 'undefined') {
-        try {
-          fetch('/api/security-events', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(securityLog),
-            // Don't wait for response to avoid blocking
-            keepalive: true
-          }).catch(() => {}); // Ignore errors, this is just a best-effort
-        } catch (e) {
-          // Ignore errors, logging should never break functionality
-        }
+      try {
+        fetch('/api/security-events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(securityLog),
+          keepalive: true
+        }).catch(() => {});
+      } catch (e) {
+        // Ignore errors
       }
     }
   } catch (e) {
-    // If logging fails, don't break the app
     console.error('Error in security logging:', e);
   }
 };
@@ -337,7 +292,7 @@ export const LIMITS = {
   GREEN_FLAGS_MAX_LENGTH: 300,
   MIN_BIO_LENGTH: 50,
   MESSAGE_MAX_LENGTH: 1000,
-  MAX_PHOTO_SIZE: 5 * 1024 * 1024, // 5MB
+  MAX_PHOTO_SIZE: 5 * 1024 * 1024,
   MAX_PHOTOS_PER_USER: 6
 };
 
@@ -352,7 +307,6 @@ export const isProductionEnvironment = (): boolean => {
            !host.includes('10.') &&
            !host.endsWith('.dev');
   } catch (e) {
-    // If there's any error accessing location, assume production as safer default
     return true;
   }
 };
@@ -368,13 +322,12 @@ function generateSimpleFingerprint(): string {
       new Date().getTimezoneOffset()
     ];
     
-    // Create a string hash
     const str = components.join('|');
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
+      hash = hash & hash;
     }
     return hash.toString(16);
   } catch (e) {
@@ -401,17 +354,14 @@ export const validateInputSafety = (input: string): boolean => {
 export const validateUrlSafety = (url: string): boolean => {
   if (!url) return false;
   
-  // Must be HTTP or HTTPS
   if (!/^https?:\/\//i.test(url)) {
     return false;
   }
   
-  // Block localhost and private IPs
   if (/localhost|127\.0\.0\.1|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\./i.test(url)) {
     return false;
   }
   
-  // Block dangerous protocols
   if (/^(javascript|data|file|vbscript):/i.test(url)) {
     return false;
   }

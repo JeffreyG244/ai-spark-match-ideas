@@ -9,6 +9,24 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      breached_passwords: {
+        Row: {
+          created_at: string
+          id: number
+          password_hash: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          password_hash: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          password_hash?: string
+        }
+        Relationships: []
+      }
       compatibility_answers: {
         Row: {
           answers: Json
@@ -481,9 +499,21 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      is_password_breached: {
+        Args: { password: string }
+        Returns: boolean
+      }
+      prevent_breached_password: {
+        Args: { user_password: string }
+        Returns: boolean
+      }
       upsert_user_presence: {
         Args: { p_user_id: string; p_is_online: boolean }
         Returns: undefined
+      }
+      user_login: {
+        Args: { email: string; password: string }
+        Returns: boolean
       }
       validate_user_session: {
         Args: { user_id: string }
