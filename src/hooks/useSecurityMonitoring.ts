@@ -58,7 +58,8 @@ export const useSecurityMonitoring = () => {
     const navigationEntries = performance.getEntriesByType('navigation');
     if (navigationEntries.length > 0) {
       const entry = navigationEntries[0] as PerformanceNavigationTiming;
-      if (entry.loadEventEnd - entry.navigationStart < 100) {
+      // Fixed: Use fetchStart instead of navigationStart
+      if (entry.loadEventEnd - entry.fetchStart < 100) {
         logSecurityEvent('suspicious_navigation', 'Extremely fast page load detected', 'medium');
       }
     }
