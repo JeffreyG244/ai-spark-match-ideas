@@ -11,6 +11,7 @@ import Dashboard from '@/pages/Dashboard';
 import Messages from '@/pages/Messages';
 import NotFound from '@/pages/NotFound';
 import Legal from '@/pages/Legal';
+import SeedUsers from '@/pages/SeedUsers';
 
 // Legal Pages
 import PrivacyPolicy from '@/pages/legal/PrivacyPolicy';
@@ -23,6 +24,7 @@ import ContentModerationPolicy from '@/pages/legal/ContentModerationPolicy';
 import AgeVerificationPolicy from '@/pages/legal/AgeVerificationPolicy';
 import IdentityVerificationPolicy from '@/pages/legal/IdentityVerificationPolicy';
 import RomanceScamPrevention from '@/pages/legal/RomanceScamPrevention';
+import BlockingReportingPolicy from '@/pages/legal/BlockingReportingPolicy';
 
 import './App.css';
 
@@ -50,6 +52,14 @@ function App() {
                 </AuthGuard>
               } 
             />
+            <Route 
+              path="/seed-users" 
+              element={
+                <AuthGuard>
+                  <SeedUsers />
+                </AuthGuard>
+              } 
+            />
             
             {/* Legal Routes - Implemented */}
             <Route path="/legal" element={<Legal />} />
@@ -63,9 +73,9 @@ function App() {
             <Route path="/legal/age-verification" element={<AgeVerificationPolicy />} />
             <Route path="/legal/identity-verification" element={<IdentityVerificationPolicy />} />
             <Route path="/legal/scam-prevention" element={<RomanceScamPrevention />} />
+            <Route path="/legal/reporting" element={<BlockingReportingPolicy />} />
             
             {/* Placeholder routes for remaining legal pages - Coming Soon */}
-            <Route path="/legal/reporting" element={<div>Blocking & Reporting Policy - Coming Soon</div>} />
             <Route path="/legal/gdpr" element={<div>GDPR Compliance - Coming Soon</div>} />
             <Route path="/legal/ccpa" element={<div>CCPA Compliance - Coming Soon</div>} />
             <Route path="/legal/data-retention" element={<div>Data Retention Policy - Coming Soon</div>} />
