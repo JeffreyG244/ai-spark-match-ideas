@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Heart, Shield, AlertTriangle } from 'lucide-react';
+import { Shield, Heart, AlertTriangle, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const CommunityGuidelines = () => {
@@ -23,196 +23,183 @@ const CommunityGuidelines = () => {
           </nav>
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Community Guidelines</h1>
           <p className="text-lg text-gray-600">
-            Creating a safe, respectful, and authentic community for meaningful connections.
+            Creating a safe, respectful, and authentic environment for everyone.
           </p>
         </div>
 
-        <div className="mb-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="flex items-start gap-3">
-            <Heart className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
-            <div>
-              <h3 className="font-bold text-blue-800 mb-2">Our Mission</h3>
-              <p className="text-blue-700">
-                Luvlang is designed to help people find meaningful connections. These guidelines ensure 
-                our community remains safe, respectful, and authentic for everyone.
+        {/* Core Values */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card className="border-blue-200 bg-blue-50">
+            <CardContent className="p-6 text-center">
+              <Shield className="h-8 w-8 text-blue-600 mx-auto mb-3" />
+              <h3 className="font-bold text-blue-800 mb-2">Safety First</h3>
+              <p className="text-blue-700 text-sm">
+                We prioritize user safety and work to prevent harassment and abuse.
               </p>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-green-200 bg-green-50">
+            <CardContent className="p-6 text-center">
+              <Heart className="h-8 w-8 text-green-600 mx-auto mb-3" />
+              <h3 className="font-bold text-green-800 mb-2">Authentic Connections</h3>
+              <p className="text-green-700 text-sm">
+                We encourage genuine profiles and meaningful interactions.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-purple-200 bg-purple-50">
+            <CardContent className="p-6 text-center">
+              <FileText className="h-8 w-8 text-purple-600 mx-auto mb-3" />
+              <h3 className="font-bold text-purple-800 mb-2">Respectful Behavior</h3>
+              <p className="text-purple-700 text-sm">
+                We expect all users to treat each other with dignity and respect.
+              </p>
+            </CardContent>
+          </Card>
         </div>
 
-        <Card className="border-green-200 mb-8">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <Shield className="h-6 w-6 text-green-600" />
-              <CardTitle className="text-xl text-green-800">Be Authentic</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3 text-green-800">
-              <li className="flex items-start gap-3">
-                <span className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></span>
-                <span>Use your real name, age, and recent photos</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></span>
-                <span>Provide honest information about yourself</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></span>
-                <span>Don't impersonate others or create fake profiles</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></span>
-                <span>Only post photos of yourself</span>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
+        {/* Guidelines Sections */}
+        <div className="space-y-8">
+          {/* Profile Standards */}
+          <Card className="border-green-200">
+            <CardHeader>
+              <CardTitle className="text-2xl text-green-800">Profile Standards</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 text-gray-700">
+                <h3 className="text-xl font-semibold text-gray-800">Required:</h3>
+                <ul className="list-disc list-inside space-y-2">
+                  <li>Use real, recent photos of yourself</li>
+                  <li>Provide accurate age and basic information</li>
+                  <li>Write authentic descriptions about yourself</li>
+                  <li>Use your real first name or a genuine nickname</li>
+                </ul>
+                
+                <h3 className="text-xl font-semibold text-gray-800 mt-6">Prohibited:</h3>
+                <ul className="list-disc list-inside space-y-2">
+                  <li>Fake profiles or impersonating others</li>
+                  <li>Using photos of other people</li>
+                  <li>Significantly outdated photos (older than 2 years)</li>
+                  <li>Group photos where you can't be identified</li>
+                  <li>Photos of children, even if they're your own</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="border-blue-200 mb-8">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <Users className="h-6 w-6 text-blue-600" />
-              <CardTitle className="text-xl text-blue-800">Be Respectful</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-3 text-blue-800">
-              <li className="flex items-start gap-3">
-                <span className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></span>
-                <span>Treat everyone with kindness and respect</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></span>
-                <span>Accept rejection gracefully</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></span>
-                <span>No harassment, stalking, or persistent unwanted contact</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></span>
-                <span>Respect personal boundaries and consent</span>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
+          {/* Communication Standards */}
+          <Card className="border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-2xl text-blue-800">Communication Standards</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 text-gray-700">
+                <h3 className="text-xl font-semibold text-gray-800">Encouraged:</h3>
+                <ul className="list-disc list-inside space-y-2">
+                  <li>Respectful and thoughtful messages</li>
+                  <li>Honest communication about intentions</li>
+                  <li>Respectful responses to rejection</li>
+                  <li>Constructive and positive interactions</li>
+                </ul>
+                
+                <h3 className="text-xl font-semibold text-gray-800 mt-6">Prohibited:</h3>
+                <ul className="list-disc list-inside space-y-2">
+                  <li>Harassment, threats, or abusive language</li>
+                  <li>Sexually explicit messages or content</li>
+                  <li>Spam or repetitive unwanted messages</li>
+                  <li>Requests for money, gifts, or financial assistance</li>
+                  <li>Sharing personal contact information in initial messages</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card className="border-red-200 mb-8">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="h-6 w-6 text-red-600" />
-              <CardTitle className="text-xl text-red-800">Prohibited Behavior</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-semibold text-red-800 mb-2">Sexual Content & Harassment</h4>
-                <ul className="space-y-2 text-red-700 text-sm">
-                  <li>• No sexually explicit content or nudity</li>
-                  <li>• No unsolicited sexual messages or advances</li>
-                  <li>• No requesting or sharing intimate photos</li>
+          {/* Content Guidelines */}
+          <Card className="border-purple-200">
+            <CardHeader>
+              <CardTitle className="text-2xl text-purple-800">Content Guidelines</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 text-gray-700">
+                <h3 className="text-xl font-semibold text-gray-800">Acceptable Content:</h3>
+                <ul className="list-disc list-inside space-y-2">
+                  <li>Tasteful photos that clearly show your face</li>
+                  <li>Positive and genuine profile descriptions</li>
+                  <li>Appropriate hobby and interest photos</li>
+                  <li>Professional or casual photos in appropriate settings</li>
+                </ul>
+                
+                <h3 className="text-xl font-semibold text-gray-800 mt-6">Prohibited Content:</h3>
+                <ul className="list-disc list-inside space-y-2">
+                  <li>Nudity, sexually explicit, or suggestive content</li>
+                  <li>Violence, weapons, or illegal activities</li>
+                  <li>Hate speech, discrimination, or offensive language</li>
+                  <li>Commercial advertising or promotional content</li>
+                  <li>Copyrighted material without permission</li>
                 </ul>
               </div>
-              
-              <div>
-                <h4 className="font-semibold text-red-800 mb-2">Hate Speech & Discrimination</h4>
-                <ul className="space-y-2 text-red-700 text-sm">
-                  <li>• No content targeting race, religion, gender, or sexual orientation</li>
-                  <li>• No slurs, offensive language, or discriminatory comments</li>
-                  <li>• No promoting hate groups or extremist ideologies</li>
-                </ul>
-              </div>
+            </CardContent>
+          </Card>
 
-              <div>
-                <h4 className="font-semibold text-red-800 mb-2">Scams & Financial Requests</h4>
-                <ul className="space-y-2 text-red-700 text-sm">
-                  <li>• Never ask for money, gifts, or financial assistance</li>
-                  <li>• No promoting investment schemes or financial services</li>
-                  <li>• No selling products or services to other users</li>
+          {/* Safety Requirements */}
+          <Card className="border-red-200 bg-red-50">
+            <CardHeader>
+              <CardTitle className="text-2xl text-red-800">Safety Requirements</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 text-red-800">
+                <h3 className="text-xl font-semibold">Zero Tolerance for:</h3>
+                <ul className="list-disc list-inside space-y-2">
+                  <li>Any form of harassment or stalking</li>
+                  <li>Threats of violence or actual violence</li>
+                  <li>Sharing intimate images without consent</li>
+                  <li>Attempting to obtain personal or financial information</li>
+                  <li>Catfishing or romantic scams</li>
+                  <li>Any illegal activities or solicitation</li>
                 </ul>
+                
+                <div className="mt-6 p-4 bg-white rounded-lg border border-red-200">
+                  <h4 className="font-semibold mb-2">If You Experience Violations:</h4>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Use the report button immediately</li>
+                    <li>Block the user if necessary</li>
+                    <li>Contact support at safety@luvlang.com</li>
+                    <li>Save evidence if safe to do so</li>
+                  </ul>
+                </div>
               </div>
+            </CardContent>
+          </Card>
 
-              <div>
-                <h4 className="font-semibold text-red-800 mb-2">Privacy & Safety</h4>
-                <ul className="space-y-2 text-red-700 text-sm">
-                  <li>• Don't share others' private information without consent</li>
-                  <li>• No screenshots or recordings of private conversations</li>
-                  <li>• Don't use the platform to stalk or monitor others</li>
+          {/* Enforcement */}
+          <Card className="border-orange-200">
+            <CardHeader>
+              <CardTitle className="text-2xl text-orange-800">Enforcement</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 text-gray-700">
+                <h3 className="text-xl font-semibold text-gray-800">Violation Consequences:</h3>
+                <ul className="list-disc list-inside space-y-2">
+                  <li><strong>Warning:</strong> First-time minor violations</li>
+                  <li><strong>Content Removal:</strong> Inappropriate photos or text</li>
+                  <li><strong>Temporary Suspension:</strong> Repeated violations</li>
+                  <li><strong>Permanent Ban:</strong> Serious safety violations</li>
+                  <li><strong>Legal Action:</strong> Criminal behavior or threats</li>
                 </ul>
+                
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-semibold text-gray-800 mb-2">Appeals Process:</h4>
+                  <p className="text-gray-700">
+                    If you believe your account was suspended in error, you can appeal by contacting 
+                    appeals@luvlang.com within 30 days of the action.
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-purple-200 mb-8">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <FileText className="h-6 w-6 text-purple-600" />
-              <CardTitle className="text-xl text-purple-800">Photo Guidelines</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold text-purple-800 mb-3">✅ Acceptable Photos</h4>
-                <ul className="space-y-2 text-purple-700 text-sm">
-                  <li>• Clear photos of your face</li>
-                  <li>• Recent photos (within 2 years)</li>
-                  <li>• Photos where you're fully clothed</li>
-                  <li>• High-quality, well-lit images</li>
-                  <li>• Photos showing your personality/interests</li>
-                </ul>
-              </div>
-              
-              <div>
-                <h4 className="font-semibold text-red-800 mb-3">❌ Prohibited Photos</h4>
-                <ul className="space-y-2 text-red-700 text-sm">
-                  <li>• Nudity or sexually suggestive content</li>
-                  <li>• Photos of other people without consent</li>
-                  <li>• Screenshots from other social media</li>
-                  <li>• Heavily filtered or misleading photos</li>
-                  <li>• Photos with contact information visible</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-orange-200">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="h-6 w-6 text-orange-600" />
-              <CardTitle className="text-xl text-orange-800">Reporting & Enforcement</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4 text-orange-800">
-              <div>
-                <h4 className="font-semibold mb-2">How to Report</h4>
-                <p className="text-sm text-orange-700 mb-3">
-                  If you encounter behavior that violates these guidelines, please report it immediately:
-                </p>
-                <ul className="space-y-2 text-orange-700 text-sm">
-                  <li>• Use the report button on profiles or messages</li>
-                  <li>• Contact our safety team: safety@luvlang.com</li>
-                  <li>• For emergencies, contact local authorities first</li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-2">Consequences</h4>
-                <ul className="space-y-2 text-orange-700 text-sm">
-                  <li>• Warning for minor violations</li>
-                  <li>• Temporary suspension for repeated violations</li>
-                  <li>• Permanent ban for serious violations</li>
-                  <li>• Legal action for illegal activities</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="mt-8 text-center">
           <Link 
