@@ -9,6 +9,13 @@ import SecurityActivity from './security/SecurityActivity';
 import SecurityFooter from './security/SecurityFooter';
 import { getSecurityLogs, logSecurityEventToDB, SecurityLogEntry } from '@/utils/enhancedSecurity';
 
+interface SecurityEvent {
+  type: 'success' | 'warning' | 'info' | 'error';
+  message: string;
+  timestamp: Date;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+}
+
 const SecurityMonitor = () => {
   const { securityStatus, performSecurityCheck } = useSecurityMonitoring();
   const [securityMetrics, setSecurityMetrics] = useState({
@@ -18,7 +25,7 @@ const SecurityMonitor = () => {
     activeMonitoring: true
   });
 
-  const [recentActivity, setRecentActivity] = useState<SecurityLogEntry[]>([]);
+  const [recentActivity, setRecentActivity] = useState<SecurityEvent[]>([]);
 
   useEffect(() => {
     loadSecurityActivity();
@@ -30,8 +37,8 @@ const SecurityMonitor = () => {
       // Load from centralized database first
       const dbLogs = await getSecurityLogs(10);
       
-      // Convert to the format expected by SecurityActivity component
-      const formattedLogs = dbLogs.map(log => ({
+      // Convert SecurityLogEntry[] to SecurityEvent[]
+      const formattedLogs: SecurityEvent[] = dbLogs.map(log => ({
         type: getActivityType(log.severity),
         message: typeof log.details === 'object' && log.details.message 
           ? log.details.message 
@@ -40,7 +47,7 @@ const SecurityMonitor = () => {
         severity: log.severity
       }));
 
-      setRecentActivity(formattedLogs as any);
+      setRecentActivity(formattedLogs);
 
       // Update metrics based on recent activity
       const recentThreats = dbLogs.filter(log => 
@@ -60,7 +67,7 @@ const SecurityMonitor = () => {
       
       // Fallback to localStorage if database fails
       const fallbackLogs = JSON.parse(localStorage.getItem('security_logs') || '[]');
-      const formattedFallback = fallbackLogs.slice(-10).map((log: any) => ({
+      const formattedFallback: SecurityEvent[] = fallbackLogs.slice(-10).map((log: any) => ({
         type: getActivityType(log.severity || 'low'),
         message: log.details || log.type,
         timestamp: new Date(log.timestamp),

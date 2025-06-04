@@ -1,4 +1,43 @@
+
 import { logSecurityEventToDB } from './enhancedSecurity';
+
+// Security configuration constants
+export const LIMITS = {
+  BIO_MAX_LENGTH: 500,
+  MIN_BIO_LENGTH: 50,
+  VALUES_MAX_LENGTH: 300,
+  GOALS_MAX_LENGTH: 300,
+  GREEN_FLAGS_MAX_LENGTH: 300,
+  MESSAGE_MAX_LENGTH: 1000
+};
+
+// Rate limiter utility
+export const rateLimiter = {
+  requests: new Map<string, number[]>(),
+  
+  isAllowed(key: string, maxRequests: number, windowMs: number): boolean {
+    const now = Date.now();
+    const windowStart = now - windowMs;
+    
+    if (!this.requests.has(key)) {
+      this.requests.set(key, []);
+    }
+    
+    const requests = this.requests.get(key)!;
+    
+    // Remove old requests outside the window
+    const validRequests = requests.filter(time => time > windowStart);
+    
+    if (validRequests.length >= maxRequests) {
+      return false;
+    }
+    
+    validRequests.push(now);
+    this.requests.set(key, validRequests);
+    
+    return true;
+  }
+};
 
 export const logSecurityEvent = async (
   eventType: string,
@@ -53,9 +92,59 @@ export const sanitizeInput = (input: string): string => {
     .substring(0, 1000); // Limit length
 };
 
+export const sanitizeForDisplay = (input: string): string => {
+  return input
+    .replace(/[<>]/g, '') // Remove potential HTML tags
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .trim();
+};
+
 export const validateEmailFormat = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+};
+
+export const containsInappropriateContent = (content: string): boolean => {
+  const inappropriatePatterns = [
+    /contact.*me.*at/i,
+    /instagram|snapchat|whatsapp|telegram/i,
+    /money|bitcoin|crypto|investment/i,
+    /cashapp|venmo|paypal/i,
+    /click.*here|visit.*site/i,
+    /urgent|emergency|asap/i
+  ];
+  
+  return inappropriatePatterns.some(pattern => pattern.test(content));
+};
+
+export const validateMessageContent = (content: string): { isValid: boolean; error?: string } => {
+  if (!content || content.trim().length === 0) {
+    return { isValid: false, error: 'Message cannot be empty' };
+  }
+
+  if (content.length > LIMITS.MESSAGE_MAX_LENGTH) {
+    return { isValid: false, error: `Message too long (max ${LIMITS.MESSAGE_MAX_LENGTH} characters)` };
+  }
+
+  // Check for dangerous patterns
+  const dangerousPatterns = [
+    /<script/gi,
+    /javascript:/gi,
+    /on\w+\s*=/gi,
+    /data:text\/html/gi
+  ];
+
+  if (dangerousPatterns.some(pattern => pattern.test(content))) {
+    return { isValid: false, error: 'Message contains potentially dangerous content' };
+  }
+
+  if (containsInappropriateContent(content)) {
+    return { isValid: false, error: 'Message contains inappropriate content' };
+  }
+
+  return { isValid: true };
 };
 
 export const detectSuspiciousPatterns = (content: string): string[] => {

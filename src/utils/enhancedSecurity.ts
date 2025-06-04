@@ -180,7 +180,11 @@ export const getSecurityLogs = async (limit: number = 50): Promise<SecurityLogEn
       throw error;
     }
 
-    return data || [];
+    // Cast the data to match our SecurityLogEntry interface
+    return (data || []).map(log => ({
+      ...log,
+      severity: log.severity as 'low' | 'medium' | 'high' | 'critical'
+    }));
   } catch (error) {
     console.error('Error fetching security logs:', error);
     return [];
