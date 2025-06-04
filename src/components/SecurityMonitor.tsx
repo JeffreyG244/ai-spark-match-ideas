@@ -40,9 +40,7 @@ const SecurityMonitor = () => {
       // Convert SecurityLogEntry[] to SecurityEvent[]
       const formattedLogs: SecurityEvent[] = dbLogs.map(log => ({
         type: getActivityType(log.severity),
-        message: typeof log.details === 'object' && log.details.message 
-          ? log.details.message 
-          : log.event_type.replace(/_/g, ' '),
+        message: getMessageFromDetails(log.details, log.event_type),
         timestamp: new Date(log.created_at!),
         severity: log.severity
       }));
@@ -76,6 +74,13 @@ const SecurityMonitor = () => {
       
       setRecentActivity(formattedFallback);
     }
+  };
+
+  const getMessageFromDetails = (details: Record<string, any>, eventType: string): string => {
+    if (details && typeof details === 'object' && details.message) {
+      return details.message;
+    }
+    return eventType.replace(/_/g, ' ');
   };
 
   const getActivityType = (severity: string): 'success' | 'warning' | 'info' | 'error' => {

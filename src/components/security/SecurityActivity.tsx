@@ -7,7 +7,7 @@ interface SecurityEvent {
   type: 'success' | 'warning' | 'info' | 'error';
   message: string;
   timestamp: Date;
-  severity: 'low' | 'medium' | 'high';
+  severity: 'low' | 'medium' | 'high' | 'critical';
 }
 
 interface SecurityActivityProps {
@@ -34,6 +34,19 @@ const SecurityActivity: React.FC<SecurityActivityProps> = ({ recentActivity }) =
     }
   };
 
+  const getSeverityBadge = (severity: 'low' | 'medium' | 'high' | 'critical') => {
+    if (severity === 'critical') {
+      return <Badge variant="destructive">Critical</Badge>;
+    }
+    if (severity === 'high') {
+      return <Badge variant="destructive">High</Badge>;
+    }
+    if (severity === 'medium') {
+      return <Badge variant="default" className="bg-yellow-500">Medium</Badge>;
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-2">
       <h4 className="font-medium text-sm flex items-center gap-2">
@@ -45,7 +58,7 @@ const SecurityActivity: React.FC<SecurityActivityProps> = ({ recentActivity }) =
           <div 
             key={index} 
             className={`flex items-start gap-2 p-2 rounded text-xs ${
-              activity.severity === 'high' 
+              activity.severity === 'critical' || activity.severity === 'high'
                 ? 'bg-red-50' 
                 : activity.severity === 'medium'
                   ? 'bg-yellow-50'
@@ -57,12 +70,7 @@ const SecurityActivity: React.FC<SecurityActivityProps> = ({ recentActivity }) =
               <p className="text-gray-700">{activity.message}</p>
               <p className="text-gray-500">{formatTimeAgo(activity.timestamp)}</p>
             </div>
-            {activity.severity === 'high' && (
-              <Badge variant="destructive">High</Badge>
-            )}
-            {activity.severity === 'medium' && (
-              <Badge variant="default" className="bg-yellow-500">Medium</Badge>
-            )}
+            {getSeverityBadge(activity.severity)}
           </div>
         ))}
       </div>

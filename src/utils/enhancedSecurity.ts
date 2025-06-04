@@ -39,6 +39,16 @@ export interface AdminAction {
   created_at?: string;
 }
 
+const convertSupabaseJsonToRecord = (jsonData: any): Record<string, any> => {
+  if (!jsonData) return {};
+  if (typeof jsonData === 'object') return jsonData;
+  try {
+    return JSON.parse(jsonData);
+  } catch {
+    return { raw: jsonData };
+  }
+};
+
 export const logSecurityEventToDB = async (
   eventType: string,
   details: string | Record<string, any>,
@@ -180,10 +190,11 @@ export const getSecurityLogs = async (limit: number = 50): Promise<SecurityLogEn
       throw error;
     }
 
-    // Cast the data to match our SecurityLogEntry interface
+    // Convert the Supabase data to match our SecurityLogEntry interface
     return (data || []).map(log => ({
       ...log,
-      severity: log.severity as 'low' | 'medium' | 'high' | 'critical'
+      severity: log.severity as 'low' | 'medium' | 'high' | 'critical',
+      details: convertSupabaseJsonToRecord(log.details)
     }));
   } catch (error) {
     console.error('Error fetching security logs:', error);
