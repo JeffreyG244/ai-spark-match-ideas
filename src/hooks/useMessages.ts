@@ -23,15 +23,36 @@ export const useMessages = (conversationId: string | null) => {
   const channelRef = useRef<any>(null);
   const isSubscribedRef = useRef(false);
   const currentConversationId = useRef<string | null>(null);
+  const previousMessagesCountRef = useRef<number>(0);
 
   const loadMessages = async () => {
-    if (!conversationId) {
+    if (!conversationId || !user) {
       setMessages([]);
       setIsLoading(false);
       return;
     }
 
     try {
+      // Security check: ensure the conversation belongs to the current user
+      const { data: conversationData, error: conversationError } = await supabase
+        .from('conversations')
+        .select('*')
+        .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
+        .eq('id', conversationId)
+        .single();
+        
+      if (conversationError || !conversationData) {
+        logSecurityEvent('unauthorized_conversation_access', `User ${user.id} attempted to access unauthorized conversation ${conversationId}`, 'high');
+        toast({
+          title: "Access denied",
+          description: "You don't have permission to view this conversation",
+          variant: "destructive"
+        });
+        setMessages([]);
+        setIsLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('conversation_messages')
         .select('*')
@@ -39,6 +60,15 @@ export const useMessages = (conversationId: string | null) => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
+      
+      // Check for suspicious message injection
+      if (data && previousMessagesCountRef.current > 0 && 
+          data.length > previousMessagesCountRef.current + 5) {
+        logSecurityEvent('message_injection_suspected', 
+          `Abnormal message count increase in conversation ${conversationId}`, 'high');
+      }
+      
+      previousMessagesCountRef.current = data?.length || 0;
       setMessages(data || []);
     } catch (error) {
       console.error('Error loading messages:', error);
@@ -51,7 +81,15 @@ export const useMessages = (conversationId: string | null) => {
   const checkRateLimit = async (): Promise<boolean> => {
     if (!user) return false;
 
+    // First check client-side rate limiting
+    const rateLimitKey = `messages_${user.id}`;
+    if (!rateLimiter.isAllowed(rateLimitKey, 5, 10000)) { // 5 messages per 10 seconds
+      logSecurityEvent('client_rate_limit_exceeded', `User ${user.id} exceeded client message rate limit`, 'medium');
+      return false;
+    }
+
     try {
+      // Then check server-side rate limiting
       const { data, error } = await supabase.rpc('check_message_rate_limit', {
         p_user_id: user.id
       });
@@ -61,7 +99,7 @@ export const useMessages = (conversationId: string | null) => {
         return false;
       }
 
-      return data;
+      return !!data;
     } catch (error) {
       console.error('Rate limit check error:', error);
       return false;
@@ -74,10 +112,9 @@ export const useMessages = (conversationId: string | null) => {
     // Client-side rate limiting
     const rateLimitKey = `messages_${user.id}`;
     if (!rateLimiter.isAllowed(rateLimitKey, 10, 60000)) {
-      const remaining = rateLimiter.getRemainingAttempts(rateLimitKey, 10, 60000);
       toast({
         title: 'Rate limit exceeded',
-        description: `Please wait before sending another message. ${remaining} attempts remaining.`,
+        description: 'You are sending messages too quickly. Please wait a moment.',
         variant: 'destructive'
       });
       logSecurityEvent('rate_limit_exceeded', `User ${user.id} exceeded message rate limit`, 'high');
@@ -87,6 +124,24 @@ export const useMessages = (conversationId: string | null) => {
     setIsSending(true);
 
     try {
+      // Security check: ensure user has access to this conversation
+      const { data: conversationData, error: conversationError } = await supabase
+        .from('conversations')
+        .select('*')
+        .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
+        .eq('id', conversationId)
+        .single();
+        
+      if (conversationError || !conversationData) {
+        logSecurityEvent('unauthorized_message_send', `User ${user.id} attempted to send message to unauthorized conversation ${conversationId}`, 'high');
+        toast({
+          title: "Access denied",
+          description: "You don't have permission to send messages in this conversation",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       // Sanitize input
       const sanitizedContent = sanitizeInput(content.trim());
       
@@ -149,11 +204,33 @@ export const useMessages = (conversationId: string | null) => {
     if (!user) return;
 
     try {
+      // Security: Only mark messages as read if the user is a participant
+      const { data: message, error: messageError } = await supabase
+        .from('conversation_messages')
+        .select('conversation_id, sender_id')
+        .eq('id', messageId)
+        .single();
+        
+      if (messageError || !message) {
+        return;
+      }
+      
+      // Get the conversation to verify user is a participant
+      const { data: conversation, error: conversationError } = await supabase
+        .from('conversations')
+        .select('*')
+        .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
+        .eq('id', message.conversation_id)
+        .single();
+        
+      if (conversationError || !conversation || message.sender_id === user.id) {
+        return;
+      }
+
       const { error } = await supabase
         .from('conversation_messages')
         .update({ read_at: new Date().toISOString() })
-        .eq('id', messageId)
-        .neq('sender_id', user.id);
+        .eq('id', messageId);
 
       if (error) throw error;
     } catch (error) {
@@ -176,9 +253,10 @@ export const useMessages = (conversationId: string | null) => {
         }
       }
       currentConversationId.current = conversationId;
+      previousMessagesCountRef.current = 0;
     }
 
-    if (!conversationId) {
+    if (!conversationId || !user) {
       setMessages([]);
       setIsLoading(false);
       return;
@@ -204,7 +282,19 @@ export const useMessages = (conversationId: string | null) => {
             },
             (payload) => {
               console.log('New message:', payload);
-              setMessages(prev => [...prev, payload.new as Message]);
+              
+              // Security check: Don't add messages with invalid structure
+              if (!payload.new || typeof payload.new !== 'object' || !payload.new.id) {
+                logSecurityEvent('invalid_message_received', 
+                  `Invalid message structure received in conversation ${conversationId}`, 'medium');
+                return;
+              }
+              
+              // Only add the message if it belongs to the current conversation
+              if (payload.new.conversation_id === conversationId) {
+                setMessages(prev => [...prev, payload.new as Message]);
+                previousMessagesCountRef.current += 1;
+              }
             }
           )
           .on(
@@ -217,6 +307,14 @@ export const useMessages = (conversationId: string | null) => {
             },
             (payload) => {
               console.log('Message updated:', payload);
+              
+              // Security check: Don't update messages with invalid structure
+              if (!payload.new || typeof payload.new !== 'object' || !payload.new.id) {
+                logSecurityEvent('invalid_message_update', 
+                  `Invalid message update received in conversation ${conversationId}`, 'medium');
+                return;
+              }
+              
               setMessages(prev => 
                 prev.map(msg => 
                   msg.id === payload.new.id ? payload.new as Message : msg
@@ -253,7 +351,7 @@ export const useMessages = (conversationId: string | null) => {
         }
       }
     };
-  }, [conversationId]);
+  }, [conversationId, user]);
 
   return {
     messages,
