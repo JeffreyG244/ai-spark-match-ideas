@@ -49,6 +49,11 @@ const convertSupabaseJsonToRecord = (jsonData: any): Record<string, any> => {
   }
 };
 
+const convertToString = (value: unknown): string | undefined => {
+  if (value === null || value === undefined) return undefined;
+  return String(value);
+};
+
 export const logSecurityEventToDB = async (
   eventType: string,
   details: string | Record<string, any>,
@@ -58,13 +63,13 @@ export const logSecurityEventToDB = async (
     const { data: { user } } = await supabase.auth.getUser();
     
     const logEntry: Omit<SecurityLogEntry, 'id' | 'created_at'> = {
-      user_id: user?.id || null,
+      user_id: user?.id || undefined,
       event_type: eventType,
       severity,
       details: typeof details === 'string' ? { message: details } : details,
       user_agent: navigator.userAgent,
       fingerprint: generateDeviceFingerprint(),
-      session_id: user?.id ? `session_${user.id}_${Date.now()}` : null
+      session_id: user?.id ? `session_${user.id}_${Date.now()}` : undefined
     };
 
     const { error } = await supabase
@@ -192,9 +197,19 @@ export const getSecurityLogs = async (limit: number = 50): Promise<SecurityLogEn
 
     // Convert the Supabase data to match our SecurityLogEntry interface
     return (data || []).map(log => ({
-      ...log,
+      id: log.id,
+      user_id: log.user_id || undefined,
+      event_type: log.event_type,
       severity: log.severity as 'low' | 'medium' | 'high' | 'critical',
-      details: convertSupabaseJsonToRecord(log.details)
+      details: convertSupabaseJsonToRecord(log.details),
+      ip_address: convertToString(log.ip_address),
+      user_agent: log.user_agent || undefined,
+      session_id: log.session_id || undefined,
+      fingerprint: log.fingerprint || undefined,
+      created_at: log.created_at || undefined,
+      resolved: log.resolved || false,
+      resolved_by: log.resolved_by || undefined,
+      resolved_at: log.resolved_at || undefined
     }));
   } catch (error) {
     console.error('Error fetching security logs:', error);
