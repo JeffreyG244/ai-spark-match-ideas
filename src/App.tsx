@@ -15,6 +15,10 @@ import Legal from '@/pages/Legal';
 // Legal Pages
 import PrivacyPolicy from '@/pages/legal/PrivacyPolicy';
 import SafetyGuidelines from '@/pages/legal/SafetyGuidelines';
+import TermsOfService from '@/pages/legal/TermsOfService';
+import CommunityGuidelines from '@/pages/legal/CommunityGuidelines';
+import CookiePolicy from '@/pages/legal/CookiePolicy';
+import IntellectualProperty from '@/pages/legal/IntellectualProperty';
 
 import './App.css';
 
@@ -47,11 +51,12 @@ function App() {
             <Route path="/legal" element={<Legal />} />
             <Route path="/legal/privacy" element={<PrivacyPolicy />} />
             <Route path="/legal/safety" element={<SafetyGuidelines />} />
+            <Route path="/legal/terms" element={<TermsOfService />} />
+            <Route path="/legal/community" element={<CommunityGuidelines />} />
+            <Route path="/legal/cookies" element={<CookiePolicy />} />
+            <Route path="/legal/ip" element={<IntellectualProperty />} />
             
-            {/* Placeholder routes for other legal pages */}
-            <Route path="/legal/terms" element={<div>Terms of Service - Coming Soon</div>} />
-            <Route path="/legal/community" element={<div>Community Guidelines - Coming Soon</div>} />
-            <Route path="/legal/cookies" element={<div>Cookie Policy - Coming Soon</div>} />
+            {/* Placeholder routes for other legal pages - Coming Soon */}
             <Route path="/legal/moderation" element={<div>Content Moderation Policy - Coming Soon</div>} />
             <Route path="/legal/age-verification" element={<div>Age Verification Policy - Coming Soon</div>} />
             <Route path="/legal/identity-verification" element={<div>Identity Verification Policy - Coming Soon</div>} />
@@ -71,7 +76,6 @@ function App() {
             <Route path="/legal/background-check" element={<div>Background Check Disclaimer - Coming Soon</div>} />
             <Route path="/legal/health-safety" element={<div>Health & Safety Disclaimer - Coming Soon</div>} />
             <Route path="/legal/dmca" element={<div>DMCA Policy - Coming Soon</div>} />
-            <Route path="/legal/ip" element={<div>Intellectual Property Policy - Coming Soon</div>} />
             <Route path="/legal/subscription" element={<div>Subscription Policy - Coming Soon</div>} />
             <Route path="/legal/refunds" element={<div>Refund Policy - Coming Soon</div>} />
             <Route path="/legal/billing" element={<div>Billing Terms - Coming Soon</div>} />
