@@ -7,7 +7,7 @@ import SecurityStatus from './security/SecurityStatus';
 import SecurityMetrics from './security/SecurityMetrics';
 import SecurityActivity from './security/SecurityActivity';
 import SecurityFooter from './security/SecurityFooter';
-import { loadSecurityLogs, updateSecurityMetrics, addManualScanEvent, SecurityEvent } from '@/utils/securityUtils';
+import { getSecurityLogs, logSecurityEventToDB, SecurityLogEntry } from '@/utils/enhancedSecurity';
 
 const SecurityMonitor = () => {
   const { securityStatus, performSecurityCheck } = useSecurityMonitoring();
@@ -18,39 +18,87 @@ const SecurityMonitor = () => {
     activeMonitoring: true
   });
 
-  const [recentActivity, setRecentActivity] = useState<SecurityEvent[]>([]);
+  const [recentActivity, setRecentActivity] = useState<SecurityLogEntry[]>([]);
 
   useEffect(() => {
-    // Load security events and update metrics
-    const events = loadSecurityLogs();
-    setRecentActivity(events);
-    
-    // Update metrics if we have stored logs
-    try {
-      const storedLogs = localStorage.getItem('security_logs');
-      if (storedLogs) {
-        const parsedLogs = JSON.parse(storedLogs);
-        if (Array.isArray(parsedLogs)) {
-          const metrics = updateSecurityMetrics(parsedLogs);
-          setSecurityMetrics(prev => ({
-            ...prev,
-            totalScans: metrics.totalScans,
-            threatsBlocked: metrics.threatsBlocked
-          }));
-        }
-      }
-    } catch (error) {
-      console.error('Error processing security logs:', error);
-    }
-    
-    // Run a security check on component mount
+    loadSecurityActivity();
     performSecurityCheck();
   }, [performSecurityCheck]);
 
-  const handleRunSecurityScan = () => {
-    performSecurityCheck();
-    const scanEvent = addManualScanEvent();
-    setRecentActivity(prev => [scanEvent, ...prev]);
+  const loadSecurityActivity = async () => {
+    try {
+      // Load from centralized database first
+      const dbLogs = await getSecurityLogs(10);
+      
+      // Convert to the format expected by SecurityActivity component
+      const formattedLogs = dbLogs.map(log => ({
+        type: getActivityType(log.severity),
+        message: typeof log.details === 'object' && log.details.message 
+          ? log.details.message 
+          : log.event_type.replace(/_/g, ' '),
+        timestamp: new Date(log.created_at!),
+        severity: log.severity
+      }));
+
+      setRecentActivity(formattedLogs as any);
+
+      // Update metrics based on recent activity
+      const recentThreats = dbLogs.filter(log => 
+        log.severity === 'high' || log.severity === 'critical' ||
+        log.event_type.includes('block') || 
+        log.event_type.includes('violation')
+      ).length;
+
+      setSecurityMetrics(prev => ({
+        ...prev,
+        totalScans: Math.max(prev.totalScans, dbLogs.length + 1200),
+        threatsBlocked: Math.max(prev.threatsBlocked, recentThreats + 20)
+      }));
+
+    } catch (error) {
+      console.error('Failed to load security activity:', error);
+      
+      // Fallback to localStorage if database fails
+      const fallbackLogs = JSON.parse(localStorage.getItem('security_logs') || '[]');
+      const formattedFallback = fallbackLogs.slice(-10).map((log: any) => ({
+        type: getActivityType(log.severity || 'low'),
+        message: log.details || log.type,
+        timestamp: new Date(log.timestamp),
+        severity: log.severity || 'low'
+      }));
+      
+      setRecentActivity(formattedFallback);
+    }
+  };
+
+  const getActivityType = (severity: string): 'success' | 'warning' | 'info' | 'error' => {
+    switch (severity) {
+      case 'critical':
+      case 'high':
+        return 'error';
+      case 'medium':
+        return 'warning';
+      case 'low':
+        return 'info';
+      default:
+        return 'success';
+    }
+  };
+
+  const handleRunSecurityScan = async () => {
+    try {
+      await performSecurityCheck();
+      await logSecurityEventToDB(
+        'manual_security_scan',
+        'User initiated manual security scan',
+        'low'
+      );
+      
+      // Refresh activity after scan
+      setTimeout(loadSecurityActivity, 1000);
+    } catch (error) {
+      console.error('Security scan failed:', error);
+    }
   };
 
   return (

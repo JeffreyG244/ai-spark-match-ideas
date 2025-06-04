@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_actions: {
+        Row: {
+          action_type: string
+          admin_user_id: string
+          created_at: string
+          details: Json
+          id: string
+          ip_address: unknown | null
+          target_resource: string | null
+          target_user_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_user_id: string
+          created_at?: string
+          details?: Json
+          id?: string
+          ip_address?: unknown | null
+          target_resource?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_user_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          ip_address?: unknown | null
+          target_resource?: string | null
+          target_user_id?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       breached_passwords: {
         Row: {
           created_at: string
@@ -287,6 +323,42 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_rules: {
+        Row: {
+          created_at: string
+          endpoint_pattern: string
+          id: string
+          max_penalty_duration: number
+          max_requests: number
+          penalty_multiplier: number
+          rule_name: string
+          updated_at: string
+          window_seconds: number
+        }
+        Insert: {
+          created_at?: string
+          endpoint_pattern: string
+          id?: string
+          max_penalty_duration?: number
+          max_requests?: number
+          penalty_multiplier?: number
+          rule_name: string
+          updated_at?: string
+          window_seconds?: number
+        }
+        Update: {
+          created_at?: string
+          endpoint_pattern?: string
+          id?: string
+          max_penalty_duration?: number
+          max_requests?: number
+          penalty_multiplier?: number
+          rule_name?: string
+          updated_at?: string
+          window_seconds?: number
+        }
+        Relationships: []
+      }
       rate_limits: {
         Row: {
           action: string
@@ -375,6 +447,54 @@ export type Database = {
           identifier?: string | null
           ip_address?: string | null
           severity?: Database["public"]["Enums"]["security_severity"]
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      security_logs: {
+        Row: {
+          created_at: string
+          details: Json
+          event_type: string
+          fingerprint: string | null
+          id: string
+          ip_address: unknown | null
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          session_id: string | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          event_type: string
+          fingerprint?: string | null
+          id?: string
+          ip_address?: unknown | null
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          session_id?: string | null
+          severity: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          event_type?: string
+          fingerprint?: string | null
+          id?: string
+          ip_address?: unknown | null
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          session_id?: string | null
+          severity?: string
           user_agent?: string | null
           user_id?: string | null
         }
@@ -470,6 +590,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          expires_at: string | null
+          granted_at: string
+          granted_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -482,6 +629,10 @@ export type Database = {
           p_algorithm?: string
         }
         Returns: undefined
+      }
+      check_breached_password_secure: {
+        Args: { password_input: string }
+        Returns: boolean
       }
       check_message_rate_limit: {
         Args: { p_user_id: string }
@@ -498,6 +649,17 @@ export type Database = {
       cleanup_old_rate_limits: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      has_role: {
+        Args: {
+          check_user_id: string
+          required_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: boolean
+      }
+      is_admin_or_higher: {
+        Args: { check_user_id: string }
+        Returns: boolean
       }
       is_password_breached: {
         Args: { password: string }
@@ -529,6 +691,7 @@ export type Database = {
         | "refunded"
         | "cancelled"
       security_severity: "low" | "medium" | "high" | "critical"
+      user_role: "user" | "moderator" | "admin" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -653,6 +816,7 @@ export const Constants = {
         "cancelled",
       ],
       security_severity: ["low", "medium", "high", "critical"],
+      user_role: ["user", "moderator", "admin", "super_admin"],
     },
   },
 } as const
