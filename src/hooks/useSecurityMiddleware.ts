@@ -1,6 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { enhancedRateLimiting, logSecurityEventToDB } from '@/utils/enhancedSecurity';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SecurityMiddlewareResult {
   allowed: boolean;
@@ -9,6 +10,7 @@ interface SecurityMiddlewareResult {
 }
 
 export const useSecurityMiddleware = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const checkRateLimit = useCallback(async (endpoint: string): Promise<SecurityMiddlewareResult> => {
@@ -46,7 +48,11 @@ export const useSecurityMiddleware = () => {
     contentType: string
   ): Promise<SecurityMiddlewareResult> => {
     try {
-      // Basic content validation without external password checking
+      // Enhanced content validation with RLS protection
+      if (!user) {
+        return { allowed: false, reason: 'Authentication required' };
+      }
+
       if (!content || content.trim().length === 0) {
         return { allowed: false, reason: 'Content cannot be empty' };
       }
@@ -55,19 +61,23 @@ export const useSecurityMiddleware = () => {
         return { allowed: false, reason: 'Content too long' };
       }
 
-      // Simple pattern checking for malicious content
+      // Enhanced security patterns
       const dangerousPatterns = [
         /<script[\s\S]*?>[\s\S]*?<\/script>/gi,
         /javascript:/gi,
         /vbscript:/gi,
-        /on\w+\s*=/gi
+        /on\w+\s*=/gi,
+        /<iframe[\s\S]*?>/gi,
+        /<object[\s\S]*?>/gi,
+        /<embed[\s\S]*?>/gi,
+        /data:text\/html/gi
       ];
 
       for (const pattern of dangerousPatterns) {
         if (pattern.test(content)) {
           await logSecurityEventToDB(
             'dangerous_content_detected',
-            `Dangerous pattern detected in content`,
+            `Dangerous pattern detected in ${contentType} content`,
             'high'
           );
           return { allowed: false, reason: 'Content contains potentially dangerous patterns' };
@@ -84,7 +94,7 @@ export const useSecurityMiddleware = () => {
       );
       return { allowed: false, reason: 'Content validation failed' };
     }
-  }, []);
+  }, [user]);
 
   const secureAction = useCallback(async (
     action: () => Promise<any>,
@@ -97,6 +107,22 @@ export const useSecurityMiddleware = () => {
   ): Promise<{ success: boolean; data?: any; error?: string }> => {
     try {
       setLoading(true);
+
+      // Enhanced authentication check
+      if (options.requireAuth !== false && !user) {
+        await logSecurityEventToDB(
+          'unauthorized_action_attempt',
+          {
+            endpoint: options.endpoint,
+            content_type: options.contentType
+          },
+          'medium'
+        );
+        return {
+          success: false,
+          error: 'Authentication required'
+        };
+      }
 
       // Check rate limiting if endpoint provided
       if (options.endpoint) {
@@ -120,16 +146,17 @@ export const useSecurityMiddleware = () => {
         }
       }
 
-      // Execute the action
+      // Execute the action with RLS protection
       const result = await action();
       
-      // Log successful action
-      if (options.endpoint) {
+      // Log successful action with user context
+      if (options.endpoint && user) {
         await logSecurityEventToDB(
           'secure_action_completed',
           {
             endpoint: options.endpoint,
             content_type: options.contentType,
+            user_id: user.id,
             action_success: true
           },
           'low'
@@ -144,12 +171,13 @@ export const useSecurityMiddleware = () => {
     } catch (error) {
       console.error('Secure action failed:', error);
       
-      // Log failed action
+      // Enhanced error logging with user context
       if (options.endpoint) {
         await logSecurityEventToDB(
           'secure_action_failed',
           {
             endpoint: options.endpoint,
+            user_id: user?.id,
             error: error instanceof Error ? error.message : 'Unknown error'
           },
           'medium'
@@ -163,12 +191,48 @@ export const useSecurityMiddleware = () => {
     } finally {
       setLoading(false);
     }
-  }, [checkRateLimit, validateContent]);
+  }, [checkRateLimit, validateContent, user]);
+
+  const validateUserAction = useCallback(async (
+    targetUserId?: string
+  ): Promise<SecurityMiddlewareResult> => {
+    if (!user) {
+      return { allowed: false, reason: 'Authentication required' };
+    }
+
+    // If targeting another user, ensure it's allowed
+    if (targetUserId && targetUserId !== user.id) {
+      // Check if user has admin privileges for cross-user actions
+      try {
+        const { data: adminCheck } = await import('@/utils/enhancedSecurity').then(
+          module => module.checkUserRole('admin')
+        );
+        
+        if (!adminCheck) {
+          await logSecurityEventToDB(
+            'unauthorized_cross_user_action',
+            {
+              requesting_user: user.id,
+              target_user: targetUserId
+            },
+            'high'
+          );
+          return { allowed: false, reason: 'Insufficient permissions' };
+        }
+      } catch (error) {
+        return { allowed: false, reason: 'Permission check failed' };
+      }
+    }
+
+    return { allowed: true };
+  }, [user]);
 
   return {
     loading,
     checkRateLimit,
     validateContent,
-    secureAction
+    secureAction,
+    validateUserAction,
+    isAuthenticated: !!user
   };
 };

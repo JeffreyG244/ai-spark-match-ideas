@@ -607,10 +607,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_message_rate_limit: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
       cleanup_old_data: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -634,8 +630,8 @@ export type Database = {
         Args: {
           p_user_id: string
           p_action: string
-          p_max_requests?: number
-          p_window_seconds?: number
+          p_max_requests: number
+          p_window_seconds: number
         }
         Returns: boolean
       }
