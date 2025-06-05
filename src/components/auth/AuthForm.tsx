@@ -104,14 +104,14 @@ const AuthForm = ({ mode, onToggleMode }: AuthFormProps) => {
     <Card className="w-full max-w-md mx-auto border-purple-200">
       <CardHeader className="text-center">
         <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-          <Shield className="h-6 w-6 text-white" />
+          <Heart className="h-6 w-6 text-white" />
         </div>
         <CardTitle className="text-2xl">
           {mode === 'login' ? 'Welcome Back' : 'Create Account'}
         </CardTitle>
         <CardDescription>
           {mode === 'login' 
-            ? 'Sign in to your SoulSync account' 
+            ? 'Sign in to your LuvLang account' 
             : 'Start your journey to meaningful connections'
           }
         </CardDescription>
