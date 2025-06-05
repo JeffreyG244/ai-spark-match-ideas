@@ -45,7 +45,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
       }
 
       if (mode === 'signup') {
-        // Validate password strength for signup
+        // Client-side validation for better UX (database also validates)
         const passwordValidation = validatePasswordBeforeAuth(sanitizedPassword);
         if (!passwordValidation.isValid) {
           setError(passwordValidation.error || 'Invalid password');
@@ -70,14 +70,15 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
           return;
         }
 
-        // Sign up with validated data
+        // Sign up - database trigger will validate password server-side
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: sanitizedEmail,
           password: sanitizedPassword,
           options: {
             data: {
               first_name: sanitizedFirstName,
-              last_name: sanitizedLastName
+              last_name: sanitizedLastName,
+              password: sanitizedPassword // Pass to database trigger for validation
             },
             emailRedirectTo: `${window.location.origin}/`
           }

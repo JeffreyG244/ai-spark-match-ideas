@@ -1,11 +1,5 @@
 
-// Custom bypass password checks function for development/testing
-export const bypass_password_checks = () => {
-  // This function bypasses Supabase's built-in password validation
-  // Only use this for development or when you have custom validation
-  return true;
-};
-
+// Password validation utilities that work with the new database-level validation
 export const validatePasswordStrength = (password: string): { isValid: boolean; error?: string } => {
   // Minimum length check
   if (!password || password.length < 6) {
@@ -22,7 +16,14 @@ export const validatePasswordStrength = (password: string): { isValid: boolean; 
     'passw0rd', 'login', 'solo', 'starwars', 'freedom',
     'hello', 'secret', 'whatever', '1234', 'test',
     '111111', '123', 'admin123', 'letmein123', 'welcome123',
-    'access', 'flower', '555555', 'pass', '123321'
+    'access', 'flower', '555555', 'pass', '123321',
+    '7777777', '123qwe', 'fuckyou', '121212', 'donald',
+    '123abc', 'qwerty123', '1q2w3e4r', 'azerty', 'password123',
+    'bailey', '000000', '696969', 'batman', '1qaz2wsx',
+    '123654', 'charlie', 'aa123456', '654321', '123123123',
+    'qazwsx', 'password!', '123456a', 'loveme', '888888',
+    'soccer', 'jordan23', 'jordan', 'michael', 'mustang',
+    'password12', '123456789a', 'super123', 'pokemon', 'iloveyou'
   ];
 
   const lowerPassword = password.toLowerCase();

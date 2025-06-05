@@ -2,30 +2,30 @@
 import { supabase } from '@/integrations/supabase/client';
 import { validatePasswordStrength } from './passwordValidation';
 
-// Configuration for authentication with custom password validation
+// Configuration for authentication - database now handles server-side validation
 export const authConfig = {
-  // Use client-side password validation instead of bypassing server validation
-  useCustomValidation: true,
+  // Database handles server-side validation via trigger
+  useServerValidation: true,
   
-  // Custom validation settings
+  // Client-side validation settings for UX
   minPasswordLength: 6,
   requireStrongPassword: true,
   checkLeakedPasswords: true
 };
 
-// Function to validate password before sending to Supabase
+// Function to validate password before sending to Supabase (for better UX)
 export const validatePasswordBeforeAuth = (password: string): { isValid: boolean; error?: string } => {
   return validatePasswordStrength(password);
 };
 
-// Function to initialize auth with custom settings
+// Function to initialize auth - no longer needed for custom validation
 export const initializeAuth = async () => {
   try {
-    console.log('Initializing auth with custom password validation');
+    console.log('Auth initialized with database-level password validation');
     
     return {
       success: true,
-      message: 'Auth initialized with custom password validation'
+      message: 'Auth initialized with database-level password validation'
     };
   } catch (error) {
     console.error('Failed to initialize auth:', error);
