@@ -1,7 +1,6 @@
 
 import { useState, useCallback } from 'react';
 import { enhancedRateLimiting, logSecurityEventToDB } from '@/utils/enhancedSecurity';
-import { enforceContentPolicy } from '@/utils/enhancedInputSecurity';
 
 interface SecurityMiddlewareResult {
   allowed: boolean;
@@ -31,7 +30,6 @@ export const useSecurityMiddleware = () => {
       };
     } catch (error) {
       console.error('Rate limit check failed:', error);
-      // Fail secure - deny if rate limiting fails
       await logSecurityEventToDB(
         'rate_limit_check_failed',
         `Rate limit check failed for ${endpoint}: ${error}`,
@@ -48,11 +46,35 @@ export const useSecurityMiddleware = () => {
     contentType: string
   ): Promise<SecurityMiddlewareResult> => {
     try {
-      const result = await enforceContentPolicy(content, contentType);
-      return {
-        allowed: result.allowed,
-        reason: result.reason
-      };
+      // Basic content validation without external password checking
+      if (!content || content.trim().length === 0) {
+        return { allowed: false, reason: 'Content cannot be empty' };
+      }
+
+      if (content.length > 10000) {
+        return { allowed: false, reason: 'Content too long' };
+      }
+
+      // Simple pattern checking for malicious content
+      const dangerousPatterns = [
+        /<script[\s\S]*?>[\s\S]*?<\/script>/gi,
+        /javascript:/gi,
+        /vbscript:/gi,
+        /on\w+\s*=/gi
+      ];
+
+      for (const pattern of dangerousPatterns) {
+        if (pattern.test(content)) {
+          await logSecurityEventToDB(
+            'dangerous_content_detected',
+            `Dangerous pattern detected in content`,
+            'high'
+          );
+          return { allowed: false, reason: 'Content contains potentially dangerous patterns' };
+        }
+      }
+
+      return { allowed: true };
     } catch (error) {
       console.error('Content validation failed:', error);
       await logSecurityEventToDB(

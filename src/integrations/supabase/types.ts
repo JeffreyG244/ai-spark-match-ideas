@@ -45,24 +45,6 @@ export type Database = {
         }
         Relationships: []
       }
-      breached_passwords: {
-        Row: {
-          created_at: string
-          id: number
-          password_hash: string
-        }
-        Insert: {
-          created_at?: string
-          id?: never
-          password_hash: string
-        }
-        Update: {
-          created_at?: string
-          id?: never
-          password_hash?: string
-        }
-        Relationships: []
-      }
       compatibility_answers: {
         Row: {
           answers: Json
@@ -227,30 +209,6 @@ export type Database = {
           receiver_id?: string
           sender_id?: string
           timestamp?: string
-        }
-        Relationships: []
-      }
-      password_history: {
-        Row: {
-          algorithm: string
-          created_at: string | null
-          id: string
-          password_hash: string
-          user_id: string
-        }
-        Insert: {
-          algorithm?: string
-          created_at?: string | null
-          id?: string
-          password_hash: string
-          user_id: string
-        }
-        Update: {
-          algorithm?: string
-          created_at?: string | null
-          id?: string
-          password_hash?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -649,24 +607,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      add_password_to_history: {
-        Args: {
-          p_user_id: string
-          p_password_hash: string
-          p_algorithm?: string
-        }
-        Returns: undefined
-      }
-      check_breached_password_secure: {
-        Args: { password_input: string }
-        Returns: boolean
-      }
       check_message_rate_limit: {
         Args: { p_user_id: string }
-        Returns: boolean
-      }
-      check_password_reuse: {
-        Args: { p_user_id: string; p_new_password_hash: string }
         Returns: boolean
       }
       cleanup_old_data: {
@@ -688,14 +630,6 @@ export type Database = {
         Args: { check_user_id: string }
         Returns: boolean
       }
-      is_password_breached: {
-        Args: { password: string }
-        Returns: boolean
-      }
-      prevent_breached_password: {
-        Args: { user_password: string }
-        Returns: boolean
-      }
       secure_rate_limit_check: {
         Args: {
           p_user_id: string
@@ -709,20 +643,12 @@ export type Database = {
         Args: { p_user_id: string; p_is_online: boolean }
         Returns: undefined
       }
-      user_login: {
-        Args: { email: string; password: string }
-        Returns: boolean
-      }
       validate_role_assignment: {
         Args: {
           assigner_id: string
           target_user_id: string
           new_role: Database["public"]["Enums"]["user_role"]
         }
-        Returns: boolean
-      }
-      validate_user_session: {
-        Args: { user_id: string }
         Returns: boolean
       }
     }
