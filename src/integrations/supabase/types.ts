@@ -296,6 +296,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          bio: string | null
+          created_at: string
+          email: string
+          id: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          email: string
+          id?: never
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          email?: string
+          id?: never
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       rate_limit_blocks: {
         Row: {
           action: string
@@ -669,12 +696,29 @@ export type Database = {
         Args: { user_password: string }
         Returns: boolean
       }
+      secure_rate_limit_check: {
+        Args: {
+          p_user_id: string
+          p_action: string
+          p_max_requests?: number
+          p_window_seconds?: number
+        }
+        Returns: boolean
+      }
       upsert_user_presence: {
         Args: { p_user_id: string; p_is_online: boolean }
         Returns: undefined
       }
       user_login: {
         Args: { email: string; password: string }
+        Returns: boolean
+      }
+      validate_role_assignment: {
+        Args: {
+          assigner_id: string
+          target_user_id: string
+          new_role: Database["public"]["Enums"]["user_role"]
+        }
         Returns: boolean
       }
       validate_user_session: {

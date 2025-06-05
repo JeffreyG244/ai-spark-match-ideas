@@ -1,5 +1,5 @@
-
 import { logSecurityEventToDB } from './enhancedSecurity';
+import { validateAndSanitizeInput } from './enhancedInputSecurity';
 
 // Security configuration constants
 export const LIMITS = {
@@ -11,7 +11,7 @@ export const LIMITS = {
   MESSAGE_MAX_LENGTH: 1000
 };
 
-// Rate limiter utility
+// Enhanced rate limiter utility
 export const rateLimiter = {
   requests: new Map<string, number[]>(),
   
@@ -29,6 +29,12 @@ export const rateLimiter = {
     const validRequests = requests.filter(time => time > windowStart);
     
     if (validRequests.length >= maxRequests) {
+      // Log rate limit violation
+      logSecurityEventToDB(
+        'client_rate_limit_exceeded',
+        { key, maxRequests, windowMs, currentCount: validRequests.length },
+        'medium'
+      );
       return false;
     }
     
@@ -36,6 +42,21 @@ export const rateLimiter = {
     this.requests.set(key, validRequests);
     
     return true;
+  },
+
+  // Clean up old entries periodically
+  cleanup(): void {
+    const now = Date.now();
+    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+    
+    for (const [key, requests] of this.requests.entries()) {
+      const validRequests = requests.filter(time => now - time < maxAge);
+      if (validRequests.length === 0) {
+        this.requests.delete(key);
+      } else {
+        this.requests.set(key, validRequests);
+      }
+    }
   }
 };
 
@@ -86,24 +107,29 @@ export const isProductionEnvironment = (): boolean => {
 };
 
 export const sanitizeInput = (input: string): string => {
+  // Use the enhanced sanitization
   return input
     .replace(/[<>]/g, '') // Remove potential HTML tags
+    .replace(/['"]/g, '') // Remove quotes that could break out of attributes
+    .replace(/[&]/g, '&amp;') // Escape ampersands
     .trim()
     .substring(0, 1000); // Limit length
 };
 
 export const sanitizeForDisplay = (input: string): string => {
   return input
-    .replace(/[<>]/g, '') // Remove potential HTML tags
     .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
     .trim();
 };
 
 export const validateEmailFormat = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  return emailRegex.test(email) && email.length <= 320; // RFC 5321 limit
 };
 
 export const containsInappropriateContent = (content: string): boolean => {
@@ -113,13 +139,16 @@ export const containsInappropriateContent = (content: string): boolean => {
     /money|bitcoin|crypto|investment/i,
     /cashapp|venmo|paypal/i,
     /click.*here|visit.*site/i,
-    /urgent|emergency|asap/i
+    /urgent|emergency|asap/i,
+    // Add more sophisticated patterns
+    /\b(?:administrator|admin|root|system)\b.*\b(?:password|login|access)\b/i,
+    /\b(?:hack|crack|exploit|vulnerability)\b/i
   ];
   
   return inappropriatePatterns.some(pattern => pattern.test(content));
 };
 
-export const validateMessageContent = (content: string): { isValid: boolean; error?: string } => {
+export const validateMessageContent = async (content: string): Promise<{ isValid: boolean; error?: string; sanitized?: string }> => {
   if (!content || content.trim().length === 0) {
     return { isValid: false, error: 'Message cannot be empty' };
   }
@@ -128,23 +157,27 @@ export const validateMessageContent = (content: string): { isValid: boolean; err
     return { isValid: false, error: `Message too long (max ${LIMITS.MESSAGE_MAX_LENGTH} characters)` };
   }
 
-  // Check for dangerous patterns
-  const dangerousPatterns = [
-    /<script/gi,
-    /javascript:/gi,
-    /on\w+\s*=/gi,
-    /data:text\/html/gi
-  ];
-
-  if (dangerousPatterns.some(pattern => pattern.test(content))) {
-    return { isValid: false, error: 'Message contains potentially dangerous content' };
+  // Use enhanced validation
+  const validation = await validateAndSanitizeInput(content, 'text', LIMITS.MESSAGE_MAX_LENGTH);
+  
+  if (!validation.isValid) {
+    return { 
+      isValid: false, 
+      error: validation.error,
+      sanitized: validation.sanitized
+    };
   }
 
   if (containsInappropriateContent(content)) {
+    await logSecurityEventToDB(
+      'inappropriate_content_detected',
+      { content: content.substring(0, 200), type: 'message' },
+      'medium'
+    );
     return { isValid: false, error: 'Message contains inappropriate content' };
   }
 
-  return { isValid: true };
+  return { isValid: true, sanitized: validation.sanitized };
 };
 
 export const detectSuspiciousPatterns = (content: string): string[] => {
@@ -207,3 +240,33 @@ export const enforceContentPolicy = async (content: string, contentType: string)
   
   return { allowed: true };
 };
+
+// Enhanced cleanup function
+export const performSecurityMaintenance = (): void => {
+  try {
+    rateLimiter.cleanup();
+    
+    // Clean up old localStorage security data
+    const securityKeys = ['security_logs', 'security_logs_fallback', 'audit_logs'];
+    securityKeys.forEach(key => {
+      try {
+        const data = localStorage.getItem(key);
+        if (data) {
+          const parsed = JSON.parse(data);
+          if (Array.isArray(parsed) && parsed.length > 1000) {
+            localStorage.setItem(key, JSON.stringify(parsed.slice(-500)));
+          }
+        }
+      } catch (error) {
+        console.warn(`Failed to clean up ${key}:`, error);
+      }
+    });
+  } catch (error) {
+    console.error('Security maintenance failed:', error);
+  }
+};
+
+// Run maintenance every hour
+if (typeof window !== 'undefined') {
+  setInterval(performSecurityMaintenance, 60 * 60 * 1000);
+}

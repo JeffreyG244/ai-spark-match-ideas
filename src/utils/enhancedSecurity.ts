@@ -101,6 +101,21 @@ export const logAdminAction = async (
       throw new Error('User must be authenticated to log admin actions');
     }
 
+    // Check if user has admin privileges before logging admin action
+    const hasAdminRole = await checkUserRole('admin');
+    if (!hasAdminRole) {
+      await logSecurityEventToDB(
+        'unauthorized_admin_action_attempt',
+        {
+          attempted_action: actionType,
+          target_user_id: targetUserId,
+          target_resource: targetResource
+        },
+        'high'
+      );
+      throw new Error('Insufficient privileges for admin action');
+    }
+
     const adminAction: Omit<AdminAction, 'id' | 'created_at'> = {
       admin_user_id: user.id,
       action_type: actionType,
@@ -250,12 +265,43 @@ export const assignUserRole = async (
   role: string
 ): Promise<void> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error('User must be authenticated to assign roles');
+    }
+
+    // Use the new validation function from the database
+    const { data: validationResult, error: validationError } = await supabase
+      .rpc('validate_role_assignment', {
+        assigner_id: user.id,
+        target_user_id: userId,
+        new_role: role as any
+      });
+
+    if (validationError) {
+      throw new Error(`Role validation failed: ${validationError.message}`);
+    }
+
+    if (!validationResult) {
+      await logSecurityEventToDB(
+        'unauthorized_role_assignment_attempt',
+        {
+          assigner_id: user.id,
+          target_user_id: userId,
+          attempted_role: role
+        },
+        'high'
+      );
+      throw new Error('Insufficient privileges to assign this role');
+    }
+
     const { error } = await supabase
       .from('user_roles')
       .upsert({
         user_id: userId,
         role: role as any,
-        granted_by: (await supabase.auth.getUser()).data.user?.id
+        granted_by: user.id
       });
 
     if (error) {
@@ -300,66 +346,82 @@ const generateDeviceFingerprint = (): string => {
 export const enhancedRateLimiting = {
   async checkRateLimit(endpoint: string): Promise<{ allowed: boolean; remainingRequests?: number }> {
     try {
-      // Get rate limit rules for this endpoint
-      const { data: rules, error } = await supabase
-        .from('rate_limit_rules')
-        .select('*')
-        .ilike('endpoint_pattern', `%${endpoint}%`)
-        .single();
-
-      if (error || !rules) {
-        // Default rate limiting if no specific rule found
-        return { allowed: true };
-      }
-
       const { data: { user } } = await supabase.auth.getUser();
-      const identifier = user?.id || 'anonymous';
-
-      // Check current usage
-      const windowStart = new Date(Date.now() - (rules.window_seconds * 1000));
       
-      const { data: recentRequests, error: countError } = await supabase
-        .from('rate_limits')
-        .select('id')
-        .eq('identifier', identifier)
-        .eq('action', endpoint)
-        .gte('timestamp', windowStart.toISOString());
-
-      if (countError) {
-        console.error('Rate limit check error:', countError);
-        return { allowed: true };
+      if (!user) {
+        // For unauthenticated users, use a more restrictive rate limit
+        return await this.checkAnonymousRateLimit(endpoint);
       }
 
-      const requestCount = recentRequests?.length || 0;
+      // Use the new secure rate limiting function
+      const { data: allowed, error } = await supabase
+        .rpc('secure_rate_limit_check', {
+          p_user_id: user.id,
+          p_action: endpoint,
+          p_max_requests: 60,
+          p_window_seconds: 60
+        });
+
+      if (error) {
+        console.error('Rate limit check error:', error);
+        // Fail secure - deny if rate limiting fails
+        return { allowed: false };
+      }
+
+      return { allowed: allowed || false };
+    } catch (error) {
+      console.error('Rate limiting error:', error);
+      // Fail secure - deny if rate limiting fails
+      return { allowed: false };
+    }
+  },
+
+  async checkAnonymousRateLimit(endpoint: string): Promise<{ allowed: boolean; remainingRequests?: number }> {
+    try {
+      const identifier = this.getAnonymousIdentifier();
+      const windowStart = new Date(Date.now() - 60000); // 1 minute window
       
-      if (requestCount >= rules.max_requests) {
+      // Check localStorage for anonymous rate limiting
+      const rateLimitKey = `rate_limit_${identifier}_${endpoint}`;
+      const stored = localStorage.getItem(rateLimitKey);
+      const requests = stored ? JSON.parse(stored) : [];
+      
+      // Filter requests within the window
+      const recentRequests = requests.filter((timestamp: number) => timestamp > windowStart.getTime());
+      
+      if (recentRequests.length >= 10) { // Lower limit for anonymous users
         await logSecurityEventToDB(
-          'rate_limit_exceeded',
+          'anonymous_rate_limit_exceeded',
           {
             endpoint,
-            request_count: requestCount,
-            max_requests: rules.max_requests,
-            window_seconds: rules.window_seconds
+            identifier,
+            request_count: recentRequests.length
           },
           'medium'
         );
-        
         return { allowed: false, remainingRequests: 0 };
       }
 
       // Log this request
-      await supabase.from('rate_limits').insert({
-        identifier,
-        action: endpoint
-      });
+      recentRequests.push(Date.now());
+      localStorage.setItem(rateLimitKey, JSON.stringify(recentRequests));
 
       return { 
         allowed: true, 
-        remainingRequests: rules.max_requests - requestCount - 1 
+        remainingRequests: 10 - recentRequests.length - 1 
       };
     } catch (error) {
-      console.error('Rate limiting error:', error);
-      return { allowed: true };
+      console.error('Anonymous rate limiting error:', error);
+      return { allowed: false };
     }
+  },
+
+  getAnonymousIdentifier(): string {
+    const stored = localStorage.getItem('anonymous_identifier');
+    if (stored) return stored;
+    
+    const identifier = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    localStorage.setItem('anonymous_identifier', identifier);
+    return identifier;
   }
 };

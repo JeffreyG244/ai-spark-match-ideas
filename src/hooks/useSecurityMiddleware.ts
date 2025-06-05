@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { enhancedRateLimiting, logSecurityEventToDB } from '@/utils/enhancedSecurity';
-import { enforceContentPolicy } from '@/utils/security';
+import { enforceContentPolicy } from '@/utils/enhancedInputSecurity';
 
 interface SecurityMiddlewareResult {
   allowed: boolean;
@@ -31,8 +31,13 @@ export const useSecurityMiddleware = () => {
       };
     } catch (error) {
       console.error('Rate limit check failed:', error);
-      // Allow request if rate limiting fails to avoid blocking users
-      return { allowed: true };
+      // Fail secure - deny if rate limiting fails
+      await logSecurityEventToDB(
+        'rate_limit_check_failed',
+        `Rate limit check failed for ${endpoint}: ${error}`,
+        'medium'
+      );
+      return { allowed: false, reason: 'Security check failed' };
     } finally {
       setLoading(false);
     }
@@ -50,8 +55,12 @@ export const useSecurityMiddleware = () => {
       };
     } catch (error) {
       console.error('Content validation failed:', error);
-      // Allow content if validation fails to avoid blocking users
-      return { allowed: true };
+      await logSecurityEventToDB(
+        'content_validation_failed',
+        `Content validation failed: ${error}`,
+        'medium'
+      );
+      return { allowed: false, reason: 'Content validation failed' };
     }
   }, []);
 
