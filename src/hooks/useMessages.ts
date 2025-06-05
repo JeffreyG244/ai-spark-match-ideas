@@ -145,8 +145,8 @@ export const useMessages = (conversationId: string | null) => {
       // Sanitize input
       const sanitizedContent = sanitizeInput(content.trim());
       
-      // Validate content
-      const validation = validateMessageContent(sanitizedContent);
+      // Validate content - FIX: await the async function
+      const validation = await validateMessageContent(sanitizedContent);
       if (!validation.isValid) {
         toast({
           title: 'Invalid message',
