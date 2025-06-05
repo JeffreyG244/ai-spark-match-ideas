@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { validatePasswordStrength, sanitizePasswordInput } from '@/utils/passwordValidation';
+import { validatePasswordBeforeAuth, validateEmailFormat, sanitizeAuthInput } from '@/utils/authConfig';
+import { sanitizePasswordInput } from '@/utils/passwordValidation';
 import { logSecurityEventToDB } from '@/utils/enhancedSecurity';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
@@ -33,12 +33,20 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
     setLoading(true);
 
     try {
-      // Sanitize password input
+      // Sanitize inputs
+      const sanitizedEmail = sanitizeAuthInput(email);
       const sanitizedPassword = sanitizePasswordInput(password);
+
+      // Validate email format
+      if (!validateEmailFormat(sanitizedEmail)) {
+        setError('Please enter a valid email address');
+        setLoading(false);
+        return;
+      }
 
       if (mode === 'signup') {
         // Validate password strength for signup
-        const passwordValidation = validatePasswordStrength(sanitizedPassword);
+        const passwordValidation = validatePasswordBeforeAuth(sanitizedPassword);
         if (!passwordValidation.isValid) {
           setError(passwordValidation.error || 'Invalid password');
           setLoading(false);
@@ -53,20 +61,23 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
         }
 
         // Validate required fields
-        if (!firstName.trim() || !lastName.trim()) {
+        const sanitizedFirstName = sanitizeAuthInput(firstName);
+        const sanitizedLastName = sanitizeAuthInput(lastName);
+        
+        if (!sanitizedFirstName || !sanitizedLastName) {
           setError('First name and last name are required');
           setLoading(false);
           return;
         }
 
-        // Sign up with custom bypass
+        // Sign up with validated data
         const { data, error: signUpError } = await supabase.auth.signUp({
-          email: email.trim(),
+          email: sanitizedEmail,
           password: sanitizedPassword,
           options: {
             data: {
-              first_name: firstName.trim(),
-              last_name: lastName.trim()
+              first_name: sanitizedFirstName,
+              last_name: sanitizedLastName
             },
             emailRedirectTo: `${window.location.origin}/`
           }
@@ -79,7 +90,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
           // Log security event for failed signup
           await logSecurityEventToDB(
             'signup_failed',
-            { email, error: signUpError.message },
+            { email: sanitizedEmail, error: signUpError.message },
             'medium'
           );
         } else {
@@ -91,7 +102,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
           // Log successful signup
           await logSecurityEventToDB(
             'user_signup_success',
-            { email, user_id: data.user?.id },
+            { email: sanitizedEmail, user_id: data.user?.id },
             'low'
           );
           
@@ -100,7 +111,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
       } else {
         // Login
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: sanitizedEmail,
           password: sanitizedPassword
         });
 
@@ -111,7 +122,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
           // Log security event for failed login
           await logSecurityEventToDB(
             'login_failed',
-            { email, error: signInError.message },
+            { email: sanitizedEmail, error: signInError.message },
             'medium'
           );
         } else {
@@ -123,7 +134,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
           // Log successful login
           await logSecurityEventToDB(
             'user_login_success',
-            { email, user_id: data.user?.id },
+            { email: sanitizedEmail, user_id: data.user?.id },
             'low'
           );
           
@@ -137,7 +148,10 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
       // Log unexpected error
       await logSecurityEventToDB(
         'auth_unexpected_error',
-        { email, error: error instanceof Error ? error.message : 'Unknown error' },
+        { 
+          email: sanitizeAuthInput(email), 
+          error: error instanceof Error ? error.message : 'Unknown error' 
+        },
         'high'
       );
     } finally {
@@ -155,32 +169,32 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'signup' && (
-            <>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    required
-                    disabled={loading}
-                  />
-                </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  disabled={loading}
+                  maxLength={50}
+                />
               </div>
-            </>
+              <div>
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  disabled={loading}
+                  maxLength={50}
+                />
+              </div>
+            </div>
           )}
           
           <div>
@@ -192,6 +206,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
+              maxLength={320}
             />
           </div>
 
@@ -205,6 +220,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
               required
               disabled={loading}
               minLength={6}
+              maxLength={128}
             />
           </div>
 
@@ -219,6 +235,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
                 required
                 disabled={loading}
                 minLength={6}
+                maxLength={128}
               />
             </div>
           )}
