@@ -204,7 +204,7 @@ export const useSecurityMiddleware = () => {
     if (targetUserId && targetUserId !== user.id) {
       // Check if user has admin privileges for cross-user actions
       try {
-        const { data: adminCheck } = await import('@/utils/enhancedSecurity').then(
+        const adminCheck = await import('@/utils/enhancedSecurity').then(
           module => module.checkUserRole('admin')
         );
         

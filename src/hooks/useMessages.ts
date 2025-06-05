@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
@@ -89,9 +88,12 @@ export const useMessages = (conversationId: string | null) => {
     }
 
     try {
-      // Then check server-side rate limiting
-      const { data, error } = await supabase.rpc('check_message_rate_limit', {
-        p_user_id: user.id
+      // Use the secure rate limiting function that exists in the database
+      const { data, error } = await supabase.rpc('secure_rate_limit_check', {
+        p_user_id: user.id,
+        p_action: 'send_message',
+        p_max_requests: 10,
+        p_window_seconds: 60
       });
 
       if (error) {
