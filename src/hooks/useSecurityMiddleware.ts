@@ -1,6 +1,8 @@
 
 import { useState, useCallback } from 'react';
-import { enhancedRateLimiting, logSecurityEventToDB } from '@/utils/enhancedSecurity';
+import { RateLimitingService } from '@/services/security/RateLimitingService';
+import { SecurityAuditService } from '@/services/security/SecurityAuditService';
+import { ContentValidationService } from '@/services/security/ContentValidationService';
 import { useAuth } from '@/hooks/useAuth';
 
 interface SecurityMiddlewareResult {
@@ -16,7 +18,7 @@ export const useSecurityMiddleware = () => {
   const checkRateLimit = useCallback(async (endpoint: string): Promise<SecurityMiddlewareResult> => {
     try {
       setLoading(true);
-      const result = await enhancedRateLimiting.checkRateLimit(endpoint);
+      const result = await RateLimitingService.checkRateLimit(endpoint);
       
       if (!result.allowed) {
         return {
@@ -32,7 +34,7 @@ export const useSecurityMiddleware = () => {
       };
     } catch (error) {
       console.error('Rate limit check failed:', error);
-      await logSecurityEventToDB(
+      await SecurityAuditService.logSecurityEvent(
         'rate_limit_check_failed',
         `Rate limit check failed for ${endpoint}: ${error}`,
         'medium'
@@ -48,46 +50,23 @@ export const useSecurityMiddleware = () => {
     contentType: string
   ): Promise<SecurityMiddlewareResult> => {
     try {
-      // Enhanced content validation with RLS protection
       if (!user) {
         return { allowed: false, reason: 'Authentication required' };
       }
 
-      if (!content || content.trim().length === 0) {
-        return { allowed: false, reason: 'Content cannot be empty' };
-      }
-
-      if (content.length > 10000) {
-        return { allowed: false, reason: 'Content too long' };
-      }
-
-      // Enhanced security patterns
-      const dangerousPatterns = [
-        /<script[\s\S]*?>[\s\S]*?<\/script>/gi,
-        /javascript:/gi,
-        /vbscript:/gi,
-        /on\w+\s*=/gi,
-        /<iframe[\s\S]*?>/gi,
-        /<object[\s\S]*?>/gi,
-        /<embed[\s\S]*?>/gi,
-        /data:text\/html/gi
-      ];
-
-      for (const pattern of dangerousPatterns) {
-        if (pattern.test(content)) {
-          await logSecurityEventToDB(
-            'dangerous_content_detected',
-            `Dangerous pattern detected in ${contentType} content`,
-            'high'
-          );
-          return { allowed: false, reason: 'Content contains potentially dangerous patterns' };
-        }
+      const result = await ContentValidationService.enforceContentPolicy(content, contentType);
+      
+      if (!result.allowed) {
+        return {
+          allowed: false,
+          reason: result.reason
+        };
       }
 
       return { allowed: true };
     } catch (error) {
       console.error('Content validation failed:', error);
-      await logSecurityEventToDB(
+      await SecurityAuditService.logSecurityEvent(
         'content_validation_failed',
         `Content validation failed: ${error}`,
         'medium'
@@ -108,9 +87,8 @@ export const useSecurityMiddleware = () => {
     try {
       setLoading(true);
 
-      // Enhanced authentication check
       if (options.requireAuth !== false && !user) {
-        await logSecurityEventToDB(
+        await SecurityAuditService.logSecurityEvent(
           'unauthorized_action_attempt',
           {
             endpoint: options.endpoint,
@@ -124,7 +102,6 @@ export const useSecurityMiddleware = () => {
         };
       }
 
-      // Check rate limiting if endpoint provided
       if (options.endpoint) {
         const rateLimitResult = await checkRateLimit(options.endpoint);
         if (!rateLimitResult.allowed) {
@@ -135,7 +112,6 @@ export const useSecurityMiddleware = () => {
         }
       }
 
-      // Validate content if provided
       if (options.content && options.contentType) {
         const contentResult = await validateContent(options.content, options.contentType);
         if (!contentResult.allowed) {
@@ -146,12 +122,10 @@ export const useSecurityMiddleware = () => {
         }
       }
 
-      // Execute the action with RLS protection
       const result = await action();
       
-      // Log successful action with user context
       if (options.endpoint && user) {
-        await logSecurityEventToDB(
+        await SecurityAuditService.logSecurityEvent(
           'secure_action_completed',
           {
             endpoint: options.endpoint,
@@ -171,9 +145,8 @@ export const useSecurityMiddleware = () => {
     } catch (error) {
       console.error('Secure action failed:', error);
       
-      // Enhanced error logging with user context
       if (options.endpoint) {
-        await logSecurityEventToDB(
+        await SecurityAuditService.logSecurityEvent(
           'secure_action_failed',
           {
             endpoint: options.endpoint,
@@ -193,46 +166,11 @@ export const useSecurityMiddleware = () => {
     }
   }, [checkRateLimit, validateContent, user]);
 
-  const validateUserAction = useCallback(async (
-    targetUserId?: string
-  ): Promise<SecurityMiddlewareResult> => {
-    if (!user) {
-      return { allowed: false, reason: 'Authentication required' };
-    }
-
-    // If targeting another user, ensure it's allowed
-    if (targetUserId && targetUserId !== user.id) {
-      // Check if user has admin privileges for cross-user actions
-      try {
-        const adminCheck = await import('@/utils/enhancedSecurity').then(
-          module => module.checkUserRole('admin')
-        );
-        
-        if (!adminCheck) {
-          await logSecurityEventToDB(
-            'unauthorized_cross_user_action',
-            {
-              requesting_user: user.id,
-              target_user: targetUserId
-            },
-            'high'
-          );
-          return { allowed: false, reason: 'Insufficient permissions' };
-        }
-      } catch (error) {
-        return { allowed: false, reason: 'Permission check failed' };
-      }
-    }
-
-    return { allowed: true };
-  }, [user]);
-
   return {
     loading,
     checkRateLimit,
     validateContent,
     secureAction,
-    validateUserAction,
     isAuthenticated: !!user
   };
 };

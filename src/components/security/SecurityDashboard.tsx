@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,12 +13,9 @@ import {
   XCircle,
   Filter
 } from 'lucide-react';
-import { 
-  getSecurityLogs, 
-  resolveSecurityLog, 
-  checkUserRole,
-  SecurityLogEntry 
-} from '@/utils/enhancedSecurity';
+import { SecurityAuditService } from '@/services/security/SecurityAuditService';
+import { RoleManagementService } from '@/services/security/RoleManagementService';
+import { SecurityLogEntry } from '@/types/security';
 import { formatDistanceToNow } from 'date-fns';
 
 const SecurityDashboard: React.FC = () => {
@@ -35,14 +31,14 @@ const SecurityDashboard: React.FC = () => {
   }, []);
 
   const checkAdminStatus = async () => {
-    const adminStatus = await checkUserRole('admin');
+    const adminStatus = await RoleManagementService.checkUserRole('admin');
     setIsAdmin(adminStatus);
   };
 
   const loadSecurityLogs = async () => {
     try {
       setLoading(true);
-      const logs = await getSecurityLogs(100);
+      const logs = await SecurityAuditService.getSecurityLogs(100);
       setSecurityLogs(logs);
     } catch (error) {
       console.error('Failed to load security logs:', error);
@@ -53,8 +49,8 @@ const SecurityDashboard: React.FC = () => {
 
   const handleResolveLog = async (logId: string) => {
     try {
-      await resolveSecurityLog(logId);
-      await loadSecurityLogs(); // Refresh the logs
+      await SecurityAuditService.resolveSecurityLog(logId);
+      await loadSecurityLogs();
     } catch (error) {
       console.error('Failed to resolve security log:', error);
     }

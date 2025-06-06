@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield } from 'lucide-react';
 import { useSecurityMonitoring } from '@/hooks/useSecurityMonitoring';
+import { SecurityAuditService } from '@/services/security/SecurityAuditService';
 import SecurityStatus from './security/SecurityStatus';
 import SecurityMetrics from './security/SecurityMetrics';
 import SecurityActivity from './security/SecurityActivity';
 import SecurityFooter from './security/SecurityFooter';
-import { getSecurityLogs, logSecurityEventToDB, SecurityLogEntry } from '@/utils/enhancedSecurity';
 
 interface SecurityEvent {
   type: 'success' | 'warning' | 'info' | 'error';
@@ -34,10 +34,8 @@ const SecurityMonitor = () => {
 
   const loadSecurityActivity = async () => {
     try {
-      // Load from centralized database first
-      const dbLogs = await getSecurityLogs(10);
+      const dbLogs = await SecurityAuditService.getSecurityLogs(10);
       
-      // Convert SecurityLogEntry[] to SecurityEvent[]
       const formattedLogs: SecurityEvent[] = dbLogs.map(log => ({
         type: getActivityType(log.severity),
         message: getMessageFromDetails(log.details, log.event_type),
@@ -47,7 +45,6 @@ const SecurityMonitor = () => {
 
       setRecentActivity(formattedLogs);
 
-      // Update metrics based on recent activity
       const recentThreats = dbLogs.filter(log => 
         log.severity === 'high' || log.severity === 'critical' ||
         log.event_type.includes('block') || 
@@ -63,7 +60,6 @@ const SecurityMonitor = () => {
     } catch (error) {
       console.error('Failed to load security activity:', error);
       
-      // Fallback to localStorage if database fails
       const fallbackLogs = JSON.parse(localStorage.getItem('security_logs') || '[]');
       const formattedFallback: SecurityEvent[] = fallbackLogs.slice(-10).map((log: any) => ({
         type: getActivityType(log.severity || 'low'),
@@ -100,13 +96,12 @@ const SecurityMonitor = () => {
   const handleRunSecurityScan = async () => {
     try {
       await performSecurityCheck();
-      await logSecurityEventToDB(
+      await SecurityAuditService.logSecurityEvent(
         'manual_security_scan',
         'User initiated manual security scan',
         'low'
       );
       
-      // Refresh activity after scan
       setTimeout(loadSecurityActivity, 1000);
     } catch (error) {
       console.error('Security scan failed:', error);

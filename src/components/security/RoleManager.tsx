@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,11 +13,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  checkUserRole, 
-  assignUserRole, 
-  logAdminAction 
-} from '@/utils/enhancedSecurity';
+import { RoleManagementService } from '@/services/security/RoleManagementService';
 
 interface UserRole {
   id: string;
@@ -42,7 +37,7 @@ const RoleManager: React.FC = () => {
   }, []);
 
   const checkAdminStatus = async () => {
-    const adminStatus = await checkUserRole('admin');
+    const adminStatus = await RoleManagementService.checkUserRole('admin');
     setIsAdmin(adminStatus);
   };
 
@@ -50,7 +45,6 @@ const RoleManager: React.FC = () => {
     try {
       setLoading(true);
       
-      // Get all user roles with email information
       const { data: roles, error } = await supabase
         .from('user_roles')
         .select(`
@@ -80,7 +74,6 @@ const RoleManager: React.FC = () => {
     if (!newUserEmail || !newUserRole) return;
 
     try {
-      // First, find the user by email
       const { data: profile, error: profileError } = await supabase
         .from('user_profiles')
         .select('user_id')
@@ -92,7 +85,7 @@ const RoleManager: React.FC = () => {
         return;
       }
 
-      await assignUserRole(profile.user_id, newUserRole);
+      await RoleManagementService.assignUserRole(profile.user_id, newUserRole);
       await loadUserRoles();
       setNewUserEmail('');
       setNewUserRole('user');
@@ -113,7 +106,6 @@ const RoleManager: React.FC = () => {
         throw error;
       }
 
-      await logAdminAction('user_role_revoked', userId, 'user_roles');
       await loadUserRoles();
     } catch (error) {
       console.error('Failed to revoke role:', error);

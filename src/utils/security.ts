@@ -1,7 +1,7 @@
-import { logSecurityEventToDB } from './enhancedSecurity';
-import { validateAndSanitizeInput } from './enhancedInputSecurity';
 
-// Security configuration constants
+import { SecurityAuditService } from '@/services/security/SecurityAuditService';
+import { ContentValidationService } from '@/services/security/ContentValidationService';
+
 export const LIMITS = {
   BIO_MAX_LENGTH: 500,
   MIN_BIO_LENGTH: 50,
@@ -11,7 +11,6 @@ export const LIMITS = {
   MESSAGE_MAX_LENGTH: 1000
 };
 
-// Enhanced rate limiter utility
 export const rateLimiter = {
   requests: new Map<string, number[]>(),
   
@@ -24,13 +23,10 @@ export const rateLimiter = {
     }
     
     const requests = this.requests.get(key)!;
-    
-    // Remove old requests outside the window
     const validRequests = requests.filter(time => time > windowStart);
     
     if (validRequests.length >= maxRequests) {
-      // Log rate limit violation
-      logSecurityEventToDB(
+      SecurityAuditService.logSecurityEvent(
         'client_rate_limit_exceeded',
         { key, maxRequests, windowMs, currentCount: validRequests.length },
         'medium'
@@ -40,14 +36,12 @@ export const rateLimiter = {
     
     validRequests.push(now);
     this.requests.set(key, validRequests);
-    
     return true;
   },
 
-  // Clean up old entries periodically
   cleanup(): void {
     const now = Date.now();
-    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+    const maxAge = 24 * 60 * 60 * 1000;
     
     for (const [key, requests] of this.requests.entries()) {
       const validRequests = requests.filter(time => now - time < maxAge);
@@ -65,10 +59,8 @@ export const logSecurityEvent = async (
   details: string,
   severity: 'low' | 'medium' | 'high' | 'critical' = 'low'
 ): Promise<void> => {
-  // Use the new centralized logging system
-  await logSecurityEventToDB(eventType, details, severity);
+  await SecurityAuditService.logSecurityEvent(eventType, details, severity);
   
-  // Keep fallback to localStorage for compatibility
   try {
     const existingLogs = JSON.parse(localStorage.getItem('security_logs') || '[]');
     const newLog = {
@@ -81,7 +73,6 @@ export const logSecurityEvent = async (
     
     existingLogs.push(newLog);
     
-    // Keep only last 100 entries in localStorage as fallback
     if (existingLogs.length > 100) {
       existingLogs.splice(0, existingLogs.length - 100);
     }
@@ -107,13 +98,12 @@ export const isProductionEnvironment = (): boolean => {
 };
 
 export const sanitizeInput = (input: string): string => {
-  // Use the enhanced sanitization
   return input
-    .replace(/[<>]/g, '') // Remove potential HTML tags
-    .replace(/['"]/g, '') // Remove quotes that could break out of attributes
-    .replace(/[&]/g, '&amp;') // Escape ampersands
+    .replace(/[<>]/g, '')
+    .replace(/['"]/g, '')
+    .replace(/[&]/g, '&amp;')
     .trim()
-    .substring(0, 1000); // Limit length
+    .substring(0, 1000);
 };
 
 export const sanitizeForDisplay = (input: string): string => {
@@ -129,23 +119,12 @@ export const sanitizeForDisplay = (input: string): string => {
 
 export const validateEmailFormat = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email) && email.length <= 320; // RFC 5321 limit
+  return emailRegex.test(email) && email.length <= 320;
 };
 
 export const containsInappropriateContent = (content: string): boolean => {
-  const inappropriatePatterns = [
-    /contact.*me.*at/i,
-    /instagram|snapchat|whatsapp|telegram/i,
-    /money|bitcoin|crypto|investment/i,
-    /cashapp|venmo|paypal/i,
-    /click.*here|visit.*site/i,
-    /urgent|emergency|asap/i,
-    // Add more sophisticated patterns
-    /\b(?:administrator|admin|root|system)\b.*\b(?:password|login|access)\b/i,
-    /\b(?:hack|crack|exploit|vulnerability)\b/i
-  ];
-  
-  return inappropriatePatterns.some(pattern => pattern.test(content));
+  const patterns = ContentValidationService.detectSuspiciousPatterns(content);
+  return patterns.length > 0;
 };
 
 export const validateMessageContent = async (content: string): Promise<{ isValid: boolean; error?: string; sanitized?: string }> => {
@@ -157,8 +136,7 @@ export const validateMessageContent = async (content: string): Promise<{ isValid
     return { isValid: false, error: `Message too long (max ${LIMITS.MESSAGE_MAX_LENGTH} characters)` };
   }
 
-  // Use enhanced validation
-  const validation = await validateAndSanitizeInput(content, 'text', LIMITS.MESSAGE_MAX_LENGTH);
+  const validation = await ContentValidationService.validateAndSanitizeInput(content, 'text', LIMITS.MESSAGE_MAX_LENGTH);
   
   if (!validation.isValid) {
     return { 
@@ -169,7 +147,7 @@ export const validateMessageContent = async (content: string): Promise<{ isValid
   }
 
   if (containsInappropriateContent(content)) {
-    await logSecurityEventToDB(
+    await SecurityAuditService.logSecurityEvent(
       'inappropriate_content_detected',
       { content: content.substring(0, 200), type: 'message' },
       'medium'
@@ -180,73 +158,10 @@ export const validateMessageContent = async (content: string): Promise<{ isValid
   return { isValid: true, sanitized: validation.sanitized };
 };
 
-export const detectSuspiciousPatterns = (content: string): string[] => {
-  const patterns = [
-    /contact.*me.*at/i,
-    /instagram|snapchat|whatsapp|telegram/i,
-    /money|bitcoin|crypto|investment/i,
-    /cashapp|venmo|paypal/i,
-    /click.*here|visit.*site/i,
-    /urgent|emergency|asap/i
-  ];
-  
-  const detectedPatterns: string[] = [];
-  
-  patterns.forEach((pattern, index) => {
-    if (pattern.test(content)) {
-      const patternNames = [
-        'contact_info_sharing',
-        'external_platform_reference',
-        'financial_content',
-        'payment_reference',
-        'suspicious_links',
-        'urgency_manipulation'
-      ];
-      detectedPatterns.push(patternNames[index]);
-    }
-  });
-  
-  return detectedPatterns;
-};
-
-export const enforceContentPolicy = async (content: string, contentType: string): Promise<{ allowed: boolean; reason?: string }> => {
-  const suspiciousPatterns = detectSuspiciousPatterns(content);
-  
-  if (suspiciousPatterns.length > 0) {
-    await logSecurityEvent(
-      'content_policy_violation',
-      `Suspicious patterns detected in ${contentType}: ${suspiciousPatterns.join(', ')}`,
-      'medium'
-    );
-    
-    return {
-      allowed: false,
-      reason: `Content contains prohibited patterns: ${suspiciousPatterns.join(', ')}`
-    };
-  }
-  
-  if (content.length > 2000) {
-    await logSecurityEvent(
-      'content_length_violation',
-      `Content exceeds maximum length for ${contentType}`,
-      'low'
-    );
-    
-    return {
-      allowed: false,
-      reason: 'Content exceeds maximum allowed length'
-    };
-  }
-  
-  return { allowed: true };
-};
-
-// Enhanced cleanup function
 export const performSecurityMaintenance = (): void => {
   try {
     rateLimiter.cleanup();
     
-    // Clean up old localStorage security data
     const securityKeys = ['security_logs', 'security_logs_fallback', 'audit_logs'];
     securityKeys.forEach(key => {
       try {
@@ -266,7 +181,6 @@ export const performSecurityMaintenance = (): void => {
   }
 };
 
-// Run maintenance every hour
 if (typeof window !== 'undefined') {
   setInterval(performSecurityMaintenance, 60 * 60 * 1000);
 }
