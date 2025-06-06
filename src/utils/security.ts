@@ -1,7 +1,9 @@
+
 import { SecurityCoreService } from '@/services/security/SecurityCoreService';
 import { ValidationService, SECURITY_LIMITS } from '@/services/security/ValidationService';
 import { RateLimitService } from '@/services/security/RateLimitService';
 import { SecurityAuditService } from '@/services/security/SecurityAuditService';
+import { ContentValidationService } from '@/services/security/ContentValidationService';
 
 // Export the limits with the expected property names for backward compatibility
 export const LIMITS = {
@@ -30,11 +32,16 @@ export const sanitizeInput = ValidationService.sanitizeInput;
 export const sanitizeForDisplay = ValidationService.sanitizeForDisplay;
 export const validateMessageContent = ValidationService.validateMessageContent;
 export const containsInappropriateContent = (content: string): boolean => {
-  const suspiciousPatterns = ValidationService.detectSuspiciousPatterns?.(content) || [];
+  const suspiciousPatterns = ContentValidationService.detectSuspiciousPatterns?.(content) || [];
   return suspiciousPatterns.length > 0;
 };
 
 export const logSecurityEvent = SecurityAuditService.logSecurityEvent;
+
+// Export SecurityCoreService functions
+export const isProductionEnvironment = SecurityCoreService.isProductionEnvironment;
+export const generateDeviceFingerprint = SecurityCoreService.generateDeviceFingerprint;
+export const detectAutomationIndicators = SecurityCoreService.detectAutomationIndicators;
 
 // Rate limiting
 export const rateLimiter = {
@@ -65,4 +72,4 @@ export const rateLimiter = {
 };
 
 // Re-export services for direct access
-export { SecurityCoreService, ValidationService, RateLimitService, SecurityAuditService };
+export { SecurityCoreService, ValidationService, RateLimitService, SecurityAuditService, ContentValidationService };
