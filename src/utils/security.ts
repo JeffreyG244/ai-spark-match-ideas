@@ -1,87 +1,68 @@
-
-import { SecurityAuditService } from '@/services/security/SecurityAuditService';
+import { SecurityCoreService } from '@/services/security/SecurityCoreService';
 import { ValidationService, SECURITY_LIMITS } from '@/services/security/ValidationService';
 import { RateLimitService } from '@/services/security/RateLimitService';
-import { SecurityCoreService } from '@/services/security/SecurityCoreService';
+import { SecurityAuditService } from '@/services/security/SecurityAuditService';
 
-// Export consolidated utilities
-export const LIMITS = SECURITY_LIMITS;
-
-export const rateLimiter = {
-  requests: new Map<string, number[]>(),
+// Export the limits with the expected property names for backward compatibility
+export const LIMITS = {
+  // Message limits
+  MESSAGE_MAX_LENGTH: SECURITY_LIMITS.MAX_MESSAGE_LENGTH,
   
-  isAllowed(key: string, maxRequests: number, windowMs: number): boolean {
-    return RateLimitService.isAllowed(key, maxRequests, windowMs);
-  },
+  // Bio limits  
+  BIO_MAX_LENGTH: SECURITY_LIMITS.MAX_BIO_LENGTH,
+  MIN_BIO_LENGTH: 50, // Add missing minimum bio length
+  
+  // Profile field limits
+  VALUES_MAX_LENGTH: 300,
+  GOALS_MAX_LENGTH: 300,
+  GREEN_FLAGS_MAX_LENGTH: 300,
+  
+  // File limits
+  MAX_FILE_SIZE: SECURITY_LIMITS.MAX_FILE_SIZE,
+  
+  // Other limits
+  MAX_LOGIN_ATTEMPTS: SECURITY_LIMITS.MAX_LOGIN_ATTEMPTS,
+  SESSION_TIMEOUT: SECURITY_LIMITS.SESSION_TIMEOUT
+} as const;
 
-  cleanup(): void {
-    RateLimitService.cleanup();
-  }
+// Security functions
+export const sanitizeInput = ValidationService.sanitizeInput;
+export const sanitizeForDisplay = ValidationService.sanitizeForDisplay;
+export const validateMessageContent = ValidationService.validateMessageContent;
+export const containsInappropriateContent = (content: string): boolean => {
+  const suspiciousPatterns = ValidationService.detectSuspiciousPatterns?.(content) || [];
+  return suspiciousPatterns.length > 0;
 };
 
-export const logSecurityEvent = async (
-  eventType: string,
-  details: string,
-  severity: 'low' | 'medium' | 'high' | 'critical' = 'low'
-): Promise<void> => {
-  await SecurityAuditService.logSecurityEvent(eventType, details, severity);
-  
-  try {
-    const existingLogs = JSON.parse(localStorage.getItem('security_logs') || '[]');
-    const newLog = {
-      type: eventType,
-      details,
-      severity,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent
-    };
+export const logSecurityEvent = SecurityAuditService.logSecurityEvent;
+
+// Rate limiting
+export const rateLimiter = {
+  isAllowed: (key: string, maxRequests: number, windowMs: number): boolean => {
+    // Simple client-side rate limiting implementation
+    const now = Date.now();
+    const windowKey = `${key}_${Math.floor(now / windowMs)}`;
+    const currentCount = parseInt(localStorage.getItem(windowKey) || '0');
     
-    existingLogs.push(newLog);
-    
-    if (existingLogs.length > 100) {
-      existingLogs.splice(0, existingLogs.length - 100);
+    if (currentCount >= maxRequests) {
+      return false;
     }
     
-    localStorage.setItem('security_logs', JSON.stringify(existingLogs));
-  } catch (error) {
-    console.error('Fallback security logging failed:', error);
+    localStorage.setItem(windowKey, (currentCount + 1).toString());
+    
+    // Clean up old entries
+    setTimeout(() => {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith(`${key.split('_')[0]}_`) && parseInt(key.split('_')[1]) < Math.floor(now / windowMs)) {
+          localStorage.removeItem(key);
+        }
+      }
+    }, 100);
+    
+    return true;
   }
 };
 
-export const isProductionEnvironment = (): boolean => {
-  return SecurityCoreService.isProductionEnvironment();
-};
-
-export const sanitizeInput = (input: string): string => {
-  return ValidationService.sanitizeInput(input);
-};
-
-export const sanitizeForDisplay = (input: string): string => {
-  return ValidationService.sanitizeForDisplay(input);
-};
-
-export const validateEmailFormat = (email: string): boolean => {
-  return ValidationService.validateEmailFormat(email);
-};
-
-export const containsInappropriateContent = (content: string): boolean => {
-  const inappropriatePatterns = [
-    /contact.*me.*at/i,
-    /instagram|snapchat|whatsapp|telegram/i,
-    /money|bitcoin|crypto|investment/i,
-    /cashapp|venmo|paypal/i
-  ];
-  return inappropriatePatterns.some(pattern => pattern.test(content));
-};
-
-export const validateMessageContent = async (content: string): Promise<{ isValid: boolean; error?: string; sanitized?: string }> => {
-  return ValidationService.validateMessageContent(content);
-};
-
-export const performSecurityMaintenance = (): void => {
-  SecurityCoreService.performSecurityMaintenance();
-};
-
-if (typeof window !== 'undefined') {
-  setInterval(performSecurityMaintenance, 60 * 60 * 1000);
-}
+// Re-export services for direct access
+export { SecurityCoreService, ValidationService, RateLimitService, SecurityAuditService };
