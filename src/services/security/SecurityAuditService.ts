@@ -1,22 +1,9 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { SecurityLogEntry, AdminAction } from '@/types/security';
-import { SecurityCoreService } from './SecurityCoreService';
-
-const convertSupabaseJsonToRecord = (jsonData: any): Record<string, any> => {
-  if (!jsonData) return {};
-  if (typeof jsonData === 'object') return jsonData;
-  try {
-    return JSON.parse(jsonData);
-  } catch {
-    return { raw: jsonData };
-  }
-};
-
-const convertToString = (value: unknown): string | undefined => {
-  if (value === null || value === undefined) return undefined;
-  return String(value);
-};
+import { AuditLogService } from './audit/AuditLogService';
+import { LogRetrievalService } from './audit/LogRetrievalService';
+import { LogResolutionService } from './audit/LogResolutionService';
+import { AdminActionService } from './audit/AdminActionService';
+import { SecurityLogEntry } from '@/types/security';
 
 export class SecurityAuditService {
   static async logSecurityEvent(
@@ -24,151 +11,23 @@ export class SecurityAuditService {
     details: string | Record<string, any>,
     severity: 'low' | 'medium' | 'high' | 'critical' = 'low'
   ): Promise<void> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      const logEntry = {
-        user_id: user?.id || undefined,
-        event_type: eventType,
-        severity,
-        details: typeof details === 'string' ? { message: details } : details,
-        user_agent: navigator.userAgent,
-        fingerprint: SecurityCoreService.generateDeviceFingerprint(),
-        session_id: user?.id ? `session_${user.id}_${Date.now()}` : undefined
-      };
-
-      const { error } = await supabase
-        .from('security_logs')
-        .insert(logEntry);
-
-      if (error) {
-        console.error('Failed to log security event to database:', error);
-        this.fallbackLog(logEntry, error.message);
-      }
-    } catch (error) {
-      console.error('Security logging error:', error);
-    }
+    return AuditLogService.logSecurityEvent(eventType, details, severity);
   }
 
   static async getSecurityLogs(limit: number = 50): Promise<SecurityLogEntry[]> {
-    try {
-      const { data, error } = await supabase
-        .from('security_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(limit);
-
-      if (error) {
-        throw error;
-      }
-
-      return (data || []).map(log => ({
-        id: log.id,
-        user_id: log.user_id || undefined,
-        event_type: log.event_type,
-        severity: log.severity as 'low' | 'medium' | 'high' | 'critical',
-        details: convertSupabaseJsonToRecord(log.details),
-        ip_address: convertToString(log.ip_address),
-        user_agent: log.user_agent || undefined,
-        session_id: log.session_id || undefined,
-        fingerprint: log.fingerprint || undefined,
-        created_at: log.created_at || undefined,
-        resolved: log.resolved || false,
-        resolved_by: log.resolved_by || undefined,
-        resolved_at: log.resolved_at || undefined
-      }));
-    } catch (error) {
-      console.error('Error fetching security logs:', error);
-      return [];
-    }
+    return LogRetrievalService.getSecurityLogs(limit);
   }
 
   static async resolveSecurityLog(logId: string): Promise<void> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('User must be authenticated to resolve security logs');
-      }
-
-      const { error } = await supabase
-        .from('security_logs')
-        .update({
-          resolved: true,
-          resolved_by: user.id,
-          resolved_at: new Date().toISOString()
-        })
-        .eq('id', logId);
-
-      if (error) {
-        throw error;
-      }
-
-      await this.logAdminAction('security_log_resolved', undefined, `security_log:${logId}`);
-    } catch (error) {
-      console.error('Error resolving security log:', error);
-      throw error;
-    }
+    return LogResolutionService.resolveSecurityLog(logId);
   }
 
-  private static async logAdminAction(
+  static async logAdminAction(
     actionType: string,
     targetUserId?: string,
     targetResource?: string,
     details: Record<string, any> = {}
   ): Promise<void> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error('User must be authenticated to log admin actions');
-      }
-
-      const adminAction = {
-        admin_user_id: user.id,
-        action_type: actionType,
-        target_user_id: targetUserId,
-        target_resource: targetResource,
-        details,
-        user_agent: navigator.userAgent
-      };
-
-      const { error } = await supabase
-        .from('admin_actions')
-        .insert(adminAction);
-
-      if (error) {
-        throw error;
-      }
-
-      await this.logSecurityEvent(
-        'admin_action_performed',
-        {
-          action_type: actionType,
-          target_user_id: targetUserId,
-          target_resource: targetResource,
-          admin_user_id: user.id,
-          ...details
-        },
-        'medium'
-      );
-    } catch (error) {
-      console.error('Failed to log admin action:', error);
-      throw error;
-    }
-  }
-
-  private static fallbackLog(logEntry: any, errorReason: string): void {
-    try {
-      const fallbackLogs = JSON.parse(localStorage.getItem('security_logs_fallback') || '[]');
-      fallbackLogs.push({ 
-        ...logEntry, 
-        timestamp: new Date().toISOString(),
-        fallback_reason: errorReason 
-      });
-      localStorage.setItem('security_logs_fallback', JSON.stringify(fallbackLogs.slice(-100)));
-    } catch (error) {
-      console.error('Fallback logging failed:', error);
-    }
+    return AdminActionService.logAdminAction(actionType, targetUserId, targetResource, details);
   }
 }
