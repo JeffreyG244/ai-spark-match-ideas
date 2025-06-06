@@ -26,7 +26,7 @@ export class SecurityAuditService {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      const logEntry: Omit<SecurityLogEntry, 'id' | 'created_at'> = {
+      const logEntry = {
         user_id: user?.id || undefined,
         event_type: eventType,
         severity,
@@ -123,7 +123,7 @@ export class SecurityAuditService {
         throw new Error('User must be authenticated to log admin actions');
       }
 
-      const adminAction: Omit<AdminAction, 'id' | 'created_at'> = {
+      const adminAction = {
         admin_user_id: user.id,
         action_type: actionType,
         target_user_id: targetUserId,
