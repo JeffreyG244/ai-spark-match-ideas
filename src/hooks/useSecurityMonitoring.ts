@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { MonitoringService } from '@/services/security/MonitoringService';
 import { SecurityAuditService } from '@/services/security/SecurityAuditService';
+import { SecurityCoreService } from '@/services/security/SecurityCoreService';
 
 interface SecurityStatus {
   sessionValid: boolean;
@@ -36,7 +37,7 @@ export const useSecurityMonitoring = () => {
     
     try {
       const automationIndicators = MonitoringService.detectAutomationIndicators();
-      const deviceFingerprint = MonitoringService.generateDeviceFingerprint();
+      const deviceFingerprint = SecurityCoreService.generateDeviceFingerprint();
       
       const knownDevices = JSON.parse(localStorage.getItem(`known_devices_${user.id}`) || '[]');
       const isKnownDevice = knownDevices.includes(deviceFingerprint);
@@ -130,7 +131,7 @@ export const useSecurityMonitoring = () => {
   };
 
   const getDeviceFingerprint = () => {
-    return MonitoringService.generateDeviceFingerprint();
+    return SecurityCoreService.generateDeviceFingerprint();
   };
 
   return {

@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { RateLimitingService } from '@/services/security/RateLimitingService';
 import { SecurityAuditService } from '@/services/security/SecurityAuditService';
-import { ContentValidationService } from '@/services/security/ContentValidationService';
+import { ValidationService } from '@/services/security/ValidationService';
 import { useAuth } from '@/hooks/useAuth';
 
 interface SecurityMiddlewareResult {
@@ -54,12 +54,12 @@ export const useSecurityMiddleware = () => {
         return { allowed: false, reason: 'Authentication required' };
       }
 
-      const result = await ContentValidationService.enforceContentPolicy(content, contentType);
+      const result = await ValidationService.validateMessageContent(content);
       
-      if (!result.allowed) {
+      if (!result.isValid) {
         return {
           allowed: false,
-          reason: result.reason
+          reason: result.error
         };
       }
 

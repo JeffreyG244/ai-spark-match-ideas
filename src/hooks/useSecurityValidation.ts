@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { ContentValidationService } from '@/services/security/ContentValidationService';
+import { ValidationService } from '@/services/security/ValidationService';
 import { useAuth } from '@/hooks/useAuth';
 
 interface SecurityValidationResult {
@@ -30,12 +30,12 @@ export const useSecurityValidation = () => {
         return { allowed: false, reason: 'Content too long' };
       }
 
-      const result = await ContentValidationService.enforceContentPolicy(content, contentType);
+      const result = await ValidationService.validateMessageContent(content);
       
-      if (!result.allowed) {
+      if (!result.isValid) {
         return {
           allowed: false,
-          reason: result.reason
+          reason: result.error
         };
       }
 

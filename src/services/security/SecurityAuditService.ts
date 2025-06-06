@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { SecurityLogEntry, AdminAction } from '@/types/security';
+import { SecurityCoreService } from './SecurityCoreService';
 
 const convertSupabaseJsonToRecord = (jsonData: any): Record<string, any> => {
   if (!jsonData) return {};
@@ -32,7 +33,7 @@ export class SecurityAuditService {
         severity,
         details: typeof details === 'string' ? { message: details } : details,
         user_agent: navigator.userAgent,
-        fingerprint: this.generateDeviceFingerprint(),
+        fingerprint: SecurityCoreService.generateDeviceFingerprint(),
         session_id: user?.id ? `session_${user.id}_${Date.now()}` : undefined
       };
 
@@ -168,34 +169,6 @@ export class SecurityAuditService {
       localStorage.setItem('security_logs_fallback', JSON.stringify(fallbackLogs.slice(-100)));
     } catch (error) {
       console.error('Fallback logging failed:', error);
-    }
-  }
-
-  private static generateDeviceFingerprint(): string {
-    try {
-      const components = [
-        navigator.userAgent,
-        navigator.language,
-        screen.width,
-        screen.height,
-        new Date().getTimezoneOffset(),
-        navigator.platform,
-        navigator.cookieEnabled
-      ];
-      
-      const fingerprint = components.join('|');
-      
-      let hash = 0;
-      for (let i = 0; i < fingerprint.length; i++) {
-        const char = fingerprint.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-      }
-      
-      return Math.abs(hash).toString(16);
-    } catch (error) {
-      console.error('Device fingerprint generation failed:', error);
-      return 'unknown';
     }
   }
 }
