@@ -615,6 +615,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      example_function: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       has_role: {
         Args: {
           check_user_id: string
@@ -638,6 +642,14 @@ export type Database = {
       upsert_user_presence: {
         Args: { p_user_id: string; p_is_online: boolean }
         Returns: undefined
+      }
+      validate_password_sec: {
+        Args: { password: string }
+        Returns: boolean
+      }
+      validate_password_security: {
+        Args: { password: string }
+        Returns: boolean
       }
       validate_role_assignment: {
         Args: {

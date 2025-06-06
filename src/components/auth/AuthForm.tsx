@@ -1,16 +1,11 @@
 
 import React, { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { validatePasswordBeforeAuth, validateEmailFormat, sanitizeAuthInput } from '@/utils/authConfig';
-import { sanitizePasswordInput } from '@/utils/passwordValidation';
-import { logSecurityEventToDB } from '@/utils/enhancedSecurity';
-import { useNavigate } from 'react-router-dom';
-import { toast } from '@/hooks/use-toast';
+import { useAuthentication } from '@/hooks/useAuthentication';
 
 interface AuthFormProps {
   mode: 'login' | 'signup';
@@ -23,140 +18,16 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode, onToggleMode }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  
+  const { loading, error, signUp, signIn } = useAuthentication();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
 
-    try {
-      // Sanitize inputs
-      const sanitizedEmail = sanitizeAuthInput(email);
-      const sanitizedPassword = sanitizePasswordInput(password);
-
-      // Validate email format
-      if (!validateEmailFormat(sanitizedEmail)) {
-        setError('Please enter a valid email address');
-        setLoading(false);
-        return;
-      }
-
-      if (mode === 'signup') {
-        // Client-side validation for better UX (database also validates)
-        const passwordValidation = validatePasswordBeforeAuth(sanitizedPassword);
-        if (!passwordValidation.isValid) {
-          setError(passwordValidation.error || 'Invalid password');
-          setLoading(false);
-          return;
-        }
-
-        // Check password confirmation
-        if (sanitizedPassword !== confirmPassword) {
-          setError('Passwords do not match');
-          setLoading(false);
-          return;
-        }
-
-        // Validate required fields
-        const sanitizedFirstName = sanitizeAuthInput(firstName);
-        const sanitizedLastName = sanitizeAuthInput(lastName);
-        
-        if (!sanitizedFirstName || !sanitizedLastName) {
-          setError('First name and last name are required');
-          setLoading(false);
-          return;
-        }
-
-        // Sign up - database trigger will validate password server-side
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email: sanitizedEmail,
-          password: sanitizedPassword,
-          options: {
-            data: {
-              first_name: sanitizedFirstName,
-              last_name: sanitizedLastName,
-              password: sanitizedPassword // Pass to database trigger for validation
-            },
-            emailRedirectTo: `${window.location.origin}/`
-          }
-        });
-
-        if (signUpError) {
-          console.error('Signup error:', signUpError);
-          setError(signUpError.message);
-          
-          // Log security event for failed signup
-          await logSecurityEventToDB(
-            'signup_failed',
-            { email: sanitizedEmail, error: signUpError.message },
-            'medium'
-          );
-        } else {
-          toast({
-            title: 'Account created successfully',
-            description: 'Please check your email to verify your account.',
-          });
-          
-          // Log successful signup
-          await logSecurityEventToDB(
-            'user_signup_success',
-            { email: sanitizedEmail, user_id: data.user?.id },
-            'low'
-          );
-          
-          navigate('/');
-        }
-      } else {
-        // Login
-        const { data, error: signInError } = await supabase.auth.signInWithPassword({
-          email: sanitizedEmail,
-          password: sanitizedPassword
-        });
-
-        if (signInError) {
-          console.error('Login error:', signInError);
-          setError(signInError.message);
-          
-          // Log security event for failed login
-          await logSecurityEventToDB(
-            'login_failed',
-            { email: sanitizedEmail, error: signInError.message },
-            'medium'
-          );
-        } else {
-          toast({
-            title: 'Welcome back!',
-            description: 'You have been successfully logged in.',
-          });
-          
-          // Log successful login
-          await logSecurityEventToDB(
-            'user_login_success',
-            { email: sanitizedEmail, user_id: data.user?.id },
-            'low'
-          );
-          
-          navigate('/');
-        }
-      }
-    } catch (error) {
-      console.error('Auth error:', error);
-      setError('An unexpected error occurred. Please try again.');
-      
-      // Log unexpected error
-      await logSecurityEventToDB(
-        'auth_unexpected_error',
-        { 
-          email: sanitizeAuthInput(email), 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        },
-        'high'
-      );
-    } finally {
-      setLoading(false);
+    if (mode === 'signup') {
+      await signUp(email, password, confirmPassword, firstName, lastName);
+    } else {
+      await signIn(email, password);
     }
   };
 
