@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, Users, Camera, Crown } from 'lucide-react';
+import { Heart, MessageCircle, Users, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import ProfileManager from '@/components/ProfileManager';
@@ -48,7 +48,9 @@ const Dashboard = () => {
               <Heart className="h-8 w-8 text-pink-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Matches</h3>
               <p className="text-sm text-gray-600 mb-4">View your compatibility</p>
-              <Button className="w-full" disabled>Coming Soon</Button>
+              <Link to="/matches">
+                <Button className="w-full">View Matches</Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -57,7 +59,9 @@ const Dashboard = () => {
               <Users className="h-8 w-8 text-blue-600 mx-auto mb-3" />
               <h3 className="font-semibold mb-2">Discover</h3>
               <p className="text-sm text-gray-600 mb-4">Find new connections</p>
-              <Button className="w-full" disabled>Coming Soon</Button>
+              <Link to="/discover">
+                <Button className="w-full">Start Discovering</Button>
+              </Link>
             </CardContent>
           </Card>
 

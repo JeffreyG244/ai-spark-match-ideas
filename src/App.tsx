@@ -9,6 +9,8 @@ import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import Dashboard from '@/pages/Dashboard';
 import Messages from '@/pages/Messages';
+import Discover from '@/pages/Discover';
+import Matches from '@/pages/Matches';
 import NotFound from '@/pages/NotFound';
 import Legal from '@/pages/Legal';
 import SeedUsers from '@/pages/SeedUsers';
@@ -42,6 +44,22 @@ function App() {
               element={
                 <AuthGuard>
                   <Dashboard />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/discover" 
+              element={
+                <AuthGuard>
+                  <Discover />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/matches" 
+              element={
+                <AuthGuard>
+                  <Matches />
                 </AuthGuard>
               } 
             />
