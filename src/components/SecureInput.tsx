@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -34,18 +33,21 @@ const SecureInput = ({
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const rawValue = e.target.value;
-    const sanitizedValue = sanitizeInput(rawValue);
     
-    // Validate length
-    if (sanitizedValue.length > maxLength) {
+    // Validate length before any processing
+    if (rawValue.length > maxLength) {
       return; // Don't allow input beyond max length
     }
     
-    onChange(sanitizedValue);
+    // Only sanitize on blur or when saving, not during typing
+    // This preserves normal typing behavior including spaces
+    onChange(rawValue);
     
-    // Run validation
+    // Run custom validation if provided
     if (validation) {
-      const validationError = validation(sanitizedValue);
+      // Use sanitized version for validation but keep raw for display
+      const sanitizedForValidation = sanitizeInput(rawValue);
+      const validationError = validation(sanitizedForValidation);
       setError(validationError);
     } else {
       setError(null);
@@ -54,7 +56,15 @@ const SecureInput = ({
 
   const handleBlur = () => {
     setIsTouched(true);
-    if (required && value.length < minLength) {
+    
+    // Sanitize and update the value on blur
+    const sanitizedValue = sanitizeInput(value);
+    if (sanitizedValue !== value) {
+      onChange(sanitizedValue);
+    }
+    
+    // Validate minimum length
+    if (required && sanitizedValue.length < minLength) {
       setError(`${label} must be at least ${minLength} characters`);
     }
   };
