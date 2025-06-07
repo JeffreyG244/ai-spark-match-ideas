@@ -671,11 +671,53 @@ export type Database = {
             referencedRelation: "membership_plans"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "public_memberships"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      public_memberships: {
+        Row: {
+          annual_price: number | null
+          created_at: string | null
+          features: Json | null
+          highlight_color: string | null
+          id: number | null
+          is_popular: boolean | null
+          monthly_price: number | null
+          name: string | null
+          price_id: string | null
+        }
+        Insert: {
+          annual_price?: number | null
+          created_at?: string | null
+          features?: Json | null
+          highlight_color?: string | null
+          id?: number | null
+          is_popular?: boolean | null
+          monthly_price?: number | null
+          name?: string | null
+          price_id?: string | null
+        }
+        Update: {
+          annual_price?: number | null
+          created_at?: string | null
+          features?: Json | null
+          highlight_color?: string | null
+          id?: number | null
+          is_popular?: boolean | null
+          monthly_price?: number | null
+          name?: string | null
+          price_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_old_data: {

@@ -39,7 +39,7 @@ const SoulSyncAI = () => {
   const runSoulSync = () => {
     setIsAnalyzing(true);
     toast({
-      title: "SoulSync AI Activated",
+      title: "Luvlang AI Activated",
       description: "Analyzing your soul's deepest patterns and desires...",
     });
 
@@ -59,7 +59,7 @@ const SoulSyncAI = () => {
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <Brain className="h-8 w-8 text-purple-600" />
-            SoulSync AI
+            Luvlang AI
           </h2>
           <p className="text-gray-600">Deep personality matching at the soul level</p>
         </div>

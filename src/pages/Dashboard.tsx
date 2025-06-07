@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, Shield, Users, Camera } from 'lucide-react';
+import { Heart, MessageCircle, Users, Camera, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import ProfileManager from '@/components/ProfileManager';
@@ -61,12 +61,14 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-green-200 hover:border-green-300 transition-colors">
+          <Card className="border-amber-200 hover:border-amber-300 transition-colors">
             <CardContent className="p-6 text-center">
-              <Shield className="h-8 w-8 text-green-600 mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Safety</h3>
-              <p className="text-sm text-gray-600 mb-4">Security settings</p>
-              <Button className="w-full" disabled>Coming Soon</Button>
+              <Crown className="h-8 w-8 text-amber-600 mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">Membership</h3>
+              <p className="text-sm text-gray-600 mb-4">Upgrade your plan</p>
+              <Link to="/membership">
+                <Button className="w-full">View Plans</Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

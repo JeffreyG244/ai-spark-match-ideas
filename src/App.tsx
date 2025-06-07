@@ -12,6 +12,7 @@ import Messages from '@/pages/Messages';
 import NotFound from '@/pages/NotFound';
 import Legal from '@/pages/Legal';
 import SeedUsers from '@/pages/SeedUsers';
+import Membership from '@/pages/Membership';
 
 // Legal Pages
 import PrivacyPolicy from '@/pages/legal/PrivacyPolicy';
@@ -41,6 +42,14 @@ function App() {
               element={
                 <AuthGuard>
                   <Dashboard />
+                </AuthGuard>
+              } 
+            />
+            <Route 
+              path="/membership" 
+              element={
+                <AuthGuard>
+                  <Membership />
                 </AuthGuard>
               } 
             />

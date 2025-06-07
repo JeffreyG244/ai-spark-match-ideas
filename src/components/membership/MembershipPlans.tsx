@@ -130,15 +130,15 @@ const MembershipPlans = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-4">Choose Your Plan</h1>
+        <h1 className="text-3xl font-bold mb-4 text-gray-900">Choose Your Plan</h1>
         <p className="text-gray-600 mb-6">Find your perfect match with the right features for you</p>
         
         <div className="flex justify-center mb-8">
@@ -147,7 +147,7 @@ const MembershipPlans = () => {
               onClick={() => setBillingCycle('monthly')}
               className={`px-4 py-2 rounded-md transition-colors ${
                 billingCycle === 'monthly' 
-                  ? 'bg-white shadow-sm text-primary' 
+                  ? 'bg-white shadow-sm text-purple-600' 
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -157,7 +157,7 @@ const MembershipPlans = () => {
               onClick={() => setBillingCycle('annual')}
               className={`px-4 py-2 rounded-md transition-colors ${
                 billingCycle === 'annual' 
-                  ? 'bg-white shadow-sm text-primary' 
+                  ? 'bg-white shadow-sm text-purple-600' 
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -176,12 +176,12 @@ const MembershipPlans = () => {
             <Card 
               key={plan.id} 
               className={`relative ${
-                plan.is_popular ? 'border-2 border-primary shadow-lg' : ''
+                plan.is_popular ? 'border-2 border-purple-600 shadow-lg' : 'border-purple-200'
               } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
             >
               {plan.is_popular && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-primary text-white">
+                  <Badge className="bg-purple-600 text-white">
                     <Star className="w-3 h-3 mr-1" />
                     Most Popular
                   </Badge>
@@ -191,11 +191,11 @@ const MembershipPlans = () => {
               <CardHeader className="text-center">
                 <CardTitle 
                   className="text-2xl"
-                  style={{ color: plan.highlight_color || '#000' }}
+                  style={{ color: plan.highlight_color || '#7C3AED' }}
                 >
                   {plan.name}
                 </CardTitle>
-                <CardDescription className="text-3xl font-bold">
+                <CardDescription className="text-3xl font-bold text-gray-900">
                   {getPrice(plan)}
                 </CardDescription>
                 {billingCycle === 'annual' && plan.monthly_price > 0 && (
@@ -226,7 +226,7 @@ const MembershipPlans = () => {
                   variant={isCurrentPlan ? "outline" : "default"}
                   disabled={isCurrentPlan}
                   style={{
-                    backgroundColor: !isCurrentPlan ? plan.highlight_color || undefined : undefined
+                    backgroundColor: !isCurrentPlan ? (plan.highlight_color || '#7C3AED') : undefined
                   }}
                 >
                   {isCurrentPlan ? 'Current Plan' : `Choose ${plan.name}`}
@@ -238,13 +238,13 @@ const MembershipPlans = () => {
       </div>
 
       {userSubscription && (
-        <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-          <h3 className="font-semibold text-blue-900">Current Subscription</h3>
-          <p className="text-blue-700">
+        <div className="mt-8 p-4 bg-purple-50 rounded-lg border border-purple-200">
+          <h3 className="font-semibold text-purple-900">Current Subscription</h3>
+          <p className="text-purple-700">
             Status: <span className="capitalize">{userSubscription.status}</span>
           </p>
           {userSubscription.current_period_end && (
-            <p className="text-blue-700">
+            <p className="text-purple-700">
               Next billing: {new Date(userSubscription.current_period_end).toLocaleDateString()}
             </p>
           )}
