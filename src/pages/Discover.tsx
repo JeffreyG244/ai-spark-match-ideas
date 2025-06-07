@@ -52,9 +52,7 @@ const Discover = () => {
                     src={user.photos[0]} 
                     alt={`${user.firstName} ${user.lastName}`}
                     className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60";
-                    }}
+                    loading="lazy"
                   />
                 </div>
                 <CardTitle className="flex items-center justify-between">
