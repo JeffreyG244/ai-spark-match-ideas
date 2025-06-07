@@ -161,6 +161,42 @@ export type Database = {
         }
         Relationships: []
       }
+      membership_plans: {
+        Row: {
+          annual_price: number | null
+          created_at: string | null
+          features: Json
+          highlight_color: string | null
+          id: number
+          is_popular: boolean | null
+          monthly_price: number
+          name: string
+          price_id: string | null
+        }
+        Insert: {
+          annual_price?: number | null
+          created_at?: string | null
+          features: Json
+          highlight_color?: string | null
+          id?: number
+          is_popular?: boolean | null
+          monthly_price: number
+          name: string
+          price_id?: string | null
+        }
+        Update: {
+          annual_price?: number | null
+          created_at?: string | null
+          features?: Json
+          highlight_color?: string | null
+          id?: number
+          is_popular?: boolean | null
+          monthly_price?: number
+          name?: string
+          price_id?: string | null
+        }
+        Relationships: []
+      }
       message_rate_limits: {
         Row: {
           id: string
@@ -601,6 +637,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          current_period_end: string | null
+          plan_id: number | null
+          status: string | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          current_period_end?: string | null
+          plan_id?: number | null
+          status?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          current_period_end?: string | null
+          plan_id?: number | null
+          status?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "membership_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
