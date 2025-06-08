@@ -53,6 +53,9 @@ const Discover = () => {
                     alt={`${user.firstName} ${user.lastName}`}
                     className="w-full h-full object-cover"
                     loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.src = "https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60";
+                    }}
                   />
                 </div>
                 <CardTitle className="flex items-center justify-between">
