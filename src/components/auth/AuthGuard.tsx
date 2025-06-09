@@ -28,7 +28,7 @@ const AuthGuard = ({ children, requireAuth = true }: AuthGuardProps) => {
         if (event === 'SIGNED_IN') {
           toast({
             title: 'Successfully signed in',
-            description: 'Welcome to SoulSync!',
+            description: 'Welcome to Luvlang!',
           });
           
           // Redirect to dashboard if on auth page

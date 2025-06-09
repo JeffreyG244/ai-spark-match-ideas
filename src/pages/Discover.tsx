@@ -13,6 +13,7 @@ const Discover = () => {
   const { signOut } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState(null);
+  const [imageLoaded, setImageLoaded] = useState({});
 
   const handleSwipe = (direction: 'like' | 'pass', userIndex: number) => {
     setSwipeDirection(direction);
@@ -33,6 +34,10 @@ const Discover = () => {
     } else if (info.offset.x < -threshold) {
       handleSwipe('pass', userIndex);
     }
+  };
+
+  const handleImageLoad = (userId: string) => {
+    setImageLoaded(prev => ({ ...prev, [userId]: true }));
   };
 
   const currentUser = diverseUsersData[currentIndex];
@@ -92,36 +97,52 @@ const Discover = () => {
                 {currentUser && (
                   <motion.div
                     key={currentIndex}
-                    initial={{ scale: 0.8, opacity: 0, rotateY: 90 }}
-                    animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
                     exit={{ 
-                      scale: 0.8, 
+                      scale: 0.9, 
                       opacity: 0,
                       x: swipeDirection === 'like' ? 300 : swipeDirection === 'pass' ? -300 : 0,
                       rotate: swipeDirection === 'like' ? 15 : swipeDirection === 'pass' ? -15 : 0
                     }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ 
+                      duration: 0.3,
+                      ease: "easeOut"
+                    }}
                     drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
+                    dragConstraints={{ left: -50, right: 50 }}
+                    dragElastic={0.2}
                     onDragEnd={handleDragEnd}
                     whileDrag={{ 
                       rotate: 5,
-                      scale: 1.05,
-                      cursor: 'grabbing'
+                      scale: 1.02,
+                      cursor: 'grabbing',
+                      zIndex: 10
                     }}
                     className="absolute w-full cursor-grab active:cursor-grabbing"
+                    style={{ willChange: 'transform' }}
                   >
-                    <Card className="border-purple-200 hover:border-purple-300 transition-all duration-300 shadow-xl">
+                    <Card className="border-purple-200 hover:border-purple-300 transition-all duration-300 shadow-xl overflow-hidden">
                       <CardHeader className="pb-4">
-                        <div className="w-full h-64 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 overflow-hidden">
+                        <div className="w-full h-64 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 overflow-hidden relative">
+                          {!imageLoaded[currentUser.id] && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                              <div className="animate-pulse bg-gray-300 w-full h-full"></div>
+                            </div>
+                          )}
                           <img 
                             src={currentUser.photos[0]} 
                             alt={`${currentUser.firstName} ${currentUser.lastName}`}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
+                            className={`w-full h-full object-cover transition-opacity duration-500 ${
+                              imageLoaded[currentUser.id] ? 'opacity-100' : 'opacity-0'
+                            }`}
+                            loading="eager"
+                            onLoad={() => handleImageLoad(currentUser.id)}
                             onError={(e) => {
                               e.currentTarget.src = "https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60";
+                              handleImageLoad(currentUser.id);
                             }}
+                            style={{ backfaceVisibility: 'hidden' }}
                           />
                         </div>
                         <CardTitle className="flex items-center justify-between">
