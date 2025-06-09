@@ -1,15 +1,42 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Heart, MapPin, Users, ArrowLeft } from 'lucide-react';
+import { Heart, MapPin, Users, ArrowLeft, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { diverseUsersData } from '@/data/diverseUsersData';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Discover = () => {
   const { signOut } = useAuth();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [swipeDirection, setSwipeDirection] = useState(null);
+
+  const handleSwipe = (direction: 'like' | 'pass', userIndex: number) => {
+    setSwipeDirection(direction);
+    
+    // Add a small delay for animation, then move to next card
+    setTimeout(() => {
+      setCurrentIndex(prev => prev + 1);
+      setSwipeDirection(null);
+    }, 300);
+  };
+
+  const handleDragEnd = (event: any, info: any) => {
+    const threshold = 100;
+    const userIndex = currentIndex;
+    
+    if (info.offset.x > threshold) {
+      handleSwipe('like', userIndex);
+    } else if (info.offset.x < -threshold) {
+      handleSwipe('pass', userIndex);
+    }
+  };
+
+  const currentUser = diverseUsersData[currentIndex];
+  const hasMoreProfiles = currentIndex < diverseUsersData.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
@@ -39,71 +66,135 @@ const Discover = () => {
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Discover New Connections</h1>
-          <p className="text-gray-600">Find people who share your values and life goals</p>
+          <p className="text-gray-600">Swipe right to like, left to pass</p>
         </div>
 
-        {/* Profiles Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {diverseUsersData.map((user, index) => (
-            <Card key={index} className="border-purple-200 hover:border-purple-300 transition-all duration-300 hover:shadow-lg">
-              <CardHeader className="pb-4">
-                <div className="w-full h-48 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 overflow-hidden">
-                  <img 
-                    src={user.photos[0]} 
-                    alt={`${user.firstName} ${user.lastName}`}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.currentTarget.src = "https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60";
+        {/* Swipe Card Container */}
+        <div className="flex justify-center">
+          <div className="relative w-full max-w-md h-[600px]">
+            {!hasMoreProfiles ? (
+              <Card className="border-purple-200 p-8 text-center">
+                <CardContent>
+                  <Heart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">No More Profiles</h3>
+                  <p className="text-gray-600 mb-6">
+                    You've seen all available profiles. Check back later for new connections!
+                  </p>
+                  <Link to="/matches">
+                    <Button className="bg-purple-600 hover:bg-purple-700">
+                      View Your Matches
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ) : (
+              <AnimatePresence mode="wait">
+                {currentUser && (
+                  <motion.div
+                    key={currentIndex}
+                    initial={{ scale: 0.8, opacity: 0, rotateY: 90 }}
+                    animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                    exit={{ 
+                      scale: 0.8, 
+                      opacity: 0,
+                      x: swipeDirection === 'like' ? 300 : swipeDirection === 'pass' ? -300 : 0,
+                      rotate: swipeDirection === 'like' ? 15 : swipeDirection === 'pass' ? -15 : 0
                     }}
-                  />
-                </div>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="text-xl">{user.firstName} {user.lastName}</span>
-                  <Badge className="bg-purple-100 text-purple-800">
-                    {Math.floor(Math.random() * 20) + 20} years
-                  </Badge>
-                </CardTitle>
-                <div className="flex items-center text-gray-500 text-sm">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span>{Math.floor(Math.random() * 10) + 1} miles away</span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
-                  {user.bio}
-                </p>
+                    transition={{ duration: 0.3 }}
+                    drag="x"
+                    dragConstraints={{ left: 0, right: 0 }}
+                    onDragEnd={handleDragEnd}
+                    whileDrag={{ 
+                      rotate: 5,
+                      scale: 1.05,
+                      cursor: 'grabbing'
+                    }}
+                    className="absolute w-full cursor-grab active:cursor-grabbing"
+                  >
+                    <Card className="border-purple-200 hover:border-purple-300 transition-all duration-300 shadow-xl">
+                      <CardHeader className="pb-4">
+                        <div className="w-full h-64 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 overflow-hidden">
+                          <img 
+                            src={currentUser.photos[0]} 
+                            alt={`${currentUser.firstName} ${currentUser.lastName}`}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.src = "https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60";
+                            }}
+                          />
+                        </div>
+                        <CardTitle className="flex items-center justify-between">
+                          <span className="text-xl">{currentUser.firstName} {currentUser.lastName}</span>
+                          <Badge className="bg-purple-100 text-purple-800">
+                            {Math.floor(Math.random() * 20) + 20} years
+                          </Badge>
+                        </CardTitle>
+                        <div className="flex items-center text-gray-500 text-sm">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          <span>{Math.floor(Math.random() * 10) + 1} miles away</span>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
+                          {currentUser.bio}
+                        </p>
+                        
+                        <div>
+                          <h4 className="font-semibold text-gray-800 mb-2">Core Values</h4>
+                          <div className="flex flex-wrap gap-1">
+                            {currentUser.values.split(', ').map((value, i) => (
+                              <Badge key={i} variant="outline" className="text-xs border-purple-300 text-purple-700">
+                                {value.trim()}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h4 className="font-semibold text-gray-800 mb-2">Green Flags</h4>
+                          <p className="text-sm text-gray-600 line-clamp-2">{currentUser.greenFlags}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            )}
+
+            {/* Action Buttons */}
+            {hasMoreProfiles && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => handleSwipe('pass', currentIndex)}
+                  className="w-14 h-14 bg-white border-2 border-red-300 rounded-full flex items-center justify-center shadow-lg hover:border-red-400 transition-colors"
+                >
+                  <X className="h-6 w-6 text-red-500" />
+                </motion.button>
                 
-                <div>
-                  <h4 className="font-semibold text-gray-800 mb-2">Core Values</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {user.values.split(', ').map((value, i) => (
-                      <Badge key={i} variant="outline" className="text-xs border-purple-300 text-purple-700">
-                        {value.trim()}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-semibold text-gray-800 mb-2">Green Flags</h4>
-                  <p className="text-sm text-gray-600 line-clamp-2">{user.greenFlags}</p>
-                </div>
-
-                <div className="flex gap-2 pt-4">
-                  <Button variant="outline" className="flex-1">
-                    <Users className="h-4 w-4 mr-2" />
-                    Learn More
-                  </Button>
-                  <Button className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-                    <Heart className="h-4 w-4 mr-2" />
-                    Like
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => handleSwipe('like', currentIndex)}
+                  className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-lg hover:from-purple-700 hover:to-pink-700 transition-all"
+                >
+                  <Heart className="h-6 w-6 text-white" />
+                </motion.button>
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Swipe Instructions */}
+        {hasMoreProfiles && (
+          <div className="text-center mt-8">
+            <p className="text-gray-500 text-sm">
+              💡 Drag the card or use the buttons below to interact
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
