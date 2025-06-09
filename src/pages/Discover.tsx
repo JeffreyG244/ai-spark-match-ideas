@@ -36,8 +36,8 @@ const Discover = () => {
     }
   };
 
-  const handleImageLoad = (userId: string) => {
-    setImageLoaded(prev => ({ ...prev, [userId]: true }));
+  const handleImageLoad = (userEmail: string) => {
+    setImageLoaded(prev => ({ ...prev, [userEmail]: true }));
   };
 
   const currentUser = diverseUsersData[currentIndex];
@@ -125,7 +125,7 @@ const Discover = () => {
                     <Card className="border-purple-200 hover:border-purple-300 transition-all duration-300 shadow-xl overflow-hidden">
                       <CardHeader className="pb-4">
                         <div className="w-full h-64 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 overflow-hidden relative">
-                          {!imageLoaded[currentUser.id] && (
+                          {!imageLoaded[currentUser.email] && (
                             <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
                               <div className="animate-pulse bg-gray-300 w-full h-full"></div>
                             </div>
@@ -134,13 +134,13 @@ const Discover = () => {
                             src={currentUser.photos[0]} 
                             alt={`${currentUser.firstName} ${currentUser.lastName}`}
                             className={`w-full h-full object-cover transition-opacity duration-500 ${
-                              imageLoaded[currentUser.id] ? 'opacity-100' : 'opacity-0'
+                              imageLoaded[currentUser.email] ? 'opacity-100' : 'opacity-0'
                             }`}
                             loading="eager"
-                            onLoad={() => handleImageLoad(currentUser.id)}
+                            onLoad={() => handleImageLoad(currentUser.email)}
                             onError={(e) => {
                               e.currentTarget.src = "https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60";
-                              handleImageLoad(currentUser.id);
+                              handleImageLoad(currentUser.email);
                             }}
                             style={{ backfaceVisibility: 'hidden' }}
                           />
