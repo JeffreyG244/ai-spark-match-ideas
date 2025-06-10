@@ -1,6 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import DOMPurify from 'dompurify';
+import { validatePasswordAgainstLeaks, logCriticalSecurityEvent } from './criticalSecurityFixes';
 
 export interface SecurityValidationResult {
   isValid: boolean;
@@ -15,12 +15,39 @@ export interface PasswordValidationResult {
   suggestions: string[];
 }
 
-// Enhanced password validation with stricter requirements
+// Enhanced password validation with critical security fixes
 export const validatePasswordSecurity = (password: string): PasswordValidationResult => {
   const errors: string[] = [];
   const suggestions: string[] = [];
   let score = 0;
 
+  // First check critical security issues
+  const criticalValidation = validatePasswordAgainstLeaks(password);
+  
+  if (!criticalValidation.isSecure) {
+    errors.push(...criticalValidation.vulnerabilities);
+    suggestions.push(...criticalValidation.recommendations);
+    score = Math.max(0, criticalValidation.securityScore);
+    
+    // Log critical security issue
+    logCriticalSecurityEvent(
+      'weak_password_detected',
+      {
+        vulnerabilities: criticalValidation.vulnerabilities,
+        security_score: criticalValidation.securityScore
+      },
+      'high'
+    );
+    
+    return {
+      isValid: false,
+      errors,
+      score,
+      suggestions
+    };
+  }
+
+  // Basic validation checks
   if (!password || password.length < 8) {
     errors.push('Password must be at least 8 characters long');
   } else {
@@ -55,16 +82,8 @@ export const validatePasswordSecurity = (password: string): PasswordValidationRe
     score += 20;
   }
 
-  // Check against common compromised passwords
-  const commonPasswords = [
-    'password', '123456789', 'password123', 'admin123', 'welcome123',
-    'qwerty123', 'password!', 'Password1', 'letmein123'
-  ];
-
-  if (commonPasswords.includes(password.toLowerCase())) {
-    errors.push('This password has been found in data breaches. Please choose a different password.');
-    score = Math.max(0, score - 50);
-  }
+  // Use the critical security score if it's higher
+  score = Math.max(score, criticalValidation.securityScore);
 
   return {
     isValid: errors.length === 0 && score >= 80,
@@ -87,30 +106,53 @@ export const sanitizeUserInput = (input: string, allowBasicFormatting = false): 
     errors.push('Input is too long');
   }
 
-  // Check for malicious patterns
+  // Enhanced malicious pattern detection
   const maliciousPatterns = [
     /<script[^>]*>.*?<\/script>/gi,
     /javascript:/gi,
     /on\w+\s*=/gi,
     /data:text\/html/gi,
     /vbscript:/gi,
-    /expression\s*\(/gi
+    /expression\s*\(/gi,
+    /<iframe[^>]*>/gi,
+    /<object[^>]*>/gi,
+    /<embed[^>]*>/gi,
+    /<link[^>]*>/gi,
+    /<meta[^>]*>/gi,
+    /eval\s*\(/gi,
+    /setTimeout\s*\(/gi,
+    /setInterval\s*\(/gi
   ];
 
   if (maliciousPatterns.some(pattern => pattern.test(input))) {
     errors.push('Input contains potentially dangerous content');
+    
+    // Log critical XSS attempt
+    logCriticalSecurityEvent(
+      'xss_attempt_detected',
+      {
+        input_sample: input.substring(0, 100),
+        patterns_matched: maliciousPatterns.filter(pattern => pattern.test(input)).length
+      },
+      'critical'
+    );
+    
     return { isValid: false, errors };
   }
 
-  // Sanitize the input
+  // Sanitize the input with stricter rules
   const sanitizedValue = allowBasicFormatting 
     ? DOMPurify.sanitize(input, {
         ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br'],
-        ALLOWED_ATTR: []
+        ALLOWED_ATTR: [],
+        ALLOW_DATA_ATTR: false,
+        ALLOW_UNKNOWN_PROTOCOLS: false
       })
     : DOMPurify.sanitize(input, {
         ALLOWED_TAGS: [],
-        ALLOWED_ATTR: []
+        ALLOWED_ATTR: [],
+        ALLOW_DATA_ATTR: false,
+        ALLOW_UNKNOWN_PROTOCOLS: false
       });
 
   return {
@@ -130,11 +172,10 @@ export const checkEnhancedRateLimit = async (
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
-      // Anonymous rate limiting
       return checkAnonymousRateLimit(action, maxRequests, windowSeconds);
     }
 
-    // Use the existing secure_rate_limit_check function
+    // Use the existing secure_rate_limit_check function with enhanced logging
     const { data: allowed, error } = await supabase
       .rpc('secure_rate_limit_check', {
         p_user_id: user.id,
@@ -145,7 +186,31 @@ export const checkEnhancedRateLimit = async (
 
     if (error) {
       console.error('Rate limit check failed:', error);
+      // Log the rate limit failure as a security event
+      await logCriticalSecurityEvent(
+        'rate_limit_check_failure',
+        {
+          action,
+          error: error.message,
+          user_id: user.id
+        },
+        'medium'
+      );
       return { allowed: false };
+    }
+
+    // Log if rate limit exceeded
+    if (!allowed) {
+      await logCriticalSecurityEvent(
+        'rate_limit_exceeded',
+        {
+          action,
+          user_id: user.id,
+          max_requests: maxRequests,
+          window_seconds: windowSeconds
+        },
+        'medium'
+      );
     }
 
     return { allowed: allowed || false };
@@ -195,7 +260,6 @@ export const validateAdminAction = async (actionType: string): Promise<boolean> 
       return false;
     }
 
-    // Check if user has admin role
     const { data: hasAdminRole, error } = await supabase
       .rpc('has_role', {
         check_user_id: user.id,
@@ -208,20 +272,28 @@ export const validateAdminAction = async (actionType: string): Promise<boolean> 
     }
 
     if (!hasAdminRole) {
-      // Log unauthorized admin action attempt
-      await supabase.from('security_logs').insert({
-        user_id: user.id,
-        event_type: 'unauthorized_admin_action_attempt',
-        severity: 'high',
-        details: {
+      await logCriticalSecurityEvent(
+        'unauthorized_admin_attempt',
+        {
           attempted_action: actionType,
-          user_agent: navigator.userAgent,
-          timestamp: new Date().toISOString()
-        }
-      });
+          user_id: user.id,
+          user_agent: navigator.userAgent
+        },
+        'critical'
+      );
       
       return false;
     }
+
+    // Log successful admin action
+    await logCriticalSecurityEvent(
+      'admin_action_authorized',
+      {
+        action_type: actionType,
+        user_id: user.id
+      },
+      'low'
+    );
 
     return true;
   } catch (error) {
@@ -234,30 +306,43 @@ export const validateAdminAction = async (actionType: string): Promise<boolean> 
 export const validateFileUpload = (file: File): SecurityValidationResult => {
   const errors: string[] = [];
   
-  // Check file size (10MB limit)
-  if (file.size > 10 * 1024 * 1024) {
-    errors.push('File size must be less than 10MB');
+  // Check file size (5MB limit for security)
+  if (file.size > 5 * 1024 * 1024) {
+    errors.push('File size must be less than 5MB');
   }
   
-  // Check file type
+  // Stricter file type checking
   const allowedTypes = [
     'image/jpeg',
     'image/jpg', 
     'image/png',
-    'image/webp',
-    'image/gif'
+    'image/webp'
   ];
   
   if (!allowedTypes.includes(file.type)) {
-    errors.push('File type not allowed. Only JPEG, PNG, WebP, and GIF files are supported.');
+    errors.push('File type not allowed. Only JPEG, PNG, and WebP files are supported.');
   }
   
-  // Check file name for malicious patterns
+  // Enhanced file name security
   const fileName = file.name.toLowerCase();
-  const maliciousExtensions = ['.exe', '.bat', '.com', '.scr', '.vbs', '.js', '.jar'];
+  const maliciousExtensions = [
+    '.exe', '.bat', '.com', '.scr', '.vbs', '.js', '.jar',
+    '.php', '.asp', '.jsp', '.py', '.rb', '.pl', '.sh'
+  ];
   
   if (maliciousExtensions.some(ext => fileName.endsWith(ext))) {
     errors.push('File type not allowed for security reasons');
+    
+    // Log malicious file upload attempt
+    logCriticalSecurityEvent(
+      'malicious_file_upload_attempt',
+      {
+        filename: file.name,
+        file_type: file.type,
+        file_size: file.size
+      },
+      'high'
+    );
   }
   
   return {
@@ -295,7 +380,6 @@ export const validateSessionSecurity = async (): Promise<{
     const expiresAt = session.expires_at || 0;
     const timeUntilExpiry = expiresAt - now;
     
-    // Session expired
     if (timeUntilExpiry <= 0) {
       return {
         isValid: false,
@@ -304,7 +388,6 @@ export const validateSessionSecurity = async (): Promise<{
       };
     }
     
-    // Session expires soon (within 5 minutes)
     if (timeUntilExpiry < 300) {
       return {
         isValid: true,
