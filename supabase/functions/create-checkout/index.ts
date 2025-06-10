@@ -27,7 +27,15 @@ serve(async (req) => {
     logStep("Function started");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY is not configured");
+    }
+    
+    // Validate the Stripe key format
+    if (!stripeKey.startsWith('sk_')) {
+      throw new Error("Invalid Stripe secret key format");
+    }
+    
     logStep("Stripe key verified");
 
     const authHeader = req.headers.get("Authorization");
@@ -46,7 +54,20 @@ serve(async (req) => {
       throw new Error("Missing planType or billingCycle");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    // Validate plan types
+    if (!['plus', 'premium'].includes(planType)) {
+      throw new Error("Invalid plan type. Must be 'plus' or 'premium'");
+    }
+
+    // Validate billing cycles
+    if (!['monthly', 'yearly'].includes(billingCycle)) {
+      throw new Error("Invalid billing cycle. Must be 'monthly' or 'yearly'");
+    }
+
+    const stripe = new Stripe(stripeKey, { 
+      apiVersion: "2023-10-16",
+      typescript: true
+    });
     
     // Check if customer exists
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
@@ -56,7 +77,7 @@ serve(async (req) => {
       logStep("Found existing customer", { customerId });
     }
 
-    // Define pricing
+    // Define pricing in cents
     const prices = {
       plus: {
         monthly: 2499, // $24.99
@@ -81,7 +102,7 @@ serve(async (req) => {
           price_data: {
             currency: "usd",
             product_data: { 
-              name: `${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan`,
+              name: `Luvlang ${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan`,
               description: `Luvlang ${planType.charAt(0).toUpperCase() + planType.slice(1)} subscription - ${billingCycle} billing`
             },
             unit_amount: amount,

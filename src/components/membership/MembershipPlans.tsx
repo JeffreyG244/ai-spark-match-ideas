@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,9 +65,12 @@ const MembershipPlans = () => {
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Subscription check error:', error);
+        throw error;
+      }
       
-      if (data.subscribed) {
+      if (data?.subscribed) {
         // Update local subscription state
         setUserSubscription({
           plan_id: data.plan_type === 'plus' ? 2 : data.plan_type === 'premium' ? 3 : 1,
@@ -76,6 +80,7 @@ const MembershipPlans = () => {
       }
     } catch (error) {
       console.error('Error checking subscription:', error);
+      toast.error('Failed to check subscription status');
     } finally {
       setCheckingSubscription(false);
     }
@@ -97,6 +102,10 @@ const MembershipPlans = () => {
     try {
       const planType = plan.name.toLowerCase(); // 'plus' or 'premium'
       
+      if (!['plus', 'premium'].includes(planType)) {
+        throw new Error('Invalid plan type');
+      }
+      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           planType,
@@ -104,15 +113,21 @@ const MembershipPlans = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Checkout creation error:', error);
+        throw new Error(error.message || 'Failed to create checkout session');
+      }
 
-      if (data.url) {
+      if (data?.url) {
         // Open Stripe checkout in a new tab
         window.open(data.url, '_blank');
+      } else {
+        throw new Error('No checkout URL received');
       }
     } catch (error) {
       console.error('Error creating checkout:', error);
-      toast.error('Failed to start checkout process. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to start checkout process';
+      toast.error(errorMessage);
     } finally {
       setProcessingPayment(null);
     }
@@ -124,9 +139,12 @@ const MembershipPlans = () => {
     try {
       const { data, error } = await supabase.functions.invoke('customer-portal');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Customer portal error:', error);
+        throw error;
+      }
       
-      if (data.url) {
+      if (data?.url) {
         window.open(data.url, '_blank');
       }
     } catch (error) {
@@ -261,12 +279,12 @@ const MembershipPlans = () => {
             <Card 
               key={plan.id} 
               className={`relative ${
-                plan.is_popular ? 'border-2 border-purple-600 shadow-lg' : 'border-purple-200'
+                plan.is_popular ? 'border-2 border-yellow-500 shadow-lg' : 'border-purple-200'
               } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
             >
               {plan.is_popular && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-purple-600 text-white">
+                  <Badge className="bg-yellow-500 text-white border-yellow-500">
                     <Star className="w-3 h-3 mr-1" />
                     Most Popular
                   </Badge>
