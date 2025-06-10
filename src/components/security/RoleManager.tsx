@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,8 +37,13 @@ const RoleManager: React.FC = () => {
   }, []);
 
   const checkAdminStatus = async () => {
-    const adminStatus = await RoleManagementService.checkUserRole('admin');
-    setIsAdmin(adminStatus);
+    try {
+      const adminStatus = await RoleManagementService.checkUserRole('admin');
+      setIsAdmin(adminStatus);
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+    }
   };
 
   const loadUserRoles = async () => {
@@ -66,6 +70,7 @@ const RoleManager: React.FC = () => {
       setUserRoles(rolesWithEmails);
     } catch (error) {
       console.error('Failed to load user roles:', error);
+      setUserRoles([]);
     } finally {
       setLoading(false);
     }
