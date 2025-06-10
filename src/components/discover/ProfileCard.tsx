@@ -57,7 +57,7 @@ const ProfileCard = ({ user, swipeDirection, onDragEnd, cardIndex }: ProfileCard
         <CardHeader className="pb-4">
           <div className="w-full h-64 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 overflow-hidden">
             <img 
-              src={user.photos[0]}
+              src={user.photos && user.photos.length > 0 ? user.photos[0] : "https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60"}
               alt={`${user.firstName} ${user.lastName}`}
               className="w-full h-full object-cover"
               onError={(e) => {
