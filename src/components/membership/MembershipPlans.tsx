@@ -95,18 +95,27 @@ const MembershipPlans = () => {
     setProcessingPayment(plan.name);
     
     try {
+      console.log('Starting checkout for plan:', plan.name);
+      console.log('Billing cycle:', billingCycle);
+      
       const planType = plan.name.toLowerCase();
       
       if (!['plus', 'premium'].includes(planType)) {
         throw new Error('Invalid plan type');
       }
       
+      const requestBody = {
+        planType,
+        billingCycle: billingCycle === 'annual' ? 'yearly' : 'monthly'
+      };
+      
+      console.log('Sending request to create-checkout with:', requestBody);
+      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: {
-          planType,
-          billingCycle: billingCycle === 'annual' ? 'yearly' : 'monthly'
-        }
+        body: requestBody
       });
+
+      console.log('Response from create-checkout:', { data, error });
 
       if (error) {
         console.error('Checkout creation error:', error);
@@ -114,9 +123,12 @@ const MembershipPlans = () => {
       }
 
       if (data?.url) {
-        window.open(data.url, '_blank');
+        console.log('Redirecting to Stripe checkout:', data.url);
+        // Redirect to Stripe checkout in the same window
+        window.location.href = data.url;
       } else {
-        throw new Error('No checkout URL received');
+        console.error('No checkout URL received:', data);
+        throw new Error('No checkout URL received from Stripe');
       }
     } catch (error) {
       console.error('Error creating checkout:', error);

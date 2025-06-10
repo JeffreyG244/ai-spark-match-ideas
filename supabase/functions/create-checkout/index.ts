@@ -83,6 +83,7 @@ serve(async (req) => {
     let customers;
     try {
       customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      logStep("Customer lookup successful", { customersFound: customers.data.length });
     } catch (error) {
       logStep("ERROR: Failed to list customers", { error: error.message });
       throw new Error("Failed to connect to Stripe. Please check your API key.");
@@ -92,6 +93,8 @@ serve(async (req) => {
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
       logStep("Found existing customer", { customerId });
+    } else {
+      logStep("No existing customer found, will create new one in checkout");
     }
 
     // Define pricing in cents
@@ -113,6 +116,11 @@ serve(async (req) => {
     
     logStep("Pricing calculated", { planType: planTypeLower, billingCycle: billingCycleLower, amount, interval });
 
+    // Get the origin for redirect URLs
+    const origin = req.headers.get("origin") || "https://id-preview--016dc165-a1fe-4ce7-adef-dbf00d3eba8a.lovable.app";
+    
+    logStep("Creating checkout session", { origin, customerId: customerId || "new" });
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -131,8 +139,8 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/membership?success=true&plan=${planTypeLower}`,
-      cancel_url: `${req.headers.get("origin")}/membership?canceled=true`,
+      success_url: `${origin}/membership?success=true&plan=${planTypeLower}`,
+      cancel_url: `${origin}/membership?canceled=true`,
       metadata: {
         user_id: user.id,
         plan_type: planTypeLower,
@@ -140,7 +148,11 @@ serve(async (req) => {
       }
     });
 
-    logStep("Checkout session created", { sessionId: session.id });
+    logStep("Checkout session created successfully", { 
+      sessionId: session.id,
+      url: session.url,
+      mode: session.mode
+    });
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

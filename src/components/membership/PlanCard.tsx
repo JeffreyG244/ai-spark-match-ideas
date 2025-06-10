@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Star, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface MembershipPlan {
   id: number;
@@ -80,7 +82,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
     return `$${price.toFixed(2)}${period}`;
   };
 
-  const handlePlanClick = () => {
+  const handlePlanClick = async () => {
     if (!user) {
       navigate('/auth');
       return;
@@ -94,8 +96,8 @@ const PlanCard: React.FC<PlanCardProps> = ({
       return;
     }
 
-    // Navigate to checkout page for paid plans
-    navigate(`/checkout?plan=${plan.name.toLowerCase()}`);
+    // Call the onPlanSelect which handles the checkout process
+    onPlanSelect(plan);
   };
 
   const features = Object.entries(plan.features || {});
