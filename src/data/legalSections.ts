@@ -1,88 +1,159 @@
 
-import { FileText, Users, Lock, AlertTriangle, Heart, Shield } from 'lucide-react';
-
-export interface LegalPolicy {
-  name: string;
-  path: string;
-  required: boolean;
-}
-
-export interface LegalSection {
-  title: string;
-  icon: any;
-  color: string;
-  policies: LegalPolicy[];
-}
-
-export const legalSections: LegalSection[] = [
+export const legalSections = [
   {
     title: "Core Legal Documents",
-    icon: FileText,
-    color: "blue",
-    policies: [
-      { name: "Privacy Policy", path: "/legal/privacy", required: true },
-      { name: "Terms of Service", path: "/legal/terms", required: true },
-      { name: "Community Guidelines", path: "/legal/community", required: true },
-      { name: "Cookie Policy", path: "/legal/cookies", required: true },
-      { name: "Content Moderation Policy", path: "/legal/moderation", required: true }
+    description: "Essential legal documents that govern platform usage and user rights.",
+    items: [
+      {
+        title: "Privacy Policy",
+        description: "How we collect, use, and protect your personal information.",
+        path: "/legal/privacy",
+        icon: "Shield"
+      },
+      {
+        title: "Terms of Service",
+        description: "Legal agreement between users and our platform.",
+        path: "/legal/terms",
+        icon: "FileText"
+      },
+      {
+        title: "Community Guidelines",
+        description: "Standards for respectful and safe community interaction.",
+        path: "/legal/community",
+        icon: "Users"
+      },
+      {
+        title: "Cookie Policy",
+        description: "Information about our use of cookies and tracking technologies.",
+        path: "/legal/cookies",
+        icon: "Cookie"
+      },
+      {
+        title: "Content Moderation Policy",
+        description: "How we review and moderate user-generated content.",
+        path: "/legal/moderation",
+        icon: "Eye"
+      }
     ]
   },
   {
     title: "Safety & Security",
-    icon: Shield,
-    color: "green",
-    policies: [
-      { name: "Safety Tips & Guidelines", path: "/legal/safety", required: true },
-      { name: "Age Verification Policy", path: "/legal/age-verification", required: true },
-      { name: "Identity Verification Policy", path: "/legal/identity-verification", required: true },
-      { name: "Romance Scam Prevention", path: "/legal/scam-prevention", required: true },
-      { name: "Blocking & Reporting Policy", path: "/legal/reporting", required: true }
+    description: "Policies and guidelines to ensure user safety and platform security.",
+    items: [
+      {
+        title: "Safety Guidelines & Tips",
+        description: "Essential safety tips for online dating and meeting new people.",
+        path: "/legal/safety",
+        icon: "Shield"
+      },
+      {
+        title: "Age Verification Policy",
+        description: "Requirements and process for verifying user age (18+).",
+        path: "/legal/age-verification",
+        icon: "CheckCircle"
+      },
+      {
+        title: "Identity Verification Policy",
+        description: "Standards for verifying user identity and preventing fake profiles.",
+        path: "/legal/identity-verification",
+        icon: "UserCheck"
+      },
+      {
+        title: "Romance Scam Prevention",
+        description: "Information about common scams and how to avoid them.",
+        path: "/legal/scam-prevention",
+        icon: "AlertTriangle"
+      },
+      {
+        title: "Blocking & Reporting Policy",
+        description: "How to block users and report inappropriate behavior.",
+        path: "/legal/reporting",
+        icon: "Flag"
+      }
     ]
   },
   {
     title: "Data Protection & Privacy",
-    icon: Lock,
-    color: "purple",
-    policies: [
-      { name: "GDPR Compliance (EU)", path: "/legal/gdpr", required: true },
-      { name: "CCPA Compliance (California)", path: "/legal/ccpa", required: true },
-      { name: "Data Retention Policy", path: "/legal/data-retention", required: true },
-      { name: "Data Breach Notification", path: "/legal/breach-notification", required: true },
-      { name: "Account Deletion Policy", path: "/legal/account-deletion", required: true }
+    description: "Compliance with international data protection regulations.",
+    items: [
+      {
+        title: "GDPR Compliance (EU)",
+        description: "European data protection rights and compliance measures.",
+        path: "/legal/gdpr",
+        icon: "Shield"
+      },
+      {
+        title: "CCPA Compliance (California)",
+        description: "California Consumer Privacy Act rights and protections.",
+        path: "/legal/ccpa",
+        icon: "Scale"
+      },
+      {
+        title: "Data Retention Policy",
+        description: "How long we keep your data and when it's deleted.",
+        path: "/legal/data-retention",
+        icon: "Database"
+      }
     ]
   },
   {
     title: "Platform Operations",
-    icon: Users,
-    color: "orange",
-    policies: [
-      { name: "Photo Verification Guidelines", path: "/legal/photo-verification", required: true },
-      { name: "Message Monitoring Policy", path: "/legal/message-monitoring", required: true },
-      { name: "Account Suspension Policy", path: "/legal/suspension", required: true },
-      { name: "Appeals Process", path: "/legal/appeals", required: true },
-      { name: "Inactive Account Policy", path: "/legal/inactive-accounts", required: false }
+    description: "Policies governing platform features and operational procedures.",
+    items: [
+      {
+        title: "Photo Verification Guidelines",
+        description: "Standards and requirements for photo verification.",
+        path: "/legal/photo-verification",
+        icon: "Camera"
+      },
+      {
+        title: "Message Monitoring Policy",
+        description: "How we monitor messages for safety and compliance.",
+        path: "/legal/message-monitoring",
+        icon: "MessageSquare"
+      },
+      {
+        title: "Account Suspension Policy",
+        description: "Reasons and procedures for account suspension or termination.",
+        path: "/legal/suspension",
+        icon: "UserX"
+      }
     ]
   },
   {
     title: "Legal Protection",
-    icon: AlertTriangle,
-    color: "red",
-    policies: [
-      { name: "Liability Disclaimer", path: "/legal/liability", required: true },
-      { name: "Background Check Disclaimer", path: "/legal/background-check", required: true },
-      { name: "Health & Safety Disclaimer", path: "/legal/health-safety", required: true },
-      { name: "DMCA Policy", path: "/legal/dmca", required: true },
-      { name: "Intellectual Property Policy", path: "/legal/ip", required: false }
+    description: "Intellectual property and legal protection policies.",
+    items: [
+      {
+        title: "Intellectual Property Policy",
+        description: "Protection of copyrights, trademarks, and user content rights.",
+        path: "/legal/ip",
+        icon: "Copyright"
+      }
     ]
   },
   {
     title: "Financial & Subscriptions",
-    icon: Heart,
-    color: "pink",
-    policies: [
-      { name: "Subscription Policy", path: "/legal/subscription", required: false },
-      { name: "Refund Policy", path: "/legal/refunds", required: false },
-      { name: "Billing Terms", path: "/legal/billing", required: false }
+    description: "Billing, payments, and subscription management policies.",
+    items: [
+      {
+        title: "Billing & Payment Policy",
+        description: "Payment processing, billing cycles, and refund policies.",
+        path: "/legal/billing",
+        icon: "CreditCard"
+      },
+      {
+        title: "Subscription Terms",
+        description: "Premium subscription features, pricing, and cancellation terms.",
+        path: "/legal/subscription",
+        icon: "Star"
+      },
+      {
+        title: "Refund & Cancellation Policy",
+        description: "Conditions and procedures for refunds and subscription cancellations.",
+        path: "/legal/refunds",
+        icon: "RotateCcw"
+      }
     ]
   }
 ];

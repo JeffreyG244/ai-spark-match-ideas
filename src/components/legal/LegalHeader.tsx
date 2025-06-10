@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Heart, AlertTriangle } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const LegalHeader = () => {
@@ -21,23 +21,6 @@ const LegalHeader = () => {
           Comprehensive legal documentation to protect both our platform and our users. 
           All policies are designed to ensure safety, privacy, and legal compliance.
         </p>
-      </div>
-
-      {/* Critical Notice */}
-      <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-lg">
-        <div className="flex items-start gap-3">
-          <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0 mt-1" />
-          <div>
-            <h3 className="font-bold text-red-800 mb-2">Launch Readiness Status</h3>
-            <p className="text-red-700 mb-3">
-              <strong>Critical:</strong> All policies marked as "Required" must be implemented before public launch 
-              to ensure legal compliance and user safety.
-            </p>
-            <p className="text-sm text-red-600">
-              Recommended: Consult with a technology lawyer specializing in dating platforms before launch.
-            </p>
-          </div>
-        </div>
       </div>
     </>
   );
