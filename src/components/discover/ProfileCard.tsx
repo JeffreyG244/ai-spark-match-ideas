@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin } from 'lucide-react';
@@ -14,18 +14,6 @@ interface ProfileCardProps {
 }
 
 const ProfileCard = ({ user, swipeDirection, onDragEnd, cardIndex }: ProfileCardProps) => {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
-
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-  };
-
-  const handleImageError = () => {
-    setImageError(true);
-    setImageLoaded(true);
-  };
-
   return (
     <motion.div
       key={cardIndex}
@@ -55,22 +43,14 @@ const ProfileCard = ({ user, swipeDirection, onDragEnd, cardIndex }: ProfileCard
     >
       <Card className="border-purple-200 hover:border-purple-300 transition-all duration-300 shadow-xl overflow-hidden">
         <CardHeader className="pb-4">
-          <div className="w-full h-64 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 overflow-hidden relative">
-            {!imageLoaded && (
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-pink-100 animate-pulse" />
-            )}
+          <div className="w-full h-64 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 overflow-hidden">
             <img 
-              src={imageError ? "https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60" : user.photos[0]}
+              src={user.photos[0]}
               alt={`${user.firstName} ${user.lastName}`}
-              className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-              loading="eager"
-              decoding="sync"
-              style={{ 
-                backfaceVisibility: 'hidden',
-                transform: 'translateZ(0)',
-                willChange: 'auto'
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.currentTarget;
+                target.src = "https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60";
               }}
             />
           </div>
