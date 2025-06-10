@@ -31,11 +31,6 @@ serve(async (req) => {
       throw new Error("STRIPE_SECRET_KEY is not configured");
     }
     
-    // Validate the Stripe key format
-    if (!stripeKey.startsWith('sk_')) {
-      throw new Error("Invalid Stripe secret key format");
-    }
-    
     logStep("Stripe key verified");
 
     const authHeader = req.headers.get("Authorization");

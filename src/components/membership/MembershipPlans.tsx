@@ -256,19 +256,20 @@ const MembershipPlans = () => {
           const features = Object.entries(plan.features || {});
           const isProcessing = processingPayment === plan.name;
           const isPremium = plan.name === 'Premium';
+          const isPlus = plan.name === 'Plus';
 
           return (
             <Card 
               key={plan.id} 
               className={`relative ${
-                plan.is_popular ? 'border-2 border-yellow-500 shadow-lg' : 
+                isPlus ? 'border-2 border-purple-500 shadow-lg' : 
                 isPremium ? 'border-2 border-yellow-500 shadow-lg' :
                 'border-purple-200'
               } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
             >
               {plan.is_popular && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <Badge className="bg-yellow-500 text-white border-yellow-500">
+                  <Badge className="bg-purple-500 text-white border-purple-500">
                     <Star className="w-3 h-3 mr-1" />
                     Most Popular
                   </Badge>
@@ -278,7 +279,7 @@ const MembershipPlans = () => {
               <CardHeader className="text-center">
                 <CardTitle 
                   className="text-2xl"
-                  style={{ color: plan.highlight_color || '#7C3AED' }}
+                  style={{ color: isPlus ? '#7C3AED' : plan.highlight_color || '#7C3AED' }}
                 >
                   {plan.name}
                 </CardTitle>
@@ -313,7 +314,7 @@ const MembershipPlans = () => {
                   variant={isCurrentPlan ? "outline" : "default"}
                   disabled={isCurrentPlan || isProcessing || !user}
                   style={{
-                    backgroundColor: !isCurrentPlan ? (plan.highlight_color || '#7C3AED') : undefined
+                    backgroundColor: !isCurrentPlan ? (isPlus ? '#7C3AED' : plan.highlight_color || '#7C3AED') : undefined
                   }}
                 >
                   {isProcessing ? (
