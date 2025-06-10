@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -72,7 +71,7 @@ export const useCompatibilityAnswers = () => {
         });
       } else {
         const answeredCount = Object.keys(questionAnswers).length;
-        const totalQuestions = compatibilityQuestions.length; // Use actual length
+        const totalQuestions = 15; // Fixed to exactly 15 questions
         const score = Math.round((answeredCount / totalQuestions) * 100);
         
         toast({
