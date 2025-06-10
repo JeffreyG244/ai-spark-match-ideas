@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,7 +25,6 @@ export const useMembership = () => {
     if (user) {
       fetchUserMembership();
     } else {
-      // Default to free plan for non-authenticated users
       fetchFreePlan();
     }
   }, [user]);
@@ -52,7 +50,10 @@ export const useMembership = () => {
     if (!user) return;
 
     try {
-      // Get user subscription
+      // Check subscription status via edge function
+      const { data: subscriptionCheck } = await supabase.functions.invoke('check-subscription');
+      
+      // Get user subscription from database
       const { data: subscriptionData, error: subError } = await supabase
         .from('user_subscriptions')
         .select('*')
@@ -60,11 +61,10 @@ export const useMembership = () => {
         .single();
 
       if (subError && subError.code !== 'PGRST116') throw subError;
-
       setSubscription(subscriptionData);
 
       // Get plan details
-      const planId = subscriptionData?.plan_id || 1; // Default to Free plan (id: 1)
+      const planId = subscriptionData?.plan_id || 1;
       const { data: planData, error: planError } = await supabase
         .from('membership_plans')
         .select('*')
@@ -75,7 +75,6 @@ export const useMembership = () => {
       setCurrentPlan(planData);
     } catch (error) {
       console.error('Error fetching user membership:', error);
-      // Fallback to free plan
       fetchFreePlan();
     } finally {
       setLoading(false);
@@ -99,7 +98,7 @@ export const useMembership = () => {
     if (typeof feature === 'object') {
       if (feature?.daily_limit) return feature.daily_limit;
       if (feature?.credits) return feature.credits;
-      if (feature?.unlimited) return -1; // -1 indicates unlimited
+      if (feature?.unlimited) return -1;
     }
     if (typeof feature === 'number') return feature;
     return null;
@@ -117,7 +116,7 @@ export const useMembership = () => {
     if (!currentPlan?.features?.swipes) return null;
     
     const swipes = currentPlan.features.swipes;
-    if (swipes.unlimited) return -1; // Unlimited
+    if (swipes.unlimited) return -1;
     if (swipes.daily_limit) return swipes.daily_limit;
     return null;
   };

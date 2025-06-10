@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star } from 'lucide-react';
+import { Check, Star, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -30,12 +29,14 @@ const MembershipPlans = () => {
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [checkingSubscription, setCheckingSubscription] = useState(false);
+  const [processingPayment, setProcessingPayment] = useState<string | null>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
   useEffect(() => {
     fetchPlans();
     if (user) {
-      fetchUserSubscription();
+      checkSubscriptionStatus();
     }
   }, [user]);
 
@@ -56,20 +57,27 @@ const MembershipPlans = () => {
     }
   };
 
-  const fetchUserSubscription = async () => {
+  const checkSubscriptionStatus = async () => {
     if (!user) return;
-
+    
+    setCheckingSubscription(true);
     try {
-      const { data, error } = await supabase
-        .from('user_subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      setUserSubscription(data);
+      const { data, error } = await supabase.functions.invoke('check-subscription');
+      
+      if (error) throw error;
+      
+      if (data.subscribed) {
+        // Update local subscription state
+        setUserSubscription({
+          plan_id: data.plan_type === 'plus' ? 2 : data.plan_type === 'premium' ? 3 : 1,
+          status: data.status,
+          current_period_end: data.subscription_end
+        });
+      }
     } catch (error) {
-      console.error('Error fetching user subscription:', error);
+      console.error('Error checking subscription:', error);
+    } finally {
+      setCheckingSubscription(false);
     }
   };
 
@@ -84,8 +92,47 @@ const MembershipPlans = () => {
       return;
     }
 
-    // Here you would integrate with Stripe for payment processing
-    toast.info('Payment integration coming soon!');
+    setProcessingPayment(plan.name);
+    
+    try {
+      const planType = plan.name.toLowerCase(); // 'plus' or 'premium'
+      
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          planType,
+          billingCycle: billingCycle === 'annual' ? 'yearly' : 'monthly'
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.url) {
+        // Open Stripe checkout in a new tab
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error creating checkout:', error);
+      toast.error('Failed to start checkout process. Please try again.');
+    } finally {
+      setProcessingPayment(null);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      
+      if (error) throw error;
+      
+      if (data.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Error opening customer portal:', error);
+      toast.error('Failed to open subscription management');
+    }
   };
 
   const formatFeature = (key: string, value: any) => {
@@ -106,7 +153,7 @@ const MembershipPlans = () => {
       case 'boosts':
         if (typeof value === 'object' && value.unlimited) return 'Unlimited boosts';
         if (typeof value === 'number' && value > 0) return `${value} boost${value !== 1 ? 's' : ''} per month`;
-        if (typeof value === 'number' && value === 0) return null; // Don't show 0 boosts
+        if (typeof value === 'number' && value === 0) return null;
         return null;
       case 'advanced_filters':
         return value ? 'Advanced filters' : null;
@@ -133,7 +180,7 @@ const MembershipPlans = () => {
   };
 
   const getCurrentPlanId = () => {
-    if (!userSubscription) return 1; // Default to Free plan
+    if (!userSubscription) return 1;
     return userSubscription.plan_id;
   };
 
@@ -151,7 +198,7 @@ const MembershipPlans = () => {
         <h1 className="text-3xl font-bold mb-4 text-gray-900">Choose Your Plan</h1>
         <p className="text-gray-600 mb-6">Find your perfect match with the right features for you</p>
         
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-6">
           <div className="bg-gray-100 p-1 rounded-lg">
             <button
               onClick={() => setBillingCycle('monthly')}
@@ -175,12 +222,40 @@ const MembershipPlans = () => {
             </button>
           </div>
         </div>
+
+        {user && (
+          <div className="flex justify-center gap-4 mb-6">
+            <Button
+              onClick={checkSubscriptionStatus}
+              disabled={checkingSubscription}
+              variant="outline"
+              size="sm"
+            >
+              {checkingSubscription ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Checking...</>
+              ) : (
+                'Refresh Status'
+              )}
+            </Button>
+            
+            {userSubscription && userSubscription.plan_id > 1 && (
+              <Button
+                onClick={handleManageSubscription}
+                variant="outline"
+                size="sm"
+              >
+                Manage Subscription
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
         {plans.map((plan) => {
           const isCurrentPlan = getCurrentPlanId() === plan.id;
           const features = Object.entries(plan.features || {});
+          const isProcessing = processingPayment === plan.name;
 
           return (
             <Card 
@@ -234,12 +309,20 @@ const MembershipPlans = () => {
                   onClick={() => handlePlanSelect(plan)}
                   className="w-full"
                   variant={isCurrentPlan ? "outline" : "default"}
-                  disabled={isCurrentPlan}
+                  disabled={isCurrentPlan || isProcessing || !user}
                   style={{
                     backgroundColor: !isCurrentPlan ? (plan.highlight_color || '#7C3AED') : undefined
                   }}
                 >
-                  {isCurrentPlan ? 'Current Plan' : `Choose ${plan.name}`}
+                  {isProcessing ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
+                  ) : isCurrentPlan ? (
+                    'Current Plan'
+                  ) : !user ? (
+                    'Sign In Required'
+                  ) : (
+                    `Choose ${plan.name}`
+                  )}
                 </Button>
               </CardContent>
             </Card>
