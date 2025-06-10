@@ -6,7 +6,6 @@ import { Heart, MessageCircle, Users, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import ProfileManager from '@/components/ProfileManager';
-import SecurityMonitor from '@/components/SecurityMonitor';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
@@ -76,11 +75,6 @@ const Dashboard = () => {
               </Link>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Security Monitor */}
-        <div className="mb-8">
-          <SecurityMonitor />
         </div>
 
         {/* Profile Management */}
