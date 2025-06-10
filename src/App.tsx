@@ -1,132 +1,63 @@
 
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from '@/hooks/useAuth';
-import AuthGuard from '@/components/auth/AuthGuard';
-
-// Pages
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/sonner';
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import Dashboard from '@/pages/Dashboard';
-import Messages from '@/pages/Messages';
 import Discover from '@/pages/Discover';
 import Matches from '@/pages/Matches';
-import NotFound from '@/pages/NotFound';
-import Legal from '@/pages/Legal';
-import SeedUsers from '@/pages/SeedUsers';
+import Messages from '@/pages/Messages';
 import Membership from '@/pages/Membership';
-
-// Legal Pages
+import Legal from '@/pages/Legal';
+import NotFound from '@/pages/NotFound';
 import PrivacyPolicy from '@/pages/legal/PrivacyPolicy';
-import SafetyGuidelines from '@/pages/legal/SafetyGuidelines';
 import TermsOfService from '@/pages/legal/TermsOfService';
 import CommunityGuidelines from '@/pages/legal/CommunityGuidelines';
-import CookiePolicy from '@/pages/legal/CookiePolicy';
-import IntellectualProperty from '@/pages/legal/IntellectualProperty';
+import SafetyGuidelines from '@/pages/legal/SafetyGuidelines';
+import RomanceScamPrevention from '@/pages/legal/RomanceScamPrevention';
 import ContentModerationPolicy from '@/pages/legal/ContentModerationPolicy';
+import BlockingReportingPolicy from '@/pages/legal/BlockingReportingPolicy';
 import AgeVerificationPolicy from '@/pages/legal/AgeVerificationPolicy';
 import IdentityVerificationPolicy from '@/pages/legal/IdentityVerificationPolicy';
-import RomanceScamPrevention from '@/pages/legal/RomanceScamPrevention';
-import BlockingReportingPolicy from '@/pages/legal/BlockingReportingPolicy';
-
+import CookiePolicy from '@/pages/legal/CookiePolicy';
+import IntellectualProperty from '@/pages/legal/IntellectualProperty';
+import AuthGuard from '@/components/auth/AuthGuard';
 import './App.css';
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <AuthProvider>
+    <QueryClientProvider client={queryClient}>
       <Router>
         <div className="App">
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <AuthGuard>
-                  <Dashboard />
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/discover" 
-              element={
-                <AuthGuard>
-                  <Discover />
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/matches" 
-              element={
-                <AuthGuard>
-                  <Matches />
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/membership" 
-              element={
-                <AuthGuard>
-                  <Membership />
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/messages" 
-              element={
-                <AuthGuard>
-                  <Messages />
-                </AuthGuard>
-              } 
-            />
-            <Route 
-              path="/seed-users" 
-              element={
-                <AuthGuard>
-                  <SeedUsers />
-                </AuthGuard>
-              } 
-            />
-            
-            {/* Legal Routes - Implemented */}
+            <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
+            <Route path="/discover" element={<AuthGuard><Discover /></AuthGuard>} />
+            <Route path="/matches" element={<AuthGuard><Matches /></AuthGuard>} />
+            <Route path="/messages" element={<AuthGuard><Messages /></AuthGuard>} />
+            <Route path="/membership" element={<AuthGuard><Membership /></AuthGuard>} />
             <Route path="/legal" element={<Legal />} />
             <Route path="/legal/privacy" element={<PrivacyPolicy />} />
-            <Route path="/legal/safety" element={<SafetyGuidelines />} />
             <Route path="/legal/terms" element={<TermsOfService />} />
-            <Route path="/legal/community" element={<CommunityGuidelines />} />
-            <Route path="/legal/cookies" element={<CookiePolicy />} />
-            <Route path="/legal/ip" element={<IntellectualProperty />} />
-            <Route path="/legal/moderation" element={<ContentModerationPolicy />} />
+            <Route path="/legal/community-guidelines" element={<CommunityGuidelines />} />
+            <Route path="/legal/safety-guidelines" element={<SafetyGuidelines />} />
+            <Route path="/legal/romance-scam-prevention" element={<RomanceScamPrevention />} />
+            <Route path="/legal/content-moderation" element={<ContentModerationPolicy />} />
+            <Route path="/legal/blocking-reporting" element={<BlockingReportingPolicy />} />
             <Route path="/legal/age-verification" element={<AgeVerificationPolicy />} />
             <Route path="/legal/identity-verification" element={<IdentityVerificationPolicy />} />
-            <Route path="/legal/scam-prevention" element={<RomanceScamPrevention />} />
-            <Route path="/legal/reporting" element={<BlockingReportingPolicy />} />
-            
-            {/* Placeholder routes for remaining legal pages - Coming Soon */}
-            <Route path="/legal/gdpr" element={<div>GDPR Compliance - Coming Soon</div>} />
-            <Route path="/legal/ccpa" element={<div>CCPA Compliance - Coming Soon</div>} />
-            <Route path="/legal/data-retention" element={<div>Data Retention Policy - Coming Soon</div>} />
-            <Route path="/legal/breach-notification" element={<div>Data Breach Notification - Coming Soon</div>} />
-            <Route path="/legal/account-deletion" element={<div>Account Deletion Policy - Coming Soon</div>} />
-            <Route path="/legal/photo-verification" element={<div>Photo Verification Guidelines - Coming Soon</div>} />
-            <Route path="/legal/message-monitoring" element={<div>Message Monitoring Policy - Coming Soon</div>} />
-            <Route path="/legal/suspension" element={<div>Account Suspension Policy - Coming Soon</div>} />
-            <Route path="/legal/appeals" element={<div>Appeals Process - Coming Soon</div>} />
-            <Route path="/legal/inactive-accounts" element={<div>Inactive Account Policy - Coming Soon</div>} />
-            <Route path="/legal/liability" element={<div>Liability Disclaimer - Coming Soon</div>} />
-            <Route path="/legal/background-check" element={<div>Background Check Disclaimer - Coming Soon</div>} />
-            <Route path="/legal/health-safety" element={<div>Health & Safety Disclaimer - Coming Soon</div>} />
-            <Route path="/legal/dmca" element={<div>DMCA Policy - Coming Soon</div>} />
-            <Route path="/legal/subscription" element={<div>Subscription Policy - Coming Soon</div>} />
-            <Route path="/legal/refunds" element={<div>Refund Policy - Coming Soon</div>} />
-            <Route path="/legal/billing" element={<div>Billing Terms - Coming Soon</div>} />
-            
+            <Route path="/legal/cookies" element={<CookiePolicy />} />
+            <Route path="/legal/intellectual-property" element={<IntellectualProperty />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Toaster />
         </div>
       </Router>
-    </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

@@ -97,6 +97,10 @@ const MembershipPlans = () => {
       case 'super_likes':
         return typeof value === 'number' ? `${value} super likes per day` : 'Unlimited super likes';
       case 'boosts':
+        // Special handling for free plan to show "2 minute sign up"
+        if (typeof value === 'number' && value === 0) {
+          return '2 minute sign up';
+        }
         return typeof value === 'number' ? `${value} boost per month` : 'Unlimited boosts';
       case 'advanced_filters':
         return value ? 'Advanced filters' : null;
