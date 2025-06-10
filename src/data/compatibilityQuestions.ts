@@ -184,5 +184,22 @@ export const compatibilityQuestions: QuestionData[] = [
       "No social links now—keeping it just within the app",
       "Will share after building trust and seeing genuine interest"
     ]
+  },
+  {
+    id: 16,
+    question: "Do you own any pets that live with you?",
+    options: [
+      "Yes",
+      "No"
+    ]
+  },
+  {
+    id: 17,
+    question: "Are you allergic to animals?",
+    options: [
+      "Dog",
+      "Cat",
+      "Other"
+    ]
   }
 ];

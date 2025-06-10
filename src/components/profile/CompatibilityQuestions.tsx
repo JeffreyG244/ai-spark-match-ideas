@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ const CompatibilityQuestions = ({
   isSaving 
 }: CompatibilityQuestionsProps) => {
   const answeredQuestions = Object.keys(questionAnswers).length;
-  const totalQuestions = 15; // Fixed to exactly 15 questions
+  const totalQuestions = 17; // Updated to 17 questions
   const compatibilityScore = Math.round((answeredQuestions / totalQuestions) * 100);
 
   return (

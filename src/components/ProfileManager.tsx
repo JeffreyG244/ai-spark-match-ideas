@@ -54,7 +54,7 @@ const ProfileManager = () => {
   );
 
   const answeredQuestions = Object.keys(questionAnswers).length;
-  const totalQuestions = 15; // Fixed to exactly 15 questions
+  const totalQuestions = 17; // Updated to 17 questions
 
   return (
     <div className="space-y-6">
