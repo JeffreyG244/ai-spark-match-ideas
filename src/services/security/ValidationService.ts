@@ -1,15 +1,16 @@
 
 import DOMPurify from 'dompurify';
+import { validatePasswordStrengthEnhanced } from '@/utils/enhancedPasswordValidation';
 
 export const SECURITY_LIMITS = {
   MAX_MESSAGE_LENGTH: 10000,
   MAX_BIO_LENGTH: 1000,
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
-  MIN_PASSWORD_LENGTH: 8,
+  MIN_PASSWORD_LENGTH: 8, // Updated to 8 characters
   MAX_PASSWORD_LENGTH: 128,
   MAX_LOGIN_ATTEMPTS: 5,
   LOCKOUT_DURATION: 15 * 60 * 1000, // 15 minutes
-  SESSION_TIMEOUT: 24 * 60 * 60 * 1000, // 24 hours
+  SESSION_TIMEOUT: 30 * 60 * 1000, // 30 minutes (updated)
   RATE_LIMIT_WINDOW: 60 * 1000, // 1 minute
   RATE_LIMIT_MAX_REQUESTS: 60
 } as const;
@@ -78,35 +79,10 @@ export class ValidationService {
   }
 
   static validatePasswordStrength(password: string): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-
-    if (password.length < SECURITY_LIMITS.MIN_PASSWORD_LENGTH) {
-      errors.push(`Password must be at least ${SECURITY_LIMITS.MIN_PASSWORD_LENGTH} characters long`);
-    }
-
-    if (password.length > SECURITY_LIMITS.MAX_PASSWORD_LENGTH) {
-      errors.push(`Password must be no more than ${SECURITY_LIMITS.MAX_PASSWORD_LENGTH} characters long`);
-    }
-
-    if (!/[A-Z]/.test(password)) {
-      errors.push('Password must contain at least one uppercase letter');
-    }
-
-    if (!/[a-z]/.test(password)) {
-      errors.push('Password must contain at least one lowercase letter');
-    }
-
-    if (!/\d/.test(password)) {
-      errors.push('Password must contain at least one number');
-    }
-
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      errors.push('Password must contain at least one special character');
-    }
-
+    const result = validatePasswordStrengthEnhanced(password);
     return {
-      isValid: errors.length === 0,
-      errors
+      isValid: result.isValid,
+      errors: result.errors
     };
   }
 }
