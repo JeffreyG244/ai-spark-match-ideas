@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -54,7 +53,6 @@ const ProfileCard = ({ user, swipeDirection, onDragEnd, cardIndex }: ProfileCard
                 target.src = "https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60";
               }}
               style={{ 
-                imageRendering: 'optimizeQuality',
                 backfaceVisibility: 'hidden',
                 transform: 'translateZ(0)'
               }}
