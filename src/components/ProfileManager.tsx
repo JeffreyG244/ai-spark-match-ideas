@@ -54,7 +54,7 @@ const ProfileManager = () => {
   );
 
   const answeredQuestions = Object.keys(questionAnswers).length;
-  const totalQuestions = compatibilityQuestions.length;
+  const totalQuestions = compatibilityQuestions.length; // Use actual array length
 
   return (
     <div className="space-y-6">

@@ -150,16 +150,6 @@ export const compatibilityQuestions: QuestionData[] = [
   },
   {
     id: 13,
-    question: "Social Media Sharing Preferences:",
-    options: [
-      "Linking socials (Instagram, TikTok, LinkedIn) to show my world",
-      "Sharing only curated posts or private story highlights",
-      "No social links now—keeping it just within the app",
-      "Will share after building trust and seeing genuine interest"
-    ]
-  },
-  {
-    id: 14,
     question: "What's Your Date Planning Style?",
     options: [
       "Spontaneous \"surprise\" dates—live in the moment",
@@ -169,7 +159,7 @@ export const compatibilityQuestions: QuestionData[] = [
     ]
   },
   {
-    id: 15,
+    id: 14,
     question: "How did you hear about Luvlang?",
     options: [
       "Social media (Instagram, TikTok, Facebook)",
@@ -183,6 +173,16 @@ export const compatibilityQuestions: QuestionData[] = [
       "Online community or forum",
       "Word of mouth",
       "Other"
+    ]
+  },
+  {
+    id: 15,
+    question: "Social Media Sharing Preferences:",
+    options: [
+      "Linking socials (Instagram, TikTok, LinkedIn) to show my world",
+      "Sharing only curated posts or private story highlights",
+      "No social links now—keeping it just within the app",
+      "Will share after building trust and seeing genuine interest"
     ]
   }
 ];
