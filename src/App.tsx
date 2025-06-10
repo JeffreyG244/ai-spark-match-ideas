@@ -20,6 +20,33 @@ import Legal from './pages/Legal';
 import NotFound from './pages/NotFound';
 import RoleManager from '@/components/security/RoleManager';
 
+// Core Legal Documents
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import TermsOfService from './pages/legal/TermsOfService';
+import CommunityGuidelines from './pages/legal/CommunityGuidelines';
+import CookiePolicy from './pages/legal/CookiePolicy';
+import ContentModerationPolicy from './pages/legal/ContentModerationPolicy';
+
+// Safety & Security
+import SafetyGuidelines from './pages/legal/SafetyGuidelines';
+import AgeVerificationPolicy from './pages/legal/AgeVerificationPolicy';
+import IdentityVerificationPolicy from './pages/legal/IdentityVerificationPolicy';
+import RomanceScamPrevention from './pages/legal/RomanceScamPrevention';
+import BlockingReportingPolicy from './pages/legal/BlockingReportingPolicy';
+
+// Data Protection & Privacy
+import GDPR from './pages/legal/GDPR';
+import CCPA from './pages/legal/CCPA';
+import DataRetention from './pages/legal/DataRetention';
+
+// Platform Operations
+import PhotoVerification from './pages/legal/PhotoVerification';
+import MessageMonitoring from './pages/legal/MessageMonitoring';
+import AccountSuspension from './pages/legal/AccountSuspension';
+
+// Legal Protection
+import IntellectualProperty from './pages/legal/IntellectualProperty';
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -40,6 +67,33 @@ const App = () => (
               </AuthGuard>
             } />
             <Route path="/legal" element={<Legal />} />
+            
+            {/* Core Legal Documents */}
+            <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+            <Route path="/legal/terms" element={<TermsOfService />} />
+            <Route path="/legal/community" element={<CommunityGuidelines />} />
+            <Route path="/legal/cookies" element={<CookiePolicy />} />
+            <Route path="/legal/moderation" element={<ContentModerationPolicy />} />
+            
+            {/* Safety & Security */}
+            <Route path="/legal/safety" element={<SafetyGuidelines />} />
+            <Route path="/legal/age-verification" element={<AgeVerificationPolicy />} />
+            <Route path="/legal/identity-verification" element={<IdentityVerificationPolicy />} />
+            <Route path="/legal/scam-prevention" element={<RomanceScamPrevention />} />
+            <Route path="/legal/reporting" element={<BlockingReportingPolicy />} />
+            
+            {/* Data Protection & Privacy */}
+            <Route path="/legal/gdpr" element={<GDPR />} />
+            <Route path="/legal/ccpa" element={<CCPA />} />
+            <Route path="/legal/data-retention" element={<DataRetention />} />
+            
+            {/* Platform Operations */}
+            <Route path="/legal/photo-verification" element={<PhotoVerification />} />
+            <Route path="/legal/message-monitoring" element={<MessageMonitoring />} />
+            <Route path="/legal/suspension" element={<AccountSuspension />} />
+            
+            {/* Legal Protection */}
+            <Route path="/legal/ip" element={<IntellectualProperty />} />
             
             {/* Protected Routes */}
             <Route path="/dashboard" element={
