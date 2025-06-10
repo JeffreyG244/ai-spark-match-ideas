@@ -26,27 +26,32 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    // Get and clean the Stripe key
-    const rawStripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!rawStripeKey) {
-      logStep("ERROR: STRIPE_SECRET_KEY not found");
-      throw new Error("STRIPE_SECRET_KEY is not configured");
+    // Get and validate the Stripe key
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeSecretKey) {
+      logStep("ERROR: STRIPE_SECRET_KEY environment variable not found");
+      throw new Error("Stripe configuration missing. Please contact support.");
     }
     
-    // Trim whitespace from the key
-    const stripeKey = rawStripeKey.trim();
+    // Clean and validate the key format
+    const cleanKey = stripeSecretKey.trim();
+    logStep("Stripe key validation", { 
+      keyExists: !!cleanKey,
+      keyLength: cleanKey.length,
+      keyPrefix: cleanKey.substring(0, 3),
+      isValidFormat: cleanKey.startsWith('sk_')
+    });
     
-    if (!stripeKey.startsWith('sk_')) {
-      logStep("ERROR: Invalid Stripe key format", { 
-        keyStart: stripeKey.substring(0, 7),
-        hasLeadingSpace: rawStripeKey !== stripeKey,
-        originalLength: rawStripeKey.length,
-        trimmedLength: stripeKey.length
+    if (!cleanKey.startsWith('sk_')) {
+      logStep("ERROR: Invalid Stripe key format detected", { 
+        actualPrefix: cleanKey.substring(0, 10),
+        expectedPrefix: "sk_",
+        keyLength: cleanKey.length
       });
-      throw new Error("Invalid Stripe secret key format. Key should start with 'sk_'");
+      throw new Error("Invalid Stripe secret key format. Please check your Stripe configuration.");
     }
-    
-    logStep("Stripe key verified");
+
+    logStep("Stripe key validated successfully");
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
@@ -58,7 +63,7 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     const { planType, billingCycle } = await req.json();
-    logStep("Request data", { planType, billingCycle });
+    logStep("Request data received", { planType, billingCycle });
 
     if (!planType || !billingCycle) {
       throw new Error("Missing planType or billingCycle");
@@ -74,19 +79,25 @@ serve(async (req) => {
       throw new Error("Invalid billing cycle. Must be 'monthly' or 'yearly'");
     }
 
-    const stripe = new Stripe(stripeKey, { 
+    // Initialize Stripe with validated key
+    const stripe = new Stripe(cleanKey, { 
       apiVersion: "2023-10-16",
       typescript: true
     });
     
-    // Check if customer exists
+    logStep("Stripe client initialized");
+    
+    // Test Stripe connection by checking customer list
     let customers;
     try {
       customers = await stripe.customers.list({ email: user.email, limit: 1 });
-      logStep("Customer lookup successful", { customersFound: customers.data.length });
+      logStep("Stripe connection successful", { customersFound: customers.data.length });
     } catch (error) {
-      logStep("ERROR: Failed to list customers", { error: error.message });
-      throw new Error("Failed to connect to Stripe. Please check your API key.");
+      logStep("ERROR: Stripe API call failed", { 
+        error: error.message,
+        type: error.type || 'unknown'
+      });
+      throw new Error(`Stripe connection failed: ${error.message}`);
     }
 
     let customerId;
@@ -114,7 +125,12 @@ serve(async (req) => {
     const amount = prices[planTypeLower][billingCycleLower];
     const interval = billingCycleLower === 'yearly' ? 'year' : 'month';
     
-    logStep("Pricing calculated", { planType: planTypeLower, billingCycle: billingCycleLower, amount, interval });
+    logStep("Pricing calculated", { 
+      planType: planTypeLower, 
+      billingCycle: billingCycleLower, 
+      amount, 
+      interval 
+    });
 
     // Get the origin for redirect URLs
     const origin = req.headers.get("origin") || "https://id-preview--016dc165-a1fe-4ce7-adef-dbf00d3eba8a.lovable.app";

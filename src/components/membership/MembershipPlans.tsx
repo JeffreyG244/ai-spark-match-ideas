@@ -95,13 +95,15 @@ const MembershipPlans = () => {
     setProcessingPayment(plan.name);
     
     try {
-      console.log('Starting checkout for plan:', plan.name);
+      console.log('=== CHECKOUT PROCESS STARTED ===');
+      console.log('User:', { id: user.id, email: user.email });
+      console.log('Plan:', plan.name);
       console.log('Billing cycle:', billingCycle);
       
       const planType = plan.name.toLowerCase();
       
       if (!['plus', 'premium'].includes(planType)) {
-        throw new Error('Invalid plan type');
+        throw new Error('Invalid plan type selected');
       }
       
       const requestBody = {
@@ -109,31 +111,50 @@ const MembershipPlans = () => {
         billingCycle: billingCycle === 'annual' ? 'yearly' : 'monthly'
       };
       
-      console.log('Sending request to create-checkout with:', requestBody);
+      console.log('Sending request to create-checkout:', requestBody);
       
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: requestBody
       });
 
-      console.log('Response from create-checkout:', { data, error });
+      console.log('=== CHECKOUT RESPONSE ===');
+      console.log('Data:', data);
+      console.log('Error:', error);
 
       if (error) {
         console.error('Checkout creation error:', error);
-        throw new Error(error.message || 'Failed to create checkout session');
+        
+        // Provide specific error messages based on the error
+        if (error.message?.includes('Stripe secret key')) {
+          toast.error('Payment system configuration error. Please contact support.');
+        } else if (error.message?.includes('Invalid plan type')) {
+          toast.error('Selected plan is not available. Please try a different plan.');
+        } else if (error.message?.includes('User not authenticated')) {
+          toast.error('Please sign in again to continue.');
+        } else {
+          toast.error(`Payment setup failed: ${error.message}`);
+        }
+        return;
       }
 
       if (data?.url) {
         console.log('Redirecting to Stripe checkout:', data.url);
-        // Redirect to Stripe checkout in the same window
-        window.location.href = data.url;
+        
+        // Show success message before redirect
+        toast.success('Redirecting to secure payment...');
+        
+        // Small delay to show the toast, then redirect
+        setTimeout(() => {
+          window.location.href = data.url;
+        }, 500);
       } else {
         console.error('No checkout URL received:', data);
-        throw new Error('No checkout URL received from Stripe');
+        toast.error('Payment system error. Please try again or contact support.');
       }
     } catch (error) {
-      console.error('Error creating checkout:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to start checkout process';
-      toast.error(errorMessage);
+      console.error('Error in checkout process:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      toast.error(`Failed to start checkout: ${errorMessage}`);
     } finally {
       setProcessingPayment(null);
     }
