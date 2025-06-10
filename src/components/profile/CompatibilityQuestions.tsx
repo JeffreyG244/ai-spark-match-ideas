@@ -21,7 +21,7 @@ const CompatibilityQuestions = ({
   isSaving 
 }: CompatibilityQuestionsProps) => {
   const answeredQuestions = Object.keys(questionAnswers).length;
-  const totalQuestions = 15; // Fixed to show correct count
+  const totalQuestions = compatibilityQuestions.length; // Use actual length of questions array
   const compatibilityScore = Math.round((answeredQuestions / totalQuestions) * 100);
 
   return (

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { compatibilityQuestions } from '@/data/compatibilityQuestions';
 
 export const useCompatibilityAnswers = () => {
   const { user } = useAuth();
@@ -71,7 +72,8 @@ export const useCompatibilityAnswers = () => {
         });
       } else {
         const answeredCount = Object.keys(questionAnswers).length;
-        const score = Math.round((answeredCount / 15) * 100); // Fixed to use 15 as total
+        const totalQuestions = compatibilityQuestions.length; // Use actual length
+        const score = Math.round((answeredCount / totalQuestions) * 100);
         
         toast({
           title: 'Compatibility Answers Saved',
