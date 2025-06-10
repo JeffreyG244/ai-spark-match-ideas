@@ -130,7 +130,8 @@ export const compatibilityQuestions: QuestionData[] = [
     question: "What Conversation Style Fuels Your Fire?",
     options: [
       "Deep, introspective talks about purpose, dreams, and goals",
-      "Playful banter, witty comebacks, and light teasing"
+      "Playful banter, witty comebacks, and light teasing",
+      "Casual, calm, roll with the conversation"
     ]
   },
   {
@@ -149,17 +150,6 @@ export const compatibilityQuestions: QuestionData[] = [
   },
   {
     id: 13,
-    question: "How Do You Most Enjoy Expressing Your Personality to New People?",
-    options: [
-      "A short, candid video clip sharing my passions",
-      "A voice message with a genuine \"hello\" and fun fact",
-      "A creative written bio with humor and heartfelt details",
-      "An AI-crafted introduction highlighting my top traits",
-      "An interactive mini-quiz about my quirks and preferences"
-    ]
-  },
-  {
-    id: 14,
     question: "How Open Are You to an Age Gap?",
     options: [
       "Only within my own decade for life-stage alignment",
@@ -169,7 +159,7 @@ export const compatibilityQuestions: QuestionData[] = [
     ]
   },
   {
-    id: 15,
+    id: 14,
     question: "Social Media Sharing Preferences:",
     options: [
       "Linking socials (Instagram, TikTok, LinkedIn) to show my world",
@@ -179,7 +169,7 @@ export const compatibilityQuestions: QuestionData[] = [
     ]
   },
   {
-    id: 16,
+    id: 15,
     question: "What's Your Date Planning Style?",
     options: [
       "Spontaneous \"surprise\" dates—live in the moment",
@@ -189,7 +179,7 @@ export const compatibilityQuestions: QuestionData[] = [
     ]
   },
   {
-    id: 17,
+    id: 16,
     question: "How did you hear about Luvlang?",
     options: [
       "Social media (Instagram, TikTok, Facebook)",

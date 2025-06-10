@@ -90,11 +90,7 @@ const Index = () => {
             <h1 className="text-2xl font-bold text-gray-900">Luvlang</h1>
           </div>
           <div className="flex gap-3">
-            {user ? (
-              <Button onClick={() => navigate("/dashboard")} className="bg-purple-600 hover:bg-purple-700">
-                Go to Dashboard
-              </Button>
-            ) : (
+            {!user && (
               <>
                 <Button onClick={() => navigate("/auth")} variant="outline">
                   Sign In
@@ -131,11 +127,7 @@ const Index = () => {
             AI-powered deep connections for serious professionals. No swiping, no games - just authentic, meaningful relationships built on compatibility.
           </p>
           <div className="flex gap-4 justify-center">
-            {user ? (
-              <Button size="lg" onClick={() => navigate("/dashboard")} className="bg-purple-600 hover:bg-purple-700">
-                Continue to Dashboard
-              </Button>
-            ) : (
+            {!user && (
               <>
                 <Button size="lg" onClick={() => navigate("/auth")} className="bg-purple-600 hover:bg-purple-700">
                   Start Your Journey
@@ -267,11 +259,7 @@ const Index = () => {
         <div className="text-center bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-12 text-white">
           <h2 className="text-3xl font-bold mb-4">Ready to Find Your Soul Match?</h2>
           <p className="text-xl mb-8 opacity-90">Join thousands of professionals who've found meaningful love through secure AI matching</p>
-          {user ? (
-            <Button size="lg" variant="secondary" onClick={() => navigate("/dashboard")}>
-              Continue to Dashboard
-            </Button>
-          ) : (
+          {!user && (
             <Button size="lg" variant="secondary" onClick={() => navigate("/auth")}>
               Start Matching Today
             </Button>
