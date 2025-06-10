@@ -28,7 +28,13 @@ serve(async (req) => {
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
+      logStep("ERROR: STRIPE_SECRET_KEY not found");
       throw new Error("STRIPE_SECRET_KEY is not configured");
+    }
+    
+    if (!stripeKey.startsWith('sk_')) {
+      logStep("ERROR: Invalid Stripe key format", { keyStart: stripeKey.substring(0, 7) });
+      throw new Error("Invalid Stripe secret key format");
     }
     
     logStep("Stripe key verified");
@@ -50,12 +56,12 @@ serve(async (req) => {
     }
 
     // Validate plan types
-    if (!['plus', 'premium'].includes(planType)) {
+    if (!['plus', 'premium'].includes(planType.toLowerCase())) {
       throw new Error("Invalid plan type. Must be 'plus' or 'premium'");
     }
 
     // Validate billing cycles
-    if (!['monthly', 'yearly'].includes(billingCycle)) {
+    if (!['monthly', 'yearly'].includes(billingCycle.toLowerCase())) {
       throw new Error("Invalid billing cycle. Must be 'monthly' or 'yearly'");
     }
 
@@ -65,7 +71,14 @@ serve(async (req) => {
     });
     
     // Check if customer exists
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    let customers;
+    try {
+      customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    } catch (error) {
+      logStep("ERROR: Failed to list customers", { error: error.message });
+      throw new Error("Failed to connect to Stripe. Please check your API key.");
+    }
+
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
@@ -84,10 +97,12 @@ serve(async (req) => {
       }
     };
 
-    const amount = prices[planType as 'plus' | 'premium'][billingCycle as 'monthly' | 'yearly'];
-    const interval = billingCycle === 'yearly' ? 'year' : 'month';
+    const planTypeLower = planType.toLowerCase() as 'plus' | 'premium';
+    const billingCycleLower = billingCycle.toLowerCase() as 'monthly' | 'yearly';
+    const amount = prices[planTypeLower][billingCycleLower];
+    const interval = billingCycleLower === 'yearly' ? 'year' : 'month';
     
-    logStep("Pricing calculated", { planType, billingCycle, amount, interval });
+    logStep("Pricing calculated", { planType: planTypeLower, billingCycle: billingCycleLower, amount, interval });
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -97,8 +112,8 @@ serve(async (req) => {
           price_data: {
             currency: "usd",
             product_data: { 
-              name: `Luvlang ${planType.charAt(0).toUpperCase() + planType.slice(1)} Plan`,
-              description: `Luvlang ${planType.charAt(0).toUpperCase() + planType.slice(1)} subscription - ${billingCycle} billing`
+              name: `Luvlang ${planTypeLower.charAt(0).toUpperCase() + planTypeLower.slice(1)} Plan`,
+              description: `Luvlang ${planTypeLower.charAt(0).toUpperCase() + planTypeLower.slice(1)} subscription - ${billingCycleLower} billing`
             },
             unit_amount: amount,
             recurring: { interval: interval as 'month' | 'year' },
@@ -107,12 +122,12 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/membership?success=true`,
+      success_url: `${req.headers.get("origin")}/membership?success=true&plan=${planTypeLower}`,
       cancel_url: `${req.headers.get("origin")}/membership?canceled=true`,
       metadata: {
         user_id: user.id,
-        plan_type: planType,
-        billing_cycle: billingCycle
+        plan_type: planTypeLower,
+        billing_cycle: billingCycleLower
       }
     });
 

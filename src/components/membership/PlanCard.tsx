@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Star, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface MembershipPlan {
   id: number;
@@ -33,6 +34,8 @@ const PlanCard: React.FC<PlanCardProps> = ({
   user,
   onPlanSelect
 }) => {
+  const navigate = useNavigate();
+
   const formatFeature = (key: string, value: any) => {
     switch (key) {
       case 'swipes':
@@ -75,6 +78,24 @@ const PlanCard: React.FC<PlanCardProps> = ({
     const price = billingCycle === 'annual' ? (plan.annual_price || 0) : plan.monthly_price;
     const period = billingCycle === 'annual' ? '/year' : '/month';
     return `$${price.toFixed(2)}${period}`;
+  };
+
+  const handlePlanClick = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (plan.name === 'Free') {
+      return;
+    }
+
+    if (isCurrentPlan) {
+      return;
+    }
+
+    // Navigate to checkout page for paid plans
+    navigate(`/checkout?plan=${plan.name.toLowerCase()}`);
   };
 
   const features = Object.entries(plan.features || {});
@@ -131,10 +152,10 @@ const PlanCard: React.FC<PlanCardProps> = ({
         </div>
 
         <Button
-          onClick={() => onPlanSelect(plan)}
+          onClick={handlePlanClick}
           className="w-full"
           variant={isCurrentPlan ? "outline" : "default"}
-          disabled={isCurrentPlan || isProcessing || !user}
+          disabled={isCurrentPlan || isProcessing}
           style={{
             backgroundColor: !isCurrentPlan ? (isPlus ? '#7C3AED' : plan.highlight_color || '#7C3AED') : undefined
           }}
@@ -144,7 +165,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
           ) : isCurrentPlan ? (
             'Current Plan'
           ) : !user ? (
-            'Sign In Required'
+            'Sign In to Upgrade'
           ) : (
             `Choose ${plan.name}`
           )}

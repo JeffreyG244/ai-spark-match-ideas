@@ -69,6 +69,11 @@ const App = () => (
                 </AuthGuard>
               } />
               <Route path="/legal" element={<Legal />} />
+              <Route path="/checkout" element={
+                <AuthGuard requireAuth={true}>
+                  <Checkout />
+                </AuthGuard>
+              } />
               
               {/* Core Legal Documents */}
               <Route path="/legal/privacy" element={<PrivacyPolicy />} />
