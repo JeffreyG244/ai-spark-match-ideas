@@ -1,4 +1,3 @@
-
 export interface QuestionData {
   id: number;
   question: string;
@@ -199,7 +198,8 @@ export const compatibilityQuestions: QuestionData[] = [
     options: [
       "Dog",
       "Cat",
-      "Other"
+      "Other",
+      "Not allergic"
     ]
   }
 ];
