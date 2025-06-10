@@ -30,7 +30,6 @@ const MembershipPlans = () => {
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
   const [loading, setLoading] = useState(true);
-  const [checkingSubscription, setCheckingSubscription] = useState(false);
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
@@ -61,7 +60,6 @@ const MembershipPlans = () => {
   const checkSubscriptionStatus = async () => {
     if (!user) return;
     
-    setCheckingSubscription(true);
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
@@ -81,8 +79,6 @@ const MembershipPlans = () => {
     } catch (error) {
       console.error('Error checking subscription:', error);
       toast.error('Failed to check subscription status');
-    } finally {
-      setCheckingSubscription(false);
     }
   };
 
@@ -241,30 +237,15 @@ const MembershipPlans = () => {
           </div>
         </div>
 
-        {user && (
-          <div className="flex justify-center gap-4 mb-6">
+        {user && userSubscription && userSubscription.plan_id > 1 && (
+          <div className="flex justify-center mb-6">
             <Button
-              onClick={checkSubscriptionStatus}
-              disabled={checkingSubscription}
+              onClick={handleManageSubscription}
               variant="outline"
               size="sm"
             >
-              {checkingSubscription ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Checking...</>
-              ) : (
-                'Refresh Status'
-              )}
+              Manage Subscription
             </Button>
-            
-            {userSubscription && userSubscription.plan_id > 1 && (
-              <Button
-                onClick={handleManageSubscription}
-                variant="outline"
-                size="sm"
-              >
-                Manage Subscription
-              </Button>
-            )}
           </div>
         )}
       </div>
@@ -274,12 +255,15 @@ const MembershipPlans = () => {
           const isCurrentPlan = getCurrentPlanId() === plan.id;
           const features = Object.entries(plan.features || {});
           const isProcessing = processingPayment === plan.name;
+          const isPremium = plan.name === 'Premium';
 
           return (
             <Card 
               key={plan.id} 
               className={`relative ${
-                plan.is_popular ? 'border-2 border-yellow-500 shadow-lg' : 'border-purple-200'
+                plan.is_popular ? 'border-2 border-yellow-500 shadow-lg' : 
+                isPremium ? 'border-2 border-yellow-500 shadow-lg' :
+                'border-purple-200'
               } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
             >
               {plan.is_popular && (
