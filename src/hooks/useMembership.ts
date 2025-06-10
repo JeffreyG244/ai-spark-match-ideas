@@ -88,6 +88,7 @@ export const useMembership = () => {
     const feature = currentPlan.features[featureName];
     if (typeof feature === 'boolean') return feature;
     if (typeof feature === 'object' && feature?.unlimited) return true;
+    if (featureName === 'messaging' && feature === 'unlimited') return true;
     return false;
   };
 
@@ -95,8 +96,10 @@ export const useMembership = () => {
     if (!currentPlan?.features) return null;
     
     const feature = currentPlan.features[featureName];
-    if (typeof feature === 'object' && feature?.daily_limit) {
-      return feature.daily_limit;
+    if (typeof feature === 'object') {
+      if (feature?.daily_limit) return feature.daily_limit;
+      if (feature?.credits) return feature.credits;
+      if (feature?.unlimited) return -1; // -1 indicates unlimited
     }
     if (typeof feature === 'number') return feature;
     return null;
@@ -106,6 +109,38 @@ export const useMembership = () => {
     return currentPlan?.name !== 'Free';
   };
 
+  const canUseFeature = (featureName: string): boolean => {
+    return hasFeature(featureName);
+  };
+
+  const getSwipeLimit = (): number | null => {
+    if (!currentPlan?.features?.swipes) return null;
+    
+    const swipes = currentPlan.features.swipes;
+    if (swipes.unlimited) return -1; // Unlimited
+    if (swipes.daily_limit) return swipes.daily_limit;
+    return null;
+  };
+
+  const getMessagingType = (): 'unlimited' | 'matches_only' | 'credits' | null => {
+    if (!currentPlan?.features?.messaging) return null;
+    
+    const messaging = currentPlan.features.messaging;
+    if (messaging === 'unlimited') return 'unlimited';
+    if (messaging === 'matches_only') return 'matches_only';
+    if (typeof messaging === 'object' && messaging.credits) return 'credits';
+    return null;
+  };
+
+  const getSuperLikesLimit = (): number | null => {
+    if (!currentPlan?.features?.super_likes) return null;
+    
+    const superLikes = currentPlan.features.super_likes;
+    if (typeof superLikes === 'object' && superLikes.unlimited) return -1;
+    if (typeof superLikes === 'number') return superLikes;
+    return null;
+  };
+
   return {
     currentPlan,
     subscription,
@@ -113,6 +148,10 @@ export const useMembership = () => {
     hasFeature,
     getFeatureLimit,
     isPremiumUser,
+    canUseFeature,
+    getSwipeLimit,
+    getMessagingType,
+    getSuperLikesLimit,
     refetch: fetchUserMembership
   };
 };

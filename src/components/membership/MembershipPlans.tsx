@@ -91,17 +91,23 @@ const MembershipPlans = () => {
   const formatFeature = (key: string, value: any) => {
     switch (key) {
       case 'swipes':
-        return value.unlimited ? 'Unlimited swipes' : `${value.daily_limit} daily swipes`;
+        if (value.unlimited) return 'Unlimited swipes';
+        if (value.daily_limit) return `${value.daily_limit} daily swipes`;
+        return null;
       case 'messaging':
-        return value === 'unlimited' ? 'Unlimited messaging' : 'Message matches only';
+        if (value === 'unlimited') return 'Unlimited messaging';
+        if (value === 'matches_only') return 'Message matches only';
+        if (value.credits) return `${value.credits} messaging credits`;
+        return null;
       case 'super_likes':
-        return typeof value === 'number' ? `${value} super likes per day` : 'Unlimited super likes';
+        if (typeof value === 'object' && value.unlimited) return 'Unlimited super likes';
+        if (typeof value === 'number') return `${value} super like${value !== 1 ? 's' : ''} per day`;
+        return null;
       case 'boosts':
-        // Special handling for free plan to show "2 minute sign up"
-        if (typeof value === 'number' && value === 0) {
-          return '2 minute sign up';
-        }
-        return typeof value === 'number' ? `${value} boost per month` : 'Unlimited boosts';
+        if (typeof value === 'object' && value.unlimited) return 'Unlimited boosts';
+        if (typeof value === 'number' && value > 0) return `${value} boost${value !== 1 ? 's' : ''} per month`;
+        if (typeof value === 'number' && value === 0) return null; // Don't show 0 boosts
+        return null;
       case 'advanced_filters':
         return value ? 'Advanced filters' : null;
       case 'see_likes':
@@ -202,15 +208,15 @@ const MembershipPlans = () => {
                 <CardDescription className="text-3xl font-bold text-gray-900">
                   {getPrice(plan)}
                 </CardDescription>
-                {billingCycle === 'annual' && plan.monthly_price > 0 && (
+                {billingCycle === 'annual' && plan.monthly_price > 0 && plan.annual_price && (
                   <p className="text-sm text-gray-500">
-                    Save ${((plan.monthly_price * 12) - (plan.annual_price || 0)).toFixed(2)} per year
+                    Save ${((plan.monthly_price * 12) - plan.annual_price).toFixed(2)} per year
                   </p>
                 )}
               </CardHeader>
 
               <CardContent className="space-y-4">
-                <div className="space-y-2">
+                <div className="space-y-2 min-h-[200px]">
                   {features.map(([key, value]) => {
                     const featureText = formatFeature(key, value);
                     if (!featureText) return null;
