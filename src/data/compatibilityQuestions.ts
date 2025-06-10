@@ -150,16 +150,6 @@ export const compatibilityQuestions: QuestionData[] = [
   },
   {
     id: 13,
-    question: "How Open Are You to an Age Gap?",
-    options: [
-      "Only within my own decade for life-stage alignment",
-      "Up to a 5-year difference if energy matches",
-      "Comfortable with 10+ years if we vibe well",
-      "Age doesn't matter—if the connection is real, it works"
-    ]
-  },
-  {
-    id: 14,
     question: "Social Media Sharing Preferences:",
     options: [
       "Linking socials (Instagram, TikTok, LinkedIn) to show my world",
@@ -169,7 +159,7 @@ export const compatibilityQuestions: QuestionData[] = [
     ]
   },
   {
-    id: 15,
+    id: 14,
     question: "What's Your Date Planning Style?",
     options: [
       "Spontaneous \"surprise\" dates—live in the moment",
@@ -179,7 +169,7 @@ export const compatibilityQuestions: QuestionData[] = [
     ]
   },
   {
-    id: 16,
+    id: 15,
     question: "How did you hear about Luvlang?",
     options: [
       "Social media (Instagram, TikTok, Facebook)",
