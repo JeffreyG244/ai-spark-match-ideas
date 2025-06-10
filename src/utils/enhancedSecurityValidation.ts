@@ -134,9 +134,9 @@ export const checkEnhancedRateLimit = async (
       return checkAnonymousRateLimit(action, maxRequests, windowSeconds);
     }
 
-    // Use the enhanced rate limiting function from the database
+    // Use the existing secure_rate_limit_check function
     const { data: allowed, error } = await supabase
-      .rpc('enhanced_rate_limit_check', {
+      .rpc('secure_rate_limit_check', {
         p_user_id: user.id,
         p_action: action,
         p_max_requests: maxRequests,
