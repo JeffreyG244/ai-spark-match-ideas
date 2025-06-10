@@ -4,10 +4,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { DiverseUser } from '@/data/diverseUsersData';
+
+interface UserProfile {
+  id: string;
+  user_id: string;
+  email: string;
+  bio: string | null;
+  values: string | null;
+  life_goals: string | null;
+  green_flags: string | null;
+  photos: string[];
+  firstName: string;
+  lastName: string;
+}
 
 interface ProfileCardProps {
-  user: DiverseUser;
+  user: UserProfile;
   swipeDirection: 'like' | 'pass' | null;
   onDragEnd: (event: any, info: any) => void;
   cardIndex: number;
@@ -67,13 +79,13 @@ const ProfileCard = ({ user, swipeDirection, onDragEnd, cardIndex }: ProfileCard
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
-            {user.bio}
+            {user.bio || 'No bio available'}
           </p>
           
           <div>
             <h4 className="font-semibold text-gray-800 mb-2">Core Values</h4>
             <div className="flex flex-wrap gap-1">
-              {user.values.split(', ').map((value, i) => (
+              {(user.values || 'No values listed').split(', ').map((value, i) => (
                 <Badge key={i} variant="outline" className="text-xs border-purple-300 text-purple-700">
                   {value.trim()}
                 </Badge>
@@ -83,7 +95,7 @@ const ProfileCard = ({ user, swipeDirection, onDragEnd, cardIndex }: ProfileCard
 
           <div>
             <h4 className="font-semibold text-gray-800 mb-2">Green Flags</h4>
-            <p className="text-sm text-gray-600 line-clamp-2">{user.greenFlags}</p>
+            <p className="text-sm text-gray-600 line-clamp-2">{user.green_flags || 'No green flags listed'}</p>
           </div>
         </CardContent>
       </Card>
