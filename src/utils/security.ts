@@ -1,4 +1,3 @@
-
 import { SecurityCoreService } from '@/services/security/SecurityCoreService';
 import { ValidationService, SECURITY_LIMITS } from '@/services/security/ValidationService';
 import { RateLimitService } from '@/services/security/RateLimitService';
@@ -28,9 +27,49 @@ export const LIMITS = {
 } as const;
 
 // Security functions
-export const sanitizeInput = ValidationService.sanitizeInput;
-export const sanitizeForDisplay = ValidationService.sanitizeForDisplay;
-export const validateMessageContent = ValidationService.validateMessageContent;
+export const sanitizeInput = (input: string): string => {
+  const { sanitizedValue } = require('@/utils/enhancedSecurityValidation').sanitizeUserInput(input, false);
+  return sanitizedValue || '';
+};
+
+export const sanitizeForDisplay = (input: string): string => {
+  const { sanitizedValue } = require('@/utils/enhancedSecurityValidation').sanitizeUserInput(input, true);
+  return sanitizedValue || '';
+};
+
+export const validateMessageContent = async (content: string): Promise<{ isValid: boolean; error?: string }> => {
+  const { checkEnhancedRateLimit } = await import('@/utils/enhancedSecurityValidation');
+  
+  // Check rate limiting for message sending
+  const rateCheck = await checkEnhancedRateLimit('send_message', 10, 60);
+  if (!rateCheck.allowed) {
+    return {
+      isValid: false,
+      error: 'Too many messages sent. Please wait before sending another message.'
+    };
+  }
+
+  // Use enhanced input validation
+  const { sanitizeUserInput } = await import('@/utils/enhancedSecurityValidation');
+  const validation = sanitizeUserInput(content, false);
+  
+  if (!validation.isValid) {
+    return {
+      isValid: false,
+      error: validation.errors.join(', ')
+    };
+  }
+
+  if (content.length > LIMITS.MESSAGE_MAX_LENGTH) {
+    return {
+      isValid: false,
+      error: `Message is too long. Maximum ${LIMITS.MESSAGE_MAX_LENGTH} characters allowed.`
+    };
+  }
+
+  return { isValid: true };
+};
+
 export const containsInappropriateContent = (content: string): boolean => {
   const suspiciousPatterns = ContentValidationService.detectSuspiciousPatterns?.(content) || [];
   return suspiciousPatterns.length > 0;
@@ -45,29 +84,10 @@ export const detectAutomationIndicators = SecurityCoreService.detectAutomationIn
 
 // Rate limiting
 export const rateLimiter = {
-  isAllowed: (key: string, maxRequests: number, windowMs: number): boolean => {
-    // Simple client-side rate limiting implementation
-    const now = Date.now();
-    const windowKey = `${key}_${Math.floor(now / windowMs)}`;
-    const currentCount = parseInt(localStorage.getItem(windowKey) || '0');
-    
-    if (currentCount >= maxRequests) {
-      return false;
-    }
-    
-    localStorage.setItem(windowKey, (currentCount + 1).toString());
-    
-    // Clean up old entries
-    setTimeout(() => {
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key?.startsWith(`${key.split('_')[0]}_`) && parseInt(key.split('_')[1]) < Math.floor(now / windowMs)) {
-          localStorage.removeItem(key);
-        }
-      }
-    }, 100);
-    
-    return true;
+  isAllowed: async (key: string, maxRequests: number, windowMs: number): Promise<boolean> => {
+    const { checkEnhancedRateLimit } = await import('@/utils/enhancedSecurityValidation');
+    const result = await checkEnhancedRateLimit(key, maxRequests, Math.floor(windowMs / 1000));
+    return result.allowed;
   }
 };
 
