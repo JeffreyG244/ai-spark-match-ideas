@@ -78,17 +78,31 @@ export const compatibilityQuestions: QuestionData[] = [
   },
   {
     id: 7,
-    question: "How Much Do You Value Profile Verification?",
+    question: "How do you identify yourself?",
     options: [
-      "1 (I trust intuition over digital badges)",
-      "2 (Preferred but not essential)",
-      "3 (Neutral—depends on the situation)",
-      "4 (Important—gives me peace of mind)",
-      "5 (Non-negotiable—only verified profiles for me)"
+      "Male",
+      "Female",
+      "Non-binary (An umbrella term for genders beyond strictly male/female)",
+      "Genderfluid (My gender changes over time or context)",
+      "Agender (I don't identify with any gender)",
+      "Prefer to self-describe"
     ]
   },
   {
     id: 8,
+    question: "Which term best describes your sexual orientation?",
+    options: [
+      "Straight/heterosexual (Attracted to a different gender)",
+      "Gay (Men attracted to men – sometimes used broadly for same-gender attraction)",
+      "Lesbian (Women attracted to women)",
+      "Bisexual (Attracted to more than one gender)",
+      "Pansexual (Attracted to people regardless of gender)",
+      "Asexual (Experiences little/no sexual attraction)",
+      "Prefer not to say / Other"
+    ]
+  },
+  {
+    id: 9,
     question: "Which Small Romantic Gesture Feels Most Meaningful to You?",
     options: [
       "Curating a personalized playlist or podcast episode just for me",
@@ -100,7 +114,7 @@ export const compatibilityQuestions: QuestionData[] = [
     ]
   },
   {
-    id: 9,
+    id: 10,
     question: "Choose Your Ideal First Meet-Up Scenario:",
     options: [
       "Casual coffee at a cozy café with natural lighting",
@@ -112,7 +126,7 @@ export const compatibilityQuestions: QuestionData[] = [
     ]
   },
   {
-    id: 10,
+    id: 11,
     question: "What Conversation Style Fuels Your Fire?",
     options: [
       "Deep, introspective talks about purpose, dreams, and goals",
@@ -120,7 +134,7 @@ export const compatibilityQuestions: QuestionData[] = [
     ]
   },
   {
-    id: 11,
+    id: 12,
     question: "Which Compatibility Qualities Matter Most to You in a Match?",
     options: [
       "Physical vibe (height, fitness level, style)",
@@ -134,7 +148,7 @@ export const compatibilityQuestions: QuestionData[] = [
     ]
   },
   {
-    id: 12,
+    id: 13,
     question: "How Do You Most Enjoy Expressing Your Personality to New People?",
     options: [
       "A short, candid video clip sharing my passions",
@@ -145,7 +159,7 @@ export const compatibilityQuestions: QuestionData[] = [
     ]
   },
   {
-    id: 13,
+    id: 14,
     question: "How Open Are You to an Age Gap?",
     options: [
       "Only within my own decade for life-stage alignment",
@@ -155,7 +169,7 @@ export const compatibilityQuestions: QuestionData[] = [
     ]
   },
   {
-    id: 14,
+    id: 15,
     question: "Social Media Sharing Preferences:",
     options: [
       "Linking socials (Instagram, TikTok, LinkedIn) to show my world",
@@ -165,24 +179,13 @@ export const compatibilityQuestions: QuestionData[] = [
     ]
   },
   {
-    id: 15,
+    id: 16,
     question: "What's Your Date Planning Style?",
     options: [
       "Spontaneous \"surprise\" dates—live in the moment",
       "Meticulous planning—reservations, itineraries, and backups",
       "Hybrid approach—basic plan with room for fun detours",
       "Thoughtful gestures matter more than agendas (flowers, notes, songs)"
-    ]
-  },
-  {
-    id: 16,
-    question: "What is your sexual orientation?",
-    options: [
-      "Straight",
-      "Gay",
-      "Bisexual",
-      "Transgender",
-      "Prefer not to say"
     ]
   },
   {
