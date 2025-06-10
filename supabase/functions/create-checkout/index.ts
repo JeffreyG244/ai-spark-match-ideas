@@ -26,15 +26,24 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
+    // Get and clean the Stripe key
+    const rawStripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!rawStripeKey) {
       logStep("ERROR: STRIPE_SECRET_KEY not found");
       throw new Error("STRIPE_SECRET_KEY is not configured");
     }
     
+    // Trim whitespace from the key
+    const stripeKey = rawStripeKey.trim();
+    
     if (!stripeKey.startsWith('sk_')) {
-      logStep("ERROR: Invalid Stripe key format", { keyStart: stripeKey.substring(0, 7) });
-      throw new Error("Invalid Stripe secret key format");
+      logStep("ERROR: Invalid Stripe key format", { 
+        keyStart: stripeKey.substring(0, 7),
+        hasLeadingSpace: rawStripeKey !== stripeKey,
+        originalLength: rawStripeKey.length,
+        trimmedLength: stripeKey.length
+      });
+      throw new Error("Invalid Stripe secret key format. Key should start with 'sk_'");
     }
     
     logStep("Stripe key verified");
