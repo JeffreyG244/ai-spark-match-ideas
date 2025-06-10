@@ -17,6 +17,7 @@ import Discover from './pages/Discover';
 import Membership from './pages/Membership';
 import Legal from './pages/Legal';
 import NotFound from './pages/NotFound';
+import Checkout from './pages/Checkout';
 import RoleManager from '@/components/security/RoleManager';
 
 // Core Legal Documents
