@@ -54,11 +54,12 @@ export const useAuthentication = () => {
 
       toast({
         title: 'Account created successfully',
-        description: 'Please check your email to verify your account.',
+        description: 'Welcome to Luvlang! You can now start exploring.',
       });
 
-      navigate('/');
+      navigate('/dashboard');
     } catch (error) {
+      console.error('Signup error:', error);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
@@ -95,8 +96,9 @@ export const useAuthentication = () => {
         description: 'You have been successfully logged in.',
       });
 
-      navigate('/');
+      navigate('/dashboard');
     } catch (error) {
+      console.error('Login error:', error);
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);

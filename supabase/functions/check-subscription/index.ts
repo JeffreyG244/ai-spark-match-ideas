@@ -6,6 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Content-Type": "application/json"
 };
 
 const logStep = (step: string, details?: any) => {
@@ -32,12 +33,19 @@ serve(async (req) => {
       throw new Error("STRIPE_SECRET_KEY is not configured");
     }
 
+    if (!stripeKey.startsWith('sk_')) {
+      throw new Error("Invalid STRIPE_SECRET_KEY format - should start with 'sk_'");
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    if (userError) {
+      logStep("Authentication failed", { error: userError.message });
+      throw new Error(`Authentication error: ${userError.message}`);
+    }
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
@@ -65,7 +73,7 @@ serve(async (req) => {
         plan_type: 'free',
         status: 'inactive'
       }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: corsHeaders,
         status: 200,
       });
     }
@@ -134,14 +142,19 @@ serve(async (req) => {
       subscription_end: subscriptionEnd,
       status: hasActiveSub ? 'active' : 'inactive'
     }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: corsHeaders,
       status: 200,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in check-subscription", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      subscribed: false,
+      plan_type: 'free',
+      status: 'error'
+    }), {
+      headers: corsHeaders,
       status: 500,
     });
   }

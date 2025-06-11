@@ -91,6 +91,8 @@ const Checkout = () => {
     setIsLoading(true);
 
     try {
+      console.log('Starting checkout process...');
+      
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           planType,
@@ -98,14 +100,18 @@ const Checkout = () => {
         }
       });
 
+      console.log('Checkout response:', { data, error });
+
       if (error) {
         console.error('Checkout error:', error);
         throw new Error(error.message || 'Failed to create checkout session');
       }
 
       if (data?.url) {
+        console.log('Redirecting to Stripe checkout:', data.url);
         window.location.href = data.url;
       } else {
+        console.error('No checkout URL received:', data);
         throw new Error('No checkout URL received');
       }
     } catch (error) {
