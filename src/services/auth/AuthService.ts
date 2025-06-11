@@ -26,11 +26,17 @@ export class AuthService {
 
   static async signUp(data: SignUpData): Promise<AuthResult> {
     try {
+      console.log('AuthService.signUp starting for:', data.email);
+      
       // Client-side validation for better UX
       const passwordValidation = validatePasswordStrength(data.password);
       if (!passwordValidation.isValid) {
         return { success: false, error: passwordValidation.error };
       }
+
+      // Use window.location.origin for the redirect URL to ensure it works in all environments
+      const redirectUrl = `${window.location.origin}/dashboard`;
+      console.log('Using redirect URL:', redirectUrl);
 
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
@@ -38,14 +44,14 @@ export class AuthService {
         options: {
           data: {
             first_name: data.firstName,
-            last_name: data.lastName,
-            password: data.password // Pass to database trigger for validation
+            last_name: data.lastName
           },
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: redirectUrl
         }
       });
 
       if (error) {
+        console.error('Supabase signup error:', error);
         await this.securityLogger.logEvent(
           'signup_failed',
           { email: data.email, error: error.message },
@@ -54,6 +60,7 @@ export class AuthService {
         return { success: false, error: error.message };
       }
 
+      console.log('Supabase signup successful:', authData.user?.id);
       await this.securityLogger.logEvent(
         'user_signup_success',
         { email: data.email, user_id: authData.user?.id },
@@ -63,6 +70,7 @@ export class AuthService {
       return { success: true, user: authData.user };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('AuthService.signUp error:', errorMessage);
       await this.securityLogger.logEvent(
         'auth_unexpected_error',
         { email: data.email, error: errorMessage },
@@ -74,12 +82,15 @@ export class AuthService {
 
   static async signIn(data: SignInData): Promise<AuthResult> {
     try {
+      console.log('AuthService.signIn starting for:', data.email);
+      
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password
       });
 
       if (error) {
+        console.error('Supabase signin error:', error);
         await this.securityLogger.logEvent(
           'login_failed',
           { email: data.email, error: error.message },
@@ -88,6 +99,7 @@ export class AuthService {
         return { success: false, error: error.message };
       }
 
+      console.log('Supabase signin successful:', authData.user?.id);
       await this.securityLogger.logEvent(
         'user_login_success',
         { email: data.email, user_id: authData.user?.id },
@@ -97,6 +109,7 @@ export class AuthService {
       return { success: true, user: authData.user };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('AuthService.signIn error:', errorMessage);
       await this.securityLogger.logEvent(
         'auth_unexpected_error',
         { email: data.email, error: errorMessage },
@@ -107,9 +120,16 @@ export class AuthService {
   }
 
   static async signOut(): Promise<void> {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error);
+    try {
+      console.log('AuthService.signOut starting');
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+      } else {
+        console.log('Sign out successful');
+      }
+    } catch (error) {
+      console.error('Unexpected sign out error:', error);
     }
   }
 }

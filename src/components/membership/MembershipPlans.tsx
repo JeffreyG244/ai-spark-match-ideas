@@ -42,12 +42,18 @@ const MembershipPlans = () => {
 
   const fetchPlans = async () => {
     try {
+      console.log('Fetching membership plans...');
       const { data, error } = await supabase
         .from('membership_plans')
         .select('*')
         .order('monthly_price', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching plans:', error);
+        throw error;
+      }
+      
+      console.log('Plans fetched successfully:', data?.length);
       setPlans(data || []);
     } catch (error) {
       console.error('Error fetching plans:', error);
@@ -61,12 +67,18 @@ const MembershipPlans = () => {
     if (!user) return;
     
     try {
+      console.log('Checking subscription status for user:', user.id);
+      
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
         console.error('Subscription check error:', error);
-        throw error;
+        // Don't throw error here, just log it and continue
+        console.log('Continuing without subscription data');
+        return;
       }
+      
+      console.log('Subscription check response:', data);
       
       if (data?.subscribed) {
         setUserSubscription({
@@ -77,7 +89,8 @@ const MembershipPlans = () => {
       }
     } catch (error) {
       console.error('Error checking subscription:', error);
-      toast.error('Failed to check subscription status');
+      // Don't show error toast for subscription check failures
+      console.log('Subscription check failed, continuing without subscription data');
     }
   };
 
@@ -125,14 +138,16 @@ const MembershipPlans = () => {
         console.error('Checkout creation error:', error);
         
         // Provide specific error messages based on the error
-        if (error.message?.includes('Stripe secret key')) {
+        if (error.message?.includes('Stripe secret key') || error.message?.includes('Stripe configuration')) {
           toast.error('Payment system configuration error. Please contact support.');
         } else if (error.message?.includes('Invalid plan type')) {
           toast.error('Selected plan is not available. Please try a different plan.');
         } else if (error.message?.includes('User not authenticated')) {
           toast.error('Please sign in again to continue.');
+        } else if (error.message?.includes('Invalid JSON response')) {
+          toast.error('System configuration error. Please contact support.');
         } else {
-          toast.error(`Payment setup failed: ${error.message}`);
+          toast.error(`Payment setup failed: ${error.message || 'Unknown error'}`);
         }
         return;
       }
@@ -154,7 +169,14 @@ const MembershipPlans = () => {
     } catch (error) {
       console.error('Error in checkout process:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      toast.error(`Failed to start checkout: ${errorMessage}`);
+      
+      if (errorMessage.includes('Failed to fetch')) {
+        toast.error('Network error. Please check your connection and try again.');
+      } else if (errorMessage.includes('Invalid JSON response')) {
+        toast.error('System configuration error. Please contact support.');
+      } else {
+        toast.error(`Failed to start checkout: ${errorMessage}`);
+      }
     } finally {
       setProcessingPayment(null);
     }
@@ -164,15 +186,22 @@ const MembershipPlans = () => {
     if (!user) return;
 
     try {
+      console.log('Opening customer portal for user:', user.id);
+      
       const { data, error } = await supabase.functions.invoke('customer-portal');
       
       if (error) {
         console.error('Customer portal error:', error);
-        throw error;
+        toast.error('Failed to open subscription management');
+        return;
       }
       
       if (data?.url) {
+        console.log('Opening customer portal:', data.url);
         window.open(data.url, '_blank');
+      } else {
+        console.error('No portal URL received:', data);
+        toast.error('Failed to open subscription management');
       }
     } catch (error) {
       console.error('Error opening customer portal:', error);

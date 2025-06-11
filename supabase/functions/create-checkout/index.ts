@@ -6,6 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Content-Type": "application/json"
 };
 
 const logStep = (step: string, details?: any) => {
@@ -14,6 +15,7 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -30,7 +32,12 @@ serve(async (req) => {
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeSecretKey) {
       logStep("ERROR: STRIPE_SECRET_KEY environment variable not found");
-      throw new Error("Stripe configuration missing. Please contact support.");
+      return new Response(JSON.stringify({ 
+        error: "Stripe configuration missing. Please contact support." 
+      }), {
+        headers: corsHeaders,
+        status: 500,
+      });
     }
     
     // Clean and validate the key format
@@ -48,44 +55,102 @@ serve(async (req) => {
         expectedPrefix: "sk_",
         keyLength: cleanKey.length
       });
-      throw new Error("Invalid Stripe secret key format. Please check your Stripe configuration.");
+      return new Response(JSON.stringify({ 
+        error: "Invalid Stripe secret key format. Please check your Stripe configuration." 
+      }), {
+        headers: corsHeaders,
+        status: 500,
+      });
     }
 
     logStep("Stripe key validated successfully");
 
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ 
+        error: "No authorization header provided" 
+      }), {
+        headers: corsHeaders,
+        status: 401,
+      });
+    }
     
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    if (!user?.email) {
+      return new Response(JSON.stringify({ 
+        error: "User not authenticated or email not available" 
+      }), {
+        headers: corsHeaders,
+        status: 401,
+      });
+    }
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { planType, billingCycle } = await req.json();
+    // Parse request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (error) {
+      logStep("ERROR: Invalid request body", { error: error.message });
+      return new Response(JSON.stringify({ 
+        error: "Invalid request body. Expected JSON." 
+      }), {
+        headers: corsHeaders,
+        status: 400,
+      });
+    }
+
+    const { planType, billingCycle } = requestBody;
     logStep("Request data received", { planType, billingCycle });
 
     if (!planType || !billingCycle) {
-      throw new Error("Missing planType or billingCycle");
+      return new Response(JSON.stringify({ 
+        error: "Missing planType or billingCycle" 
+      }), {
+        headers: corsHeaders,
+        status: 400,
+      });
     }
 
     // Validate plan types
     if (!['plus', 'premium'].includes(planType.toLowerCase())) {
-      throw new Error("Invalid plan type. Must be 'plus' or 'premium'");
+      return new Response(JSON.stringify({ 
+        error: "Invalid plan type. Must be 'plus' or 'premium'" 
+      }), {
+        headers: corsHeaders,
+        status: 400,
+      });
     }
 
     // Validate billing cycles
     if (!['monthly', 'yearly'].includes(billingCycle.toLowerCase())) {
-      throw new Error("Invalid billing cycle. Must be 'monthly' or 'yearly'");
+      return new Response(JSON.stringify({ 
+        error: "Invalid billing cycle. Must be 'monthly' or 'yearly'" 
+      }), {
+        headers: corsHeaders,
+        status: 400,
+      });
     }
 
     // Initialize Stripe with validated key
-    const stripe = new Stripe(cleanKey, { 
-      apiVersion: "2023-10-16",
-      typescript: true
-    });
-    
-    logStep("Stripe client initialized");
+    let stripe;
+    try {
+      stripe = new Stripe(cleanKey, { 
+        apiVersion: "2023-10-16",
+        typescript: true
+      });
+      logStep("Stripe client initialized");
+    } catch (error) {
+      logStep("ERROR: Failed to initialize Stripe", { error: error.message });
+      return new Response(JSON.stringify({ 
+        error: "Failed to initialize payment system" 
+      }), {
+        headers: corsHeaders,
+        status: 500,
+      });
+    }
     
     // Test Stripe connection by checking customer list
     let customers;
@@ -97,7 +162,12 @@ serve(async (req) => {
         error: error.message,
         type: error.type || 'unknown'
       });
-      throw new Error(`Stripe connection failed: ${error.message}`);
+      return new Response(JSON.stringify({ 
+        error: `Stripe connection failed: ${error.message}` 
+      }), {
+        headers: corsHeaders,
+        status: 500,
+      });
     }
 
     let customerId;
@@ -137,48 +207,61 @@ serve(async (req) => {
     
     logStep("Creating checkout session", { origin, customerId: customerId || "new" });
 
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: { 
-              name: `Luvlang ${planTypeLower.charAt(0).toUpperCase() + planTypeLower.slice(1)} Plan`,
-              description: `Luvlang ${planTypeLower.charAt(0).toUpperCase() + planTypeLower.slice(1)} subscription - ${billingCycleLower} billing`
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: { 
+                name: `Luvlang ${planTypeLower.charAt(0).toUpperCase() + planTypeLower.slice(1)} Plan`,
+                description: `Luvlang ${planTypeLower.charAt(0).toUpperCase() + planTypeLower.slice(1)} subscription - ${billingCycleLower} billing`
+              },
+              unit_amount: amount,
+              recurring: { interval: interval as 'month' | 'year' },
             },
-            unit_amount: amount,
-            recurring: { interval: interval as 'month' | 'year' },
+            quantity: 1,
           },
-          quantity: 1,
-        },
-      ],
-      mode: "subscription",
-      success_url: `${origin}/membership?success=true&plan=${planTypeLower}`,
-      cancel_url: `${origin}/membership?canceled=true`,
-      metadata: {
-        user_id: user.id,
-        plan_type: planTypeLower,
-        billing_cycle: billingCycleLower
-      }
-    });
+        ],
+        mode: "subscription",
+        success_url: `${origin}/membership?success=true&plan=${planTypeLower}`,
+        cancel_url: `${origin}/membership?canceled=true`,
+        metadata: {
+          user_id: user.id,
+          plan_type: planTypeLower,
+          billing_cycle: billingCycleLower
+        }
+      });
 
-    logStep("Checkout session created successfully", { 
-      sessionId: session.id,
-      url: session.url,
-      mode: session.mode
-    });
+      logStep("Checkout session created successfully", { 
+        sessionId: session.id,
+        url: session.url,
+        mode: session.mode
+      });
+    } catch (error) {
+      logStep("ERROR: Failed to create checkout session", { error: error.message });
+      return new Response(JSON.stringify({ 
+        error: `Failed to create checkout session: ${error.message}` 
+      }), {
+        headers: corsHeaders,
+        status: 500,
+      });
+    }
 
     return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: corsHeaders,
       status: 200,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR in create-checkout", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(JSON.stringify({ 
+      error: errorMessage 
+    }), {
+      headers: corsHeaders,
       status: 500,
     });
   }

@@ -25,16 +25,19 @@ export const useAuthentication = () => {
       // Validate inputs
       if (!validateEmailFormat(sanitizedEmail)) {
         setError('Please enter a valid email address');
+        setLoading(false);
         return;
       }
 
       if (sanitizedPassword !== confirmPassword) {
         setError('Passwords do not match');
+        setLoading(false);
         return;
       }
 
       if (!sanitizedFirstName || !sanitizedLastName) {
         setError('First name and last name are required');
+        setLoading(false);
         return;
       }
 
@@ -45,13 +48,18 @@ export const useAuthentication = () => {
         lastName: sanitizedLastName
       };
 
+      console.log('Attempting signup with:', { email: sanitizedEmail, firstName: sanitizedFirstName, lastName: sanitizedLastName });
+      
       const result = await AuthService.signUp(signUpData);
 
       if (!result.success) {
+        console.error('Signup failed:', result.error);
         setError(result.error || 'Signup failed');
+        setLoading(false);
         return;
       }
 
+      console.log('Signup successful');
       toast({
         title: 'Account created successfully',
         description: 'Welcome to Luvlang! You can now start exploring.',
@@ -76,8 +84,11 @@ export const useAuthentication = () => {
 
       if (!validateEmailFormat(sanitizedEmail)) {
         setError('Please enter a valid email address');
+        setLoading(false);
         return;
       }
+
+      console.log('Attempting signin with email:', sanitizedEmail);
 
       const signInData: SignInData = {
         email: sanitizedEmail,
@@ -87,10 +98,21 @@ export const useAuthentication = () => {
       const result = await AuthService.signIn(signInData);
 
       if (!result.success) {
-        setError(result.error || 'Login failed');
+        console.error('Login failed:', result.error);
+        
+        // Provide more specific error messages
+        if (result.error?.includes('Invalid login credentials')) {
+          setError('Invalid email or password. Please check your credentials and try again.');
+        } else if (result.error?.includes('Email not confirmed')) {
+          setError('Please check your email and click the confirmation link before signing in.');
+        } else {
+          setError(result.error || 'Login failed');
+        }
+        setLoading(false);
         return;
       }
 
+      console.log('Login successful');
       toast({
         title: 'Welcome back!',
         description: 'You have been successfully logged in.',
