@@ -1,7 +1,8 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, Brain, Shield, Target, MessageCircle, Star, CheckCircle, Users, Lock, Quote, ArrowRight } from "lucide-react";
+import { Heart, Brain, Shield, Target, MessageCircle, Star, CheckCircle, Users, Quote, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -126,21 +127,6 @@ const Index = () => {
           </div>
         )}
 
-        {/* Security Notice */}
-        {!user && (
-          <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-3">
-              <Lock className="h-5 w-5 text-green-600" />
-              <div>
-                <h3 className="font-semibold text-green-800">Enterprise Security Enabled</h3>
-                <p className="text-sm text-green-600">
-                  Your data is protected with Supabase authentication, Row Level Security, and end-to-end encryption
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Hero Section */}
         <div className="text-center mb-20">
           <h1 className="text-6xl font-bold text-gray-900 mb-6">
@@ -155,7 +141,7 @@ const Index = () => {
                 <Button size="lg" onClick={() => navigate("/auth")} className="bg-purple-600 hover:bg-purple-700">
                   Start Your Journey
                 </Button>
-                <Button size="lg" variant="outline">
+                <Button size="lg" variant="outline" onClick={() => navigate("/how-it-works")}>
                   How It Works
                 </Button>
               </>

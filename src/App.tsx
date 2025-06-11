@@ -1,3 +1,4 @@
+
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -18,6 +19,7 @@ import Membership from './pages/Membership';
 import Legal from './pages/Legal';
 import NotFound from './pages/NotFound';
 import Checkout from './pages/Checkout';
+import HowItWorks from './pages/HowItWorks';
 import RoleManager from '@/components/security/RoleManager';
 
 // Core Legal Documents
@@ -64,6 +66,7 @@ const App = () => (
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="/auth" element={
                 <AuthGuard requireAuth={false}>
                   <Auth />
