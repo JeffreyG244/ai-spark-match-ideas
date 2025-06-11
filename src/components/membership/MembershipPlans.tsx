@@ -30,6 +30,7 @@ const MembershipPlans = () => {
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
@@ -43,6 +44,8 @@ const MembershipPlans = () => {
   const fetchPlans = async () => {
     try {
       console.log('Fetching membership plans...');
+      setError(null);
+      
       const { data, error } = await supabase
         .from('membership_plans')
         .select('*')
@@ -50,14 +53,22 @@ const MembershipPlans = () => {
 
       if (error) {
         console.error('Error fetching plans:', error);
-        throw error;
+        setError(`Failed to load plans: ${error.message}`);
+        return;
       }
       
-      console.log('Plans fetched successfully:', data?.length);
-      setPlans(data || []);
+      console.log('Plans fetched successfully:', data?.length, data);
+      
+      if (!data || data.length === 0) {
+        console.warn('No membership plans found in database');
+        setError('No membership plans available');
+        return;
+      }
+      
+      setPlans(data);
     } catch (error) {
-      console.error('Error fetching plans:', error);
-      toast.error('Failed to load membership plans');
+      console.error('Unexpected error fetching plans:', error);
+      setError('An unexpected error occurred while loading plans');
     } finally {
       setLoading(false);
     }
@@ -217,7 +228,43 @@ const MembershipPlans = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading membership plans...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="mx-auto h-12 w-12 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Unable to Load Plans</h3>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={fetchPlans} variant="outline">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (plans.length === 0) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Plans Available</h3>
+          <p className="text-gray-600 mb-4">Membership plans are not currently available.</p>
+          <Button onClick={fetchPlans} variant="outline">
+            Refresh
+          </Button>
+        </div>
       </div>
     );
   }
