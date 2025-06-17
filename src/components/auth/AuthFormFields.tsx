@@ -145,15 +145,17 @@ const AuthFormFields = ({
       </Button>
 
       {isLogin && (
-        <div className="text-center mt-4">
-          <button
-            type="button"
-            onClick={handleAccountRecovery}
-            className="text-sm text-blue-600 hover:text-blue-700 underline cursor-pointer"
-            disabled={loading}
+        <div className="text-center">
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              handleAccountRecovery();
+            }}
+            className="text-sm text-blue-600 hover:text-blue-700 underline cursor-pointer block"
           >
             Forgot Username or Password?
-          </button>
+          </a>
         </div>
       )}
     </form>
