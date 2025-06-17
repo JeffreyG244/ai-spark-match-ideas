@@ -1,5 +1,4 @@
 
-import { SecurityAuditService } from './SecurityAuditService';
 import { SecurityCoreService } from './SecurityCoreService';
 
 export interface SecurityStatus {
@@ -17,7 +16,7 @@ export class MonitoringService {
   }
 
   static async reportSecurityIncident(incidentType: string, details: string): Promise<void> {
-    await SecurityAuditService.logSecurityEvent(incidentType, details, 'high');
+    await SecurityCoreService.logSecurityEvent(incidentType, { message: details }, 'high');
   }
 
   static generateDeviceFingerprint(): string {

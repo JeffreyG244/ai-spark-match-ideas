@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SecurityCoreService } from '@/services/security/SecurityCoreService';
 
@@ -7,6 +6,8 @@ export interface SecurityValidationResult {
   errors: string[];
   sanitizedValue?: string;
   securityScore?: number;
+  score?: number;
+  suggestions?: string[];
 }
 
 export interface RateLimitResult {
@@ -20,6 +21,7 @@ export const sanitizeUserInput = (
   allowFormatting: boolean = false
 ): SecurityValidationResult => {
   const errors: string[] = [];
+  const suggestions: string[] = [];
   let sanitizedValue = input;
   let securityScore = 100;
 
@@ -28,13 +30,17 @@ export const sanitizeUserInput = (
     return {
       isValid: false,
       errors: ['Input must be a valid string'],
-      sanitizedValue: ''
+      sanitizedValue: '',
+      securityScore: 0,
+      score: 0,
+      suggestions: ['Please provide valid text input']
     };
   }
 
   // Length validation
   if (input.length > 10000) {
     errors.push('Input too long (max 10,000 characters)');
+    suggestions.push('Reduce the length of your input');
     sanitizedValue = input.substring(0, 10000);
     securityScore -= 20;
   }
@@ -55,6 +61,7 @@ export const sanitizeUserInput = (
     if (pattern.test(sanitizedValue)) {
       sanitizedValue = sanitizedValue.replace(pattern, '');
       errors.push('Potentially malicious content removed');
+      suggestions.push('Avoid using HTML tags or JavaScript code');
       securityScore -= 30;
     }
   }
@@ -69,6 +76,7 @@ export const sanitizeUserInput = (
   for (const pattern of sqlPatterns) {
     if (pattern.test(sanitizedValue)) {
       errors.push('Potential SQL injection attempt detected');
+      suggestions.push('Remove SQL-like commands from your input');
       securityScore -= 40;
     }
   }
@@ -94,6 +102,7 @@ export const sanitizeUserInput = (
     sanitizedValue = sanitizedValue.normalize('NFKC');
   } catch (error) {
     errors.push('Character encoding normalization failed');
+    suggestions.push('Check for special characters in your input');
     securityScore -= 10;
   }
 
@@ -101,29 +110,36 @@ export const sanitizeUserInput = (
     isValid: errors.length === 0,
     errors,
     sanitizedValue,
-    securityScore: Math.max(0, securityScore)
+    securityScore: Math.max(0, securityScore),
+    score: Math.max(0, securityScore),
+    suggestions
   };
 };
 
 export const validatePasswordSecurity = (password: string): SecurityValidationResult => {
   const errors: string[] = [];
+  const suggestions: string[] = [];
   let securityScore = 100;
 
   if (!password) {
     return {
       isValid: false,
       errors: ['Password is required'],
-      securityScore: 0
+      securityScore: 0,
+      score: 0,
+      suggestions: ['Please enter a password']
     };
   }
 
   // Length requirements
   if (password.length < 8) {
     errors.push('Password must be at least 8 characters long');
+    suggestions.push('Use at least 8 characters');
     securityScore -= 30;
   }
 
   if (password.length < 12) {
+    suggestions.push('Consider using 12 or more characters for better security');
     securityScore -= 10;
   }
 
@@ -137,24 +153,29 @@ export const validatePasswordSecurity = (password: string): SecurityValidationRe
   
   if (characterTypes < 3) {
     errors.push('Password must contain at least 3 different character types (uppercase, lowercase, numbers, special characters)');
+    suggestions.push('Add uppercase letters, lowercase letters, numbers, and special characters');
     securityScore -= 25;
   }
 
   // Common patterns
   if (/(.)\1{2,}/.test(password)) {
     errors.push('Password contains too many repeated characters');
+    suggestions.push('Avoid repeating the same character multiple times');
     securityScore -= 20;
   }
 
   if (/123|abc|qwe/i.test(password)) {
     errors.push('Password contains common sequences');
+    suggestions.push('Avoid keyboard patterns and sequential characters');
     securityScore -= 15;
   }
 
   return {
     isValid: errors.length === 0 && securityScore >= 60,
     errors,
-    securityScore: Math.max(0, securityScore)
+    securityScore: Math.max(0, securityScore),
+    score: Math.max(0, securityScore),
+    suggestions
   };
 };
 
@@ -306,11 +327,13 @@ export const validateAdminAction = async (actionType: string): Promise<boolean> 
 
 export const validateFileUpload = (file: File): SecurityValidationResult => {
   const errors: string[] = [];
+  const suggestions: string[] = [];
   let securityScore = 100;
 
   // File size validation (10MB max)
   if (file.size > 10 * 1024 * 1024) {
     errors.push('File size exceeds 10MB limit');
+    suggestions.push('Please choose a smaller file');
     securityScore -= 40;
   }
 
@@ -325,6 +348,7 @@ export const validateFileUpload = (file: File): SecurityValidationResult => {
 
   if (!allowedTypes.includes(file.type)) {
     errors.push('File type not allowed. Only images are permitted.');
+    suggestions.push('Please upload a JPEG, PNG, GIF, or WebP image');
     securityScore -= 50;
   }
 
@@ -332,18 +356,22 @@ export const validateFileUpload = (file: File): SecurityValidationResult => {
   const dangerousExtensions = /\.(exe|bat|cmd|scr|pif|com|vbs|js|jar|php|asp|jsp)$/i;
   if (dangerousExtensions.test(file.name)) {
     errors.push('Dangerous file extension detected');
+    suggestions.push('Please rename your file with a safe extension');
     securityScore -= 60;
   }
 
   // File name length
   if (file.name.length > 255) {
     errors.push('File name too long');
+    suggestions.push('Please use a shorter file name');
     securityScore -= 20;
   }
 
   return {
     isValid: errors.length === 0,
     errors,
-    securityScore: Math.max(0, securityScore)
+    securityScore: Math.max(0, securityScore),
+    score: Math.max(0, securityScore),
+    suggestions
   };
 };
