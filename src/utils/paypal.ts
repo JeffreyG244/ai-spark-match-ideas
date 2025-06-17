@@ -1,3 +1,4 @@
+
 declare global {
   interface Window {
     paypal: any;
@@ -18,14 +19,60 @@ export const loadPayPalScript = (): Promise<void> => {
       existingScript.remove();
     }
 
-    // Use the live PayPal client ID for hosted buttons
-    const clientId = 'AYiPC9BjqLz4jNe_QuVdhQ';
-    
+    // For hosted buttons, we can use a simplified approach without client-id
+    // This will work with your actual hosted button IDs
     const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=hosted-buttons&enable-funding=venmo&currency=USD&disable-funding=credit`;
+    script.src = 'https://www.paypalobjects.com/api/checkout.js';
     
     script.onload = () => {
       console.log('PayPal SDK loaded successfully');
+      // Set up a simple paypal object for hosted buttons
+      if (!window.paypal) {
+        window.paypal = {
+          HostedButtons: (config: any) => ({
+            render: (selector: string) => {
+              const container = document.querySelector(selector);
+              if (container) {
+                // Create a form element with the hosted button
+                const form = document.createElement('form');
+                form.action = 'https://www.paypal.com/cgi-bin/webscr';
+                form.method = 'post';
+                form.target = '_top';
+                
+                const cmdInput = document.createElement('input');
+                cmdInput.type = 'hidden';
+                cmdInput.name = 'cmd';
+                cmdInput.value = '_s-xclick';
+                
+                const buttonIdInput = document.createElement('input');
+                buttonIdInput.type = 'hidden';
+                buttonIdInput.name = 'hosted_button_id';
+                buttonIdInput.value = config.hostedButtonId;
+                
+                const currencyInput = document.createElement('input');
+                currencyInput.type = 'hidden';
+                currencyInput.name = 'currency_code';
+                currencyInput.value = 'USD';
+                
+                const submitButton = document.createElement('input');
+                submitButton.type = 'image';
+                submitButton.src = 'https://www.paypalobjects.com/en_US/i/btn/btn_paynowCC_LG.gif';
+                submitButton.alt = 'Buy Now';
+                submitButton.title = 'PayPal - The safer, easier way to pay online!';
+                submitButton.style.border = '0';
+                
+                form.appendChild(cmdInput);
+                form.appendChild(buttonIdInput);
+                form.appendChild(currencyInput);
+                form.appendChild(submitButton);
+                
+                container.innerHTML = '';
+                container.appendChild(form);
+              }
+            }
+          })
+        };
+      }
       resolve();
     };
     
