@@ -92,7 +92,7 @@ const Dashboard = () => {
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {dashboardItems.map((item) => (
-            <Card key={item.title} className={`hover:shadow-lg transition-shadow border-2 ${item.borderColor}`}>
+            <Card key={item.title} className={`hover:shadow-lg transition-shadow ${item.borderColor}`}>
               <CardHeader className="text-center">
                 <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gray-50 flex items-center justify-center`}>
                   <item.icon className={`h-8 w-8 ${item.iconColor}`} />
