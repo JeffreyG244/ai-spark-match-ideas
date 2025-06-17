@@ -1,19 +1,19 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
-import { Eye, EyeOff, Heart } from 'lucide-react';
 import { useEnhancedSecurity } from '@/hooks/useEnhancedSecurity';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import AuthFormHeader from './AuthFormHeader';
+import PasswordInput from './PasswordInput';
+import PasswordStrengthIndicator from './PasswordStrengthIndicator';
 
 const SecureAuthForm = () => {
   const { secureAction, validateInput, validatePassword } = useEnhancedSecurity();
   const [isLogin, setIsLogin] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -143,31 +143,9 @@ const SecureAuthForm = () => {
     }
   };
 
-  const getPasswordStrengthColor = (score: number) => {
-    if (score >= 80) return 'bg-green-500';
-    if (score >= 60) return 'bg-blue-500';
-    if (score >= 40) return 'bg-yellow-500';
-    return 'bg-red-500';
-  };
-
-  const getPasswordStrengthText = (score: number) => {
-    if (score >= 80) return 'Very Strong';
-    if (score >= 60) return 'Strong';
-    if (score >= 40) return 'Moderate';
-    if (score >= 20) return 'Weak';
-    return 'Very Weak';
-  };
-
   return (
     <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-            <Heart className="h-6 w-6 text-white fill-white" />
-          </div>
-          Welcome Back to Luvlang!
-        </CardTitle>
-      </CardHeader>
+      <AuthFormHeader />
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -183,77 +161,31 @@ const SecureAuthForm = () => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.password}
-                onChange={(e) => handlePasswordChange(e.target.value)}
-                placeholder="Enter your password"
-                required
-                disabled={loading}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
-            </div>
-            
-            {!isLogin && formData.password && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Password Strength:</span>
-                  <span className={
-                    passwordValidation.score >= 80 ? 'text-green-600' :
-                    passwordValidation.score >= 60 ? 'text-blue-600' :
-                    passwordValidation.score >= 40 ? 'text-yellow-600' :
-                    'text-red-600'
-                  }>
-                    {getPasswordStrengthText(passwordValidation.score)}
-                  </span>
-                </div>
-                <Progress 
-                  value={passwordValidation.score} 
-                  className="h-2"
-                />
-                <div className={`h-2 rounded-full ${getPasswordStrengthColor(passwordValidation.score)}`} 
-                     style={{ width: `${passwordValidation.score}%` }} />
-                
-                {passwordValidation.errors.length > 0 && (
-                  <Alert>
-                    <AlertDescription>
-                      <ul className="list-disc list-inside text-sm">
-                        {passwordValidation.errors.map((error, index) => (
-                          <li key={index}>{error}</li>
-                        ))}
-                      </ul>
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </div>
-            )}
-          </div>
+          <PasswordInput
+            id="password"
+            label="Password"
+            value={formData.password}
+            onChange={handlePasswordChange}
+            disabled={loading}
+            required
+          />
+
+          <PasswordStrengthIndicator
+            passwordValidation={passwordValidation}
+            showIndicator={!isLogin && !!formData.password}
+          />
 
           {!isLogin && (
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                placeholder="Confirm your password"
-                required
-                disabled={loading}
-              />
-            </div>
+            <PasswordInput
+              id="confirmPassword"
+              label="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={(value) => setFormData(prev => ({ ...prev, confirmPassword: value }))}
+              placeholder="Confirm your password"
+              disabled={loading}
+              required
+              showVisibilityToggle={false}
+            />
           )}
 
           <Button 
