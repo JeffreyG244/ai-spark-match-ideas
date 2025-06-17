@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { Shield, Eye, EyeOff, Heart } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useEnhancedSecurity } from '@/hooks/useEnhancedSecurity';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -163,13 +162,11 @@ const SecureAuthForm = () => {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <img 
-              src="/lovable-uploads/e501bc81-b261-404b-addf-aecdebd100ae.png" 
-              alt="Luvlang" 
-              className="h-8 w-auto"
-            />
-          </div>
+          <img 
+            src="/lovable-uploads/e501bc81-b261-404b-addf-aecdebd100ae.png" 
+            alt="Luvlang" 
+            className="h-8 w-auto"
+          />
           {isLogin ? 'Welcome Back to Luvlang!' : 'Secure Registration'}
         </CardTitle>
       </CardHeader>
