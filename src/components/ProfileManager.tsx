@@ -69,7 +69,7 @@ const ProfileManager = () => {
               className="flex items-center gap-2"
             >
               <User className="h-4 w-4" />
-              Profile Details
+              Create Profile
             </Button>
             <Button
               variant={activeSection === 'questions' ? 'default' : 'outline'}
@@ -85,7 +85,7 @@ const ProfileManager = () => {
               className="flex items-center gap-2"
             >
               <Camera className="h-4 w-4" />
-              Verify Photos
+              Profile Pics
             </Button>
           </div>
 

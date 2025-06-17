@@ -10,10 +10,14 @@ import { toast } from '@/hooks/use-toast';
 import AuthFormHeader from './AuthFormHeader';
 import PasswordInput from './PasswordInput';
 import PasswordStrengthIndicator from './PasswordStrengthIndicator';
+import ProfileManager from '@/components/ProfileManager';
+
+type AuthStep = 'auth' | 'profile';
 
 const SecureAuthForm = () => {
   const { secureAction, validateInput, validatePassword } = useEnhancedSecurity();
   const [isLogin, setIsLogin] = useState(true);
+  const [currentStep, setCurrentStep] = useState<AuthStep>('auth');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -114,12 +118,19 @@ const SecureAuthForm = () => {
       );
 
       if (actionResult.success) {
-        toast({
-          title: isLogin ? 'Login Successful' : 'Account Created',
-          description: isLogin 
-            ? 'Welcome back!' 
-            : 'Please check your email to verify your account.',
-        });
+        if (isLogin) {
+          toast({
+            title: 'Login Successful',
+            description: 'Welcome back!',
+          });
+        } else {
+          toast({
+            title: 'Account Created',
+            description: 'Please complete your profile to continue.',
+          });
+          // For new signups, move to profile creation step
+          setCurrentStep('profile');
+        }
         
         // Reset form
         setFormData({ email: '', password: '', confirmPassword: '' });
@@ -142,6 +153,27 @@ const SecureAuthForm = () => {
       setLoading(false);
     }
   };
+
+  // If user is in profile creation step, show ProfileManager
+  if (currentStep === 'profile') {
+    return (
+      <Card className="w-full max-w-4xl mx-auto">
+        <AuthFormHeader title="Complete Your Profile" />
+        <CardContent>
+          <div className="mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => setCurrentStep('auth')}
+              className="mb-4"
+            >
+              ← Back to Authentication
+            </Button>
+          </div>
+          <ProfileManager />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md mx-auto">
