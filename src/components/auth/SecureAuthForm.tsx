@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Heart } from 'lucide-react';
 import { useEnhancedSecurity } from '@/hooks/useEnhancedSecurity';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -34,7 +34,7 @@ const SecureAuthForm = () => {
     // Ensure all required properties are present with defaults
     setPasswordValidation({
       isValid: validation.isValid,
-      errors: validation.errors,
+      errors: validation.errors || [],
       score: validation.score || validation.securityScore || 0,
       suggestions: validation.suggestions || []
     });
@@ -162,12 +162,10 @@ const SecureAuthForm = () => {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <img 
-            src="/lovable-uploads/e501bc81-b261-404b-addf-aecdebd100ae.png" 
-            alt="Luvlang" 
-            className="h-8 w-auto"
-          />
-          {isLogin ? 'Welcome Back to Luvlang!' : 'Secure Registration'}
+          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+            <Heart className="h-6 w-6 text-white fill-white" />
+          </div>
+          Welcome Back to Luvlang!
         </CardTitle>
       </CardHeader>
       <CardContent>
