@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/utils/logger';
 import type { MembershipPlan, UserSubscription } from '@/types/membership';
 
 export const useMembershipData = () => {
@@ -20,7 +21,7 @@ export const useMembershipData = () => {
 
   const fetchPlans = async () => {
     try {
-      console.log('Fetching membership plans...');
+      logger.log('Fetching membership plans...');
       setError(null);
       
       const { data, error } = await supabase
@@ -29,22 +30,22 @@ export const useMembershipData = () => {
         .order('monthly_price', { ascending: true });
 
       if (error) {
-        console.error('Error fetching plans:', error);
+        logger.error('Error fetching plans:', error);
         setError(`Failed to load plans: ${error.message}`);
         return;
       }
       
-      console.log('Plans fetched successfully:', data?.length, data);
+      logger.log('Plans fetched successfully:', data?.length);
       
       if (!data || data.length === 0) {
-        console.warn('No membership plans found in database');
+        logger.warn('No membership plans found in database');
         setError('No membership plans available');
         return;
       }
       
       setPlans(data);
     } catch (error) {
-      console.error('Unexpected error fetching plans:', error);
+      logger.error('Unexpected error fetching plans:', error);
       setError('An unexpected error occurred while loading plans');
     } finally {
       setLoading(false);
@@ -55,17 +56,17 @@ export const useMembershipData = () => {
     if (!user) return;
     
     try {
-      console.log('Checking subscription status for user:', user.id);
+      logger.log('Checking subscription status for user:', user.id);
       
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
-        console.error('Subscription check error:', error);
-        console.log('Continuing without subscription data');
+        logger.error('Subscription check error:', error);
+        logger.log('Continuing without subscription data');
         return;
       }
       
-      console.log('Subscription check response:', data);
+      logger.log('Subscription check response:', data);
       
       if (data?.subscribed) {
         setUserSubscription({
@@ -75,8 +76,8 @@ export const useMembershipData = () => {
         });
       }
     } catch (error) {
-      console.error('Error checking subscription:', error);
-      console.log('Subscription check failed, continuing without subscription data');
+      logger.error('Error checking subscription:', error);
+      logger.log('Subscription check failed, continuing without subscription data');
     }
   };
 
