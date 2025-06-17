@@ -39,19 +39,70 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
   buttonIdInput.name = 'hosted_button_id';
   buttonIdInput.value = hostedButtonId;
 
-  // Create the PayPal button that actually works
+  // Create payment options display
+  const paymentOptionsContainer = document.createElement('div');
+  paymentOptionsContainer.style.marginBottom = '20px';
+  paymentOptionsContainer.style.textAlign = 'center';
+
+  // PayPal and credit card logos
+  const paymentLogos = document.createElement('div');
+  paymentLogos.style.display = 'flex';
+  paymentLogos.style.justifyContent = 'center';
+  paymentLogos.style.alignItems = 'center';
+  paymentLogos.style.gap = '10px';
+  paymentLogos.style.marginBottom = '15px';
+  paymentLogos.style.flexWrap = 'wrap';
+
+  // PayPal logo
+  const paypalLogo = document.createElement('img');
+  paypalLogo.src = 'https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png';
+  paypalLogo.alt = 'PayPal';
+  paypalLogo.style.height = '25px';
+
+  // Credit card logos
+  const cardLogos = document.createElement('img');
+  cardLogos.src = 'https://www.paypalobjects.com/webstatic/en_US/i/buttons/cc-badges-ppmcvdam.png';
+  cardLogos.alt = 'Credit Cards Accepted';
+  cardLogos.style.height = '25px';
+
+  paymentLogos.appendChild(paypalLogo);
+  paymentLogos.appendChild(cardLogos);
+
+  // Payment methods text
+  const paymentText = document.createElement('div');
+  paymentText.innerHTML = `
+    <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
+      <strong>Accepted Payment Methods:</strong>
+    </div>
+    <div style="font-size: 12px; color: #888; line-height: 1.4;">
+      • PayPal Account<br>
+      • Visa, Mastercard, American Express<br>
+      • Discover, JCB, UnionPay<br>
+      • Debit Cards & Bank Transfers
+    </div>
+  `;
+
+  paymentOptionsContainer.appendChild(paymentLogos);
+  paymentOptionsContainer.appendChild(paymentText);
+
+  // Create the main PayPal button
   const paypalButton = document.createElement('button');
   paypalButton.type = 'submit';
-  paypalButton.innerHTML = 'Subscribe with PayPal';
+  paypalButton.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+      <span>Continue to Payment</span>
+    </div>
+  `;
   paypalButton.style.backgroundColor = '#0070ba';
   paypalButton.style.color = 'white';
   paypalButton.style.border = 'none';
-  paypalButton.style.padding = '12px 24px';
+  paypalButton.style.padding = '14px 24px';
   paypalButton.style.borderRadius = '6px';
   paypalButton.style.fontSize = '16px';
   paypalButton.style.cursor = 'pointer';
   paypalButton.style.width = '100%';
   paypalButton.style.fontWeight = 'bold';
+  paypalButton.style.transition = 'background-color 0.2s';
 
   // Add hover effect
   paypalButton.addEventListener('mouseenter', () => {
@@ -62,10 +113,20 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
     paypalButton.style.backgroundColor = '#0070ba';
   });
 
+  // Security notice
+  const securityNotice = document.createElement('div');
+  securityNotice.style.fontSize = '11px';
+  securityNotice.style.color = '#999';
+  securityNotice.style.marginTop = '15px';
+  securityNotice.style.textAlign = 'center';
+  securityNotice.innerHTML = '🔒 Secure payment processing powered by PayPal';
+
   // Assemble the form
   form.appendChild(cmdInput);
   form.appendChild(buttonIdInput);
+  form.appendChild(paymentOptionsContainer);
   form.appendChild(paypalButton);
+  form.appendChild(securityNotice);
 
   // Clear container and add form
   container.innerHTML = '';
