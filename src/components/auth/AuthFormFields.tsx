@@ -28,6 +28,7 @@ interface AuthFormFieldsProps {
   onPasswordChange: (password: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onToggleMode: () => void;
+  onForgotPassword: () => void;
 }
 
 const AuthFormFields = ({
@@ -38,7 +39,8 @@ const AuthFormFields = ({
   onFormDataChange,
   onPasswordChange,
   onSubmit,
-  onToggleMode
+  onToggleMode,
+  onForgotPassword
 }: AuthFormFieldsProps) => {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -89,6 +91,18 @@ const AuthFormFields = ({
       >
         {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
       </Button>
+
+      {isLogin && (
+        <Button
+          type="button"
+          variant="link"
+          className="w-full text-sm"
+          onClick={onForgotPassword}
+          disabled={loading}
+        >
+          Forgot your password?
+        </Button>
+      )}
 
       <Button
         type="button"

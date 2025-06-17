@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import AuthFormHeader from './AuthFormHeader';
 import AuthFormFields from './AuthFormFields';
+import ForgotPasswordForm from './ForgotPasswordForm';
 
 interface AuthFormData {
   email: string;
@@ -17,8 +18,11 @@ interface AuthFormContainerProps {
   onProfileStepChange: (step: 'auth' | 'profile') => void;
 }
 
+type AuthView = 'auth' | 'forgot-password';
+
 const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
   const { secureAction, validateInput, validatePassword } = useEnhancedSecurity();
+  const [currentView, setCurrentView] = useState<AuthView>('auth');
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState<AuthFormData>({
     email: '',
@@ -156,6 +160,18 @@ const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
     }
   };
 
+  const handleForgotPassword = () => {
+    setCurrentView('forgot-password');
+  };
+
+  const handleBackToAuth = () => {
+    setCurrentView('auth');
+  };
+
+  if (currentView === 'forgot-password') {
+    return <ForgotPasswordForm onBackToAuth={handleBackToAuth} />;
+  }
+
   return (
     <Card className="w-full max-w-md mx-auto">
       <AuthFormHeader />
@@ -169,6 +185,7 @@ const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
           onPasswordChange={handlePasswordChange}
           onSubmit={handleSubmit}
           onToggleMode={() => setIsLogin(!isLogin)}
+          onForgotPassword={handleForgotPassword}
         />
       </CardContent>
     </Card>
