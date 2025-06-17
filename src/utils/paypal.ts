@@ -26,6 +26,7 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
   form.method = 'post';
   form.target = '_top';
   form.style.textAlign = 'center';
+  form.style.width = '100%';
 
   // Required hidden inputs for hosted button
   const cmdInput = document.createElement('input');
@@ -38,41 +39,39 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
   buttonIdInput.name = 'hosted_button_id';
   buttonIdInput.value = hostedButtonId;
 
-  // Create the submit button
-  const submitButton = document.createElement('input');
-  submitButton.type = 'image';
-  submitButton.src = 'https://www.paypalobjects.com/en_US/i/btn/btn_subscribeCC_LG.gif';
-  submitButton.name = 'submit';
-  submitButton.alt = 'PayPal - The safer, easier way to pay online!';
-  submitButton.style.border = '0';
-  submitButton.style.cursor = 'pointer';
+  // Create the PayPal button that actually works
+  const paypalButton = document.createElement('button');
+  paypalButton.type = 'submit';
+  paypalButton.innerHTML = 'Subscribe with PayPal';
+  paypalButton.style.backgroundColor = '#0070ba';
+  paypalButton.style.color = 'white';
+  paypalButton.style.border = 'none';
+  paypalButton.style.padding = '12px 24px';
+  paypalButton.style.borderRadius = '6px';
+  paypalButton.style.fontSize = '16px';
+  paypalButton.style.cursor = 'pointer';
+  paypalButton.style.width = '100%';
+  paypalButton.style.fontWeight = 'bold';
 
-  // Add a fallback text button
-  const textButton = document.createElement('button');
-  textButton.type = 'submit';
-  textButton.textContent = 'Subscribe with PayPal';
-  textButton.style.backgroundColor = '#0070ba';
-  textButton.style.color = 'white';
-  textButton.style.border = 'none';
-  textButton.style.padding = '12px 24px';
-  textButton.style.borderRadius = '6px';
-  textButton.style.fontSize = '16px';
-  textButton.style.cursor = 'pointer';
-  textButton.style.marginTop = '10px';
-  textButton.style.display = 'block';
-  textButton.style.width = '100%';
+  // Add hover effect
+  paypalButton.addEventListener('mouseenter', () => {
+    paypalButton.style.backgroundColor = '#005ea6';
+  });
+  
+  paypalButton.addEventListener('mouseleave', () => {
+    paypalButton.style.backgroundColor = '#0070ba';
+  });
 
   // Assemble the form
   form.appendChild(cmdInput);
   form.appendChild(buttonIdInput);
-  form.appendChild(submitButton);
-  form.appendChild(textButton);
+  form.appendChild(paypalButton);
 
   // Clear container and add form
   container.innerHTML = '';
   container.appendChild(form);
 
-  console.log('PayPal hosted button created successfully');
+  console.log('PayPal hosted button created successfully with button ID:', hostedButtonId);
 };
 
 export const createPayPalContainer = () => {
@@ -89,6 +88,7 @@ export const createPayPalContainer = () => {
   paypalContainer.style.boxShadow = '0 8px 32px rgba(0,0,0,0.3)';
   paypalContainer.style.maxWidth = '400px';
   paypalContainer.style.width = '90%';
+  paypalContainer.style.position = 'relative';
   
   const overlay = document.createElement('div');
   overlay.style.position = 'fixed';
@@ -98,6 +98,11 @@ export const createPayPalContainer = () => {
   overlay.style.height = '100%';
   overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
   overlay.style.zIndex = '9998';
+  
+  // Make overlay clickable to close
+  overlay.addEventListener('click', () => {
+    cleanupPayPalContainer(paypalContainer, overlay);
+  });
   
   document.body.appendChild(overlay);
   document.body.appendChild(paypalContainer);

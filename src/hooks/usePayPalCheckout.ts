@@ -71,13 +71,31 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
       const closeButton = document.createElement('button');
       closeButton.innerHTML = '×';
       closeButton.style.position = 'absolute';
-      closeButton.style.top = '15px';
-      closeButton.style.right = '20px';
+      closeButton.style.top = '10px';
+      closeButton.style.right = '15px';
       closeButton.style.background = 'none';
       closeButton.style.border = 'none';
-      closeButton.style.fontSize = '28px';
+      closeButton.style.fontSize = '24px';
       closeButton.style.cursor = 'pointer';
       closeButton.style.color = '#666';
+      closeButton.style.width = '30px';
+      closeButton.style.height = '30px';
+      closeButton.style.display = 'flex';
+      closeButton.style.alignItems = 'center';
+      closeButton.style.justifyContent = 'center';
+      closeButton.style.borderRadius = '50%';
+      closeButton.style.transition = 'all 0.2s';
+      
+      closeButton.addEventListener('mouseenter', () => {
+        closeButton.style.backgroundColor = '#f0f0f0';
+        closeButton.style.color = '#333';
+      });
+      
+      closeButton.addEventListener('mouseleave', () => {
+        closeButton.style.backgroundColor = 'transparent';
+        closeButton.style.color = '#666';
+      });
+      
       closeButton.onclick = () => {
         cleanupPayPalContainer(paypalContainer, overlay);
         setProcessingPayment(null);
@@ -91,7 +109,19 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
       title.style.marginBottom = '20px';
       title.style.color = '#333';
       title.style.textAlign = 'center';
+      title.style.fontSize = '18px';
+      title.style.fontWeight = 'bold';
       paypalContainer.appendChild(title);
+
+      // Add payment options info
+      const paymentInfo = document.createElement('div');
+      paymentInfo.innerHTML = `
+        <div style="display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; flex-wrap: wrap;">
+          <img src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" alt="PayPal" style="height: 20px;">
+          <img src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/cc-badges-ppmcvdam.png" alt="Credit Cards" style="height: 20px;">
+        </div>
+      `;
+      paypalContainer.appendChild(paymentInfo);
 
       // Create the PayPal hosted button
       createPayPalHostedButton('paypal-button-container', hostedButtonId);
