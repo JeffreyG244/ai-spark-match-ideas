@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star, Loader2 } from 'lucide-react';
+import { Check, Star, Loader2, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface MembershipPlan {
@@ -115,6 +115,15 @@ const PlanCard: React.FC<PlanCardProps> = ({
           <Badge className="bg-purple-500 text-white border-purple-500">
             <Star className="w-3 h-3 mr-1" />
             Most Popular
+          </Badge>
+        </div>
+      )}
+
+      {isPremium && (
+        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+          <Badge className="bg-yellow-500 text-white border-yellow-500">
+            <Crown className="w-3 h-3 mr-1" />
+            Best Value
           </Badge>
         </div>
       )}
