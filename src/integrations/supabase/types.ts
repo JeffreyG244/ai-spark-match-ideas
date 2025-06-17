@@ -731,6 +731,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_old_security_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       create_paypal_payment: {
         Args: { p_user_id: string; p_amount: number; p_currency: string }
         Returns: Json

@@ -1,5 +1,6 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { SecurityCoreService } from '@/services/security/SecurityCoreService';
+import { validatePasswordSecurity } from '@/utils/enhancedSecurityValidation';
 
 // Comprehensive leaked password database (partial list for performance)
 const LEAKED_PASSWORDS_DB = new Set([
@@ -42,6 +43,13 @@ export const validatePasswordAgainstLeaks = (password: string): CriticalPassword
   const vulnerabilities: string[] = [];
   const recommendations: string[] = [];
   let securityScore = 100;
+
+  // First run basic validation
+  const basicValidation = validatePasswordSecurity(password);
+  if (!basicValidation.isValid) {
+    vulnerabilities.push(...basicValidation.errors);
+    securityScore = Math.min(securityScore, basicValidation.securityScore || 0);
+  }
 
   // Convert to lowercase for checking
   const lowerPassword = password.toLowerCase();
@@ -94,27 +102,6 @@ export const validatePasswordAgainstLeaks = (password: string): CriticalPassword
     }
   }
 
-  // Length penalties
-  if (password.length < 12) {
-    vulnerabilities.push('Password is shorter than recommended 12 characters');
-    recommendations.push('Use at least 12 characters for better security');
-    securityScore -= 15;
-  }
-
-  // Character diversity check
-  const hasUpper = /[A-Z]/.test(password);
-  const hasLower = /[a-z]/.test(password);
-  const hasNumbers = /\d/.test(password);
-  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-  const characterTypes = [hasUpper, hasLower, hasNumbers, hasSpecial].filter(Boolean).length;
-  
-  if (characterTypes < 3) {
-    vulnerabilities.push('Password lacks character diversity');
-    recommendations.push('Include uppercase, lowercase, numbers, and special characters');
-    securityScore -= 25;
-  }
-
   securityScore = Math.max(0, securityScore);
 
   return {
@@ -131,41 +118,16 @@ export const logCriticalSecurityEvent = async (
   details: Record<string, any>,
   severity: 'critical' | 'high' | 'medium' | 'low' = 'high'
 ): Promise<void> => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    // Use the existing security_logs table with enhanced details
-    const { error } = await supabase
-      .from('security_logs')
-      .insert({
-        user_id: user?.id || null,
-        event_type: `critical_${eventType}`,
-        severity,
-        details: {
-          ...details,
-          timestamp: new Date().toISOString(),
-          user_agent: navigator.userAgent,
-          url: window.location.href,
-          session_id: user?.id ? `session_${user.id}_${Date.now()}` : null
-        }
-      });
-
-    if (error) {
-      console.error('Failed to log critical security event:', error);
-      // Fallback to localStorage for critical events
-      const fallbackLogs = JSON.parse(localStorage.getItem('critical_security_fallback') || '[]');
-      fallbackLogs.push({
-        eventType: `critical_${eventType}`,
-        severity,
-        details,
-        timestamp: new Date().toISOString(),
-        fallback_reason: error.message
-      });
-      localStorage.setItem('critical_security_fallback', JSON.stringify(fallbackLogs.slice(-50)));
-    }
-  } catch (error) {
-    console.error('Critical security logging failed:', error);
-  }
+  return SecurityCoreService.logSecurityEvent(
+    `critical_${eventType}`,
+    {
+      ...details,
+      timestamp: new Date().toISOString(),
+      user_agent: navigator.userAgent,
+      url: window.location.href
+    },
+    severity
+  );
 };
 
 // Enhanced rate limiting with exponential backoff

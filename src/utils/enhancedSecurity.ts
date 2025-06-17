@@ -1,5 +1,24 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { SecurityCoreService } from '@/services/security/SecurityCoreService';
+import { 
+  sanitizeUserInput, 
+  validatePasswordSecurity, 
+  checkEnhancedRateLimit,
+  validateSessionSecurity,
+  validateAdminAction,
+  validateFileUpload
+} from '@/utils/enhancedSecurityValidation';
+
+// Re-export validation functions
+export { 
+  sanitizeUserInput, 
+  validatePasswordSecurity, 
+  checkEnhancedRateLimit,
+  validateSessionSecurity,
+  validateAdminAction,
+  validateFileUpload
+};
 
 export interface SecurityLogEntry {
   id?: string;
@@ -15,16 +34,6 @@ export interface SecurityLogEntry {
   resolved?: boolean;
   resolved_by?: string;
   resolved_at?: string;
-}
-
-export interface RateLimitRule {
-  id?: string;
-  rule_name: string;
-  endpoint_pattern: string;
-  max_requests: number;
-  window_seconds: number;
-  penalty_multiplier: number;
-  max_penalty_duration: number;
 }
 
 export interface AdminAction {
@@ -59,39 +68,11 @@ export const logSecurityEventToDB = async (
   details: string | Record<string, any>,
   severity: 'low' | 'medium' | 'high' | 'critical' = 'low'
 ): Promise<void> => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    const logEntry: Omit<SecurityLogEntry, 'id' | 'created_at'> = {
-      user_id: user?.id || undefined,
-      event_type: eventType,
-      severity,
-      details: typeof details === 'string' ? { message: details } : details,
-      user_agent: navigator.userAgent,
-      fingerprint: generateDeviceFingerprint(),
-      session_id: user?.id ? `session_${user.id}_${Date.now()}` : undefined
-    };
-
-    // With RLS enabled, only authenticated users can insert their own logs
-    // or system can create logs with the "System can create security logs" policy
-    const { error } = await supabase
-      .from('security_logs')
-      .insert(logEntry);
-
-    if (error) {
-      console.error('Failed to log security event to database:', error);
-      // Enhanced fallback with more context
-      const fallbackLogs = JSON.parse(localStorage.getItem('security_logs_fallback') || '[]');
-      fallbackLogs.push({ 
-        ...logEntry, 
-        timestamp: new Date().toISOString(),
-        fallback_reason: error.message 
-      });
-      localStorage.setItem('security_logs_fallback', JSON.stringify(fallbackLogs.slice(-100)));
-    }
-  } catch (error) {
-    console.error('Security logging error:', error);
-  }
+  return SecurityCoreService.logSecurityEvent(
+    eventType,
+    typeof details === 'string' ? { message: details } : details,
+    severity
+  );
 };
 
 export const logAdminAction = async (
@@ -107,19 +88,9 @@ export const logAdminAction = async (
       throw new Error('User must be authenticated to log admin actions');
     }
 
-    // Enhanced admin role verification
-    const hasAdminRole = await checkUserRole('admin');
-    if (!hasAdminRole) {
-      await logSecurityEventToDB(
-        'unauthorized_admin_action_attempt',
-        {
-          attempted_action: actionType,
-          target_user_id: targetUserId,
-          target_resource: targetResource,
-          user_id: user.id
-        },
-        'high'
-      );
+    // Enhanced admin role verification using the new RLS-compliant function
+    const isValidAdmin = await validateAdminAction(actionType);
+    if (!isValidAdmin) {
       throw new Error('Insufficient privileges for admin action');
     }
 
@@ -132,7 +103,7 @@ export const logAdminAction = async (
       user_agent: navigator.userAgent
     };
 
-    // With RLS, only admins can insert admin actions
+    // With new RLS, only admins can insert admin actions
     const { error } = await supabase
       .from('admin_actions')
       .insert(adminAction);
@@ -327,107 +298,12 @@ export const assignUserRole = async (
   }
 };
 
-const generateDeviceFingerprint = (): string => {
-  try {
-    const components = [
-      navigator.userAgent,
-      navigator.language,
-      screen.width,
-      screen.height,
-      new Date().getTimezoneOffset(),
-      navigator.platform,
-      navigator.cookieEnabled
-    ];
-    
-    const fingerprint = components.join('|');
-    
-    let hash = 0;
-    for (let i = 0; i < fingerprint.length; i++) {
-      const char = fingerprint.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    
-    return Math.abs(hash).toString(16);
-  } catch (error) {
-    console.error('Device fingerprint generation failed:', error);
-    return 'unknown';
-  }
-};
-
 export const enhancedRateLimiting = {
   async checkRateLimit(endpoint: string): Promise<{ allowed: boolean; remainingRequests?: number }> {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        return await this.checkAnonymousRateLimit(endpoint);
-      }
-
-      // Use the secure rate limiting function that works with RLS
-      const { data: allowed, error } = await supabase
-        .rpc('secure_rate_limit_check', {
-          p_user_id: user.id,
-          p_action: endpoint,
-          p_max_requests: 60,
-          p_window_seconds: 60
-        });
-
-      if (error) {
-        console.error('Rate limit check error:', error);
-        return { allowed: false };
-      }
-
-      return { allowed: allowed || false };
-    } catch (error) {
-      console.error('Rate limiting error:', error);
-      return { allowed: false };
-    }
+    return checkEnhancedRateLimit(endpoint, 60, 60);
   },
 
   async checkAnonymousRateLimit(endpoint: string): Promise<{ allowed: boolean; remainingRequests?: number }> {
-    try {
-      const identifier = this.getAnonymousIdentifier();
-      const windowStart = new Date(Date.now() - 60000);
-      
-      const rateLimitKey = `rate_limit_${identifier}_${endpoint}`;
-      const stored = localStorage.getItem(rateLimitKey);
-      const requests = stored ? JSON.parse(stored) : [];
-      
-      const recentRequests = requests.filter((timestamp: number) => timestamp > windowStart.getTime());
-      
-      if (recentRequests.length >= 10) {
-        await logSecurityEventToDB(
-          'anonymous_rate_limit_exceeded',
-          {
-            endpoint,
-            identifier,
-            request_count: recentRequests.length
-          },
-          'medium'
-        );
-        return { allowed: false, remainingRequests: 0 };
-      }
-
-      recentRequests.push(Date.now());
-      localStorage.setItem(rateLimitKey, JSON.stringify(recentRequests));
-
-      return { 
-        allowed: true, 
-        remainingRequests: 10 - recentRequests.length - 1 
-      };
-    } catch (error) {
-      console.error('Anonymous rate limiting error:', error);
-      return { allowed: false };
-    }
-  },
-
-  getAnonymousIdentifier(): string {
-    const stored = localStorage.getItem('anonymous_identifier');
-    if (stored) return stored;
-    
-    const identifier = `anon_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem('anonymous_identifier', identifier);
-    return identifier;
+    return checkEnhancedRateLimit(endpoint, 10, 60);
   }
 };

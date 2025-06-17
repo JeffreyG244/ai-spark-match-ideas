@@ -1,173 +1,168 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import DOMPurify from 'dompurify';
-import { validatePasswordAgainstLeaks, logCriticalSecurityEvent } from './criticalSecurityFixes';
+import { SecurityCoreService } from '@/services/security/SecurityCoreService';
 
 export interface SecurityValidationResult {
   isValid: boolean;
   errors: string[];
   sanitizedValue?: string;
+  securityScore?: number;
 }
 
-export interface PasswordValidationResult {
-  isValid: boolean;
-  errors: string[];
-  score: number;
-  suggestions: string[];
+export interface RateLimitResult {
+  allowed: boolean;
+  remainingRequests?: number;
+  retryAfter?: number;
 }
 
-// Enhanced password validation with critical security fixes
-export const validatePasswordSecurity = (password: string): PasswordValidationResult => {
+export const sanitizeUserInput = (
+  input: string, 
+  allowFormatting: boolean = false
+): SecurityValidationResult => {
   const errors: string[] = [];
-  const suggestions: string[] = [];
-  let score = 0;
+  let sanitizedValue = input;
+  let securityScore = 100;
 
-  // First check critical security issues
-  const criticalValidation = validatePasswordAgainstLeaks(password);
-  
-  if (!criticalValidation.isSecure) {
-    errors.push(...criticalValidation.vulnerabilities);
-    suggestions.push(...criticalValidation.recommendations);
-    score = Math.max(0, criticalValidation.securityScore);
-    
-    // Log critical security issue
-    logCriticalSecurityEvent(
-      'weak_password_detected',
-      {
-        vulnerabilities: criticalValidation.vulnerabilities,
-        security_score: criticalValidation.securityScore
-      },
-      'high'
-    );
-    
+  // Basic validation
+  if (!input || typeof input !== 'string') {
     return {
       isValid: false,
-      errors,
-      score,
-      suggestions
+      errors: ['Input must be a valid string'],
+      sanitizedValue: ''
     };
   }
 
-  // Basic validation checks
-  if (!password || password.length < 8) {
-    errors.push('Password must be at least 8 characters long');
-  } else {
-    score += 20;
-  }
-
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
-    suggestions.push('Add uppercase letters (A-Z)');
-  } else {
-    score += 20;
-  }
-
-  if (!/[a-z]/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
-    suggestions.push('Add lowercase letters (a-z)');
-  } else {
-    score += 20;
-  }
-
-  if (!/\d/.test(password)) {
-    errors.push('Password must contain at least one number');
-    suggestions.push('Add numbers (0-9)');
-  } else {
-    score += 20;
-  }
-
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    errors.push('Password must contain at least one special character');
-    suggestions.push('Add special characters (!@#$%^&*(),.?":{}|<>)');
-  } else {
-    score += 20;
-  }
-
-  // Use the critical security score if it's higher
-  score = Math.max(score, criticalValidation.securityScore);
-
-  return {
-    isValid: errors.length === 0 && score >= 80,
-    errors,
-    score,
-    suggestions
-  };
-};
-
-// Enhanced input sanitization with XSS protection
-export const sanitizeUserInput = (input: string, allowBasicFormatting = false): SecurityValidationResult => {
-  if (!input || typeof input !== 'string') {
-    return { isValid: false, errors: ['Invalid input type'] };
-  }
-
-  const errors: string[] = [];
-
-  // Check for extremely long input
+  // Length validation
   if (input.length > 10000) {
-    errors.push('Input is too long');
+    errors.push('Input too long (max 10,000 characters)');
+    sanitizedValue = input.substring(0, 10000);
+    securityScore -= 20;
   }
 
-  // Enhanced malicious pattern detection
-  const maliciousPatterns = [
-    /<script[^>]*>.*?<\/script>/gi,
+  // XSS prevention - remove dangerous HTML/JS
+  const dangerousPatterns = [
+    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+    /<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi,
     /javascript:/gi,
     /on\w+\s*=/gi,
-    /data:text\/html/gi,
-    /vbscript:/gi,
-    /expression\s*\(/gi,
-    /<iframe[^>]*>/gi,
-    /<object[^>]*>/gi,
-    /<embed[^>]*>/gi,
-    /<link[^>]*>/gi,
-    /<meta[^>]*>/gi,
-    /eval\s*\(/gi,
-    /setTimeout\s*\(/gi,
-    /setInterval\s*\(/gi
+    /<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi,
+    /<embed\b[^>]*>/gi,
+    /<link\b[^>]*>/gi,
+    /<meta\b[^>]*>/gi
   ];
 
-  if (maliciousPatterns.some(pattern => pattern.test(input))) {
-    errors.push('Input contains potentially dangerous content');
-    
-    // Log critical XSS attempt
-    logCriticalSecurityEvent(
-      'xss_attempt_detected',
-      {
-        input_sample: input.substring(0, 100),
-        patterns_matched: maliciousPatterns.filter(pattern => pattern.test(input)).length
-      },
-      'critical'
-    );
-    
-    return { isValid: false, errors };
+  for (const pattern of dangerousPatterns) {
+    if (pattern.test(sanitizedValue)) {
+      sanitizedValue = sanitizedValue.replace(pattern, '');
+      errors.push('Potentially malicious content removed');
+      securityScore -= 30;
+    }
   }
 
-  // Sanitize the input with stricter rules
-  const sanitizedValue = allowBasicFormatting 
-    ? DOMPurify.sanitize(input, {
-        ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br'],
-        ALLOWED_ATTR: [],
-        ALLOW_DATA_ATTR: false,
-        ALLOW_UNKNOWN_PROTOCOLS: false
-      })
-    : DOMPurify.sanitize(input, {
-        ALLOWED_TAGS: [],
-        ALLOWED_ATTR: [],
-        ALLOW_DATA_ATTR: false,
-        ALLOW_UNKNOWN_PROTOCOLS: false
-      });
+  // SQL injection prevention
+  const sqlPatterns = [
+    /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b)/gi,
+    /'(\s*;\s*|\s*--|\s*\/\*)/gi,
+    /(\|\||&&)/g
+  ];
+
+  for (const pattern of sqlPatterns) {
+    if (pattern.test(sanitizedValue)) {
+      errors.push('Potential SQL injection attempt detected');
+      securityScore -= 40;
+    }
+  }
+
+  // If formatting is not allowed, strip all HTML
+  if (!allowFormatting) {
+    sanitizedValue = sanitizedValue.replace(/<[^>]*>/g, '');
+  } else {
+    // Allow only safe HTML tags
+    const allowedTags = ['b', 'i', 'u', 'strong', 'em', 'p', 'br'];
+    const tagPattern = /<(\/?)([\w]+)[^>]*>/g;
+    
+    sanitizedValue = sanitizedValue.replace(tagPattern, (match, slash, tag) => {
+      if (allowedTags.includes(tag.toLowerCase())) {
+        return `<${slash}${tag.toLowerCase()}>`;
+      }
+      return '';
+    });
+  }
+
+  // Character encoding normalization
+  try {
+    sanitizedValue = sanitizedValue.normalize('NFKC');
+  } catch (error) {
+    errors.push('Character encoding normalization failed');
+    securityScore -= 10;
+  }
 
   return {
     isValid: errors.length === 0,
     errors,
-    sanitizedValue
+    sanitizedValue,
+    securityScore: Math.max(0, securityScore)
   };
 };
 
-// Enhanced rate limiting with user context
+export const validatePasswordSecurity = (password: string): SecurityValidationResult => {
+  const errors: string[] = [];
+  let securityScore = 100;
+
+  if (!password) {
+    return {
+      isValid: false,
+      errors: ['Password is required'],
+      securityScore: 0
+    };
+  }
+
+  // Length requirements
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters long');
+    securityScore -= 30;
+  }
+
+  if (password.length < 12) {
+    securityScore -= 10;
+  }
+
+  // Character diversity
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasNumbers = /\d/.test(password);
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+  const characterTypes = [hasUpper, hasLower, hasNumbers, hasSpecial].filter(Boolean).length;
+  
+  if (characterTypes < 3) {
+    errors.push('Password must contain at least 3 different character types (uppercase, lowercase, numbers, special characters)');
+    securityScore -= 25;
+  }
+
+  // Common patterns
+  if (/(.)\1{2,}/.test(password)) {
+    errors.push('Password contains too many repeated characters');
+    securityScore -= 20;
+  }
+
+  if (/123|abc|qwe/i.test(password)) {
+    errors.push('Password contains common sequences');
+    securityScore -= 15;
+  }
+
+  return {
+    isValid: errors.length === 0 && securityScore >= 60,
+    errors,
+    securityScore: Math.max(0, securityScore)
+  };
+};
+
 export const checkEnhancedRateLimit = async (
   action: string,
   maxRequests: number = 10,
   windowSeconds: number = 60
-): Promise<{ allowed: boolean; remainingRequests?: number; retryAfter?: number }> => {
+): Promise<RateLimitResult> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -175,7 +170,7 @@ export const checkEnhancedRateLimit = async (
       return checkAnonymousRateLimit(action, maxRequests, windowSeconds);
     }
 
-    // Use the existing secure_rate_limit_check function with enhanced logging
+    // Use the existing secure rate limiting function
     const { data: allowed, error } = await supabase
       .rpc('secure_rate_limit_check', {
         p_user_id: user.id,
@@ -185,81 +180,93 @@ export const checkEnhancedRateLimit = async (
       });
 
     if (error) {
-      console.error('Rate limit check failed:', error);
-      // Log the rate limit failure as a security event
-      await logCriticalSecurityEvent(
-        'rate_limit_check_failure',
-        {
-          action,
-          error: error.message,
-          user_id: user.id
-        },
+      console.error('Rate limit check error:', error);
+      await SecurityCoreService.logSecurityEvent(
+        'rate_limit_check_failed',
+        { action, error: error.message },
         'medium'
       );
       return { allowed: false };
     }
 
-    // Log if rate limit exceeded
     if (!allowed) {
-      await logCriticalSecurityEvent(
+      await SecurityCoreService.logSecurityEvent(
         'rate_limit_exceeded',
-        {
-          action,
-          user_id: user.id,
-          max_requests: maxRequests,
-          window_seconds: windowSeconds
-        },
+        { action, maxRequests, windowSeconds },
         'medium'
       );
     }
 
     return { allowed: allowed || false };
   } catch (error) {
-    console.error('Enhanced rate limit error:', error);
+    console.error('Rate limiting error:', error);
     return { allowed: false };
   }
 };
 
-const checkAnonymousRateLimit = (
+const checkAnonymousRateLimit = async (
   action: string,
   maxRequests: number,
   windowSeconds: number
-): { allowed: boolean; remainingRequests?: number; retryAfter?: number } => {
-  const now = Date.now();
-  const windowStart = now - (windowSeconds * 1000);
-  const key = `rate_limit_${action}`;
-  
-  const stored = localStorage.getItem(key);
-  const requests = stored ? JSON.parse(stored) : [];
-  
-  // Filter out old requests
-  const recentRequests = requests.filter((timestamp: number) => timestamp > windowStart);
-  
-  if (recentRequests.length >= maxRequests) {
-    const oldestRequest = Math.min(...recentRequests);
-    const retryAfter = Math.ceil((oldestRequest + (windowSeconds * 1000) - now) / 1000);
-    return { allowed: false, remainingRequests: 0, retryAfter };
+): Promise<RateLimitResult> => {
+  try {
+    const identifier = SecurityCoreService.getAnonymousIdentifier();
+    const windowStart = new Date(Date.now() - windowSeconds * 1000);
+    
+    const rateLimitKey = `rate_limit_${identifier}_${action}`;
+    const stored = localStorage.getItem(rateLimitKey);
+    const requests = stored ? JSON.parse(stored) : [];
+    
+    const recentRequests = requests.filter((timestamp: number) => timestamp > windowStart.getTime());
+    
+    if (recentRequests.length >= maxRequests) {
+      await SecurityCoreService.logSecurityEvent(
+        'anonymous_rate_limit_exceeded',
+        { action, identifier, requestCount: recentRequests.length },
+        'medium'
+      );
+      return { 
+        allowed: false, 
+        remainingRequests: 0,
+        retryAfter: Math.ceil(windowSeconds - (Date.now() - Math.min(...recentRequests)) / 1000)
+      };
+    }
+
+    recentRequests.push(Date.now());
+    localStorage.setItem(rateLimitKey, JSON.stringify(recentRequests));
+
+    return { 
+      allowed: true, 
+      remainingRequests: maxRequests - recentRequests.length - 1 
+    };
+  } catch (error) {
+    console.error('Anonymous rate limiting error:', error);
+    return { allowed: false };
   }
-  
-  // Add current request
-  recentRequests.push(now);
-  localStorage.setItem(key, JSON.stringify(recentRequests));
-  
-  return {
-    allowed: true,
-    remainingRequests: maxRequests - recentRequests.length
-  };
 };
 
-// Admin action validation
+export const validateSessionSecurity = async (): Promise<{
+  isValid: boolean;
+  requiresRefresh: boolean;
+  reason?: string;
+}> => {
+  return SecurityCoreService.validateSessionSecurity();
+};
+
 export const validateAdminAction = async (actionType: string): Promise<boolean> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
+      await SecurityCoreService.logSecurityEvent(
+        'unauthorized_admin_action_attempt',
+        { actionType, reason: 'No user session' },
+        'high'
+      );
       return false;
     }
 
+    // Check if user has admin role using the RLS-compliant function
     const { data: hasAdminRole, error } = await supabase
       .rpc('has_role', {
         check_user_id: user.id,
@@ -268,144 +275,75 @@ export const validateAdminAction = async (actionType: string): Promise<boolean> 
 
     if (error) {
       console.error('Admin role check failed:', error);
+      await SecurityCoreService.logSecurityEvent(
+        'admin_role_check_failed',
+        { actionType, error: error.message },
+        'high'
+      );
       return false;
     }
 
     if (!hasAdminRole) {
-      await logCriticalSecurityEvent(
-        'unauthorized_admin_attempt',
-        {
-          attempted_action: actionType,
-          user_id: user.id,
-          user_agent: navigator.userAgent
-        },
-        'critical'
+      await SecurityCoreService.logSecurityEvent(
+        'unauthorized_admin_action_attempt',
+        { actionType, userId: user.id },
+        'high'
       );
-      
       return false;
     }
 
-    // Log successful admin action
-    await logCriticalSecurityEvent(
-      'admin_action_authorized',
-      {
-        action_type: actionType,
-        user_id: user.id
-      },
-      'low'
-    );
-
     return true;
   } catch (error) {
-    console.error('Admin validation error:', error);
+    console.error('Admin action validation failed:', error);
+    await SecurityCoreService.logSecurityEvent(
+      'admin_action_validation_error',
+      { actionType, error: error instanceof Error ? error.message : 'Unknown error' },
+      'high'
+    );
     return false;
   }
 };
 
-// Content security validation
 export const validateFileUpload = (file: File): SecurityValidationResult => {
   const errors: string[] = [];
-  
-  // Check file size (5MB limit for security)
-  if (file.size > 5 * 1024 * 1024) {
-    errors.push('File size must be less than 5MB');
+  let securityScore = 100;
+
+  // File size validation (10MB max)
+  if (file.size > 10 * 1024 * 1024) {
+    errors.push('File size exceeds 10MB limit');
+    securityScore -= 40;
   }
-  
-  // Stricter file type checking
+
+  // File type validation
   const allowedTypes = [
     'image/jpeg',
     'image/jpg', 
     'image/png',
+    'image/gif',
     'image/webp'
   ];
-  
+
   if (!allowedTypes.includes(file.type)) {
-    errors.push('File type not allowed. Only JPEG, PNG, and WebP files are supported.');
+    errors.push('File type not allowed. Only images are permitted.');
+    securityScore -= 50;
   }
-  
-  // Enhanced file name security
-  const fileName = file.name.toLowerCase();
-  const maliciousExtensions = [
-    '.exe', '.bat', '.com', '.scr', '.vbs', '.js', '.jar',
-    '.php', '.asp', '.jsp', '.py', '.rb', '.pl', '.sh'
-  ];
-  
-  if (maliciousExtensions.some(ext => fileName.endsWith(ext))) {
-    errors.push('File type not allowed for security reasons');
-    
-    // Log malicious file upload attempt
-    logCriticalSecurityEvent(
-      'malicious_file_upload_attempt',
-      {
-        filename: file.name,
-        file_type: file.type,
-        file_size: file.size
-      },
-      'high'
-    );
+
+  // File name validation
+  const dangerousExtensions = /\.(exe|bat|cmd|scr|pif|com|vbs|js|jar|php|asp|jsp)$/i;
+  if (dangerousExtensions.test(file.name)) {
+    errors.push('Dangerous file extension detected');
+    securityScore -= 60;
   }
-  
+
+  // File name length
+  if (file.name.length > 255) {
+    errors.push('File name too long');
+    securityScore -= 20;
+  }
+
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
+    securityScore: Math.max(0, securityScore)
   };
-};
-
-// Session security validation
-export const validateSessionSecurity = async (): Promise<{
-  isValid: boolean;
-  requiresRefresh: boolean;
-  errors: string[];
-}> => {
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    if (error) {
-      return {
-        isValid: false,
-        requiresRefresh: false,
-        errors: ['Session validation failed']
-      };
-    }
-    
-    if (!session) {
-      return {
-        isValid: false,
-        requiresRefresh: false,
-        errors: ['No active session']
-      };
-    }
-    
-    const now = Math.floor(Date.now() / 1000);
-    const expiresAt = session.expires_at || 0;
-    const timeUntilExpiry = expiresAt - now;
-    
-    if (timeUntilExpiry <= 0) {
-      return {
-        isValid: false,
-        requiresRefresh: false,
-        errors: ['Session expired']
-      };
-    }
-    
-    if (timeUntilExpiry < 300) {
-      return {
-        isValid: true,
-        requiresRefresh: true,
-        errors: ['Session expires soon']
-      };
-    }
-    
-    return {
-      isValid: true,
-      requiresRefresh: false,
-      errors: []
-    };
-  } catch (error) {
-    return {
-      isValid: false,
-      requiresRefresh: false,
-      errors: ['Session validation error']
-    };
-  }
 };

@@ -1,23 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-export interface DeviceFingerprint {
-  userAgent: string;
-  language: string;
-  screenWidth: number;
-  screenHeight: number;
-  timezone: number;
-  platform: string;
-  cookiesEnabled: boolean;
-}
-
-export interface AutomationIndicator {
-  type: string;
-  detected: boolean;
-  description: string;
-}
-
 export class SecurityCoreService {
+  static isProductionEnvironment(): boolean {
+    return window.location.hostname !== 'localhost' && 
+           !window.location.hostname.includes('127.0.0.1') &&
+           !window.location.hostname.includes('.local');
+  }
+
   static generateDeviceFingerprint(): string {
     try {
       const components = [
@@ -46,112 +36,54 @@ export class SecurityCoreService {
     }
   }
 
-  static getDetailedDeviceFingerprint(): DeviceFingerprint {
-    return {
-      userAgent: navigator.userAgent,
-      language: navigator.language,
-      screenWidth: screen.width,
-      screenHeight: screen.height,
-      timezone: new Date().getTimezoneOffset(),
-      platform: navigator.platform,
-      cookiesEnabled: navigator.cookieEnabled
-    };
-  }
-
-  static detectAutomationIndicators(): AutomationIndicator[] {
-    const indicators: AutomationIndicator[] = [];
+  static detectAutomationIndicators(): string[] {
+    const indicators: string[] = [];
     
     try {
-      // Headless browser detection
-      if (navigator.userAgent.includes("HeadlessChrome") || 
-          navigator.userAgent.includes("PhantomJS") || 
-          /Puppeteer/.test(navigator.userAgent)) {
-        indicators.push({
-          type: 'headless_browser',
-          detected: true,
-          description: 'Headless browser detected in user agent'
-        });
+      // Check for common automation tools
+      if (typeof (window as any).webdriver !== 'undefined') {
+        indicators.push('webdriver_detected');
       }
       
-      // WebDriver detection
+      if (typeof (window as any).phantom !== 'undefined') {
+        indicators.push('phantomjs_detected');
+      }
+      
+      if (typeof (window as any).callPhantom !== 'undefined') {
+        indicators.push('phantom_callPhantom_detected');
+      }
+      
+      // Check for unusual navigator properties
       if (navigator.webdriver) {
-        indicators.push({
-          type: 'webdriver',
-          detected: true,
-          description: 'WebDriver automation detected'
-        });
+        indicators.push('navigator_webdriver_true');
       }
       
-      // Language detection
-      if (navigator.languages === undefined || navigator.languages.length === 0) {
-        indicators.push({
-          type: 'no_languages',
-          detected: true,
-          description: 'No browser languages detected'
-        });
+      // Check for common automation user agents
+      const userAgent = navigator.userAgent.toLowerCase();
+      const automationPatterns = ['headless', 'phantom', 'selenium', 'chromedriver'];
+      
+      for (const pattern of automationPatterns) {
+        if (userAgent.includes(pattern)) {
+          indicators.push(`user_agent_${pattern}`);
+        }
       }
       
-      // Screen size detection
-      if (screen.width < 100 || screen.height < 100) {
-        indicators.push({
-          type: 'tiny_screen',
-          detected: true,
-          description: 'Unusually small screen dimensions'
-        });
+      // Check for unusual screen properties
+      if (screen.width === 0 || screen.height === 0) {
+        indicators.push('invalid_screen_dimensions');
       }
       
-      // Permissions API detection
-      if (typeof navigator.permissions === 'undefined') {
-        indicators.push({
-          type: 'no_permissions_api',
-          detected: true,
-          description: 'Permissions API not available'
-        });
+      // Check for missing or unusual properties
+      if (!navigator.languages || navigator.languages.length === 0) {
+        indicators.push('missing_languages');
       }
-
-      // Cookie detection
-      if (!navigator.cookieEnabled) {
-        indicators.push({
-          type: 'cookies_disabled',
-          detected: true,
-          description: 'Cookies are disabled'
-        });
-      }
-    } catch (e) {
-      indicators.push({
-        type: 'detection_error',
-        detected: true,
-        description: 'Error during automation detection'
-      });
+      
+    } catch (error) {
+      console.error('Automation detection failed:', error);
+      indicators.push('detection_error');
     }
     
     return indicators;
-  }
-
-  static isProductionEnvironment(): boolean {
-    try {
-      const host = window.location.hostname;
-      return host !== 'localhost' && 
-             !host.includes('127.0.0.1') && 
-             !host.includes('.local') &&
-             !host.includes('192.168.') &&
-             !host.includes('10.') &&
-             !host.endsWith('.dev');
-    } catch (e) {
-      return true;
-    }
-  }
-
-  static isSecureContext(): boolean {
-    return window.isSecureContext || window.location.protocol === 'https:';
-  }
-
-  static sanitizeUserAgent(userAgent: string): string {
-    return userAgent
-      .replace(/\([^)]*\)/g, '') // Remove parenthetical content
-      .replace(/\s+/g, ' ')
-      .trim()
-      .substring(0, 200); // Limit length
   }
 
   static getAnonymousIdentifier(): string {
@@ -163,30 +95,87 @@ export class SecurityCoreService {
     return identifier;
   }
 
-  static performSecurityMaintenance(): void {
+  static async validateSessionSecurity(): Promise<{
+    isValid: boolean;
+    requiresRefresh: boolean;
+    reason?: string;
+  }> {
     try {
-      // Clean up old localStorage security data
-      const securityKeys = ['security_logs', 'security_logs_fallback', 'audit_logs'];
-      securityKeys.forEach(key => {
-        try {
-          const data = localStorage.getItem(key);
-          if (data) {
-            const parsed = JSON.parse(data);
-            if (Array.isArray(parsed) && parsed.length > 1000) {
-              localStorage.setItem(key, JSON.stringify(parsed.slice(-500)));
-            }
-          }
-        } catch (error) {
-          console.warn(`Failed to clean up ${key}:`, error);
-        }
-      });
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        return { isValid: false, requiresRefresh: false, reason: 'Session error' };
+      }
+      
+      if (!session) {
+        return { isValid: false, requiresRefresh: false, reason: 'No session' };
+      }
+      
+      const now = Math.floor(Date.now() / 1000);
+      const expiresAt = session.expires_at || 0;
+      const timeToExpiry = expiresAt - now;
+      
+      // Session expired
+      if (timeToExpiry <= 0) {
+        return { isValid: false, requiresRefresh: true, reason: 'Session expired' };
+      }
+      
+      // Session expires soon (within 5 minutes)
+      if (timeToExpiry < 300) {
+        return { isValid: true, requiresRefresh: true, reason: 'Session expiring soon' };
+      }
+      
+      return { isValid: true, requiresRefresh: false };
+      
     } catch (error) {
-      console.error('Security maintenance failed:', error);
+      console.error('Session validation failed:', error);
+      return { isValid: false, requiresRefresh: false, reason: 'Validation failed' };
     }
   }
-}
 
-// Run maintenance every hour
-if (typeof window !== 'undefined') {
-  setInterval(SecurityCoreService.performSecurityMaintenance, 60 * 60 * 1000);
+  static async logSecurityEvent(
+    eventType: string,
+    details: Record<string, any>,
+    severity: 'low' | 'medium' | 'high' | 'critical' = 'low'
+  ): Promise<void> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      const logEntry = {
+        user_id: user?.id || undefined,
+        event_type: eventType,
+        severity,
+        details,
+        user_agent: navigator.userAgent,
+        fingerprint: this.generateDeviceFingerprint(),
+        session_id: user?.id ? `session_${user.id}_${Date.now()}` : undefined
+      };
+
+      // With the new RLS policies, this will work for system logging
+      const { error } = await supabase
+        .from('security_logs')
+        .insert(logEntry);
+
+      if (error) {
+        console.error('Failed to log security event:', error);
+        this.fallbackLog(logEntry, error.message);
+      }
+    } catch (error) {
+      console.error('Security logging error:', error);
+    }
+  }
+
+  private static fallbackLog(logEntry: any, errorReason: string): void {
+    try {
+      const fallbackLogs = JSON.parse(localStorage.getItem('security_logs_fallback') || '[]');
+      fallbackLogs.push({ 
+        ...logEntry, 
+        timestamp: new Date().toISOString(),
+        fallback_reason: errorReason 
+      });
+      localStorage.setItem('security_logs_fallback', JSON.stringify(fallbackLogs.slice(-100)));
+    } catch (error) {
+      console.error('Fallback logging failed:', error);
+    }
+  }
 }
