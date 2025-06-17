@@ -100,6 +100,7 @@ const SecureAuthForm = () => {
               email: emailValidation.sanitizedValue!,
               password: formData.password,
               options: {
+                emailRedirectTo: `${window.location.origin}/`,
                 data: {
                   password: formData.password // This will trigger our enhanced validation
                 }
@@ -126,15 +127,17 @@ const SecureAuthForm = () => {
         } else {
           toast({
             title: 'Account Created',
-            description: 'Please complete your profile to continue.',
+            description: 'Complete your profile to get started!',
           });
-          // For new signups, move to profile creation step
+          // For new signups, immediately move to profile creation step
           setCurrentStep('profile');
         }
         
-        // Reset form
-        setFormData({ email: '', password: '', confirmPassword: '' });
-        setPasswordValidation({ isValid: false, errors: [], score: 0, suggestions: [] });
+        // Reset form only if staying on auth step
+        if (isLogin) {
+          setFormData({ email: '', password: '', confirmPassword: '' });
+          setPasswordValidation({ isValid: false, errors: [], score: 0, suggestions: [] });
+        }
       } else {
         toast({
           title: 'Authentication Failed',
@@ -154,11 +157,11 @@ const SecureAuthForm = () => {
     }
   };
 
-  // If user is in profile creation step, show ProfileManager
+  // If user is in profile creation step, show ProfileManager with all tabs
   if (currentStep === 'profile') {
     return (
       <Card className="w-full max-w-4xl mx-auto">
-        <AuthFormHeader title="Complete Your Profile" />
+        <AuthFormHeader title="Complete Your Luvlang Profile" />
         <CardContent>
           <div className="mb-4">
             <Button
