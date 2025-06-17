@@ -99,21 +99,22 @@ const AuthFormFields = ({
         onClick={onToggleMode}
         disabled={loading}
       >
-        {isLogin ? 'Need an account? Sign up' : 'Already have an account? Sign in'}
+        {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
       </Button>
 
-      {/* Forgot password link - positioned after the toggle mode button */}
-      <div className="text-center">
-        <Button
-          type="button"
-          variant="link"
-          className="text-sm text-blue-600 hover:text-blue-700 underline p-0 h-auto font-normal"
-          onClick={onForgotPassword}
-          disabled={loading}
-        >
-          Forgot your username or password?
-        </Button>
-      </div>
+      {isLogin && (
+        <div className="text-center mt-4">
+          <Button
+            type="button"
+            variant="link"
+            className="text-sm text-blue-600 hover:text-blue-700 underline p-0 h-auto font-normal"
+            onClick={onForgotPassword}
+            disabled={loading}
+          >
+            Forgot your username or password?
+          </Button>
+        </div>
+      )}
     </form>
   );
 };
