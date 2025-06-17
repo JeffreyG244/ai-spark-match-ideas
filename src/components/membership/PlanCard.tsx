@@ -101,12 +101,14 @@ const PlanCard: React.FC<PlanCardProps> = ({
   const features = Object.entries(plan.features || {});
   const isPremium = plan.name === 'Premium';
   const isPlus = plan.name === 'Plus';
+  const isFree = plan.name === 'Free';
 
   return (
     <Card 
       className={`relative ${
         isPlus ? 'border-2 border-purple-500 shadow-lg' : 
         isPremium ? 'border-2 border-yellow-500 shadow-lg' :
+        isFree ? 'border-2 border-green-500 shadow-lg' :
         'border-purple-200'
       } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
     >
@@ -131,7 +133,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
       <CardHeader className="text-center">
         <CardTitle 
           className="text-2xl"
-          style={{ color: isPlus ? '#7C3AED' : plan.highlight_color || '#7C3AED' }}
+          style={{ color: isPlus ? '#7C3AED' : isPremium ? '#EAB308' : isFree ? '#10B981' : plan.highlight_color || '#7C3AED' }}
         >
           {plan.name}
         </CardTitle>
@@ -166,13 +168,20 @@ const PlanCard: React.FC<PlanCardProps> = ({
           variant={isCurrentPlan ? "outline" : "default"}
           disabled={isCurrentPlan || isProcessing}
           style={{
-            backgroundColor: !isCurrentPlan ? (isPlus ? '#7C3AED' : plan.highlight_color || '#7C3AED') : undefined
+            backgroundColor: !isCurrentPlan ? (
+              isFree ? '#10B981' : 
+              isPlus ? '#7C3AED' : 
+              isPremium ? '#EAB308' : 
+              plan.highlight_color || '#7C3AED'
+            ) : undefined,
+            borderColor: isCurrentPlan && isFree ? '#10B981' : undefined,
+            color: isCurrentPlan && isFree ? '#10B981' : undefined
           }}
         >
           {isProcessing ? (
             <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</>
           ) : isCurrentPlan ? (
-            'Current Plan'
+            isFree ? 'Free Plan' : 'Current Plan'
           ) : !user ? (
             'Sign In to Upgrade'
           ) : (
