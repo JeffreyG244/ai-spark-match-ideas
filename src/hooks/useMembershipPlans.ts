@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 interface MembershipPlan {
   id: number;
   name: string;
-  price_id: string | null;
+  paypal_plan_id: string | null;
   monthly_price: number;
   annual_price: number | null;
   features: any;
@@ -19,6 +19,12 @@ interface UserSubscription {
   plan_id: number;
   status: string;
   current_period_end: string;
+}
+
+declare global {
+  interface Window {
+    paypal: any;
+  }
 }
 
 export const useMembershipPlans = () => {
@@ -98,6 +104,21 @@ export const useMembershipPlans = () => {
     }
   };
 
+  const loadPayPalScript = (): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (window.paypal) {
+        resolve();
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://www.paypal.com/sdk/js?client-id=sb&currency=USD&intent=capture';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load PayPal SDK'));
+      document.head.appendChild(script);
+    });
+  };
+
   const handlePlanSelect = async (plan: MembershipPlan, billingCycle: 'monthly' | 'annual') => {
     if (!user) {
       toast.error('Please sign in to upgrade your plan');
@@ -112,7 +133,7 @@ export const useMembershipPlans = () => {
     setProcessingPayment(plan.name);
     
     try {
-      console.log('=== CHECKOUT PROCESS STARTED ===');
+      console.log('=== PAYPAL CHECKOUT PROCESS STARTED ===');
       console.log('User:', { id: user.id, email: user.email });
       console.log('Plan:', plan.name);
       console.log('Billing cycle:', billingCycle);
@@ -122,61 +143,84 @@ export const useMembershipPlans = () => {
       if (!['plus', 'premium'].includes(planType)) {
         throw new Error('Invalid plan type selected');
       }
-      
-      const requestBody = {
-        planType,
-        billingCycle: billingCycle === 'annual' ? 'yearly' : 'monthly'
-      };
-      
-      console.log('Sending request to create-checkout:', requestBody);
-      
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: requestBody
+
+      await loadPayPalScript();
+
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-paypal-order', {
+        body: {
+          planType,
+          billingCycle: billingCycle === 'annual' ? 'yearly' : 'monthly'
+        }
       });
 
-      console.log('=== CHECKOUT RESPONSE ===');
-      console.log('Data:', data);
-      console.log('Error:', error);
-
-      if (error) {
-        console.error('Checkout creation error:', error);
-        
-        if (error.message?.includes('Stripe secret key') || error.message?.includes('Stripe configuration')) {
-          toast.error('Payment system configuration error. Please contact support.');
-        } else if (error.message?.includes('Invalid plan type')) {
-          toast.error('Selected plan is not available. Please try a different plan.');
-        } else if (error.message?.includes('User not authenticated')) {
-          toast.error('Please sign in again to continue.');
-        } else if (error.message?.includes('Invalid JSON response')) {
-          toast.error('System configuration error. Please contact support.');
-        } else {
-          toast.error(`Payment setup failed: ${error.message || 'Unknown error'}`);
-        }
+      if (orderError) {
+        console.error('Order creation error:', orderError);
+        toast.error(`Payment setup failed: ${orderError.message || 'Unknown error'}`);
         return;
       }
 
-      if (data?.url) {
-        console.log('Redirecting to Stripe checkout:', data.url);
-        toast.success('Redirecting to secure payment...');
-        
-        setTimeout(() => {
-          window.location.href = data.url;
-        }, 500);
-      } else {
-        console.error('No checkout URL received:', data);
-        toast.error('Payment system error. Please try again or contact support.');
+      if (!orderData?.orderID) {
+        console.error('No order ID received:', orderData);
+        toast.error('Payment system error. Please try again.');
+        return;
       }
+
+      console.log('PayPal order created:', orderData.orderID);
+
+      // Create PayPal button
+      const paypalContainer = document.createElement('div');
+      paypalContainer.id = 'paypal-button-container';
+      document.body.appendChild(paypalContainer);
+
+      window.paypal.Buttons({
+        createOrder: () => orderData.orderID,
+        onApprove: async (data: any) => {
+          try {
+            console.log('Payment approved, capturing...');
+            
+            const { data: captureData, error: captureError } = await supabase.functions.invoke('capture-paypal-payment', {
+              body: {
+                orderID: data.orderID,
+                planType,
+                billingCycle: billingCycle === 'annual' ? 'yearly' : 'monthly'
+              }
+            });
+
+            if (captureError) {
+              console.error('Payment capture error:', captureError);
+              toast.error('Payment processing failed. Please contact support.');
+              return;
+            }
+
+            console.log('Payment captured successfully:', captureData);
+            toast.success('Payment successful! Your subscription is now active.');
+            
+            // Refresh subscription status
+            await checkSubscriptionStatus();
+            
+          } catch (error) {
+            console.error('Error in payment capture:', error);
+            toast.error('Payment processing failed. Please contact support.');
+          } finally {
+            document.body.removeChild(paypalContainer);
+          }
+        },
+        onError: (err: any) => {
+          console.error('PayPal error:', err);
+          toast.error('Payment failed. Please try again.');
+          document.body.removeChild(paypalContainer);
+        },
+        onCancel: () => {
+          console.log('Payment cancelled by user');
+          toast.info('Payment cancelled');
+          document.body.removeChild(paypalContainer);
+        }
+      }).render('#paypal-button-container');
+
     } catch (error) {
       console.error('Error in checkout process:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      
-      if (errorMessage.includes('Failed to fetch')) {
-        toast.error('Network error. Please check your connection and try again.');
-      } else if (errorMessage.includes('Invalid JSON response')) {
-        toast.error('System configuration error. Please contact support.');
-      } else {
-        toast.error(`Failed to start checkout: ${errorMessage}`);
-      }
+      toast.error(`Failed to start checkout: ${errorMessage}`);
     } finally {
       setProcessingPayment(null);
     }
@@ -185,28 +229,7 @@ export const useMembershipPlans = () => {
   const handleManageSubscription = async () => {
     if (!user) return;
 
-    try {
-      console.log('Opening customer portal for user:', user.id);
-      
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      
-      if (error) {
-        console.error('Customer portal error:', error);
-        toast.error('Failed to open subscription management');
-        return;
-      }
-      
-      if (data?.url) {
-        console.log('Opening customer portal:', data.url);
-        window.open(data.url, '_blank');
-      } else {
-        console.error('No portal URL received:', data);
-        toast.error('Failed to open subscription management');
-      }
-    } catch (error) {
-      console.error('Error opening customer portal:', error);
-      toast.error('Failed to open subscription management');
-    }
+    toast.info('To manage your PayPal subscription, please log into your PayPal account and visit the subscription management section.');
   };
 
   const getCurrentPlanId = () => {

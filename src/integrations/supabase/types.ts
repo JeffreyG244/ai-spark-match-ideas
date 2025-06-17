@@ -171,7 +171,7 @@ export type Database = {
           is_popular: boolean | null
           monthly_price: number
           name: string
-          price_id: string | null
+          paypal_plan_id: string | null
         }
         Insert: {
           annual_price?: number | null
@@ -182,7 +182,7 @@ export type Database = {
           is_popular?: boolean | null
           monthly_price: number
           name: string
-          price_id?: string | null
+          paypal_plan_id?: string | null
         }
         Update: {
           annual_price?: number | null
@@ -193,7 +193,7 @@ export type Database = {
           is_popular?: boolean | null
           monthly_price?: number
           name?: string
-          price_id?: string | null
+          paypal_plan_id?: string | null
         }
         Relationships: []
       }
@@ -287,6 +287,42 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      paypal_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          id: string
+          paypal_order_id: string
+          paypal_payer_id: string | null
+          status: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          paypal_order_id: string
+          paypal_payer_id?: string | null
+          status: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          paypal_order_id?: string
+          paypal_payer_id?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -641,25 +677,34 @@ export type Database = {
       user_subscriptions: {
         Row: {
           current_period_end: string | null
+          payment_amount: number | null
+          payment_currency: string | null
+          paypal_payer_id: string | null
+          paypal_subscription_id: string | null
           plan_id: number | null
           status: string | null
-          stripe_subscription_id: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           current_period_end?: string | null
+          payment_amount?: number | null
+          payment_currency?: string | null
+          paypal_payer_id?: string | null
+          paypal_subscription_id?: string | null
           plan_id?: number | null
           status?: string | null
-          stripe_subscription_id?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           current_period_end?: string | null
+          payment_amount?: number | null
+          payment_currency?: string | null
+          paypal_payer_id?: string | null
+          paypal_subscription_id?: string | null
           plan_id?: number | null
           status?: string | null
-          stripe_subscription_id?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -671,53 +716,11 @@ export type Database = {
             referencedRelation: "membership_plans"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "user_subscriptions_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "public_memberships"
-            referencedColumns: ["id"]
-          },
         ]
       }
     }
     Views: {
-      public_memberships: {
-        Row: {
-          annual_price: number | null
-          created_at: string | null
-          features: Json | null
-          highlight_color: string | null
-          id: number | null
-          is_popular: boolean | null
-          monthly_price: number | null
-          name: string | null
-          price_id: string | null
-        }
-        Insert: {
-          annual_price?: number | null
-          created_at?: string | null
-          features?: Json | null
-          highlight_color?: string | null
-          id?: number | null
-          is_popular?: boolean | null
-          monthly_price?: number | null
-          name?: string | null
-          price_id?: string | null
-        }
-        Update: {
-          annual_price?: number | null
-          created_at?: string | null
-          features?: Json | null
-          highlight_color?: string | null
-          id?: number | null
-          is_popular?: boolean | null
-          monthly_price?: number | null
-          name?: string | null
-          price_id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       cleanup_old_data: {

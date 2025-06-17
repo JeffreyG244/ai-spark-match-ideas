@@ -5,13 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, Star, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 interface MembershipPlan {
   id: number;
   name: string;
-  price_id: string | null;
+  paypal_plan_id: string | null;
   monthly_price: number;
   annual_price: number | null;
   features: any;
@@ -96,7 +94,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
       return;
     }
 
-    // Call the onPlanSelect which handles the checkout process
+    // Call the onPlanSelect which handles the PayPal checkout process
     onPlanSelect(plan);
   };
 

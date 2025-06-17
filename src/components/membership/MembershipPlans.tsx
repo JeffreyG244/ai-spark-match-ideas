@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useMembershipPlans } from '@/hooks/useMembershipPlans';
 import BillingCycleToggle from './BillingCycleToggle';
@@ -22,7 +21,6 @@ const MembershipPlans = () => {
     processingPayment,
     fetchPlans,
     handlePlanSelect,
-    handleManageSubscription,
     getCurrentPlanId
   } = useMembershipPlans();
 
@@ -50,14 +48,10 @@ const MembershipPlans = () => {
         />
 
         {user && userSubscription && userSubscription.plan_id > 1 && (
-          <div className="flex justify-center mb-6">
-            <Button
-              onClick={handleManageSubscription}
-              variant="outline"
-              size="sm"
-            >
-              Manage Subscription
-            </Button>
+          <div className="text-center mb-6">
+            <p className="text-sm text-gray-600">
+              To manage your subscription, please visit your PayPal account
+            </p>
           </div>
         )}
       </div>
