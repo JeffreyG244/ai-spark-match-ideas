@@ -12,8 +12,8 @@ export const loadPayPalScript = (): Promise<void> => {
       return;
     }
 
-    // Get the PayPal client ID from environment or use sandbox for development
-    const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'sb';
+    // Use your actual PayPal client ID
+    const clientId = 'BAAFhwRq6zWeP4TjLYwm4jyFNWZ4k8EWENpInzK9br0W8Im9ORl0biNtViFkBFPjNKHJc2Tw4sAI23oU9Q';
     
     const script = document.createElement('script');
     script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&disable-funding=credit,card`;

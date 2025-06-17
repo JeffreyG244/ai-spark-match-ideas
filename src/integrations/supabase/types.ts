@@ -731,8 +731,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_paypal_payment: {
+        Args: { p_user_id: string; p_amount: number; p_currency: string }
+        Returns: Json
+      }
       example_function: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      handle_paypal_webhook: {
+        Args: { p_webhook_event: Json }
         Returns: undefined
       }
       has_role: {
