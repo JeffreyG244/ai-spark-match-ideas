@@ -1,3 +1,4 @@
+
 declare global {
   interface Window {
     paypal: any;
@@ -99,10 +100,10 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
   buttonIdInput.name = 'hosted_button_id';
   buttonIdInput.value = hostedButtonId;
 
-  // Create the main PayPal button with proper styling
-  const paypalButton = document.createElement('button');
+  // Create the main PayPal button as an input submit button instead of regular button
+  const paypalButton = document.createElement('input');
   paypalButton.type = 'submit';
-  paypalButton.textContent = 'Continue to PayPal Checkout';
+  paypalButton.value = 'Continue to PayPal Checkout';
   paypalButton.style.backgroundColor = '#0070ba';
   paypalButton.style.color = 'white';
   paypalButton.style.border = 'none';
@@ -134,6 +135,18 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
 
   paypalButton.addEventListener('mouseup', () => {
     paypalButton.style.transform = 'translateY(-1px)';
+  });
+
+  // Add form submit event listener for debugging
+  form.addEventListener('submit', function(e) {
+    console.log('PayPal form submitting to:', form.action);
+    console.log('Form method:', form.method);
+    console.log('Form target:', form.target);
+    console.log('Button ID:', hostedButtonId);
+    console.log('Form data:', new FormData(form));
+    
+    // Don't prevent default - let it submit naturally
+    console.log('Form submission proceeding...');
   });
 
   // Security notice
