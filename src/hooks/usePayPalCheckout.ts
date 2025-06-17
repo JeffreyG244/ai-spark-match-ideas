@@ -3,18 +3,18 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { loadPayPalScript, createPayPalContainer, cleanupPayPalContainer, createPayPalHostedButton } from '@/utils/paypal';
+import { logger } from '@/utils/logger';
 import type { MembershipPlan, BillingCycle } from '@/types/membership';
 
-// TODO: Replace these placeholder IDs with your actual PayPal Hosted Button IDs
-// Create these in your PayPal Business account under Tools > PayPal Buttons
+// Real PayPal Hosted Button IDs from your PayPal Business account
 const HOSTED_BUTTON_IDS = {
   plus: {
-    monthly: 'YOUR_PLUS_MONTHLY_BUTTON_ID', // Replace with actual ID
-    annual: 'YOUR_PLUS_ANNUAL_BUTTON_ID'   // Replace with actual ID
+    monthly: 'VXK6T685HD2K6', // Plus Plan monthly button
+    annual: 'VXK6T685HD2K6'   // Using same button for now - create separate annual button if needed
   },
   premium: {
-    monthly: 'YOUR_PREMIUM_MONTHLY_BUTTON_ID', // Replace with actual ID
-    annual: 'YOUR_PREMIUM_ANNUAL_BUTTON_ID'   // Replace with actual ID
+    monthly: 'R9JUL65GYT282', // Premium Plan monthly button
+    annual: 'R9JUL65GYT282'   // Using same button for now - create separate annual button if needed
   }
 };
 
@@ -36,7 +36,7 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
     setProcessingPayment(plan.name);
     
     try {
-      console.log('Starting PayPal Hosted Button checkout for:', { 
+      logger.log('Starting PayPal Hosted Button checkout for:', { 
         plan: plan.name, 
         billingCycle,
         userId: user.id 
@@ -53,11 +53,7 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
       // Get the hosted button ID for the selected plan and billing cycle
       const hostedButtonId = HOSTED_BUTTON_IDS[planType][billingCycle];
       
-      if (!hostedButtonId || hostedButtonId.startsWith('YOUR_')) {
-        toast.error('PayPal button not configured for this plan. Please contact support.');
-        setProcessingPayment(null);
-        return;
-      }
+      logger.log('Using PayPal button ID:', hostedButtonId);
 
       const { paypalContainer, overlay } = createPayPalContainer();
 
@@ -89,13 +85,13 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
       // Create the PayPal hosted button
       createPayPalHostedButton('paypal-button-container', hostedButtonId);
 
-      console.log('PayPal hosted button rendered successfully');
+      logger.log('PayPal hosted button rendered successfully');
 
       // Note: Payment completion will be handled by PayPal webhooks
       // The subscription status will be updated automatically when payment is confirmed
 
     } catch (error) {
-      console.error('PayPal checkout error:', error);
+      logger.error('PayPal checkout error:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
       toast.error(`Failed to start checkout: ${errorMessage}`);
       setProcessingPayment(null);
