@@ -1,4 +1,3 @@
-
 declare global {
   interface Window {
     paypal: any;
@@ -100,10 +99,10 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
   buttonIdInput.name = 'hosted_button_id';
   buttonIdInput.value = hostedButtonId;
 
-  // Create the main PayPal button as an input submit button instead of regular button
-  const paypalButton = document.createElement('input');
+  // Create the main PayPal button as a regular button element
+  const paypalButton = document.createElement('button');
   paypalButton.type = 'submit';
-  paypalButton.value = 'Continue to PayPal Checkout';
+  paypalButton.textContent = 'Continue to PayPal Checkout';
   paypalButton.style.backgroundColor = '#0070ba';
   paypalButton.style.color = 'white';
   paypalButton.style.border = 'none';
@@ -137,16 +136,45 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
     paypalButton.style.transform = 'translateY(-1px)';
   });
 
-  // Add form submit event listener for debugging
-  form.addEventListener('submit', function(e) {
-    console.log('PayPal form submitting to:', form.action);
-    console.log('Form method:', form.method);
-    console.log('Form target:', form.target);
+  // Add click event listener to the button for immediate redirect
+  paypalButton.addEventListener('click', function(e) {
+    e.preventDefault();
+    console.log('PayPal button clicked - attempting immediate redirect');
+    console.log('Form action:', form.action);
     console.log('Button ID:', hostedButtonId);
-    console.log('Form data:', new FormData(form));
     
-    // Don't prevent default - let it submit naturally
-    console.log('Form submission proceeding...');
+    // Create a new form for immediate submission
+    const submitForm = document.createElement('form');
+    submitForm.action = 'https://www.paypal.com/cgi-bin/webscr';
+    submitForm.method = 'post';
+    submitForm.target = '_top';
+    submitForm.style.display = 'none';
+    
+    // Add required inputs
+    const cmdSubmitInput = document.createElement('input');
+    cmdSubmitInput.type = 'hidden';
+    cmdSubmitInput.name = 'cmd';
+    cmdSubmitInput.value = '_s-xclick';
+    
+    const buttonSubmitInput = document.createElement('input');
+    buttonSubmitInput.type = 'hidden';
+    buttonSubmitInput.name = 'hosted_button_id';
+    buttonSubmitInput.value = hostedButtonId;
+    
+    submitForm.appendChild(cmdSubmitInput);
+    submitForm.appendChild(buttonSubmitInput);
+    
+    // Add to DOM and submit immediately
+    document.body.appendChild(submitForm);
+    console.log('Submitting form to PayPal...');
+    submitForm.submit();
+    
+    // Clean up
+    setTimeout(() => {
+      if (document.body.contains(submitForm)) {
+        document.body.removeChild(submitForm);
+      }
+    }, 1000);
   });
 
   // Security notice
