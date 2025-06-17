@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { useLocation } from 'react-router-dom';
 import { loadPayPalScript, createPayPalContainer, cleanupPayPalContainer, createPayPalHostedButton } from '@/utils/paypal';
 import { logger } from '@/utils/logger';
 import type { MembershipPlan, BillingCycle } from '@/types/membership';
@@ -20,9 +21,16 @@ const HOSTED_BUTTON_IDS = {
 
 export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) => {
   const { user } = useAuth();
+  const location = useLocation();
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
 
   const handlePlanSelect = async (plan: MembershipPlan, billingCycle: BillingCycle) => {
+    // Check if we're on the membership page
+    if (location.pathname !== '/membership') {
+      toast.error('Please navigate to the membership page to upgrade your plan');
+      return;
+    }
+
     if (!user) {
       toast.error('Please sign in to upgrade your plan');
       return;
@@ -39,7 +47,8 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
       logger.log('Starting PayPal Hosted Button checkout for:', { 
         plan: plan.name, 
         billingCycle,
-        userId: user.id 
+        userId: user.id,
+        currentPath: location.pathname
       });
       
       const planType = plan.name.toLowerCase() as 'plus' | 'premium';
