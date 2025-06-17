@@ -92,7 +92,17 @@ const AuthFormFields = ({
         {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
       </Button>
 
-      {/* Forgot password link - positioned right after the Sign In button */}
+      <Button
+        type="button"
+        variant="ghost"
+        className="w-full"
+        onClick={onToggleMode}
+        disabled={loading}
+      >
+        {isLogin ? 'Need an account? Sign up' : 'Already have an account? Sign in'}
+      </Button>
+
+      {/* Forgot password link - positioned after the toggle mode button */}
       <div className="text-center">
         <Button
           type="button"
@@ -104,16 +114,6 @@ const AuthFormFields = ({
           Forgot your username or password?
         </Button>
       </div>
-
-      <Button
-        type="button"
-        variant="ghost"
-        className="w-full"
-        onClick={onToggleMode}
-        disabled={loading}
-      >
-        {isLogin ? 'Need an account? Sign up' : 'Already have an account? Sign in'}
-      </Button>
     </form>
   );
 };
