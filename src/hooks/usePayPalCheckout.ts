@@ -48,7 +48,16 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
         throw new Error('Invalid plan type selected');
       }
 
-      await loadPayPalScript();
+      // Show loading message
+      toast.loading('Loading PayPal checkout...', { id: 'paypal-loading' });
+
+      try {
+        await loadPayPalScript();
+        toast.dismiss('paypal-loading');
+      } catch (error) {
+        toast.dismiss('paypal-loading');
+        throw new Error('Unable to load PayPal. Please check your internet connection and try again.');
+      }
 
       // Get the hosted button ID for the selected plan and billing cycle
       const hostedButtonId = HOSTED_BUTTON_IDS[planType][billingCycle];
@@ -83,9 +92,13 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
       paypalContainer.appendChild(title);
 
       // Create the PayPal hosted button
-      createPayPalHostedButton('paypal-button-container', hostedButtonId);
-
-      logger.log('PayPal hosted button rendered successfully');
+      try {
+        createPayPalHostedButton('paypal-button-container', hostedButtonId);
+        logger.log('PayPal hosted button rendered successfully');
+      } catch (error) {
+        cleanupPayPalContainer(paypalContainer, overlay);
+        throw error;
+      }
 
       // Note: Payment completion will be handled by PayPal webhooks
       // The subscription status will be updated automatically when payment is confirmed

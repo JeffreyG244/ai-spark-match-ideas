@@ -6,18 +6,34 @@ declare global {
 
 export const loadPayPalScript = (): Promise<void> => {
   return new Promise((resolve, reject) => {
+    // Check if PayPal is already loaded
     if (window.paypal) {
       resolve();
       return;
     }
 
-    // Use your actual PayPal client ID for hosted buttons
-    const clientId = 'BAAFhwRq6zWeP4TjLYwm4jyFNWZ4k8EWENpInzK9br0W8Im9ORl0biNtViFkBFPjNKHJc2Tw4sAI23oU9Q';
+    // Remove any existing PayPal scripts
+    const existingScript = document.querySelector('script[src*="paypal.com/sdk"]');
+    if (existingScript) {
+      existingScript.remove();
+    }
+
+    // Use the live PayPal client ID for hosted buttons
+    const clientId = 'AYiPC9BjqLz4jNe_QuVdhQ';
     
     const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=hosted-buttons&enable-funding=venmo&currency=USD`;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load PayPal SDK'));
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=hosted-buttons&enable-funding=venmo&currency=USD&disable-funding=credit`;
+    
+    script.onload = () => {
+      console.log('PayPal SDK loaded successfully');
+      resolve();
+    };
+    
+    script.onerror = (error) => {
+      console.error('Failed to load PayPal SDK:', error);
+      reject(new Error('Failed to load PayPal SDK. Please check your internet connection and try again.'));
+    };
+    
     document.head.appendChild(script);
   });
 };
@@ -27,9 +43,14 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
     throw new Error('PayPal SDK not loaded');
   }
 
-  return window.paypal.HostedButtons({
-    hostedButtonId: hostedButtonId,
-  }).render(`#${containerId}`);
+  try {
+    return window.paypal.HostedButtons({
+      hostedButtonId: hostedButtonId,
+    }).render(`#${containerId}`);
+  } catch (error) {
+    console.error('Error creating PayPal hosted button:', error);
+    throw new Error('Failed to create PayPal button. Please try again.');
+  }
 };
 
 export const createPayPalContainer = () => {
