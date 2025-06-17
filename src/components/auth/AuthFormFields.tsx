@@ -145,14 +145,14 @@ const AuthFormFields = ({
       </Button>
 
       {isLogin && (
-        <div className="text-center">
+        <div className="text-center mt-4">
           <a
             href="#"
             onClick={(e) => {
               e.preventDefault();
               handleAccountRecovery();
             }}
-            className="text-sm text-blue-600 hover:text-blue-700 underline cursor-pointer block"
+            className="text-sm text-blue-600 hover:text-blue-700 underline cursor-pointer"
           >
             Forgot Username or Password?
           </a>
