@@ -80,11 +80,11 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
   // Add payment options to container
   container.appendChild(paymentOptionsContainer);
 
-  // Create a form that directly submits to PayPal
+  // Create a simple form that submits directly to PayPal (no JavaScript interference)
   const form = document.createElement('form');
   form.action = 'https://www.paypal.com/cgi-bin/webscr';
   form.method = 'post';
-  form.target = '_top';
+  form.target = '_blank'; // Open in new tab to avoid navigation issues
   form.style.textAlign = 'center';
   form.style.width = '100%';
 
@@ -99,10 +99,10 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
   buttonIdInput.name = 'hosted_button_id';
   buttonIdInput.value = hostedButtonId;
 
-  // Create the main PayPal button as a regular button element
-  const paypalButton = document.createElement('button');
+  // Create the PayPal button as a submit input (most reliable for PayPal)
+  const paypalButton = document.createElement('input');
   paypalButton.type = 'submit';
-  paypalButton.textContent = 'Continue to PayPal Checkout';
+  paypalButton.value = 'Continue to PayPal Checkout';
   paypalButton.style.backgroundColor = '#0070ba';
   paypalButton.style.color = 'white';
   paypalButton.style.border = 'none';
@@ -115,66 +115,27 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
   paypalButton.style.transition = 'all 0.2s ease';
   paypalButton.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
 
-  // Add hover and active effects
-  paypalButton.addEventListener('mouseenter', () => {
+  // Add hover effects using mouseover/mouseout (more compatible)
+  paypalButton.addEventListener('mouseover', () => {
     paypalButton.style.backgroundColor = '#005ea6';
     paypalButton.style.transform = 'translateY(-1px)';
     paypalButton.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
   });
   
-  paypalButton.addEventListener('mouseleave', () => {
+  paypalButton.addEventListener('mouseout', () => {
     paypalButton.style.backgroundColor = '#0070ba';
     paypalButton.style.transform = 'translateY(0)';
     paypalButton.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
   });
 
-  paypalButton.addEventListener('mousedown', () => {
-    paypalButton.style.transform = 'translateY(1px)';
-  });
-
-  paypalButton.addEventListener('mouseup', () => {
-    paypalButton.style.transform = 'translateY(-1px)';
-  });
-
-  // Add click event listener to the button for immediate redirect
-  paypalButton.addEventListener('click', function(e) {
-    e.preventDefault();
-    console.log('PayPal button clicked - attempting immediate redirect');
-    console.log('Form action:', form.action);
+  // Add form submission logging (but don't interfere with submission)
+  form.addEventListener('submit', function(e) {
+    console.log('PayPal form submitting naturally to:', form.action);
+    console.log('Form method:', form.method);
+    console.log('Form target:', form.target);
     console.log('Button ID:', hostedButtonId);
-    
-    // Create a new form for immediate submission
-    const submitForm = document.createElement('form');
-    submitForm.action = 'https://www.paypal.com/cgi-bin/webscr';
-    submitForm.method = 'post';
-    submitForm.target = '_top';
-    submitForm.style.display = 'none';
-    
-    // Add required inputs
-    const cmdSubmitInput = document.createElement('input');
-    cmdSubmitInput.type = 'hidden';
-    cmdSubmitInput.name = 'cmd';
-    cmdSubmitInput.value = '_s-xclick';
-    
-    const buttonSubmitInput = document.createElement('input');
-    buttonSubmitInput.type = 'hidden';
-    buttonSubmitInput.name = 'hosted_button_id';
-    buttonSubmitInput.value = hostedButtonId;
-    
-    submitForm.appendChild(cmdSubmitInput);
-    submitForm.appendChild(buttonSubmitInput);
-    
-    // Add to DOM and submit immediately
-    document.body.appendChild(submitForm);
-    console.log('Submitting form to PayPal...');
-    submitForm.submit();
-    
-    // Clean up
-    setTimeout(() => {
-      if (document.body.contains(submitForm)) {
-        document.body.removeChild(submitForm);
-      }
-    }, 1000);
+    console.log('CMD value:', cmdInput.value);
+    // Let the form submit naturally - DO NOT prevent default
   });
 
   // Security notice
@@ -186,7 +147,7 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
   securityNotice.style.fontStyle = 'italic';
   securityNotice.innerHTML = '🔒 Secure 256-bit SSL encryption powered by PayPal';
 
-  // Assemble the form
+  // Assemble the form in the correct order
   form.appendChild(cmdInput);
   form.appendChild(buttonIdInput);
   form.appendChild(paypalButton);
@@ -195,8 +156,9 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
   // Add form to container
   container.appendChild(form);
 
-  console.log('PayPal hosted button created successfully with button ID:', hostedButtonId);
-  console.log('Form action:', form.action);
+  console.log('PayPal hosted button created successfully');
+  console.log('Button ID:', hostedButtonId);
+  console.log('Form will submit to:', form.action);
   console.log('Form method:', form.method);
   console.log('Form target:', form.target);
 };
