@@ -1,8 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { loadPayPalScript, createPayPalContainer, cleanupPayPalContainer, createPayPalHostedButton } from '@/utils/paypal';
 import { logger } from '@/utils/logger';
 import type { MembershipPlan, BillingCycle } from '@/types/membership';
@@ -22,7 +22,37 @@ const HOSTED_BUTTON_IDS = {
 export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) => {
   const { user } = useAuth();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+
+  // Handle PayPal return states
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const cancelled = searchParams.get('cancelled');
+    
+    if (success === 'true') {
+      toast.success('Payment completed! Your subscription is being activated.');
+      setProcessingPayment(null);
+      checkSubscriptionStatus();
+    } else if (cancelled === 'true') {
+      toast.info('Payment was cancelled. You can try again anytime.');
+      setProcessingPayment(null);
+    } else if (processingPayment) {
+      // Clear processing state if user navigated back without URL params
+      const timer = setTimeout(() => {
+        setProcessingPayment(null);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, processingPayment, checkSubscriptionStatus]);
+
+  // Clear processing state when user leaves membership page
+  useEffect(() => {
+    if (location.pathname !== '/membership') {
+      setProcessingPayment(null);
+    }
+  }, [location.pathname]);
 
   const handlePlanSelect = async (plan: MembershipPlan, billingCycle: BillingCycle) => {
     // Check if we're on the membership page
