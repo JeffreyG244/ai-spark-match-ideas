@@ -1,14 +1,57 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Heart, MessageCircle, Users, Crown } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import ProfileManager from '@/components/ProfileManager';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Heart, MessageCircle, Users, Crown, ArrowLeft } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const dashboardItems = [
+    {
+      title: 'Messages',
+      description: 'Chat with your matches',
+      icon: MessageCircle,
+      path: '/messages',
+      buttonText: 'Open Messages',
+      iconColor: 'text-purple-500',
+      borderColor: 'border-purple-200',
+      buttonBg: 'bg-purple-500 hover:bg-purple-600'
+    },
+    {
+      title: 'Matches',
+      description: 'View your compatibility',
+      icon: Heart,
+      path: '/matches',
+      buttonText: 'View Matches',
+      iconColor: 'text-red-500',
+      borderColor: 'border-red-200',
+      buttonBg: 'bg-red-500 hover:bg-red-600'
+    },
+    {
+      title: 'Discover',
+      description: 'Find new connections',
+      icon: Users,
+      path: '/discover',
+      buttonText: 'Start Discovering',
+      iconColor: 'text-blue-500',
+      borderColor: 'border-blue-200',
+      buttonBg: 'bg-blue-500 hover:bg-blue-600'
+    },
+    {
+      title: 'Membership',
+      description: 'Upgrade your plan',
+      icon: Crown,
+      path: '/membership',
+      buttonText: 'View Plans',
+      iconColor: 'text-orange-500',
+      borderColor: 'border-orange-200',
+      buttonBg: 'bg-orange-500 hover:bg-orange-600'
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
@@ -22,63 +65,60 @@ const Dashboard = () => {
               </div>
               <h2 className="text-2xl font-bold text-gray-900">Luvlang</h2>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-600">Welcome back, {user?.email}</p>
+            <div className="flex items-center gap-4">
+              <Link to="/">
+                <Button variant="outline">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Home
+                </Button>
+              </Link>
+            </div>
           </div>
           <Button onClick={signOut} variant="outline">
             Sign Out
           </Button>
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="border-purple-200 hover:border-purple-300 transition-colors">
-            <CardContent className="p-6 text-center">
-              <MessageCircle className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Messages</h3>
-              <p className="text-sm text-gray-600 mb-4">Chat with your matches</p>
-              <Link to="/messages">
-                <Button className="w-full">Open Messages</Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="border-pink-200 hover:border-pink-300 transition-colors">
-            <CardContent className="p-6 text-center">
-              <Heart className="h-8 w-8 text-pink-600 mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Matches</h3>
-              <p className="text-sm text-gray-600 mb-4">View your compatibility</p>
-              <Link to="/matches">
-                <Button className="w-full">View Matches</Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="border-blue-200 hover:border-blue-300 transition-colors">
-            <CardContent className="p-6 text-center">
-              <Users className="h-8 w-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Discover</h3>
-              <p className="text-sm text-gray-600 mb-4">Find new connections</p>
-              <Link to="/discover">
-                <Button className="w-full">Start Discovering</Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="border-amber-200 hover:border-amber-300 transition-colors">
-            <CardContent className="p-6 text-center">
-              <Crown className="h-8 w-8 text-amber-600 mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">Membership</h3>
-              <p className="text-sm text-gray-600 mb-4">Upgrade your plan</p>
-              <Link to="/membership">
-                <Button className="w-full">View Plans</Button>
-              </Link>
-            </CardContent>
-          </Card>
+        {/* Welcome Message */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''}!
+          </h1>
+          <p className="text-xl text-gray-600">
+            Ready to find your perfect match? Choose what you'd like to do next.
+          </p>
         </div>
 
-        {/* Profile Management */}
-        <ProfileManager />
+        {/* Dashboard Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+          {dashboardItems.map((item) => (
+            <Card key={item.title} className={`hover:shadow-lg transition-shadow ${item.borderColor}`}>
+              <CardHeader className="text-center">
+                <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gray-50 flex items-center justify-center`}>
+                  <item.icon className={`h-8 w-8 ${item.iconColor}`} />
+                </div>
+                <CardTitle className="text-xl">{item.title}</CardTitle>
+                <CardDescription>{item.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={() => navigate(item.path)}
+                  className={`w-full text-white ${item.buttonBg}`}
+                >
+                  {item.buttonText}
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Additional Info */}
+        <div className="text-center mt-12 max-w-2xl mx-auto">
+          <p className="text-gray-600">
+            Your journey to finding meaningful connections starts here. Each feature is designed 
+            to help you build authentic relationships based on deep compatibility.
+          </p>
+        </div>
       </div>
     </div>
   );
