@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,7 +30,14 @@ const SecureAuthForm = () => {
   const handlePasswordChange = (password: string) => {
     setFormData(prev => ({ ...prev, password }));
     const validation = validatePassword(password);
-    setPasswordValidation(validation);
+    
+    // Ensure all required properties are present with defaults
+    setPasswordValidation({
+      isValid: validation.isValid,
+      errors: validation.errors,
+      score: validation.score || validation.securityScore || 0,
+      suggestions: validation.suggestions || []
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
