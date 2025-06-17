@@ -112,7 +112,7 @@ export const useMembershipPlans = () => {
       }
 
       const script = document.createElement('script');
-      script.src = 'https://www.paypal.com/sdk/js?client-id=sb&currency=USD&intent=capture';
+      script.src = 'https://www.paypal.com/sdk/js?client-id=sb&currency=USD&intent=capture&disable-funding=credit,card';
       script.onload = () => resolve();
       script.onerror = () => reject(new Error('Failed to load PayPal SDK'));
       document.head.appendChild(script);
@@ -144,8 +144,11 @@ export const useMembershipPlans = () => {
         throw new Error('Invalid plan type selected');
       }
 
+      // Load PayPal SDK first
       await loadPayPalScript();
+      console.log('PayPal SDK loaded successfully');
 
+      // Create PayPal order
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-paypal-order', {
         body: {
           planType,
@@ -167,9 +170,30 @@ export const useMembershipPlans = () => {
 
       console.log('PayPal order created:', orderData.orderID);
 
-      // Create PayPal button
+      // Create PayPal button container
       const paypalContainer = document.createElement('div');
       paypalContainer.id = 'paypal-button-container';
+      paypalContainer.style.position = 'fixed';
+      paypalContainer.style.top = '50%';
+      paypalContainer.style.left = '50%';
+      paypalContainer.style.transform = 'translate(-50%, -50%)';
+      paypalContainer.style.zIndex = '9999';
+      paypalContainer.style.backgroundColor = 'white';
+      paypalContainer.style.padding = '20px';
+      paypalContainer.style.borderRadius = '8px';
+      paypalContainer.style.boxShadow = '0 4px 20px rgba(0,0,0,0.3)';
+      
+      // Create overlay
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100%';
+      overlay.style.height = '100%';
+      overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+      overlay.style.zIndex = '9998';
+      
+      document.body.appendChild(overlay);
       document.body.appendChild(paypalContainer);
 
       window.paypal.Buttons({
@@ -202,18 +226,36 @@ export const useMembershipPlans = () => {
             console.error('Error in payment capture:', error);
             toast.error('Payment processing failed. Please contact support.');
           } finally {
-            document.body.removeChild(paypalContainer);
+            // Clean up PayPal container
+            if (document.body.contains(paypalContainer)) {
+              document.body.removeChild(paypalContainer);
+            }
+            if (document.body.contains(overlay)) {
+              document.body.removeChild(overlay);
+            }
           }
         },
         onError: (err: any) => {
           console.error('PayPal error:', err);
           toast.error('Payment failed. Please try again.');
-          document.body.removeChild(paypalContainer);
+          // Clean up PayPal container
+          if (document.body.contains(paypalContainer)) {
+            document.body.removeChild(paypalContainer);
+          }
+          if (document.body.contains(overlay)) {
+            document.body.removeChild(overlay);
+          }
         },
         onCancel: () => {
           console.log('Payment cancelled by user');
           toast.info('Payment cancelled');
-          document.body.removeChild(paypalContainer);
+          // Clean up PayPal container
+          if (document.body.contains(paypalContainer)) {
+            document.body.removeChild(paypalContainer);
+          }
+          if (document.body.contains(overlay)) {
+            document.body.removeChild(overlay);
+          }
         }
       }).render('#paypal-button-container');
 

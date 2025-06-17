@@ -48,6 +48,7 @@ serve(async (req) => {
       .single();
 
     if (planError || !plan) {
+      logStep("Plan fetch error", { error: planError });
       throw new Error('Invalid plan selected');
     }
 
@@ -77,6 +78,8 @@ serve(async (req) => {
     });
 
     if (!authResponse.ok) {
+      const errorText = await authResponse.text();
+      logStep("PayPal auth failed", { status: authResponse.status, error: errorText });
       throw new Error("Failed to get PayPal access token");
     }
 
@@ -94,8 +97,8 @@ serve(async (req) => {
         description: `${plan.name} Plan - ${billingCycle === 'yearly' ? 'Annual' : 'Monthly'} Subscription`
       }],
       application_context: {
-        return_url: `${req.headers.get("origin")}/membership?success=true`,
-        cancel_url: `${req.headers.get("origin")}/membership?cancelled=true`,
+        return_url: `${req.headers.get("origin") || 'http://localhost:3000'}/membership?success=true`,
+        cancel_url: `${req.headers.get("origin") || 'http://localhost:3000'}/membership?cancelled=true`,
         brand_name: "Luvlang",
         user_action: "PAY_NOW"
       }
@@ -112,12 +115,12 @@ serve(async (req) => {
 
     if (!orderResponse.ok) {
       const errorData = await orderResponse.text();
-      logStep("PayPal order creation failed", { error: errorData });
+      logStep("PayPal order creation failed", { status: orderResponse.status, error: errorData });
       throw new Error("Failed to create PayPal order");
     }
 
     const order = await orderResponse.json();
-    logStep("PayPal order created", { orderId: order.id });
+    logStep("PayPal order created", { orderId: order.id, amount: amount });
 
     return new Response(JSON.stringify({ 
       orderID: order.id,
