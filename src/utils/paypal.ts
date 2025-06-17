@@ -1,4 +1,3 @@
-
 declare global {
   interface Window {
     paypal: any;
@@ -12,15 +11,25 @@ export const loadPayPalScript = (): Promise<void> => {
       return;
     }
 
-    // Use your actual PayPal client ID
+    // Use your actual PayPal client ID for hosted buttons
     const clientId = 'BAAFhwRq6zWeP4TjLYwm4jyFNWZ4k8EWENpInzK9br0W8Im9ORl0biNtViFkBFPjNKHJc2Tw4sAI23oU9Q';
     
     const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&disable-funding=credit,card`;
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&components=hosted-buttons&enable-funding=venmo&currency=USD`;
     script.onload = () => resolve();
     script.onerror = () => reject(new Error('Failed to load PayPal SDK'));
     document.head.appendChild(script);
   });
+};
+
+export const createPayPalHostedButton = (containerId: string, hostedButtonId: string) => {
+  if (!window.paypal) {
+    throw new Error('PayPal SDK not loaded');
+  }
+
+  return window.paypal.HostedButtons({
+    hostedButtonId: hostedButtonId,
+  }).render(`#${containerId}`);
 };
 
 export const createPayPalContainer = () => {

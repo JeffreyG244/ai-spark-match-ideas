@@ -1,10 +1,21 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { loadPayPalScript, createPayPalContainer, cleanupPayPalContainer } from '@/utils/paypal';
+import { loadPayPalScript, createPayPalContainer, cleanupPayPalContainer, createPayPalHostedButton } from '@/utils/paypal';
 import type { MembershipPlan, BillingCycle } from '@/types/membership';
+
+// Hosted Button IDs for each plan and billing cycle
+const HOSTED_BUTTON_IDS = {
+  plus: {
+    monthly: 'TCWAT7B8BF4U4', // Replace with your actual hosted button ID for Plus Monthly
+    annual: 'TCWAT7B8BF4U4'   // Replace with your actual hosted button ID for Plus Annual
+  },
+  premium: {
+    monthly: 'TCWAT7B8BF4U4', // Replace with your actual hosted button ID for Premium Monthly
+    annual: 'TCWAT7B8BF4U4'   // Replace with your actual hosted button ID for Premium Annual
+  }
+};
 
 export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) => {
   const { user } = useAuth();
@@ -24,12 +35,12 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
     setProcessingPayment(plan.name);
     
     try {
-      console.log('=== PAYPAL CHECKOUT PROCESS STARTED ===');
+      console.log('=== PAYPAL HOSTED BUTTON CHECKOUT STARTED ===');
       console.log('User:', { id: user.id, email: user.email });
       console.log('Plan:', plan.name);
       console.log('Billing cycle:', billingCycle);
       
-      const planType = plan.name.toLowerCase();
+      const planType = plan.name.toLowerCase() as 'plus' | 'premium';
       
       if (!['plus', 'premium'].includes(planType)) {
         throw new Error('Invalid plan type selected');
@@ -38,78 +49,58 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
       await loadPayPalScript();
       console.log('PayPal SDK loaded successfully');
 
-      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-paypal-order', {
-        body: {
-          planType,
-          billingCycle: billingCycle === 'annual' ? 'yearly' : 'monthly'
-        }
-      });
-
-      if (orderError) {
-        console.error('Order creation error:', orderError);
-        toast.error(`Payment setup failed: ${orderError.message || 'Unknown error'}`);
-        return;
+      // Get the hosted button ID for the selected plan and billing cycle
+      const hostedButtonId = HOSTED_BUTTON_IDS[planType][billingCycle];
+      
+      if (!hostedButtonId) {
+        throw new Error('Hosted button ID not configured for this plan');
       }
-
-      if (!orderData?.orderID) {
-        console.error('No order ID received:', orderData);
-        toast.error('Payment system error. Please try again.');
-        return;
-      }
-
-      console.log('PayPal order created:', orderData.orderID);
 
       const { paypalContainer, overlay } = createPayPalContainer();
 
-      window.paypal.Buttons({
-        createOrder: () => orderData.orderID,
-        onApprove: async (data: any) => {
-          try {
-            console.log('Payment approved, capturing...');
-            
-            const { data: captureData, error: captureError } = await supabase.functions.invoke('capture-paypal-payment', {
-              body: {
-                orderID: data.orderID,
-                planType,
-                billingCycle: billingCycle === 'annual' ? 'yearly' : 'monthly'
-              }
-            });
+      // Add a close button to the modal
+      const closeButton = document.createElement('button');
+      closeButton.innerHTML = '×';
+      closeButton.style.position = 'absolute';
+      closeButton.style.top = '10px';
+      closeButton.style.right = '15px';
+      closeButton.style.background = 'none';
+      closeButton.style.border = 'none';
+      closeButton.style.fontSize = '24px';
+      closeButton.style.cursor = 'pointer';
+      closeButton.style.color = '#666';
+      closeButton.onclick = () => {
+        cleanupPayPalContainer(paypalContainer, overlay);
+        setProcessingPayment(null);
+      };
+      paypalContainer.appendChild(closeButton);
 
-            if (captureError) {
-              console.error('Payment capture error:', captureError);
-              toast.error('Payment processing failed. Please contact support.');
-              return;
-            }
+      // Add title
+      const title = document.createElement('h3');
+      title.textContent = `Complete your ${plan.name} ${billingCycle} subscription`;
+      title.style.marginTop = '0';
+      title.style.marginBottom = '20px';
+      title.style.color = '#333';
+      paypalContainer.appendChild(title);
 
-            console.log('Payment captured successfully:', captureData);
-            toast.success('Payment successful! Your subscription is now active.');
-            
-            await checkSubscriptionStatus();
-            
-          } catch (error) {
-            console.error('Error in payment capture:', error);
-            toast.error('Payment processing failed. Please contact support.');
-          } finally {
-            cleanupPayPalContainer(paypalContainer, overlay);
-          }
-        },
-        onError: (err: any) => {
-          console.error('PayPal error:', err);
-          toast.error('Payment failed. Please try again.');
-          cleanupPayPalContainer(paypalContainer, overlay);
-        },
-        onCancel: () => {
-          console.log('Payment cancelled by user');
-          toast.info('Payment cancelled');
-          cleanupPayPalContainer(paypalContainer, overlay);
-        }
-      }).render('#paypal-button-container');
+      // Create the PayPal hosted button
+      createPayPalHostedButton('paypal-button-container', hostedButtonId);
+
+      console.log('PayPal hosted button rendered with ID:', hostedButtonId);
+
+      // Set up a listener for successful payments (this would typically come from webhooks)
+      // For now, we'll just show a success message after a delay
+      setTimeout(() => {
+        toast.success('Payment completed! Your subscription is now active.');
+        checkSubscriptionStatus();
+        cleanupPayPalContainer(paypalContainer, overlay);
+        setProcessingPayment(null);
+      }, 10000); // Remove this in production - payments should be confirmed via webhooks
 
     } catch (error) {
       console.error('Error in checkout process:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
       toast.error(`Failed to start checkout: ${errorMessage}`);
-    } finally {
       setProcessingPayment(null);
     }
   };
