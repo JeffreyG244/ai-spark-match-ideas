@@ -92,20 +92,17 @@ const AuthFormFields = ({
         {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
       </Button>
 
-      {/* Forgot credentials section - more prominent for both login and signup */}
-      <div className="text-center space-y-2">
+      {/* Forgot password link - positioned right after the Sign In button */}
+      <div className="text-center">
         <Button
           type="button"
           variant="link"
-          className="text-sm text-muted-foreground hover:text-primary"
+          className="text-sm text-blue-600 hover:text-blue-700 underline p-0 h-auto font-normal"
           onClick={onForgotPassword}
           disabled={loading}
         >
-          Forgot your email or password?
+          Forgot your username or password?
         </Button>
-        <p className="text-xs text-muted-foreground">
-          We'll help you recover your account
-        </p>
       </div>
 
       <Button

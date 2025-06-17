@@ -18,7 +18,7 @@ const Auth = () => {
             <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
               <Heart className="h-7 w-7 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">LuvLang</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Luvlang</h1>
           </div>
           <p className="text-gray-600">
             Secure AI-powered deep connections for serious professionals
