@@ -12,8 +12,11 @@ export const loadPayPalScript = (): Promise<void> => {
       return;
     }
 
+    // Get the PayPal client ID from environment or use sandbox for development
+    const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID || 'sb';
+    
     const script = document.createElement('script');
-    script.src = 'https://www.paypal.com/sdk/js?client-id=sb&currency=USD&intent=capture&disable-funding=credit,card';
+    script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&disable-funding=credit,card`;
     script.onload = () => resolve();
     script.onerror = () => reject(new Error('Failed to load PayPal SDK'));
     document.head.appendChild(script);

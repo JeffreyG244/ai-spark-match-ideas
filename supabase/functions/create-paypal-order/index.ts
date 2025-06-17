@@ -55,15 +55,25 @@ serve(async (req) => {
     const amount = billingCycle === 'yearly' ? (plan.annual_price || plan.monthly_price * 12) : plan.monthly_price;
     logStep("Plan details", { planName: plan.name, amount, billingCycle });
 
-    // Use sandbox for testing
+    // Get PayPal credentials from Supabase secrets
     const paypalClientId = Deno.env.get("PAYPAL_CLIENT_ID");
     const paypalClientSecret = Deno.env.get("PAYPAL_CLIENT_SECRET");
     const isProduction = Deno.env.get("PAYPAL_ENVIRONMENT") === "production";
     const paypalBaseUrl = isProduction ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
 
     if (!paypalClientId || !paypalClientSecret) {
-      throw new Error("PayPal credentials not configured");
+      logStep("PayPal credentials missing", { 
+        hasClientId: !!paypalClientId, 
+        hasClientSecret: !!paypalClientSecret 
+      });
+      throw new Error("PayPal credentials not configured. Please contact support.");
     }
+
+    logStep("PayPal config", { 
+      clientId: paypalClientId.substring(0, 8) + "...", 
+      environment: isProduction ? "production" : "sandbox",
+      baseUrl: paypalBaseUrl
+    });
 
     // Get PayPal access token
     const authResponse = await fetch(`${paypalBaseUrl}/v1/oauth2/token`, {
@@ -80,7 +90,7 @@ serve(async (req) => {
     if (!authResponse.ok) {
       const errorText = await authResponse.text();
       logStep("PayPal auth failed", { status: authResponse.status, error: errorText });
-      throw new Error("Failed to get PayPal access token");
+      throw new Error(`Failed to authenticate with PayPal: ${authResponse.status}`);
     }
 
     const authData = await authResponse.json();
@@ -116,7 +126,7 @@ serve(async (req) => {
     if (!orderResponse.ok) {
       const errorData = await orderResponse.text();
       logStep("PayPal order creation failed", { status: orderResponse.status, error: errorData });
-      throw new Error("Failed to create PayPal order");
+      throw new Error(`Failed to create PayPal order: ${orderResponse.status}`);
     }
 
     const order = await orderResponse.json();
