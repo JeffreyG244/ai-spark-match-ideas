@@ -57,17 +57,9 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
         throw new Error('Invalid plan type selected');
       }
 
-      // Show loading message
-      toast.loading('Loading PayPal checkout...', { id: 'paypal-loading' });
-
-      try {
-        await loadPayPalScript();
-        toast.dismiss('paypal-loading');
-      } catch (error) {
-        toast.dismiss('paypal-loading');
-        throw new Error('Unable to load PayPal. Please check your internet connection and try again.');
-      }
-
+      // Simple setup - no complex SDK loading needed
+      await loadPayPalScript();
+      
       // Get the hosted button ID for the selected plan and billing cycle
       const hostedButtonId = HOSTED_BUTTON_IDS[planType][billingCycle];
       
@@ -79,11 +71,11 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
       const closeButton = document.createElement('button');
       closeButton.innerHTML = '×';
       closeButton.style.position = 'absolute';
-      closeButton.style.top = '10px';
-      closeButton.style.right = '15px';
+      closeButton.style.top = '15px';
+      closeButton.style.right = '20px';
       closeButton.style.background = 'none';
       closeButton.style.border = 'none';
-      closeButton.style.fontSize = '24px';
+      closeButton.style.fontSize = '28px';
       closeButton.style.cursor = 'pointer';
       closeButton.style.color = '#666';
       closeButton.onclick = () => {
@@ -98,16 +90,12 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
       title.style.marginTop = '0';
       title.style.marginBottom = '20px';
       title.style.color = '#333';
+      title.style.textAlign = 'center';
       paypalContainer.appendChild(title);
 
       // Create the PayPal hosted button
-      try {
-        createPayPalHostedButton('paypal-button-container', hostedButtonId);
-        logger.log('PayPal hosted button rendered successfully');
-      } catch (error) {
-        cleanupPayPalContainer(paypalContainer, overlay);
-        throw error;
-      }
+      createPayPalHostedButton('paypal-button-container', hostedButtonId);
+      logger.log('PayPal hosted button rendered successfully');
 
       // Note: Payment completion will be handled by PayPal webhooks
       // The subscription status will be updated automatically when payment is confirmed
