@@ -45,46 +45,43 @@ const AuthFormFields = ({
   onForgotPassword
 }: AuthFormFieldsProps) => {
   
-  const handleAccountRecovery = async () => {
-    const email = prompt("Enter your email to recover your account:");
+  const handleForgotPassword = async () => {
+    const email = prompt("Enter your email address to reset your password:");
     if (!email) return;
+    
+    if (!email.includes('@')) {
+      toast({
+        title: 'Invalid Email',
+        description: 'Please enter a valid email address.',
+        variant: 'destructive'
+      });
+      return;
+    }
 
     try {
-      console.log('Starting account recovery for:', email);
+      console.log('Sending password reset email to:', email);
       
-      // Fetch user data from 'profiles' table using email
-      const { data: userData, error: fetchError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('email', email)
-        .single();
-
-      console.log('Profile fetch result:', { userData, fetchError });
-
-      // Send password reset email
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth`
       });
 
-      console.log('Password reset result:', { resetError });
-
-      if (fetchError || resetError) {
-        console.error('Recovery errors:', { fetchError, resetError });
+      if (error) {
+        console.error('Password reset error:', error);
         toast({
-          title: 'Recovery Error',
-          description: 'There was a problem. Please try again or contact support.',
+          title: 'Reset Error',
+          description: 'There was a problem sending the reset email. Please try again.',
           variant: 'destructive'
         });
       } else {
         toast({
-          title: 'Recovery Email Sent',
-          description: 'If this email is registered, a reset link has been sent to your email address.',
+          title: 'Reset Email Sent',
+          description: 'If an account with this email exists, a password reset link has been sent.',
         });
       }
     } catch (error) {
-      console.error('Account recovery error:', error);
+      console.error('Password reset error:', error);
       toast({
-        title: 'Recovery Error',
+        title: 'Reset Error',
         description: 'There was a problem. Please try again or contact support.',
         variant: 'destructive'
       });
@@ -143,6 +140,19 @@ const AuthFormFields = ({
         </Button>
       </form>
 
+      {isLogin && (
+        <div className="text-center py-2">
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            className="text-sm text-blue-600 hover:text-blue-800 underline font-medium"
+            disabled={loading}
+          >
+            Forgot your password?
+          </button>
+        </div>
+      )}
+
       <Button
         type="button"
         variant="ghost"
@@ -152,19 +162,6 @@ const AuthFormFields = ({
       >
         {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
       </Button>
-
-      {isLogin && (
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={handleAccountRecovery}
-            className="text-sm text-blue-600 hover:text-blue-700 underline cursor-pointer bg-transparent border-none p-0"
-            disabled={loading}
-          >
-            Forgot Username or Password?
-          </button>
-        </div>
-      )}
     </div>
   );
 };
