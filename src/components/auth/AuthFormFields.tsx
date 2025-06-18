@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import PasswordInput from './PasswordInput';
 import PasswordStrengthIndicator from './PasswordStrengthIndicator';
+import HCaptchaComponent from './HCaptchaComponent';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -44,24 +45,40 @@ const AuthFormFields = ({
   onToggleMode,
   onForgotPassword
 }: AuthFormFieldsProps) => {
-  
-  const handleForgotPassword = async () => {
-    const email = prompt("Enter your email address to reset your password:");
-    if (!email) return;
-    
-    if (!email.includes('@')) {
+  const [captchaToken, setCaptchaToken] = useState<string>('');
+  const [showForgotForm, setShowForgotForm] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+
+  const handleCaptchaVerify = (token: string) => {
+    setCaptchaToken(token);
+    console.log('Captcha verified:', token);
+  };
+
+  const handleCaptchaError = () => {
+    toast({
+      title: 'Captcha Error',
+      description: 'Please complete the captcha verification.',
+      variant: 'destructive'
+    });
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail) {
       toast({
-        title: 'Invalid Email',
-        description: 'Please enter a valid email address.',
+        title: 'Email Required',
+        description: 'Please enter your email address.',
         variant: 'destructive'
       });
       return;
     }
 
+    setForgotLoading(true);
     try {
-      console.log('Sending password reset email to:', email);
+      console.log('Sending password reset email to:', forgotEmail);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
         redirectTo: `${window.location.origin}/auth`
       });
 
@@ -77,6 +94,8 @@ const AuthFormFields = ({
           title: 'Reset Email Sent',
           description: 'If an account with this email exists, a password reset link has been sent.',
         });
+        setShowForgotForm(false);
+        setForgotEmail('');
       }
     } catch (error) {
       console.error('Password reset error:', error);
@@ -85,12 +104,75 @@ const AuthFormFields = ({
         description: 'There was a problem. Please try again or contact support.',
         variant: 'destructive'
       });
+    } finally {
+      setForgotLoading(false);
     }
   };
 
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!isLogin && !captchaToken) {
+      toast({
+        title: 'Captcha Required',
+        description: 'Please complete the captcha verification.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    
+    onSubmit(e);
+  };
+
+  if (showForgotForm) {
+    return (
+      <div className="space-y-4">
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-semibold">Forgot Password or Username?</h3>
+          <p className="text-sm text-muted-foreground">
+            Enter your email address and we'll send you recovery instructions.
+          </p>
+        </div>
+        
+        <form onSubmit={handleForgotPassword} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="forgot-email">Email Address</Label>
+            <Input
+              id="forgot-email"
+              type="email"
+              value={forgotEmail}
+              onChange={(e) => setForgotEmail(e.target.value)}
+              placeholder="Enter your email address"
+              required
+              disabled={forgotLoading}
+            />
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={forgotLoading || !forgotEmail}
+          >
+            {forgotLoading ? 'Sending...' : 'Send Recovery Email'}
+          </Button>
+        </form>
+
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full"
+          onClick={() => setShowForgotForm(false)}
+          disabled={forgotLoading}
+        >
+          Back to Sign In
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={handleFormSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input
@@ -119,16 +201,23 @@ const AuthFormFields = ({
         />
 
         {!isLogin && (
-          <PasswordInput
-            id="confirmPassword"
-            label="Confirm Password"
-            value={formData.confirmPassword}
-            onChange={(value) => onFormDataChange({ ...formData, confirmPassword: value })}
-            placeholder="Confirm your password"
-            disabled={loading}
-            required
-            showVisibilityToggle={false}
-          />
+          <>
+            <PasswordInput
+              id="confirmPassword"
+              label="Confirm Password"
+              value={formData.confirmPassword}
+              onChange={(value) => onFormDataChange({ ...formData, confirmPassword: value })}
+              placeholder="Confirm your password"
+              disabled={loading}
+              required
+              showVisibilityToggle={false}
+            />
+            
+            <HCaptchaComponent 
+              onVerify={handleCaptchaVerify}
+              onError={handleCaptchaError}
+            />
+          </>
         )}
 
         <Button 
@@ -144,11 +233,11 @@ const AuthFormFields = ({
         <div className="text-center py-2">
           <button
             type="button"
-            onClick={handleForgotPassword}
+            onClick={() => setShowForgotForm(true)}
             className="text-sm text-blue-600 hover:text-blue-800 underline font-medium"
             disabled={loading}
           >
-            Forgot your password?
+            Forgot your password or username?
           </button>
         </div>
       )}

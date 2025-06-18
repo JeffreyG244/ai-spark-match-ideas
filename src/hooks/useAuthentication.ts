@@ -11,7 +11,14 @@ export const useAuthentication = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const signUp = async (email: string, password: string, confirmPassword: string, firstName: string, lastName: string) => {
+  const signUp = async (
+    email: string, 
+    password: string, 
+    confirmPassword: string, 
+    firstName: string, 
+    lastName: string,
+    captchaToken?: string
+  ) => {
     setError(null);
     setLoading(true);
 
@@ -41,6 +48,12 @@ export const useAuthentication = () => {
         return;
       }
 
+      if (!captchaToken) {
+        setError('Please complete the captcha verification');
+        setLoading(false);
+        return;
+      }
+
       const signUpData: SignUpData = {
         email: sanitizedEmail,
         password: sanitizedPassword,
@@ -48,7 +61,12 @@ export const useAuthentication = () => {
         lastName: sanitizedLastName
       };
 
-      console.log('Attempting signup with:', { email: sanitizedEmail, firstName: sanitizedFirstName, lastName: sanitizedLastName });
+      console.log('Attempting signup with:', { 
+        email: sanitizedEmail, 
+        firstName: sanitizedFirstName, 
+        lastName: sanitizedLastName,
+        hasCaptcha: !!captchaToken
+      });
       
       const result = await AuthService.signUp(signUpData);
 
@@ -62,7 +80,7 @@ export const useAuthentication = () => {
       console.log('Signup successful');
       toast({
         title: 'Account created successfully',
-        description: 'Welcome to Luvlang! You can now start exploring.',
+        description: 'Welcome to Luvlang! Please check your email to verify your account.',
       });
 
       navigate('/dashboard');
