@@ -69,3 +69,47 @@ const PasswordStrengthIndicator = ({ passwordValidation, showIndicator }: Passwo
 };
 
 export default PasswordStrengthIndicator;
+import React, { useState } from 'react';
+import { supabase } from '@/utils/supabaseClient'; // Adjust the import based on your project structure
+
+const ChangePasswordForm = () => {
+  const [newPassword, setNewPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+
+    const { data, error } = await supabase.auth.update({
+      password: newPassword,
+    });
+
+    if (error) {
+      setError(error.message);
+    } else {
+      setSuccess('Password updated successfully!');
+    }
+  };
+
+  return (
+    <form onSubmit={handlePasswordChange}>
+      <div>
+        <label htmlFor="newPassword">New Password:</label>
+        <input
+          type="password"
+          id="newPassword"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          required
+        />
+      </div>
+      <button type="submit">Change Password</button>
+      {error && <div className="text-red-500">{error}</div>}
+      {success && <div className="text-green-500">{success}</div>}
+    </form>
+  );
+};
+
+export default ChangePasswordForm;
