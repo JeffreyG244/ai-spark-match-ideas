@@ -52,13 +52,18 @@ const AuthFormFields = ({
 
   const handleCaptchaVerify = (token: string) => {
     setCaptchaToken(token);
-    console.log('Captcha verified:', token);
+    console.log('Captcha verified successfully:', token.substring(0, 20) + '...');
+    toast({
+      title: 'Captcha Verified',
+      description: 'You can now proceed with account creation.',
+    });
   };
 
   const handleCaptchaError = () => {
+    setCaptchaToken('');
     toast({
       title: 'Captcha Error',
-      description: 'Please complete the captcha verification.',
+      description: 'Please complete the captcha verification to continue.',
       variant: 'destructive'
     });
   };
@@ -115,7 +120,7 @@ const AuthFormFields = ({
     if (!isLogin && !captchaToken) {
       toast({
         title: 'Captcha Required',
-        description: 'Please complete the captcha verification.',
+        description: 'Please complete the captcha verification before creating your account.',
         variant: 'destructive'
       });
       return;
@@ -222,25 +227,24 @@ const AuthFormFields = ({
 
         <Button 
           type="submit" 
-          className="w-full" 
-          disabled={loading || (!isLogin && !passwordValidation.isValid)}
+          className="w-full bg-black hover:bg-gray-800 text-white" 
+          disabled={loading || (!isLogin && (!passwordValidation.isValid || !captchaToken))}
         >
           {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
         </Button>
       </form>
 
-      {isLogin && (
-        <div className="text-center py-2">
-          <button
-            type="button"
-            onClick={() => setShowForgotForm(true)}
-            className="text-sm text-blue-600 hover:text-blue-800 underline font-medium"
-            disabled={loading}
-          >
-            Forgot your password or username?
-          </button>
-        </div>
-      )}
+      {/* Moved forgot password link right below the Create Account/Sign In button */}
+      <div className="text-center">
+        <button
+          type="button"
+          onClick={() => setShowForgotForm(true)}
+          className="text-sm text-blue-600 hover:text-blue-800 underline font-medium"
+          disabled={loading}
+        >
+          Forgot your password or username?
+        </button>
+      </div>
 
       <Button
         type="button"
