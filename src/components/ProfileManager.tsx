@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,13 +7,15 @@ import { compatibilityQuestions } from '@/data/compatibilityQuestions';
 import { useProfileData } from '@/hooks/useProfileData';
 import { useCompatibilityAnswers } from '@/hooks/useCompatibilityAnswers';
 import ProfileHeader from './profile/ProfileHeader';
-import ProfileForm from './profile/ProfileForm';
+import ComprehensiveProfileBuilder from './profile/ComprehensiveProfileBuilder';
 import CompatibilityQuestions from './profile/CompatibilityQuestions';
-import FacialVerificationCapture from './profile/FacialVerificationCapture';
+import SimplePhotoCapture from './SimplePhotoCapture';
+import ProfileForm from './profile/ProfileForm';
 
 const ProfileManager = () => {
   const { user } = useAuth();
-  const [activeSection, setActiveSection] = useState<'profile' | 'questions' | 'photos'>('profile');
+  const [viewMode, setViewMode<'simple' | 'comprehensive'>('comprehensive');
+  const [activeSection, setActiveSection<'profile' | 'questions' | 'photos'>('profile');
 
   const {
     profileData,
@@ -54,10 +55,41 @@ const ProfileManager = () => {
   );
 
   const answeredQuestions = Object.keys(questionAnswers).length;
-  const totalQuestions = 17; // Updated to 17 questions
+  const totalQuestions = 17;
 
+  // Show comprehensive profile builder by default
+  if (viewMode === 'comprehensive') {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Profile Builder</h2>
+          <Button
+            variant="outline"
+            onClick={() => setViewMode('simple')}
+            size="sm"
+          >
+            Switch to Simple View
+          </Button>
+        </div>
+        <ComprehensiveProfileBuilder />
+      </div>
+    );
+  }
+
+  // Simple view (original ProfileManager functionality)
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Profile Manager</h2>
+        <Button
+          variant="outline"
+          onClick={() => setViewMode('comprehensive')}
+          size="sm"
+        >
+          Switch to Enhanced View
+        </Button>
+      </div>
+
       <Card className="border-purple-200">
         <ProfileHeader completionPercentage={completionPercentage} />
         <CardContent>
@@ -109,7 +141,7 @@ const ProfileManager = () => {
           )}
 
           {activeSection === 'photos' && (
-            <FacialVerificationCapture />
+            <SimplePhotoCapture />
           )}
         </CardContent>
       </Card>
