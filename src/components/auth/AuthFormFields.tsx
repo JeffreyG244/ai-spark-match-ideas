@@ -50,19 +50,26 @@ const AuthFormFields = ({
     if (!email) return;
 
     try {
-      // Fetch username from 'profiles' table using email
+      console.log('Starting account recovery for:', email);
+      
+      // Fetch user data from 'profiles' table using email
       const { data: userData, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
         .eq('email', email)
         .single();
 
+      console.log('Profile fetch result:', { userData, fetchError });
+
       // Send password reset email
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth`
       });
 
+      console.log('Password reset result:', { resetError });
+
       if (fetchError || resetError) {
+        console.error('Recovery errors:', { fetchError, resetError });
         toast({
           title: 'Recovery Error',
           description: 'There was a problem. Please try again or contact support.',
@@ -85,54 +92,56 @@ const AuthFormFields = ({
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          value={formData.email}
-          onChange={(e) => onFormDataChange({ ...formData, email: e.target.value })}
-          placeholder="your@email.com"
-          required
-          disabled={loading}
-        />
-      </div>
+    <div className="space-y-4">
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => onFormDataChange({ ...formData, email: e.target.value })}
+            placeholder="your@email.com"
+            required
+            disabled={loading}
+          />
+        </div>
 
-      <PasswordInput
-        id="password"
-        label="Password"
-        value={formData.password}
-        onChange={onPasswordChange}
-        disabled={loading}
-        required
-      />
-
-      <PasswordStrengthIndicator
-        passwordValidation={passwordValidation}
-        showIndicator={!isLogin && !!formData.password}
-      />
-
-      {!isLogin && (
         <PasswordInput
-          id="confirmPassword"
-          label="Confirm Password"
-          value={formData.confirmPassword}
-          onChange={(value) => onFormDataChange({ ...formData, confirmPassword: value })}
-          placeholder="Confirm your password"
+          id="password"
+          label="Password"
+          value={formData.password}
+          onChange={onPasswordChange}
           disabled={loading}
           required
-          showVisibilityToggle={false}
         />
-      )}
 
-      <Button 
-        type="submit" 
-        className="w-full" 
-        disabled={loading || (!isLogin && !passwordValidation.isValid)}
-      >
-        {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
-      </Button>
+        <PasswordStrengthIndicator
+          passwordValidation={passwordValidation}
+          showIndicator={!isLogin && !!formData.password}
+        />
+
+        {!isLogin && (
+          <PasswordInput
+            id="confirmPassword"
+            label="Confirm Password"
+            value={formData.confirmPassword}
+            onChange={(value) => onFormDataChange({ ...formData, confirmPassword: value })}
+            placeholder="Confirm your password"
+            disabled={loading}
+            required
+            showVisibilityToggle={false}
+          />
+        )}
+
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={loading || (!isLogin && !passwordValidation.isValid)}
+        >
+          {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
+        </Button>
+      </form>
 
       <Button
         type="button"
@@ -145,20 +154,18 @@ const AuthFormFields = ({
       </Button>
 
       {isLogin && (
-        <div className="text-center mt-4">
-          <a
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              handleAccountRecovery();
-            }}
-            className="text-sm text-blue-600 hover:text-blue-700 underline cursor-pointer"
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={handleAccountRecovery}
+            className="text-sm text-blue-600 hover:text-blue-700 underline cursor-pointer bg-transparent border-none p-0"
+            disabled={loading}
           >
             Forgot Username or Password?
-          </a>
+          </button>
         </div>
       )}
-    </form>
+    </div>
   );
 };
 
