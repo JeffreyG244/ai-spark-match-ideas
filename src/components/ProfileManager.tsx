@@ -14,8 +14,8 @@ import ProfileForm from './profile/ProfileForm';
 
 const ProfileManager = () => {
   const { user } = useAuth();
-  const [viewMode, setViewMode<'simple' | 'comprehensive'>('comprehensive');
-  const [activeSection, setActiveSection<'profile' | 'questions' | 'photos'>('profile');
+  const [viewMode, setViewMode] = useState<'simple' | 'comprehensive'>('comprehensive');
+  const [activeSection, setActiveSection] = useState<'profile' | 'questions' | 'photos'>('profile');
 
   const {
     profileData,
