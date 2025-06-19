@@ -36,7 +36,7 @@ export const useDailyMatches = () => {
         .from('daily_matches')
         .select(`
           *,
-          user_profiles!inner(
+          user_profiles!daily_matches_suggested_user_id_fkey(
             id,
             user_id,
             email,
@@ -52,6 +52,42 @@ export const useDailyMatches = () => {
 
       if (error) {
         console.error('Error loading daily matches:', error);
+        // If the foreign key relationship doesn't work, fall back to separate queries
+        const { data: matchesData, error: matchesError } = await supabase
+          .from('daily_matches')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('suggested_date', new Date().toISOString().split('T')[0])
+          .order('compatibility_score', { ascending: false });
+
+        if (matchesError) {
+          console.error('Error loading daily matches (fallback):', matchesError);
+          return;
+        }
+
+        // Get profiles separately
+        if (matchesData && matchesData.length > 0) {
+          const userIds = matchesData.map(match => match.suggested_user_id);
+          const { data: profilesData, error: profilesError } = await supabase
+            .from('user_profiles')
+            .select('id, user_id, email, bio, values, interests, photos')
+            .in('user_id', userIds);
+
+          if (profilesError) {
+            console.error('Error loading profiles:', profilesError);
+            return;
+          }
+
+          const processedMatches = matchesData.map(match => {
+            const profile = profilesData?.find(p => p.user_id === match.suggested_user_id);
+            return {
+              ...match,
+              user_profile: profile
+            };
+          });
+
+          setDailyMatches(processedMatches);
+        }
         return;
       }
 

@@ -29,37 +29,50 @@ export const useMatches = () => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // Get matches first
+      const { data: matchesData, error: matchesError } = await supabase
         .from('user_matches')
-        .select(`
-          *,
-          user_profiles!inner(
-            id,
-            user_id,
-            email,
-            bio,
-            photos
-          )
-        `)
+        .select('*')
         .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
         .eq('is_active', true)
         .order('matched_at', { ascending: false });
 
-      if (error) {
-        console.error('Error loading matches:', error);
+      if (matchesError) {
+        console.error('Error loading matches:', matchesError);
+        return;
+      }
+
+      if (!matchesData || matchesData.length === 0) {
+        setMatches([]);
+        return;
+      }
+
+      // Get the other user IDs from matches
+      const otherUserIds = matchesData.map(match => {
+        return match.user1_id === user.id ? match.user2_id : match.user1_id;
+      });
+
+      // Get profiles for the other users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('id, user_id, email, bio, photos')
+        .in('user_id', otherUserIds);
+
+      if (profilesError) {
+        console.error('Error loading profiles:', profilesError);
         return;
       }
 
       // Process matches to get the other user's profile
-      const processedMatches = data?.map(match => {
-        const isUser1 = match.user1_id === user.id;
-        const otherUserId = isUser1 ? match.user2_id : match.user1_id;
+      const processedMatches = matchesData.map(match => {
+        const otherUserId = match.user1_id === user.id ? match.user2_id : match.user1_id;
+        const profile = profilesData?.find(p => p.user_id === otherUserId);
         
         return {
           ...match,
-          match_profile: match.user_profiles
+          match_profile: profile
         };
-      }) || [];
+      });
 
       setMatches(processedMatches);
     } catch (error) {
