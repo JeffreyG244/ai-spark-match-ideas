@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSwipeActions } from '@/hooks/useSwipeActions';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import DiscoverHeader from '@/components/discover/DiscoverHeader';
 import ProfileCard from '@/components/discover/ProfileCard';
 import SwipeActions from '@/components/discover/SwipeActions';
 import EmptyState from '@/components/discover/EmptyState';
+import CompatibilityScore from '@/components/discover/CompatibilityScore';
 
 interface UserProfile {
   id: string;
@@ -19,10 +21,12 @@ interface UserProfile {
   photos: string[];
   firstName: string;
   lastName: string;
+  compatibility_score?: number;
 }
 
 const Discover = () => {
   const { signOut, user } = useAuth();
+  const { recordSwipe, isLoading: swipeLoading } = useSwipeActions();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<'like' | 'pass' | null>(null);
@@ -45,23 +49,43 @@ const Discover = () => {
 
       if (error) throw error;
 
-      // Transform the data to match the expected format
-      const transformedProfiles = (data || []).map(profile => ({
-        id: profile.id.toString(),
-        user_id: profile.user_id,
-        email: profile.email,
-        bio: profile.bio || 'No bio available',
-        values: profile.values || 'No values listed',
-        life_goals: profile.life_goals || 'No life goals shared',
-        green_flags: profile.green_flags || 'No green flags listed',
-        photos: profile.photos && profile.photos.length > 0 
-          ? profile.photos 
-          : ['https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60'],
-        firstName: profile.email.split('@')[0] || 'User',
-        lastName: ''
-      }));
+      // Get compatibility scores for each profile
+      const profilesWithScores = await Promise.all(
+        (data || []).map(async (profile) => {
+          let compatibilityScore = 0;
+          
+          if (user) {
+            const { data: scoreData } = await supabase
+              .rpc('calculate_compatibility_score', {
+                user1_id: user.id,
+                user2_id: profile.user_id
+              });
+            
+            compatibilityScore = scoreData || 0;
+          }
 
-      setProfiles(transformedProfiles);
+          return {
+            id: profile.id.toString(),
+            user_id: profile.user_id,
+            email: profile.email,
+            bio: profile.bio || 'No bio available',
+            values: profile.values || 'No values listed',
+            life_goals: profile.life_goals || 'No life goals shared',
+            green_flags: profile.green_flags || 'No green flags listed',
+            photos: profile.photos && profile.photos.length > 0 
+              ? profile.photos 
+              : ['https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60'],
+            firstName: profile.email.split('@')[0] || 'User',
+            lastName: '',
+            compatibility_score: compatibilityScore
+          };
+        })
+      );
+
+      // Sort by compatibility score (highest first)
+      profilesWithScores.sort((a, b) => (b.compatibility_score || 0) - (a.compatibility_score || 0));
+      
+      setProfiles(profilesWithScores);
     } catch (error) {
       console.error('Error fetching profiles:', error);
     } finally {
@@ -69,8 +93,13 @@ const Discover = () => {
     }
   };
 
-  const handleSwipe = (direction: 'like' | 'pass') => {
+  const handleSwipe = async (direction: 'like' | 'pass') => {
+    if (swipeLoading || !currentProfile) return;
+    
     setSwipeDirection(direction);
+    
+    // Record the swipe action
+    await recordSwipe(currentProfile.user_id, direction);
     
     setTimeout(() => {
       setCurrentIndex(prev => prev + 1);
@@ -112,7 +141,7 @@ const Discover = () => {
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Discover New Connections</h1>
-          <p className="text-gray-600">Swipe right to like, left to pass</p>
+          <p className="text-gray-600">Swipe right to like, left to pass • Profiles ordered by compatibility</p>
         </div>
 
         <div className="flex justify-center">
@@ -122,13 +151,24 @@ const Discover = () => {
             ) : (
               <AnimatePresence mode="wait">
                 {currentProfile && (
-                  <ProfileCard
-                    key={currentIndex}
-                    user={currentProfile}
-                    swipeDirection={swipeDirection}
-                    onDragEnd={handleDragEnd}
-                    cardIndex={currentIndex}
-                  />
+                  <div key={currentIndex} className="relative">
+                    {/* Compatibility Score Display */}
+                    {currentProfile.compatibility_score !== undefined && (
+                      <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+                        <CompatibilityScore 
+                          score={currentProfile.compatibility_score} 
+                          showLabel={false}
+                        />
+                      </div>
+                    )}
+                    
+                    <ProfileCard
+                      user={currentProfile}
+                      swipeDirection={swipeDirection}
+                      onDragEnd={handleDragEnd}
+                      cardIndex={currentIndex}
+                    />
+                  </div>
                 )}
               </AnimatePresence>
             )}
@@ -137,16 +177,23 @@ const Discover = () => {
               <SwipeActions
                 onLike={() => handleSwipe('like')}
                 onPass={() => handleSwipe('pass')}
+                disabled={swipeLoading}
               />
             )}
           </div>
         </div>
 
         {hasMoreProfiles && (
-          <div className="text-center mt-8">
+          <div className="text-center mt-8 space-y-2">
             <p className="text-gray-500 text-sm">
               💡 Drag the card or use the buttons below to interact
             </p>
+            {currentProfile?.compatibility_score !== undefined && (
+              <p className="text-purple-600 text-sm font-medium">
+                Compatibility: {currentProfile.compatibility_score}% • 
+                {profiles.length - currentIndex - 1} profiles remaining
+              </p>
+            )}
           </div>
         )}
       </div>

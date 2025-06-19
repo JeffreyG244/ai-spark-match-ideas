@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -59,7 +58,8 @@ const ComprehensiveProfileBuilder = () => {
       }
 
       if (data) {
-        setPersonalityAnswers(data.personality_answers || {});
+        // Fix: Properly handle the jsonb type for personality_answers
+        setPersonalityAnswers((data.personality_answers as Record<string, string>) || {});
         setInterests(data.interests || []);
         
         // Convert photo URLs to Photo objects

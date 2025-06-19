@@ -134,6 +134,36 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_matches: {
+        Row: {
+          compatibility_score: number
+          created_at: string
+          id: string
+          suggested_date: string
+          suggested_user_id: string
+          user_id: string
+          viewed: boolean
+        }
+        Insert: {
+          compatibility_score?: number
+          created_at?: string
+          id?: string
+          suggested_date?: string
+          suggested_user_id: string
+          user_id: string
+          viewed?: boolean
+        }
+        Update: {
+          compatibility_score?: number
+          created_at?: string
+          id?: string
+          suggested_date?: string
+          suggested_user_id?: string
+          user_id?: string
+          viewed?: boolean
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           compatibility: number
@@ -557,6 +587,30 @@ export type Database = {
         }
         Relationships: []
       }
+      swipe_actions: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          swiped_user_id: string
+          swiper_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          swiped_user_id: string
+          swiper_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          swiped_user_id?: string
+          swiper_id?: string
+        }
+        Relationships: []
+      }
       user_devices: {
         Row: {
           created_at: string
@@ -581,6 +635,33 @@ export type Database = {
           is_trusted?: boolean
           last_seen?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_matches: {
+        Row: {
+          compatibility_score: number
+          id: string
+          is_active: boolean
+          matched_at: string
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          compatibility_score?: number
+          id?: string
+          is_active?: boolean
+          matched_at?: string
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          compatibility_score?: number
+          id?: string
+          is_active?: boolean
+          matched_at?: string
+          user1_id?: string
+          user2_id?: string
         }
         Relationships: []
       }
@@ -729,6 +810,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_compatibility_score: {
+        Args: { user1_id: string; user2_id: string }
+        Returns: number
+      }
       cleanup_old_data: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -747,6 +832,10 @@ export type Database = {
       }
       example_function: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      generate_daily_matches: {
+        Args: { target_user_id: string; match_count?: number }
         Returns: undefined
       }
       handle_paypal_webhook: {
