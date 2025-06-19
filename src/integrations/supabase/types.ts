@@ -612,7 +612,9 @@ export type Database = {
           email: string
           green_flags: string | null
           id: number
+          interests: string[] | null
           life_goals: string | null
+          personality_answers: Json | null
           photos: string[] | null
           updated_at: string
           user_id: string
@@ -625,7 +627,9 @@ export type Database = {
           email: string
           green_flags?: string | null
           id?: never
+          interests?: string[] | null
           life_goals?: string | null
+          personality_answers?: Json | null
           photos?: string[] | null
           updated_at?: string
           user_id: string
@@ -638,7 +642,9 @@ export type Database = {
           email?: string
           green_flags?: string | null
           id?: never
+          interests?: string[] | null
           life_goals?: string | null
+          personality_answers?: Json | null
           photos?: string[] | null
           updated_at?: string
           user_id?: string

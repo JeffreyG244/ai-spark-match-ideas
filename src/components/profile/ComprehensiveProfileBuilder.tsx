@@ -47,11 +47,16 @@ const ComprehensiveProfileBuilder = () => {
 
     try {
       // Load existing profile data including new fields
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('user_profiles')
         .select('personality_answers, interests, photos')
         .eq('user_id', user.id)
         .maybeSingle();
+
+      if (error) {
+        console.error('Error loading additional data:', error);
+        return;
+      }
 
       if (data) {
         setPersonalityAnswers(data.personality_answers || {});
