@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useEnhancedSecurity } from '@/hooks/useEnhancedSecurity';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuthentication } from '@/hooks/useAuthentication';
 import { toast } from '@/hooks/use-toast';
 import AuthFormHeader from './AuthFormHeader';
 import AuthFormFields from './AuthFormFields';
@@ -21,7 +21,8 @@ interface AuthFormContainerProps {
 type AuthView = 'auth' | 'forgot-password';
 
 const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
-  const { secureAction, validateInput, validatePassword } = useEnhancedSecurity();
+  const { validateInput, validatePassword } = useEnhancedSecurity();
+  const { signUp, signIn, loading, error } = useAuthentication();
   const [currentView, setCurrentView] = useState<AuthView>('auth');
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState<AuthFormData>({
@@ -35,7 +36,6 @@ const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
     score: 0,
     suggestions: [] as string[]
   });
-  const [loading, setLoading] = useState(false);
 
   const handlePasswordChange = (password: string) => {
     setFormData(prev => ({ ...prev, password }));
@@ -49,9 +49,8 @@ const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, captchaToken?: string) => {
     e.preventDefault();
-    setLoading(true);
 
     try {
       // Validate email
@@ -69,8 +68,10 @@ const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
         return;
       }
 
-      // For registration, validate password
-      if (!isLogin) {
+      if (isLogin) {
+        await signIn(formData.email, formData.password);
+      } else {
+        // For registration, validate password
         if (!passwordValidation.isValid) {
           toast({
             title: 'Weak Password',
@@ -88,65 +89,22 @@ const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
           });
           return;
         }
-      }
 
-      const actionResult = await secureAction(
-        async () => {
-          if (isLogin) {
-            const { data, error } = await supabase.auth.signInWithPassword({
-              email: emailValidation.sanitizedValue!,
-              password: formData.password
-            });
-            
-            if (error) throw error;
-            return data;
-          } else {
-            const { data, error } = await supabase.auth.signUp({
-              email: emailValidation.sanitizedValue!,
-              password: formData.password,
-              options: {
-                emailRedirectTo: `${window.location.origin}/`,
-                data: {
-                  password: formData.password
-                }
-              }
-            });
-            
-            if (error) throw error;
-            return data;
-          }
-        },
-        {
-          rateLimitAction: isLogin ? 'login_attempt' : 'signup_attempt',
-          maxRequests: 5,
-          windowSeconds: 300
-        }
-      );
+        // Extract first and last name from email as fallback
+        const emailParts = formData.email.split('@')[0];
+        const firstName = emailParts.split('.')[0] || 'User';
+        const lastName = emailParts.split('.')[1] || 'Name';
 
-      if (actionResult.success) {
-        if (isLogin) {
-          toast({
-            title: 'Login Successful',
-            description: 'Welcome back!',
-          });
-        } else {
-          toast({
-            title: 'Account Created',
-            description: 'Complete your profile to get started!',
-          });
-          onProfileStepChange('profile');
-        }
+        await signUp(
+          formData.email,
+          formData.password,
+          formData.confirmPassword,
+          firstName,
+          lastName,
+          captchaToken
+        );
         
-        if (isLogin) {
-          setFormData({ email: '', password: '', confirmPassword: '' });
-          setPasswordValidation({ isValid: false, errors: [], score: 0, suggestions: [] });
-        }
-      } else {
-        toast({
-          title: 'Authentication Failed',
-          description: actionResult.error || 'Please try again.',
-          variant: 'destructive'
-        });
+        onProfileStepChange('profile');
       }
     } catch (error) {
       console.error('Auth error:', error);
@@ -155,8 +113,6 @@ const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
         description: 'An unexpected error occurred.',
         variant: 'destructive'
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -187,6 +143,11 @@ const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
           onToggleMode={() => setIsLogin(!isLogin)}
           onForgotPassword={handleForgotPassword}
         />
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-700 text-sm">{error}</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

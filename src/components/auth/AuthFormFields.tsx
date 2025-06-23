@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,7 +28,7 @@ interface AuthFormFieldsProps {
   loading: boolean;
   onFormDataChange: (data: AuthFormData) => void;
   onPasswordChange: (password: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.FormEvent, captchaToken?: string) => void;
   onToggleMode: () => void;
   onForgotPassword: () => void;
 }
@@ -126,7 +125,8 @@ const AuthFormFields = ({
       return;
     }
     
-    onSubmit(e);
+    // Pass the captcha token to the parent component
+    onSubmit(e, captchaToken);
   };
 
   if (showForgotForm) {
