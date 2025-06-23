@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,13 +46,15 @@ const AuthFormFields = ({
   onForgotPassword
 }: AuthFormFieldsProps) => {
   const [captchaToken, setCaptchaToken] = useState<string>('');
+  const [captchaError, setCaptchaError] = useState<string>('');
   const [showForgotForm, setShowForgotForm] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
 
   const handleCaptchaVerify = (token: string) => {
+    console.log('Captcha verified with token:', token.substring(0, 20) + '...');
     setCaptchaToken(token);
-    console.log('Captcha verified successfully:', token.substring(0, 20) + '...');
+    setCaptchaError('');
     toast({
       title: 'Captcha Verified',
       description: 'You can now proceed with account creation.',
@@ -59,7 +62,9 @@ const AuthFormFields = ({
   };
 
   const handleCaptchaError = () => {
+    console.error('Captcha verification failed');
     setCaptchaToken('');
+    setCaptchaError('Captcha verification failed. Please try again.');
     toast({
       title: 'Captcha Error',
       description: 'Please complete the captcha verification to continue.',
@@ -116,13 +121,20 @@ const AuthFormFields = ({
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isLogin && !captchaToken) {
-      toast({
-        title: 'Captcha Required',
-        description: 'Please complete the captcha verification before creating your account.',
-        variant: 'destructive'
-      });
-      return;
+    console.log('Form submit - isLogin:', isLogin, 'captchaToken:', captchaToken ? 'present' : 'missing');
+    
+    if (!isLogin) {
+      if (!captchaToken) {
+        setCaptchaError('Please complete the captcha verification before creating your account.');
+        toast({
+          title: 'Captcha Required',
+          description: 'Please complete the captcha verification before creating your account.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      console.log('Proceeding with signup - captcha token verified');
     }
     
     // Pass the captcha token to the parent component
@@ -218,10 +230,18 @@ const AuthFormFields = ({
               showVisibilityToggle={false}
             />
             
-            <HCaptchaComponent 
-              onVerify={handleCaptchaVerify}
-              onError={handleCaptchaError}
-            />
+            <div className="space-y-2">
+              <HCaptchaComponent 
+                onVerify={handleCaptchaVerify}
+                onError={handleCaptchaError}
+              />
+              {captchaError && (
+                <p className="text-sm text-red-600 font-medium">{captchaError}</p>
+              )}
+              {captchaToken && (
+                <p className="text-sm text-green-600 font-medium">✓ Captcha verified successfully</p>
+              )}
+            </div>
           </>
         )}
 

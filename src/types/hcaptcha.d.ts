@@ -6,9 +6,9 @@ declare global {
         sitekey: string;
         callback: (token: string) => void;
         'error-callback'?: () => void;
-      }) => void;
-      reset: () => void;
-      execute: () => void;
+      }) => string;
+      reset: (widgetId?: string) => void;
+      execute: (widgetId?: string) => void;
     };
   }
 }
