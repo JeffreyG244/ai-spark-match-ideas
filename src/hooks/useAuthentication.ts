@@ -68,7 +68,8 @@ export const useAuthentication = () => {
         hasCaptcha: !!captchaToken
       });
       
-      const result = await AuthService.signUp(signUpData);
+      // Pass the captcha token to the AuthService
+      const result = await AuthService.signUp(signUpData, captchaToken);
 
       if (!result.success) {
         console.error('Signup failed:', result.error);

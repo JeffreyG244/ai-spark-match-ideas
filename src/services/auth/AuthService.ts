@@ -24,7 +24,7 @@ export interface AuthResult {
 export class AuthService {
   private static securityLogger = new SecurityLoggingService();
 
-  static async signUp(data: SignUpData): Promise<AuthResult> {
+  static async signUp(data: SignUpData, captchaToken?: string): Promise<AuthResult> {
     try {
       console.log('AuthService.signUp starting for:', data.email);
       
@@ -46,7 +46,8 @@ export class AuthService {
             first_name: data.firstName,
             last_name: data.lastName
           },
-          emailRedirectTo: redirectUrl
+          emailRedirectTo: redirectUrl,
+          captchaToken: captchaToken // Include the captcha token
         }
       });
 
