@@ -19,6 +19,14 @@ export const useAuthentication = () => {
     lastName: string,
     captchaToken?: string
   ) => {
+    console.log('useAuthentication.signUp called with:', {
+      email,
+      firstName,
+      lastName,
+      hasCaptchaToken: !!captchaToken,
+      captchaTokenLength: captchaToken?.length || 0
+    });
+
     setError(null);
     setLoading(true);
 
@@ -48,7 +56,9 @@ export const useAuthentication = () => {
         return;
       }
 
+      // Verify captcha token is present for signup
       if (!captchaToken) {
+        console.error('No captcha token provided for signup');
         setError('Please complete the captcha verification');
         setLoading(false);
         return;
@@ -61,14 +71,8 @@ export const useAuthentication = () => {
         lastName: sanitizedLastName
       };
 
-      console.log('Attempting signup with:', { 
-        email: sanitizedEmail, 
-        firstName: sanitizedFirstName, 
-        lastName: sanitizedLastName,
-        hasCaptcha: !!captchaToken
-      });
+      console.log('Calling AuthService.signUp with captcha token:', captchaToken.substring(0, 20) + '...');
       
-      // Pass the captcha token to the AuthService
       const result = await AuthService.signUp(signUpData, captchaToken);
 
       if (!result.success) {
@@ -78,7 +82,7 @@ export const useAuthentication = () => {
         return;
       }
 
-      console.log('Signup successful');
+      console.log('Signup successful, user created');
       toast({
         title: 'Account created successfully',
         description: 'Welcome to Luvlang! Please check your email to verify your account.',

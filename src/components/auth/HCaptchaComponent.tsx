@@ -10,26 +10,29 @@ const HCaptchaComponent = ({ onVerify, onError }: HCaptchaComponentProps) => {
   const captchaRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [widgetId, setWidgetId] = useState<string | null>(null);
+  const [isRendered, setIsRendered] = useState(false);
   const HCAPTCHA_SITE_KEY = "0ecac0a4-29ec-40a8-b234-9baced509ff8";
 
   useEffect(() => {
-    const checkAndRenderCaptcha = () => {
-      if (window.hcaptcha && captchaRef.current && !widgetId) {
+    const renderCaptcha = () => {
+      if (window.hcaptcha && captchaRef.current && !isRendered) {
         try {
           console.log('Rendering hCaptcha widget...');
           const id = window.hcaptcha.render(captchaRef.current, {
             sitekey: HCAPTCHA_SITE_KEY,
             callback: (token: string) => {
-              console.log('hCaptcha verification successful');
+              console.log('hCaptcha verification successful, token:', token.substring(0, 20) + '...');
+              setIsLoaded(true);
               onVerify(token);
             },
             'error-callback': () => {
               console.error('hCaptcha error occurred');
+              setIsLoaded(false);
               if (onError) onError();
             },
           });
           setWidgetId(id);
-          setIsLoaded(true);
+          setIsRendered(true);
           console.log('hCaptcha widget rendered successfully with ID:', id);
         } catch (error) {
           console.error('Error rendering hCaptcha:', error);
@@ -40,34 +43,22 @@ const HCaptchaComponent = ({ onVerify, onError }: HCaptchaComponentProps) => {
 
     // Check if hCaptcha is already loaded
     if (window.hcaptcha) {
-      checkAndRenderCaptcha();
+      renderCaptcha();
     } else {
-      // Wait for hCaptcha to load
-      const checkInterval = setInterval(() => {
+      // Wait for hCaptcha to load with a more robust approach
+      const checkForHCaptcha = () => {
         if (window.hcaptcha) {
-          clearInterval(checkInterval);
-          checkAndRenderCaptcha();
+          renderCaptcha();
+        } else {
+          setTimeout(checkForHCaptcha, 100);
         }
-      }, 100);
-
-      // Cleanup interval after 10 seconds to prevent infinite checking
-      const timeout = setTimeout(() => {
-        clearInterval(checkInterval);
-        console.error('hCaptcha failed to load within 10 seconds');
-        if (onError) onError();
-      }, 10000);
-
-      return () => {
-        clearInterval(checkInterval);
-        clearTimeout(timeout);
       };
+      checkForHCaptcha();
     }
-  }, [onVerify, onError, widgetId]);
 
-  // Cleanup on unmount
-  useEffect(() => {
+    // Cleanup function
     return () => {
-      if (widgetId && window.hcaptcha) {
+      if (widgetId && window.hcaptcha && isRendered) {
         try {
           window.hcaptcha.reset(widgetId);
         } catch (error) {
@@ -75,7 +66,7 @@ const HCaptchaComponent = ({ onVerify, onError }: HCaptchaComponentProps) => {
         }
       }
     };
-  }, [widgetId]);
+  }, [onVerify, onError, isRendered]);
 
   return (
     <div className="my-4 flex justify-center">

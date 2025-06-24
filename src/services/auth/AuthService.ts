@@ -27,6 +27,7 @@ export class AuthService {
   static async signUp(data: SignUpData, captchaToken?: string): Promise<AuthResult> {
     try {
       console.log('AuthService.signUp starting for:', data.email);
+      console.log('Captcha token provided:', !!captchaToken, captchaToken?.substring(0, 20) + '...');
       
       // Client-side validation for better UX
       const passwordValidation = validatePasswordStrength(data.password);
@@ -34,9 +35,16 @@ export class AuthService {
         return { success: false, error: passwordValidation.error };
       }
 
+      // Verify captcha token is present
+      if (!captchaToken) {
+        console.error('No captcha token provided to AuthService.signUp');
+        return { success: false, error: 'Captcha verification required' };
+      }
+
       // Use window.location.origin for the redirect URL to ensure it works in all environments
       const redirectUrl = `${window.location.origin}/dashboard`;
       console.log('Using redirect URL:', redirectUrl);
+      console.log('Submitting to Supabase with captcha token');
 
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
@@ -47,7 +55,7 @@ export class AuthService {
             last_name: data.lastName
           },
           emailRedirectTo: redirectUrl,
-          captchaToken: captchaToken // Include the captcha token
+          captchaToken: captchaToken // Ensure captcha token is passed
         }
       });
 

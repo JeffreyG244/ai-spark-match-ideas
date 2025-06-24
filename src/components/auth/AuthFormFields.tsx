@@ -52,7 +52,7 @@ const AuthFormFields = ({
   const [forgotLoading, setForgotLoading] = useState(false);
 
   const handleCaptchaVerify = (token: string) => {
-    console.log('Captcha verified with token:', token.substring(0, 20) + '...');
+    console.log('Captcha verified successfully with token:', token.substring(0, 20) + '...');
     setCaptchaToken(token);
     setCaptchaError('');
     toast({
@@ -121,23 +121,30 @@ const AuthFormFields = ({
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Form submit - isLogin:', isLogin, 'captchaToken:', captchaToken ? 'present' : 'missing');
+    console.log('Form submit attempt:', {
+      isLogin,
+      email: formData.email,
+      hasPassword: !!formData.password,
+      hasCaptchaToken: !!captchaToken,
+      passwordValid: passwordValidation.isValid
+    });
     
+    // For signup, require captcha token
     if (!isLogin) {
       if (!captchaToken) {
-        setCaptchaError('Please complete the captcha verification before creating your account.');
+        const errorMsg = 'Please complete the captcha verification before creating your account.';
+        setCaptchaError(errorMsg);
         toast({
           title: 'Captcha Required',
-          description: 'Please complete the captcha verification before creating your account.',
+          description: errorMsg,
           variant: 'destructive'
         });
         return;
       }
-      
-      console.log('Proceeding with signup - captcha token verified');
+      console.log('Signup captcha validation passed, proceeding with token:', captchaToken.substring(0, 20) + '...');
     }
     
-    // Pass the captcha token to the parent component
+    // Call parent submit handler with captcha token
     onSubmit(e, captchaToken);
   };
 
@@ -254,7 +261,6 @@ const AuthFormFields = ({
         </Button>
       </form>
 
-      {/* Moved forgot password link right below the Create Account/Sign In button */}
       <div className="text-center">
         <button
           type="button"
