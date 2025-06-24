@@ -14,6 +14,7 @@ interface PasswordInputProps {
   disabled?: boolean;
   required?: boolean;
   showVisibilityToggle?: boolean;
+  autoComplete?: string;
 }
 
 const PasswordInput = ({ 
@@ -24,7 +25,8 @@ const PasswordInput = ({
   placeholder = "Enter your password",
   disabled = false,
   required = false,
-  showVisibilityToggle = true
+  showVisibilityToggle = true,
+  autoComplete
 }: PasswordInputProps) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -40,6 +42,7 @@ const PasswordInput = ({
           placeholder={placeholder}
           required={required}
           disabled={disabled}
+          autoComplete={autoComplete}
         />
         {showVisibilityToggle && (
           <Button
