@@ -16,15 +16,12 @@ export const useAuthentication = () => {
     password: string, 
     confirmPassword: string, 
     firstName: string, 
-    lastName: string,
-    captchaToken?: string
+    lastName: string
   ) => {
     console.log('useAuthentication.signUp called with:', {
       email,
       firstName,
-      lastName,
-      hasCaptchaToken: !!captchaToken,
-      captchaTokenLength: captchaToken?.length || 0
+      lastName
     });
 
     setError(null);
@@ -56,14 +53,6 @@ export const useAuthentication = () => {
         return;
       }
 
-      // Verify captcha token is present for signup
-      if (!captchaToken) {
-        console.error('No captcha token provided for signup');
-        setError('Please complete the captcha verification');
-        setLoading(false);
-        return;
-      }
-
       const signUpData: SignUpData = {
         email: sanitizedEmail,
         password: sanitizedPassword,
@@ -71,9 +60,9 @@ export const useAuthentication = () => {
         lastName: sanitizedLastName
       };
 
-      console.log('Calling AuthService.signUp with captcha token:', captchaToken.substring(0, 20) + '...');
+      console.log('Calling AuthService.signUp without captcha token');
       
-      const result = await AuthService.signUp(signUpData, captchaToken);
+      const result = await AuthService.signUp(signUpData);
 
       if (!result.success) {
         console.error('Signup failed:', result.error);

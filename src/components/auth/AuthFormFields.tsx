@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import PasswordInput from './PasswordInput';
 import PasswordStrengthIndicator from './PasswordStrengthIndicator';
-import HCaptchaComponent from './HCaptchaComponent';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -29,7 +28,7 @@ interface AuthFormFieldsProps {
   loading: boolean;
   onFormDataChange: (data: AuthFormData) => void;
   onPasswordChange: (password: string) => void;
-  onSubmit: (e: React.FormEvent, captchaToken?: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
   onToggleMode: () => void;
   onForgotPassword: () => void;
 }
@@ -45,32 +44,9 @@ const AuthFormFields = ({
   onToggleMode,
   onForgotPassword
 }: AuthFormFieldsProps) => {
-  const [captchaToken, setCaptchaToken] = useState<string>('');
-  const [captchaError, setCaptchaError] = useState<string>('');
   const [showForgotForm, setShowForgotForm] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
-
-  const handleCaptchaVerify = (token: string) => {
-    console.log('Captcha verified successfully with token:', token.substring(0, 20) + '...');
-    setCaptchaToken(token);
-    setCaptchaError('');
-    toast({
-      title: 'Captcha Verified',
-      description: 'You can now proceed with account creation.',
-    });
-  };
-
-  const handleCaptchaError = () => {
-    console.error('Captcha verification failed');
-    setCaptchaToken('');
-    setCaptchaError('Captcha verification failed. Please try again.');
-    toast({
-      title: 'Captcha Error',
-      description: 'Please complete the captcha verification to continue.',
-      variant: 'destructive'
-    });
-  };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,27 +101,11 @@ const AuthFormFields = ({
       isLogin,
       email: formData.email,
       hasPassword: !!formData.password,
-      hasCaptchaToken: !!captchaToken,
       passwordValid: passwordValidation.isValid
     });
     
-    // For signup, require captcha token
-    if (!isLogin) {
-      if (!captchaToken) {
-        const errorMsg = 'Please complete the captcha verification before creating your account.';
-        setCaptchaError(errorMsg);
-        toast({
-          title: 'Captcha Required',
-          description: errorMsg,
-          variant: 'destructive'
-        });
-        return;
-      }
-      console.log('Signup captcha validation passed, proceeding with token:', captchaToken.substring(0, 20) + '...');
-    }
-    
-    // Call parent submit handler with captcha token
-    onSubmit(e, captchaToken);
+    // Call parent submit handler
+    onSubmit(e);
   };
 
   if (showForgotForm) {
@@ -225,37 +185,22 @@ const AuthFormFields = ({
         />
 
         {!isLogin && (
-          <>
-            <PasswordInput
-              id="confirmPassword"
-              label="Confirm Password"
-              value={formData.confirmPassword}
-              onChange={(value) => onFormDataChange({ ...formData, confirmPassword: value })}
-              placeholder="Confirm your password"
-              disabled={loading}
-              required
-              showVisibilityToggle={false}
-            />
-            
-            <div className="space-y-2">
-              <HCaptchaComponent 
-                onVerify={handleCaptchaVerify}
-                onError={handleCaptchaError}
-              />
-              {captchaError && (
-                <p className="text-sm text-red-600 font-medium">{captchaError}</p>
-              )}
-              {captchaToken && (
-                <p className="text-sm text-green-600 font-medium">✓ Captcha verified successfully</p>
-              )}
-            </div>
-          </>
+          <PasswordInput
+            id="confirmPassword"
+            label="Confirm Password"
+            value={formData.confirmPassword}
+            onChange={(value) => onFormDataChange({ ...formData, confirmPassword: value })}
+            placeholder="Confirm your password"
+            disabled={loading}
+            required
+            showVisibilityToggle={false}
+          />
         )}
 
         <Button 
           type="submit" 
           className="w-full bg-black hover:bg-gray-800 text-white" 
-          disabled={loading || (!isLogin && (!passwordValidation.isValid || !captchaToken))}
+          disabled={loading || (!isLogin && !passwordValidation.isValid)}
         >
           {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
         </Button>

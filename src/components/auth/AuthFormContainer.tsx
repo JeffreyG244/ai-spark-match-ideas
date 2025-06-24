@@ -49,7 +49,7 @@ const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent, captchaToken?: string) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
@@ -95,13 +95,13 @@ const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
         const firstName = emailParts.split('.')[0] || 'User';
         const lastName = emailParts.split('.')[1] || 'Name';
 
+        // No captcha token needed since it's disabled
         await signUp(
           formData.email,
           formData.password,
           formData.confirmPassword,
           firstName,
-          lastName,
-          captchaToken
+          lastName
         );
         
         onProfileStepChange('profile');

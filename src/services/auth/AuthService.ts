@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { validatePasswordStrength } from '@/utils/passwordValidation';
 import { SecurityLoggingService } from '../security/SecurityLoggingService';
@@ -24,10 +23,9 @@ export interface AuthResult {
 export class AuthService {
   private static securityLogger = new SecurityLoggingService();
 
-  static async signUp(data: SignUpData, captchaToken?: string): Promise<AuthResult> {
+  static async signUp(data: SignUpData): Promise<AuthResult> {
     try {
       console.log('AuthService.signUp starting for:', data.email);
-      console.log('Captcha token provided:', !!captchaToken, captchaToken?.substring(0, 20) + '...');
       
       // Client-side validation for better UX
       const passwordValidation = validatePasswordStrength(data.password);
@@ -35,16 +33,10 @@ export class AuthService {
         return { success: false, error: passwordValidation.error };
       }
 
-      // Verify captcha token is present
-      if (!captchaToken) {
-        console.error('No captcha token provided to AuthService.signUp');
-        return { success: false, error: 'Captcha verification required' };
-      }
-
       // Use window.location.origin for the redirect URL to ensure it works in all environments
       const redirectUrl = `${window.location.origin}/dashboard`;
       console.log('Using redirect URL:', redirectUrl);
-      console.log('Submitting to Supabase with captcha token');
+      console.log('Submitting to Supabase without captcha token');
 
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
@@ -54,8 +46,8 @@ export class AuthService {
             first_name: data.firstName,
             last_name: data.lastName
           },
-          emailRedirectTo: redirectUrl,
-          captchaToken: captchaToken // Ensure captcha token is passed
+          emailRedirectTo: redirectUrl
+          // No captcha token needed since it's disabled
         }
       });
 
