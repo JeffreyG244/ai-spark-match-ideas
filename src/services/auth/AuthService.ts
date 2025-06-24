@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { validatePasswordStrength } from '@/utils/passwordValidation';
 import { SecurityLoggingService } from '../security/SecurityLoggingService';
