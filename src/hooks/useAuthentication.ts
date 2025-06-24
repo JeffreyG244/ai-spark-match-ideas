@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { AuthService, SignUpData, SignInData } from '@/services/auth/AuthService';
 import { validateEmailFormat, sanitizeAuthInput } from '@/utils/authConfig';
-import { sanitizePasswordInput } from '@/utils/passwordValidation';
+import { validatePasswordStrength, sanitizePasswordInput } from '@/utils/passwordValidation';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,34 +21,60 @@ export const useAuthentication = () => {
     console.log('useAuthentication.signUp called with:', {
       email,
       firstName,
-      lastName
+      lastName,
+      passwordLength: password.length
     });
 
     setError(null);
     setLoading(true);
 
     try {
-      // Sanitize inputs
+      // Sanitize inputs first
       const sanitizedEmail = sanitizeAuthInput(email);
       const sanitizedPassword = sanitizePasswordInput(password);
       const sanitizedFirstName = sanitizeAuthInput(firstName);
       const sanitizedLastName = sanitizeAuthInput(lastName);
 
-      // Validate inputs
+      console.log('Sanitized inputs:', {
+        email: sanitizedEmail,
+        passwordLength: sanitizedPassword.length,
+        firstName: sanitizedFirstName,
+        lastName: sanitizedLastName
+      });
+
+      // Validate email format
       if (!validateEmailFormat(sanitizedEmail)) {
-        setError('Please enter a valid email address');
+        const errorMsg = 'Please enter a valid email address';
+        console.error('Email validation failed:', errorMsg);
+        setError(errorMsg);
         setLoading(false);
         return;
       }
 
+      // Validate password strength BEFORE sending to database
+      const passwordValidation = validatePasswordStrength(sanitizedPassword);
+      if (!passwordValidation.isValid) {
+        const errorMsg = passwordValidation.error || 'Password does not meet requirements';
+        console.error('Password validation failed:', errorMsg);
+        setError(errorMsg);
+        setLoading(false);
+        return;
+      }
+
+      // Check password confirmation
       if (sanitizedPassword !== confirmPassword) {
-        setError('Passwords do not match');
+        const errorMsg = 'Passwords do not match';
+        console.error('Password confirmation failed');
+        setError(errorMsg);
         setLoading(false);
         return;
       }
 
-      if (!sanitizedFirstName || !sanitizedLastName) {
-        setError('First name and last name are required');
+      // Validate names
+      if (!sanitizedFirstName.trim() || !sanitizedLastName.trim()) {
+        const errorMsg = 'First name and last name are required';
+        console.error('Name validation failed');
+        setError(errorMsg);
         setLoading(false);
         return;
       }
@@ -60,13 +86,23 @@ export const useAuthentication = () => {
         lastName: sanitizedLastName
       };
 
-      console.log('Calling AuthService.signUp without captcha token');
+      console.log('Calling AuthService.signUp with validated data');
       
       const result = await AuthService.signUp(signUpData);
 
       if (!result.success) {
         console.error('Signup failed:', result.error);
-        setError(result.error || 'Signup failed');
+        
+        // Handle specific database errors
+        if (result.error?.includes('Password must be at least')) {
+          setError('Password must be at least 6 characters long and meet security requirements.');
+        } else if (result.error?.includes('User already registered')) {
+          setError('An account with this email already exists. Please sign in instead.');
+        } else if (result.error?.includes('Invalid email')) {
+          setError('Please enter a valid email address.');
+        } else {
+          setError(result.error || 'Account creation failed. Please try again.');
+        }
         setLoading(false);
         return;
       }
@@ -74,13 +110,21 @@ export const useAuthentication = () => {
       console.log('Signup successful, user created');
       toast({
         title: 'Account created successfully',
-        description: 'Welcome to Luvlang! Please check your email to verify your account.',
+        description: 'Welcome to Luvlang! You can now start using the app.',
       });
 
       navigate('/dashboard');
     } catch (error) {
-      console.error('Signup error:', error);
-      setError('An unexpected error occurred. Please try again.');
+      console.error('Signup unexpected error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      
+      if (errorMessage.includes('Password must be at least')) {
+        setError('Password must be at least 6 characters long and meet security requirements.');
+      } else if (errorMessage.includes('duplicate key value')) {
+        setError('An account with this email already exists. Please sign in instead.');
+      } else {
+        setError('Account creation failed. Please check your information and try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -96,6 +140,12 @@ export const useAuthentication = () => {
 
       if (!validateEmailFormat(sanitizedEmail)) {
         setError('Please enter a valid email address');
+        setLoading(false);
+        return;
+      }
+
+      if (!sanitizedPassword || sanitizedPassword.length < 1) {
+        setError('Please enter your password');
         setLoading(false);
         return;
       }
@@ -117,8 +167,10 @@ export const useAuthentication = () => {
           setError('Invalid email or password. Please check your credentials and try again.');
         } else if (result.error?.includes('Email not confirmed')) {
           setError('Please check your email and click the confirmation link before signing in.');
+        } else if (result.error?.includes('Too many requests')) {
+          setError('Too many login attempts. Please wait a moment and try again.');
         } else {
-          setError(result.error || 'Login failed');
+          setError(result.error || 'Login failed. Please try again.');
         }
         setLoading(false);
         return;
@@ -132,8 +184,8 @@ export const useAuthentication = () => {
 
       navigate('/dashboard');
     } catch (error) {
-      console.error('Login error:', error);
-      setError('An unexpected error occurred. Please try again.');
+      console.error('Login unexpected error:', error);
+      setError('Login failed. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }

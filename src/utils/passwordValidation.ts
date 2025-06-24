@@ -1,9 +1,21 @@
 
-// Password validation utilities that work with the new database-level validation
+// Enhanced password validation utilities that work with the database-level validation
 export const validatePasswordStrength = (password: string): { isValid: boolean; error?: string } => {
-  // Minimum length check
-  if (!password || password.length < 6) {
+  console.log('Validating password strength, length:', password?.length);
+
+  // Check if password exists
+  if (!password) {
+    return { isValid: false, error: 'Password is required' };
+  }
+
+  // Minimum length check (must match database trigger requirement)
+  if (password.length < 6) {
     return { isValid: false, error: 'Password must be at least 6 characters long' };
+  }
+
+  // Maximum reasonable length check
+  if (password.length > 128) {
+    return { isValid: false, error: 'Password must be less than 128 characters long' };
   }
 
   // Check against common leaked passwords (comprehensive list)
@@ -34,11 +46,32 @@ export const validatePasswordStrength = (password: string): { isValid: boolean; 
     };
   }
 
+  // Check for basic password patterns that are too simple
+  if (/^(.)\1+$/.test(password)) {
+    return {
+      isValid: false,
+      error: 'Password cannot be all the same character.'
+    };
+  }
+
+  // Check for simple keyboard patterns
+  const keyboardPatterns = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', '1234567890'];
+  for (const pattern of keyboardPatterns) {
+    if (lowerPassword.includes(pattern) || lowerPassword.includes(pattern.split('').reverse().join(''))) {
+      return {
+        isValid: false,
+        error: 'Password cannot contain keyboard patterns.'
+      };
+    }
+  }
+
+  console.log('Password validation passed');
   return { isValid: true };
 };
 
 export const sanitizePasswordInput = (password: string): string => {
   if (!password) return '';
   // Remove any potentially dangerous characters while preserving password functionality
+  // Trim whitespace but preserve internal spaces if any
   return password.trim();
 };

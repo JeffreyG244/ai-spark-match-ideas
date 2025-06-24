@@ -101,8 +101,55 @@ const AuthFormFields = ({
       isLogin,
       email: formData.email,
       hasPassword: !!formData.password,
+      passwordLength: formData.password?.length || 0,
       passwordValid: passwordValidation.isValid
     });
+
+    // Basic client-side validation before calling parent submit
+    if (!formData.email) {
+      toast({
+        title: 'Email Required',
+        description: 'Please enter your email address.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!formData.password) {
+      toast({
+        title: 'Password Required',
+        description: 'Please enter your password.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!isLogin && formData.password.length < 6) {
+      toast({
+        title: 'Password Too Short',
+        description: 'Password must be at least 6 characters long.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!isLogin && !passwordValidation.isValid) {
+      toast({
+        title: 'Weak Password',
+        description: 'Please choose a stronger password that meets the security requirements.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      toast({
+        title: 'Passwords Don\'t Match',
+        description: 'Please make sure both passwords are identical.',
+        variant: 'destructive'
+      });
+      return;
+    }
     
     // Call parent submit handler
     onSubmit(e);
@@ -167,6 +214,7 @@ const AuthFormFields = ({
             placeholder="your@email.com"
             required
             disabled={loading}
+            autoComplete="email"
           />
         </div>
 
@@ -177,6 +225,7 @@ const AuthFormFields = ({
           onChange={onPasswordChange}
           disabled={loading}
           required
+          autoComplete={isLogin ? "current-password" : "new-password"}
         />
 
         <PasswordStrengthIndicator
@@ -194,13 +243,14 @@ const AuthFormFields = ({
             disabled={loading}
             required
             showVisibilityToggle={false}
+            autoComplete="new-password"
           />
         )}
 
         <Button 
           type="submit" 
           className="w-full bg-black hover:bg-gray-800 text-white" 
-          disabled={loading || (!isLogin && !passwordValidation.isValid)}
+          disabled={loading || (!isLogin && (!passwordValidation.isValid || formData.password.length < 6))}
         >
           {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
         </Button>
