@@ -44,4 +44,7 @@ export default Index;
 enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false  # This is set to false
-
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false  # This is set to false
