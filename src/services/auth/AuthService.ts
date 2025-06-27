@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { validatePasswordStrength } from '@/utils/passwordValidation';
 import { SecurityLoggingService } from '../security/SecurityLoggingService';
@@ -27,7 +28,7 @@ export class AuthService {
     try {
       console.log('AuthService.signUp starting for:', data.email);
       
-      // Validate password strength again at service level
+      // Validate password strength at service level
       const passwordValidation = validatePasswordStrength(data.password);
       if (!passwordValidation.isValid) {
         console.error('Password validation failed at service level:', passwordValidation.error);
@@ -113,11 +114,9 @@ export class AuthService {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('AuthService.signUp unexpected error:', errorMessage);
       
-      // Handle common database errors
+      // Handle common errors without database-specific references
       let userErrorMessage = 'Account creation failed. Please try again.';
-      if (errorMessage.includes('Password must be at least')) {
-        userErrorMessage = 'Password must be at least 6 characters long and meet security requirements.';
-      } else if (errorMessage.includes('duplicate key value')) {
+      if (errorMessage.includes('duplicate key value')) {
         userErrorMessage = 'An account with this email already exists. Please sign in instead.';
       } else if (errorMessage.includes('invalid input syntax')) {
         userErrorMessage = 'Please check your information and try again.';
