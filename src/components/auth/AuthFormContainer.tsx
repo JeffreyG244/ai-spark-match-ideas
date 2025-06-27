@@ -22,7 +22,7 @@ type AuthView = 'auth' | 'forgot-password';
 
 const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
   const { validateInput, validatePassword } = useEnhancedSecurity();
-  const { signUp, signIn, loading, error } = useAuthentication();
+  const { signUp, signIn, resendConfirmationEmail, loading, error } = useAuthentication();
   const [currentView, setCurrentView] = useState<AuthView>('auth');
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState<AuthFormData>({
@@ -124,6 +124,10 @@ const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
     setCurrentView('auth');
   };
 
+  const handleResendConfirmation = async (email: string) => {
+    await resendConfirmationEmail(email);
+  };
+
   if (currentView === 'forgot-password') {
     return <ForgotPasswordForm onBackToAuth={handleBackToAuth} />;
   }
@@ -142,6 +146,7 @@ const AuthFormContainer = ({ onProfileStepChange }: AuthFormContainerProps) => {
           onSubmit={handleSubmit}
           onToggleMode={() => setIsLogin(!isLogin)}
           onForgotPassword={handleForgotPassword}
+          onResendConfirmation={handleResendConfirmation}
         />
         {error && (
           <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">

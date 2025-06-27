@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { validatePasswordStrength } from '@/utils/passwordValidation';
 import { SecurityLoggingService } from '../security/SecurityLoggingService';
@@ -205,6 +204,68 @@ export class AuthService {
       }
     } catch (error) {
       console.error('Unexpected sign out error:', error);
+    }
+  }
+
+  static async resendConfirmationEmail(email: string): Promise<AuthResult> {
+    try {
+      console.log('AuthService.resendConfirmationEmail starting for:', email);
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        const error = 'Please enter a valid email address';
+        console.error('Email format validation failed');
+        return { success: false, error };
+      }
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        }
+      });
+
+      if (error) {
+        console.error('Supabase resend confirmation error:', error);
+        
+        // Handle specific Supabase errors
+        let errorMessage = error.message;
+        if (error.message.includes('For security purposes')) {
+          errorMessage = 'For security reasons, you can only request a new confirmation email once per minute. Please wait and try again.';
+        } else if (error.message.includes('User not found')) {
+          errorMessage = 'No account found with this email address. Please sign up first.';
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = 'Your email is not confirmed yet. A new confirmation email has been sent.';
+        }
+
+        await this.securityLogger.logEvent(
+          'resend_confirmation_failed',
+          { email: email, error: error.message },
+          'medium'
+        );
+        return { success: false, error: errorMessage };
+      }
+
+      console.log('Confirmation email resent successfully');
+      await this.securityLogger.logEvent(
+        'resend_confirmation_success',
+        { email: email },
+        'low'
+      );
+
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('AuthService.resendConfirmationEmail unexpected error:', errorMessage);
+      
+      await this.securityLogger.logEvent(
+        'resend_confirmation_unexpected_error',
+        { email: email, error: errorMessage },
+        'high'
+      );
+      return { success: false, error: 'Failed to resend confirmation email. Please try again.' };
     }
   }
 }

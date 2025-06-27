@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { AuthService, SignUpData, SignInData } from '@/services/auth/AuthService';
 import { validateEmailFormat, sanitizeAuthInput } from '@/utils/authConfig';
@@ -191,10 +190,49 @@ export const useAuthentication = () => {
     }
   };
 
+  const resendConfirmationEmail = async (email: string) => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const sanitizedEmail = sanitizeAuthInput(email);
+
+      if (!validateEmailFormat(sanitizedEmail)) {
+        setError('Please enter a valid email address');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Resending confirmation email to:', sanitizedEmail);
+
+      const result = await AuthService.resendConfirmationEmail(sanitizedEmail);
+
+      if (!result.success) {
+        console.error('Resend confirmation failed:', result.error);
+        setError(result.error || 'Failed to resend confirmation email. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Confirmation email resent successfully');
+      toast({
+        title: 'Confirmation email sent',
+        description: 'Please check your email and click the confirmation link to activate your account.',
+      });
+
+    } catch (error) {
+      console.error('Resend confirmation unexpected error:', error);
+      setError('Failed to resend confirmation email. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     error,
     signUp,
-    signIn
+    signIn,
+    resendConfirmationEmail
   };
 };

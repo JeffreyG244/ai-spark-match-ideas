@@ -31,6 +31,7 @@ interface AuthFormFieldsProps {
   onSubmit: (e: React.FormEvent) => void;
   onToggleMode: () => void;
   onForgotPassword: () => void;
+  onResendConfirmation?: (email: string) => void;
 }
 
 const AuthFormFields = ({
@@ -42,11 +43,15 @@ const AuthFormFields = ({
   onPasswordChange,
   onSubmit,
   onToggleMode,
-  onForgotPassword
+  onForgotPassword,
+  onResendConfirmation
 }: AuthFormFieldsProps) => {
   const [showForgotForm, setShowForgotForm] = useState(false);
+  const [showResendForm, setShowResendForm] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
+  const [resendEmail, setResendEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +96,31 @@ const AuthFormFields = ({
       });
     } finally {
       setForgotLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resendEmail) {
+      toast({
+        title: 'Email Required',
+        description: 'Please enter your email address.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setResendLoading(true);
+    try {
+      if (onResendConfirmation) {
+        await onResendConfirmation(resendEmail);
+        setShowResendForm(false);
+        setResendEmail('');
+      }
+    } catch (error) {
+      console.error('Resend confirmation error:', error);
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -201,6 +231,52 @@ const AuthFormFields = ({
     );
   }
 
+  if (showResendForm) {
+    return (
+      <div className="space-y-4">
+        <div className="text-center mb-4">
+          <h3 className="text-lg font-semibold">Resend Confirmation Email</h3>
+          <p className="text-sm text-muted-foreground">
+            Enter your email address and we'll send you a new confirmation link.
+          </p>
+        </div>
+        
+        <form onSubmit={handleResendConfirmation} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="resend-email">Email Address</Label>
+            <Input
+              id="resend-email"
+              type="email"
+              value={resendEmail}
+              onChange={(e) => setResendEmail(e.target.value)}
+              placeholder="Enter your email address"
+              required
+              disabled={resendLoading}
+            />
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={resendLoading || !resendEmail}
+          >
+            {resendLoading ? 'Sending...' : 'Resend Confirmation Email'}
+          </Button>
+        </form>
+
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full"
+          onClick={() => setShowResendForm(false)}
+          disabled={resendLoading}
+        >
+          Back to Sign In
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <form onSubmit={handleFormSubmit} className="space-y-4">
@@ -256,15 +332,26 @@ const AuthFormFields = ({
         </Button>
       </form>
 
-      <div className="text-center">
+      <div className="text-center space-y-2">
         <button
           type="button"
           onClick={() => setShowForgotForm(true)}
-          className="text-sm text-blue-600 hover:text-blue-800 underline font-medium"
+          className="text-sm text-blue-600 hover:text-blue-800 underline font-medium block"
           disabled={loading}
         >
           Forgot your password or username?
         </button>
+        
+        {isLogin && (
+          <button
+            type="button"
+            onClick={() => setShowResendForm(true)}
+            className="text-sm text-green-600 hover:text-green-800 underline font-medium block"
+            disabled={loading}
+          >
+            Didn't receive confirmation email?
+          </button>
+        )}
       </div>
 
       <Button
