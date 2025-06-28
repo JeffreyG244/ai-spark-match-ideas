@@ -56,10 +56,9 @@ export class AuthService {
         return { success: false, error };
       }
 
-      const redirectUrl = `${window.location.origin}/dashboard`;
-      console.log('Using redirect URL:', redirectUrl);
       console.log('Submitting to Supabase with validated data');
 
+      // Since email confirmations are disabled, we don't need emailRedirectTo
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -67,8 +66,7 @@ export class AuthService {
           data: {
             first_name: data.firstName,
             last_name: data.lastName
-          },
-          emailRedirectTo: redirectUrl
+          }
         }
       });
 
