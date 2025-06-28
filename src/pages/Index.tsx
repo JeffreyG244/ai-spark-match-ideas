@@ -40,8 +40,3 @@ const Index = () => {
 };
 
 export default Index;
-[auth.email]
-enable_signup = true
-double_confirm_changes = true
-enable_confirmations = false  # This is set to false
-
