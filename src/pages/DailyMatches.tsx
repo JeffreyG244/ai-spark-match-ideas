@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Sparkles, RefreshCw, Heart } from 'lucide-react';
@@ -17,13 +17,16 @@ const DailyMatches = () => {
     generateDailyMatches, 
     markAsViewed 
   } = useDailyMatches();
+  
+  const hasGeneratedMatches = useRef(false);
 
   useEffect(() => {
-    if (user && dailyMatches.length === 0 && !isLoading) {
-      // Generate daily matches if none exist
+    if (user && !hasGeneratedMatches.current && dailyMatches.length === 0 && !isLoading) {
+      console.log('Generating daily matches for user:', user.id);
+      hasGeneratedMatches.current = true;
       generateDailyMatches();
     }
-  }, [user, dailyMatches.length, isLoading]);
+  }, [user, dailyMatches.length, isLoading, generateDailyMatches]);
 
   const handleViewMatch = (matchId: string) => {
     markAsViewed(matchId);
@@ -31,6 +34,7 @@ const DailyMatches = () => {
   };
 
   const handleRefreshMatches = () => {
+    hasGeneratedMatches.current = false;
     generateDailyMatches();
   };
 
