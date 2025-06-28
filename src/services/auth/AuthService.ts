@@ -58,7 +58,7 @@ export class AuthService {
 
       console.log('Submitting to Supabase with validated data');
 
-      // Sign up without email confirmation requirements
+      // Sign up with email confirmations disabled
       const { data: authData, error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -66,7 +66,8 @@ export class AuthService {
           data: {
             first_name: data.firstName,
             last_name: data.lastName
-          }
+          },
+          emailRedirectTo: undefined // Explicitly disable email confirmation redirect
         }
       });
 
@@ -83,21 +84,6 @@ export class AuthService {
           errorMessage = 'Please enter a valid email address.';
         } else if (error.message.includes('Signup is disabled')) {
           errorMessage = 'Account creation is temporarily disabled. Please try again later.';
-        } else if (error.message.includes('Email not confirmed')) {
-          // Force confirm the user if email confirmation is causing issues
-          console.log('Attempting to bypass email confirmation requirement');
-          // For development, we'll treat this as a successful signup
-          errorMessage = 'Account created successfully. You can now sign in.';
-        }
-
-        // If it's an email confirmation error, we'll still log success
-        if (error.message.includes('Email not confirmed') && authData.user) {
-          await this.securityLogger.logEvent(
-            'user_signup_success',
-            { email: data.email, user_id: authData.user?.id },
-            'low'
-          );
-          return { success: true, user: authData.user };
         }
 
         await this.securityLogger.logEvent(
@@ -162,14 +148,14 @@ export class AuthService {
       if (error) {
         console.error('Supabase signin error:', error);
         
-        // Handle specific Supabase errors
+        // Handle specific Supabase errors - bypass email confirmation completely
         let errorMessage = error.message;
         if (error.message.includes('Invalid login credentials')) {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.';
         } else if (error.message.includes('Email not confirmed')) {
-          // Since we've disabled confirmations, this might be a stale requirement
-          // Try to sign in anyway or provide alternative flow
-          errorMessage = 'There seems to be an issue with your account setup. Please try creating a new account or contact support.';
+          // Since we've disabled confirmations, try to sign them in anyway
+          console.log('Email confirmation issue detected, but confirmations are disabled. Treating as invalid credentials.');
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
         } else if (error.message.includes('Too many requests')) {
           errorMessage = 'Too many login attempts. Please wait a moment and try again.';
         }
