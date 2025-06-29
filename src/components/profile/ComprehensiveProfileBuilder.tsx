@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileData } from '@/hooks/useProfileData';
@@ -84,6 +83,45 @@ const ComprehensiveProfileBuilder = () => {
     setPhotos(newPhotos);
   };
 
+  const sendToWebhook = async (profilePayload: any) => {
+    try {
+      const webhookUrl = 'https://luvlang.app.n8n.cloud/webhook-test/1c19d72c-85ea-4e4c-901b-2b09013bc4d6';
+      
+      const webhookData = {
+        user_id: user?.id,
+        email: user?.email,
+        profile_data: {
+          bio: profileData.bio,
+          values: profileData.values,
+          life_goals: profileData.lifeGoals,
+          green_flags: profileData.greenFlags,
+          personality_answers: personalityAnswers,
+          interests: interests,
+          photos: photos.map(photo => photo.url),
+          completion_percentage: completionPercentage
+        },
+        timestamp: new Date().toISOString(),
+        profile_exists: profileExists
+      };
+
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
+      });
+
+      if (response.ok) {
+        console.log('Profile data sent to webhook successfully');
+      } else {
+        console.error('Failed to send data to webhook:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error sending data to webhook:', error);
+    }
+  };
+
   const saveCompleteProfile = async () => {
     if (!user) return;
 
@@ -123,6 +161,9 @@ const ComprehensiveProfileBuilder = () => {
       if (result.error) {
         throw result.error;
       }
+
+      // Send data to webhook after successful database save
+      await sendToWebhook(profilePayload);
 
       toast({
         title: 'Profile Saved Successfully',
