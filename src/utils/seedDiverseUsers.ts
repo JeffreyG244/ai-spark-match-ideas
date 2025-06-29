@@ -33,11 +33,82 @@ export async function seedDiverseUsers() {
         }
       }
       
-      // Step 3: Create user profile
+      // Step 3: Create user profile with complete personality data
       await createUserProfile(user, userId, uploadedPhotoUrls);
       
-      // Wait 1 second between users to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Step 4: Trigger matchmaking for this new user
+      try {
+        const matchmakingData = {
+          user_id: userId,
+          email: user.email,
+          profile_data: {
+            bio: user.bio,
+            values: user.values,
+            life_goals: user.lifeGoals,
+            green_flags: user.greenFlags,
+            age: user.age,
+            gender: user.gender,
+            location: user.location,
+            relationship_goals: user.relationshipGoals || 'Long-term relationship',
+            partner_age_min: Math.max(user.age - 8, 18),
+            partner_age_max: Math.min(user.age + 12, 65),
+            partner_gender_preference: user.genderPreference || 'Any',
+            personality_answers: {
+              age: user.age.toString(),
+              gender: user.gender,
+              location: user.location,
+              relationship_goals: user.relationshipGoals || 'Long-term relationship',
+              partner_age_min: Math.max(user.age - 8, 18).toString(),
+              partner_age_max: Math.min(user.age + 12, 65).toString(),
+              partner_gender: user.genderPreference || 'Any',
+              max_distance: '50'
+            },
+            interests: user.interests,
+            photos: uploadedPhotoUrls,
+            completion_percentage: 95,
+            max_distance: 50,
+          },
+          timestamp: new Date().toISOString(),
+          profile_exists: false,
+          action: 'find_matches',
+          matchmaking_request: {
+            user_id: userId,
+            age: user.age,
+            gender: user.gender,
+            location: user.location,
+            interests: user.interests,
+            values: user.values,
+            relationship_goals: user.relationshipGoals || 'Long-term relationship',
+            preferences: {
+              age_range: {
+                min: Math.max(user.age - 8, 18),
+                max: Math.min(user.age + 12, 65)
+              },
+              gender: user.genderPreference || 'Any',
+              max_distance: 50
+            }
+          }
+        };
+
+        console.log(`Sending matchmaking data for ${user.firstName}...`);
+        
+        // Send to matchmaking service
+        const { error: matchError } = await supabase.functions.invoke('process-matches', {
+          body: matchmakingData
+        });
+
+        if (matchError) {
+          console.error(`Matchmaking error for ${user.firstName}:`, matchError);
+        } else {
+          console.log(`Matchmaking completed for ${user.firstName}`);
+        }
+
+      } catch (error) {
+        console.error(`Failed to process matches for ${user.firstName}:`, error);
+      }
+      
+      // Wait 2 seconds between users to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
     } catch (error) {
       console.error(`Failed to create user ${user.email}:`, error);
