@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { seedDiverseUsers, checkIfSeedingNeeded } from '@/utils/seedDiverseUsers';
 import { Button } from '@/components/ui/button';
@@ -66,7 +67,7 @@ const SeedUsers = () => {
   }
 
   return (
-    <AdminGuard requireProduction={true}>
+    <AdminGuard requireProduction={false}>
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="container mx-auto px-4 max-w-3xl">
           <Card className="border-purple-200 shadow-md">
@@ -76,9 +77,9 @@ const SeedUsers = () => {
                   <Users className="h-6 w-6 text-purple-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-2xl font-bold">Seed Diverse Users</CardTitle>
+                  <CardTitle className="text-2xl font-bold">Seed Professional Users</CardTitle>
                   <CardDescription>
-                    Populate your database with diverse AI user profiles for testing
+                    Populate your database with 50 professional profiles (25 male, 25 female) targeting ages 30-50
                   </CardDescription>
                 </div>
               </div>
@@ -96,18 +97,23 @@ const SeedUsers = () => {
                     <AlertCircle className="h-5 w-5 text-amber-600" />
                     <AlertTitle className="text-amber-800">Database Seeding Recommended</AlertTitle>
                     <AlertDescription className="text-amber-700">
-                      Your database appears to have fewer than 5 user profiles. Adding diverse test users is recommended for testing.
+                      Your database appears to have fewer than 5 user profiles. Adding professional test users will improve the matching experience.
                     </AlertDescription>
                   </Alert>
                   
                   <div className="bg-white p-4 border border-gray-200 rounded-lg">
-                    <h3 className="font-medium text-gray-900 mb-2">This process will:</h3>
+                    <h3 className="font-medium text-gray-900 mb-2">This process will create:</h3>
                     <ul className="list-disc list-inside text-gray-700 space-y-1 mb-4">
-                      <li>Create 10 diverse user accounts with various backgrounds</li>
-                      <li>Upload profile photos to your storage bucket</li>
-                      <li>Populate profile data including bios and values</li>
-                      <li>Create auth users with test credentials</li>
+                      <li>50 professional user accounts with sophisticated profiles</li>
+                      <li>25 female professionals (Marketing Directors, Engineers, Lawyers, etc.)</li>
+                      <li>25 male professionals (Tech Executives, Consultants, Directors, etc.)</li>
+                      <li>High-quality profile photos and detailed bios</li>
+                      <li>Professional values, goals, and interests</li>
+                      <li>Ages targeting 30-50 demographic</li>
                     </ul>
+                    <p className="text-sm text-gray-600">
+                      <strong>Note:</strong> These profiles are designed to give new users an excellent first impression with classy, modern professionals.
+                    </p>
                   </div>
                   
                   <div className="flex justify-center pt-4">
@@ -120,10 +126,10 @@ const SeedUsers = () => {
                       {isSeeding ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Seeding Users...
+                          Seeding Professional Users...
                         </>
                       ) : (
-                        'Seed 10 Diverse Users'
+                        'Seed 50 Professional Users'
                       )}
                     </Button>
                   </div>
@@ -133,7 +139,7 @@ const SeedUsers = () => {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <AlertTitle className="text-green-800">Database Already Populated</AlertTitle>
                   <AlertDescription className="text-green-700">
-                    Your database already contains enough user profiles. No additional seeding is needed.
+                    Your database already contains enough user profiles. The matching experience should work well with existing users.
                   </AlertDescription>
                 </Alert>
               )}
@@ -151,14 +157,14 @@ const SeedUsers = () => {
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <AlertTitle className="text-green-800">Seeding Complete!</AlertTitle>
                   <AlertDescription className="text-green-700">
-                    10 diverse user profiles have been successfully added to your database.
+                    50 professional user profiles have been successfully added to your database. Users will now see quality matches in the Discover and Daily Matches sections.
                   </AlertDescription>
                 </Alert>
               )}
 
               <div className="border-t border-gray-200 pt-4 mt-6">
                 <div className="text-sm text-gray-500">
-                  <p><strong>Note:</strong> This utility should only be used in development or testing environments. The created users use the test password "Password123!" and should be removed in production.</p>
+                  <p><strong>Security Note:</strong> These profiles use secure random passwords and should only be used in development/testing environments. Consider removing them before going fully live.</p>
                 </div>
               </div>
             </CardContent>
