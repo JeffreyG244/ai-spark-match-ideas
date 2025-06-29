@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSwipeActions } from '@/hooks/useSwipeActions';
@@ -63,9 +62,12 @@ const Discover = () => {
       if (matchesData && matchesData.length > 0) {
         // Extract profiles from matches
         profilesWithScores = matchesData.map((match) => {
-          const otherProfile = match.user1_id === user?.id 
-            ? match.user_profiles?.[1] || match.user_profiles?.[0]  // Get user2 profile
-            : match.user_profiles?.[0] || match.user_profiles?.[1]; // Get user1 profile
+          // Handle the profile data properly - it's an array from the join
+          let otherProfile = null;
+          if (Array.isArray(match.user_profiles)) {
+            const otherUserId = match.user1_id === user?.id ? match.user2_id : match.user1_id;
+            otherProfile = match.user_profiles.find((profile: any) => profile && profile.user_id === otherUserId);
+          }
 
           if (!otherProfile) return null;
 

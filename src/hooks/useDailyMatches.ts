@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -55,7 +54,11 @@ export const useDailyMatches = () => {
         // If no daily matches, try to get from user_matches
         const { data: userMatches, error: userMatchesError } = await supabase
           .from('user_matches')
-          .select('*, user_profiles!user_matches_user1_id_fkey(*), user_profiles!user_matches_user2_id_fkey(*)')
+          .select(`
+            *,
+            user_profiles!user_matches_user1_id_fkey(*),
+            user_profiles!user_matches_user2_id_fkey(*)
+          `)
           .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
           .order('compatibility_score', { ascending: false })
           .limit(5);
@@ -72,9 +75,12 @@ export const useDailyMatches = () => {
           // Convert user_matches to daily_matches format
           const convertedMatches = userMatches.map(match => {
             const otherUserId = match.user1_id === user.id ? match.user2_id : match.user1_id;
-            const profileData = match.user1_id === user.id 
-              ? match.user_profiles?.[1] || match.user_profiles?.[0]
-              : match.user_profiles?.[0] || match.user_profiles?.[1];
+            
+            // Handle the profile data properly - it's an array from the join
+            let profileData = null;
+            if (Array.isArray(match.user_profiles)) {
+              profileData = match.user_profiles.find((profile: any) => profile && profile.user_id === otherUserId);
+            }
 
             return {
               id: match.id,
