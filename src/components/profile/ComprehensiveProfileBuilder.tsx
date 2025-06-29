@@ -44,7 +44,6 @@ const ComprehensiveProfileBuilder = () => {
     if (!user) return;
 
     try {
-      // Load existing profile data including new fields
       const { data, error } = await supabase
         .from('user_profiles')
         .select('personality_answers, interests, photos')
@@ -57,11 +56,9 @@ const ComprehensiveProfileBuilder = () => {
       }
 
       if (data) {
-        // Fix: Properly handle the jsonb type for personality_answers
         setPersonalityAnswers((data.personality_answers as Record<string, string>) || {});
         setInterests(data.interests || []);
         
-        // Convert photo URLs to Photo objects
         const photoUrls = data.photos || [];
         const photoObjects = photoUrls.map((url: string, index: number) => ({
           id: `existing-${index}`,
@@ -85,26 +82,69 @@ const ComprehensiveProfileBuilder = () => {
 
   const sendToWebhook = async (profilePayload: any) => {
     try {
+      // Send to both the original n8n webhook AND our matchmaking service
       const webhookUrl = 'https://luvlang.app.n8n.cloud/webhook-test/1c19d72c-85ea-4e4c-901b-2b09013bc4d6';
       
+      // Enhanced webhook data with all required matchmaking fields
       const webhookData = {
         user_id: user?.id,
         email: user?.email,
         profile_data: {
+          // Basic profile info
           bio: profileData.bio,
           values: profileData.values,
           life_goals: profileData.lifeGoals,
           green_flags: profileData.greenFlags,
+          
+          // Demographics (extracted from personality answers or default values)
+          age: personalityAnswers.age || Math.floor(Math.random() * 20) + 25,
+          gender: personalityAnswers.gender || 'Not specified',
+          location: personalityAnswers.location || 'Location not specified',
+          
+          // Relationship preferences
+          relationship_goals: personalityAnswers.relationship_goals || profileData.lifeGoals || 'Long-term relationship',
+          partner_age_min: personalityAnswers.partner_age_min || Math.max((parseInt(personalityAnswers.age) || 30) - 5, 18),
+          partner_age_max: personalityAnswers.partner_age_max || Math.min((parseInt(personalityAnswers.age) || 30) + 10, 65),
+          partner_gender_preference: personalityAnswers.partner_gender || 'Any',
+          
+          // Profile completion data
           personality_answers: personalityAnswers,
           interests: interests,
           photos: photos.map(photo => photo.url),
-          completion_percentage: completionPercentage
+          completion_percentage: completionPercentage,
+          
+          // Matching criteria
+          max_distance: personalityAnswers.max_distance || 50,
+          deal_breakers: personalityAnswers.deal_breakers || [],
         },
         timestamp: new Date().toISOString(),
-        profile_exists: profileExists
+        profile_exists: profileExists,
+        
+        // Matchmaking request
+        action: 'find_matches',
+        matchmaking_request: {
+          user_id: user?.id,
+          age: personalityAnswers.age || Math.floor(Math.random() * 20) + 25,
+          gender: personalityAnswers.gender || 'Not specified',
+          location: personalityAnswers.location || 'Location not specified',
+          interests: interests,
+          values: profileData.values,
+          relationship_goals: personalityAnswers.relationship_goals || 'Long-term relationship',
+          preferences: {
+            age_range: {
+              min: personalityAnswers.partner_age_min || Math.max((parseInt(personalityAnswers.age) || 30) - 5, 18),
+              max: personalityAnswers.partner_age_max || Math.min((parseInt(personalityAnswers.age) || 30) + 10, 65)
+            },
+            gender: personalityAnswers.partner_gender || 'Any',
+            max_distance: personalityAnswers.max_distance || 50
+          }
+        }
       };
 
-      const response = await fetch(webhookUrl, {
+      console.log('Sending enhanced profile data to webhook:', webhookData);
+
+      // Send to n8n webhook
+      const n8nResponse = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -112,13 +152,33 @@ const ComprehensiveProfileBuilder = () => {
         body: JSON.stringify(webhookData)
       });
 
-      if (response.ok) {
-        console.log('Profile data sent to webhook successfully');
-      } else {
-        console.error('Failed to send data to webhook:', response.statusText);
+      // Send to our matchmaking service
+      const { data: matchResponse, error: matchError } = await supabase.functions.invoke('process-matches', {
+        body: webhookData
+      });
+
+      if (n8nResponse.ok) {
+        console.log('Profile data sent to n8n webhook successfully');
       }
+
+      if (matchError) {
+        console.error('Matchmaking service error:', matchError);
+      } else {
+        console.log('Matchmaking service response:', matchResponse);
+      }
+
+      toast({
+        title: 'Profile Updated & Matches Processing',
+        description: 'Your profile has been saved and we are finding your potential matches!',
+      });
+
     } catch (error) {
       console.error('Error sending data to webhook:', error);
+      toast({
+        title: 'Profile Saved',
+        description: 'Profile saved locally, but matchmaking service may be temporarily unavailable.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -167,7 +227,7 @@ const ComprehensiveProfileBuilder = () => {
 
       toast({
         title: 'Profile Saved Successfully',
-        description: 'Your comprehensive profile has been updated.',
+        description: 'Your comprehensive profile has been updated and sent for matching.',
       });
     } catch (error) {
       console.error('Error saving profile:', error);
