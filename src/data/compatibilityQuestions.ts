@@ -202,3 +202,4 @@ export const compatibilityQuestions: QuestionData[] = [
       "Not allergic"
     ]
   }
+];
