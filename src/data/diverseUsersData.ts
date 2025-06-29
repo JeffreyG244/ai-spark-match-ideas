@@ -1,7 +1,9 @@
+
 export interface DiverseUser {
   firstName: string;
   lastName: string;
   email: string;
+  password: string;
   age: number;
   gender: string;
   genderPreference: string;
@@ -24,6 +26,7 @@ export const diverseUsersData: DiverseUser[] = [
     firstName: 'Alice',
     lastName: 'Johnson',
     email: 'alice.johnson@example.com',
+    password: 'SecurePass123!',
     age: 28,
     gender: 'Female',
     genderPreference: 'Male',
@@ -48,6 +51,7 @@ export const diverseUsersData: DiverseUser[] = [
     firstName: 'Bob',
     lastName: 'Smith',
     email: 'bob.smith@example.com',
+    password: 'SecurePass123!',
     age: 34,
     gender: 'Male',
     genderPreference: 'Female',
@@ -72,6 +76,7 @@ export const diverseUsersData: DiverseUser[] = [
     firstName: 'Charlie',
     lastName: 'Brown',
     email: 'charlie.brown@example.com',
+    password: 'SecurePass123!',
     age: 40,
     gender: 'Male',
     genderPreference: 'Female',
@@ -96,6 +101,7 @@ export const diverseUsersData: DiverseUser[] = [
     firstName: 'Diana',
     lastName: 'Garcia',
     email: 'diana.garcia@example.com',
+    password: 'SecurePass123!',
     age: 25,
     gender: 'Female',
     genderPreference: 'Male',
@@ -120,6 +126,7 @@ export const diverseUsersData: DiverseUser[] = [
     firstName: 'Ethan',
     lastName: 'Lee',
     email: 'ethan.lee@example.com',
+    password: 'SecurePass123!',
     age: 31,
     gender: 'Male',
     genderPreference: 'Female',
