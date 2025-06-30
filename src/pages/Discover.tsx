@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSwipeActions } from '@/hooks/useSwipeActions';
@@ -65,13 +64,13 @@ const Discover = () => {
 
       // Transform profiles with compatibility scores
       const transformedProfiles = profilesData.map((profile) => {
-        const firstName = profile.email.split('@')[0] || 'User';
+        const firstName = profile.email?.split('@')[0] || 'User';
         const compatibilityScore = Math.floor(Math.random() * 40) + 50; // Random score between 50-90
         
         return {
           id: profile.id.toString(),
           user_id: profile.user_id,
-          email: profile.email,
+          email: profile.email || 'No email',
           bio: profile.bio || 'No bio available',
           values: profile.values || 'No values listed',
           life_goals: profile.life_goals || 'No life goals shared',
