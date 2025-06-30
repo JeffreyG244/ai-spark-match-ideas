@@ -49,3 +49,34 @@ export async function createUserProfile(user: DiverseUser, userId: string, photo
   console.log(`✅ Profile created successfully for ${user.firstName} ${user.lastName}`);
   return true;
 }
+import { supabase } from '@/integrations/supabase/client';
+import type { Diverselser } from '@/data/diverselsersData';
+
+// ADD THIS FUNCTION (paste near top after imports)
+function getSecurePhotoUrl(filename: string) {
+  return `https://storage.luvlang.org/storage/v1/object/public/profile-photos/${filename}`;
+}
+
+export async function createUserProfile(user: Diverselser, userId: string, photoUrls: string[]) {
+  console.log(`Creating profile for ${user.firstName}...`);
+
+  // Convert all photo URLs to secure versions (ADD THIS)
+  const securePhotoUrls = photoUrls.map(url => {
+    const filename = url.split('/').pop(); // Extract filename
+    return getSecurePhotoUrl(filename!);
+  });
+
+  const personalityAnswers = {
+    // ... (keep your existing code)
+  };
+
+  const { error: profileError } = await supabase
+    .from('user_profiles')
+    .insert({
+      user_id: userId,
+      email: user.email,
+      bio: user.bio,
+      photos: securePhotoUrls, // CHANGED: Now uses HTTPS URLs
+      // ... (rest of your existing fields)
+    });
+}
