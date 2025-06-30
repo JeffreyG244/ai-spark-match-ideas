@@ -22,7 +22,7 @@ export interface DiverseUser {
 }
 
 export const diverseUsersData: DiverseUser[] = [
-  // Professional Women (25)
+  // Professional Women (5)
   {
     firstName: "Sarah",
     lastName: "Chen",
@@ -144,7 +144,7 @@ export const diverseUsersData: DiverseUser[] = [
     dealBreakers: "Lack of empathy, unreliable"
   },
 
-  // Professional Men (25)
+  // Professional Men (5)
   {
     firstName: "Michael",
     lastName: "Johnson",

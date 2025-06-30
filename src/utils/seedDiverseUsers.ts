@@ -2,102 +2,96 @@
 import { supabase } from '@/integrations/supabase/client';
 import { diverseUsersData } from '@/data/diverseUsersData';
 
-/**
- * Creates auth users and their corresponding profiles
- */
-export async function seedDiverseUsers() {
-  console.log('Starting to seed diverse users...');
-  
-  for (const user of diverseUsersData) {
-    try {
-      console.log(`Creating user: ${user.firstName} ${user.lastName}`);
-      
-      // Step 1: Create auth user
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: user.email,
-        password: user.password,
-        email_confirm: true,
-        user_metadata: {
-          firstName: user.firstName,
-          lastName: user.lastName
-        }
-      });
-
-      if (authError) {
-        console.error(`Auth creation error for ${user.firstName}:`, authError);
-        continue;
-      }
-
-      const userId = authData.user?.id;
-      if (!userId) {
-        console.error(`No user ID returned for ${user.firstName}`);
-        continue;
-      }
-
-      console.log(`Created auth user for ${user.firstName} with ID: ${userId}`);
-      
-      // Step 2: Create user profile with complete data
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .insert({
-          user_id: userId,
-          email: user.email,
-          bio: user.bio,
-          values: user.values,
-          life_goals: user.lifeGoals,
-          green_flags: user.greenFlags,
-          photos: user.photos,
-          interests: user.interests,
-          personality_answers: {
-            age: user.age.toString(),
-            gender: user.gender,
-            location: user.location,
-            relationship_goals: user.relationshipGoals,
-            partner_age_min: Math.max(user.age - 8, 18).toString(),
-            partner_age_max: Math.min(user.age + 12, 65).toString(),
-            partner_gender: user.genderPreference,
-            max_distance: '50',
-            occupation: user.occupation,
-            education: user.education,
-            lifestyle: user.lifestyle,
-            deal_breakers: user.dealBreakers
-          },
-          verified: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-        
-      if (profileError) {
-        console.error(`Profile creation error for ${user.firstName}:`, profileError);
-        continue;
-      }
-
-      console.log(`✅ Successfully created profile for ${user.firstName} ${user.lastName}`);
-      
-      // Wait 1 second between users to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-    } catch (error) {
-      console.error(`Failed to create user ${user.email}:`, error);
-    }
-  }
-  
-  console.log('✅ Finished seeding diverse users!');
-}
-
-/**
- * Helper function to check if seeding is needed
- */
-export async function checkIfSeedingNeeded(): Promise<boolean> {
-  const { count, error } = await supabase
-    .from('user_profiles')
-    .select('*', { count: 'exact', head: true });
+export const seedDiverseUsers = async (): Promise<{ success: boolean; message: string; count?: number }> => {
+  try {
+    console.log('Starting to seed diverse users...');
     
-  if (error) {
-    console.error('Error checking profiles:', error);
-    return true;
+    // Check if users already exist to prevent duplicates
+    const { data: existingUsers, error: checkError } = await supabase
+      .from('user_profiles')
+      .select('email')
+      .in('email', diverseUsersData.map(user => user.email));
+
+    if (checkError) {
+      console.error('Error checking existing users:', checkError);
+      return { success: false, message: 'Failed to check existing users' };
+    }
+
+    const existingEmails = new Set(existingUsers?.map(u => u.email) || []);
+    const newUsers = diverseUsersData.filter(user => !existingEmails.has(user.email));
+
+    if (newUsers.length === 0) {
+      return { 
+        success: true, 
+        message: 'All diverse users already exist in the database',
+        count: 0
+      };
+    }
+
+    console.log(`Inserting ${newUsers.length} new diverse users...`);
+
+    // Prepare user profiles for insertion
+    const userProfiles = newUsers.map(user => ({
+      // Generate a fake user_id for each profile (in a real app, this would come from auth.users)
+      user_id: `fake-${user.email.split('@')[0]}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      email: user.email,
+      bio: user.bio,
+      values: user.values,
+      life_goals: user.lifeGoals,
+      green_flags: user.greenFlags,
+      interests: user.interests,
+      photos: user.photos,
+      personality_answers: {
+        age: user.age.toString(),
+        gender: user.gender,
+        location: user.location,
+        occupation: user.occupation,
+        education: user.education,
+        lifestyle: user.lifestyle,
+        relationship_goals: user.relationshipGoals,
+        deal_breakers: user.dealBreakers
+      },
+      verified: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }));
+
+    // Insert profiles in batches to avoid overwhelming the database
+    const batchSize = 10;
+    let insertedCount = 0;
+
+    for (let i = 0; i < userProfiles.length; i += batchSize) {
+      const batch = userProfiles.slice(i, i + batchSize);
+      
+      const { error: insertError } = await supabase
+        .from('user_profiles')
+        .insert(batch);
+
+      if (insertError) {
+        console.error(`Error inserting batch ${i / batchSize + 1}:`, insertError);
+        return { 
+          success: false, 
+          message: `Failed to insert user batch: ${insertError.message}` 
+        };
+      }
+
+      insertedCount += batch.length;
+      console.log(`Inserted batch ${i / batchSize + 1}: ${batch.length} users (Total: ${insertedCount})`);
+    }
+
+    console.log(`Successfully seeded ${insertedCount} diverse users!`);
+    
+    return { 
+      success: true, 
+      message: `Successfully seeded ${insertedCount} diverse professional users!`,
+      count: insertedCount
+    };
+
+  } catch (error) {
+    console.error('Error seeding diverse users:', error);
+    return { 
+      success: false, 
+      message: `Failed to seed users: ${error instanceof Error ? error.message : 'Unknown error'}` 
+    };
   }
-  
-  // If there are less than 5 user profiles, we probably need seeding
-  return count !== null && count < 5;
-}
+};

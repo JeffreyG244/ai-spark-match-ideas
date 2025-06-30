@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -54,11 +55,7 @@ export const useDailyMatches = () => {
         // If no daily matches, try to get from user_matches
         const { data: userMatches, error: userMatchesError } = await supabase
           .from('user_matches')
-          .select(`
-            *,
-            user_profiles!user_matches_user1_id_fkey(*),
-            user_profiles!user_matches_user2_id_fkey(*)
-          `)
+          .select('*')
           .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
           .order('compatibility_score', { ascending: false })
           .limit(5);
@@ -72,15 +69,26 @@ export const useDailyMatches = () => {
         console.log('User matches data:', userMatches);
 
         if (userMatches && userMatches.length > 0) {
+          // Get profiles for these matches
+          const otherUserIds = userMatches.map(match => {
+            return match.user1_id === user.id ? match.user2_id : match.user1_id;
+          });
+
+          const { data: profilesData, error: profilesError } = await supabase
+            .from('user_profiles')
+            .select('id, user_id, email, bio, values, interests, photos')
+            .in('user_id', otherUserIds);
+
+          if (profilesError) {
+            console.error('Error loading profiles for matches:', profilesError);
+            setDailyMatches([]);
+            return;
+          }
+
           // Convert user_matches to daily_matches format
           const convertedMatches = userMatches.map(match => {
             const otherUserId = match.user1_id === user.id ? match.user2_id : match.user1_id;
-            
-            // Handle the profile data properly - it's an array from the join
-            let profileData = null;
-            if (Array.isArray(match.user_profiles)) {
-              profileData = match.user_profiles.find((profile: any) => profile && profile.user_id === otherUserId);
-            }
+            const profile = profilesData?.find(p => p.user_id === otherUserId);
 
             return {
               id: match.id,
@@ -90,15 +98,7 @@ export const useDailyMatches = () => {
               suggested_date: new Date().toISOString().split('T')[0],
               viewed: false,
               created_at: match.matched_at,
-              user_profile: profileData ? {
-                id: profileData.id,
-                user_id: profileData.user_id,
-                email: profileData.email,
-                bio: profileData.bio,
-                values: profileData.values,
-                interests: profileData.interests,
-                photos: profileData.photos
-              } : undefined
+              user_profile: profile || undefined
             };
           });
 

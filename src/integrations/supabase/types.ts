@@ -1057,28 +1057,52 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string | null
+          email: string | null
+          green_flags: string | null
           id: number
+          interests: string[] | null
+          life_goals: string | null
+          personality_answers: Json | null
+          photos: string[] | null
           search_vector: unknown | null
           updated_at: string | null
           user_id: string | null
+          values: string | null
+          verified: boolean | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          email?: string | null
+          green_flags?: string | null
           id?: never
+          interests?: string[] | null
+          life_goals?: string | null
+          personality_answers?: Json | null
+          photos?: string[] | null
           search_vector?: unknown | null
           updated_at?: string | null
           user_id?: string | null
+          values?: string | null
+          verified?: boolean | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          email?: string | null
+          green_flags?: string | null
           id?: never
+          interests?: string[] | null
+          life_goals?: string | null
+          personality_answers?: Json | null
+          photos?: string[] | null
           search_vector?: unknown | null
           updated_at?: string | null
           user_id?: string | null
+          values?: string | null
+          verified?: boolean | null
         }
         Relationships: []
       }
