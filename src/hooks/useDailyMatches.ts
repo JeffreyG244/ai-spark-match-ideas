@@ -98,7 +98,15 @@ export const useDailyMatches = () => {
               suggested_date: new Date().toISOString().split('T')[0],
               viewed: false,
               created_at: match.last_updated || new Date().toISOString(),
-              user_profile: profile || undefined
+              user_profile: profile ? {
+                user_id: profile.user_id,
+                name: profile.name,
+                email: profile.email || '',
+                bio: profile.bio,
+                values: profile.values,
+                interests: profile.interests,
+                photos: profile.photos
+              } : undefined
             };
           });
 
@@ -124,7 +132,15 @@ export const useDailyMatches = () => {
           const profile = profilesData?.find(p => p.user_id === match.suggested_user_id);
           return {
             ...match,
-            user_profile: profile
+            user_profile: profile ? {
+              user_id: profile.user_id,
+              name: profile.name,
+              email: profile.email || '',
+              bio: profile.bio,
+              values: profile.values,
+              interests: profile.interests,
+              photos: profile.photos
+            } : undefined
           };
         });
 

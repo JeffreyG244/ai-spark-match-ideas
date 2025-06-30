@@ -68,13 +68,19 @@ export const useMatches = () => {
         const profile = profilesData?.find(p => p.user_id === otherUserId);
         
         return {
-          id: `${match.user1_id}-${match.user2_id}`,
+          id: match.id || `${match.user1_id}-${match.user2_id}`,
           user1_id: match.user1_id,
           user2_id: match.user2_id,
           compatibility_score: match.compatibility_score || 75,
-          matched_at: match.last_updated || new Date().toISOString(),
-          is_active: true,
-          match_profile: profile
+          matched_at: match.matched_at || match.last_updated || new Date().toISOString(),
+          is_active: match.is_active !== undefined ? match.is_active : true,
+          match_profile: profile ? {
+            user_id: profile.user_id,
+            name: profile.name,
+            email: profile.email || '',
+            bio: profile.bio,
+            photos: profile.photos
+          } : undefined
         };
       });
 

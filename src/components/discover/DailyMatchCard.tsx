@@ -10,8 +10,8 @@ interface DailyMatchCardProps {
     id: string;
     compatibility_score: number;
     user_profile?: {
-      id: number;
       user_id: string;
+      name: string;
       email: string;
       bio: string | null;
       values: string | null;
@@ -26,7 +26,7 @@ const DailyMatchCard = ({ match, onView }: DailyMatchCardProps) => {
   const profile = match.user_profile;
   if (!profile) return null;
 
-  const firstName = profile.email.split('@')[0] || 'User';
+  const firstName = profile.name || profile.email.split('@')[0] || 'User';
   const photo = profile.photos && profile.photos.length > 0 
     ? profile.photos[0] 
     : 'https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60';

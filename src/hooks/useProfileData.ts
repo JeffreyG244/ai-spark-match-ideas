@@ -93,6 +93,7 @@ export const useProfileData = () => {
     try {
       const profilePayload = {
         user_id: user.id,
+        name: user.email?.split('@')[0] || 'User',
         email: user.email || '',
         bio: sanitizedData.bio,
         values: sanitizedData.values,

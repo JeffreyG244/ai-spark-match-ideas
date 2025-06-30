@@ -955,19 +955,28 @@ export type Database = {
       user_matches: {
         Row: {
           compatibility_score: number | null
+          id: string | null
+          is_active: boolean | null
           last_updated: string | null
+          matched_at: string | null
           user1_id: string
           user2_id: string
         }
         Insert: {
           compatibility_score?: number | null
+          id?: string | null
+          is_active?: boolean | null
           last_updated?: string | null
+          matched_at?: string | null
           user1_id: string
           user2_id: string
         }
         Update: {
           compatibility_score?: number | null
+          id?: string | null
+          is_active?: boolean | null
           last_updated?: string | null
+          matched_at?: string | null
           user1_id?: string
           user2_id?: string
         }
@@ -1014,43 +1023,61 @@ export type Database = {
           age: number | null
           bio: string | null
           created_at: string | null
+          email: string | null
           embedding: string | null
           gender: string | null
+          green_flags: string | null
           interests: string[] | null
+          life_goals: string | null
           location: unknown | null
           name: string
+          personality_answers: Json | null
           photo_url: string | null
+          photos: string[] | null
           profession: string | null
           user_id: string
           values: string[] | null
+          verified: boolean | null
         }
         Insert: {
           age?: number | null
           bio?: string | null
           created_at?: string | null
+          email?: string | null
           embedding?: string | null
           gender?: string | null
+          green_flags?: string | null
           interests?: string[] | null
+          life_goals?: string | null
           location?: unknown | null
           name: string
+          personality_answers?: Json | null
           photo_url?: string | null
+          photos?: string[] | null
           profession?: string | null
           user_id: string
           values?: string[] | null
+          verified?: boolean | null
         }
         Update: {
           age?: number | null
           bio?: string | null
           created_at?: string | null
+          email?: string | null
           embedding?: string | null
           gender?: string | null
+          green_flags?: string | null
           interests?: string[] | null
+          life_goals?: string | null
           location?: unknown | null
           name?: string
+          personality_answers?: Json | null
           photo_url?: string | null
+          photos?: string[] | null
           profession?: string | null
           user_id?: string
           values?: string[] | null
+          verified?: boolean | null
         }
         Relationships: []
       }
