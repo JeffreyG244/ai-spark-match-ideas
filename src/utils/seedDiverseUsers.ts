@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { diverseUsersData } from '@/data/diverseUsersData';
 
@@ -5,7 +6,7 @@ export const checkIfSeedingNeeded = async (): Promise<boolean> => {
   try {
     const { data, error } = await supabase
       .from('user_profiles')
-      .select('id', { count: 'exact' });
+      .select('user_id', { count: 'exact' });
 
     if (error) {
       console.error('Error checking user profiles count:', error);
@@ -53,9 +54,10 @@ export const seedDiverseUsers = async (): Promise<{ success: boolean; message: s
     const userProfiles = newUsers.map(user => ({
       // Generate a fake user_id for each profile (in a real app, this would come from auth.users)
       user_id: `fake-${user.email.split('@')[0]}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: `${user.firstName} ${user.lastName}`,
       email: user.email,
       bio: user.bio,
-      values: user.values,
+      values: user.values.split(', '), // Convert to array if schema expects array
       life_goals: user.lifeGoals,
       green_flags: user.greenFlags,
       interests: user.interests,

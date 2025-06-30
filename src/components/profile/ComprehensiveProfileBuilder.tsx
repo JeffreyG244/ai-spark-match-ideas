@@ -47,7 +47,7 @@ const ComprehensiveProfileBuilder = () => {
     try {
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('personality_answers, interests, photos')
+        .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -57,10 +57,13 @@ const ComprehensiveProfileBuilder = () => {
       }
 
       if (data) {
-        setPersonalityAnswers((data.personality_answers as Record<string, string>) || {});
-        setInterests(data.interests || []);
+        // Handle personality answers - check if column exists
+        const profileData = data as any;
+        setPersonalityAnswers(profileData.personality_answers || {});
+        setInterests(profileData.interests || []);
         
-        const photoUrls = data.photos || [];
+        // Handle photos
+        const photoUrls = profileData.photos || [];
         const photoObjects = photoUrls.map((url: string, index: number) => ({
           id: `existing-${index}`,
           url,
@@ -190,19 +193,25 @@ const ComprehensiveProfileBuilder = () => {
     try {
       const photoUrls = photos.map(photo => photo.url);
       
-      const profilePayload = {
+      // Create profile payload that matches existing schema
+      const profilePayload: any = {
         user_id: user.id,
-        email: user.email || '',
+        name: user.email?.split('@')[0] || 'User',
         bio: profileData.bio,
-        values: profileData.values,
-        life_goals: profileData.lifeGoals,
-        green_flags: profileData.greenFlags,
-        personality_answers: personalityAnswers,
-        interests: interests,
-        photos: photoUrls,
-        verified: false,
         updated_at: new Date().toISOString()
       };
+
+      // Add fields that may exist in the schema
+      if (profileData.values) profilePayload.values = profileData.values.split(', ');
+      if (profileData.lifeGoals) profilePayload.life_goals = profileData.lifeGoals;
+      if (profileData.greenFlags) profilePayload.green_flags = profileData.greenFlags;
+      if (user.email) profilePayload.email = user.email;
+      if (personalityAnswers && Object.keys(personalityAnswers).length > 0) {
+        profilePayload.personality_answers = personalityAnswers;
+      }
+      if (interests.length > 0) profilePayload.interests = interests;
+      if (photoUrls.length > 0) profilePayload.photos = photoUrls;
+      profilePayload.verified = false;
 
       let result;
       if (profileExists) {
@@ -211,12 +220,10 @@ const ComprehensiveProfileBuilder = () => {
           .update(profilePayload)
           .eq('user_id', user.id);
       } else {
+        profilePayload.created_at = new Date().toISOString();
         result = await supabase
           .from('user_profiles')
-          .insert([{
-            ...profilePayload,
-            created_at: new Date().toISOString()
-          }]);
+          .insert([profilePayload]);
       }
 
       if (result.error) {
