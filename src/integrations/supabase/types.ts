@@ -73,15 +73,7 @@ export type Database = {
           rationale?: string | null
           suggestion?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "ai_date_suggestions_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "user_matches"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       ai_enhanced_matches: {
         Row: {
@@ -144,15 +136,7 @@ export type Database = {
           match_id?: string
           used?: boolean | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "ai_icebreakers_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "user_matches"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       ai_models: {
         Row: {
@@ -569,42 +553,6 @@ export type Database = {
         }
         Relationships: []
       }
-      personality_insights: {
-        Row: {
-          agreeableness: number | null
-          analyzed_at: string | null
-          conscientiousness: number | null
-          extraversion: number | null
-          id: string
-          neuroticism: number | null
-          openness: number | null
-          raw_data: Json | null
-          user_id: string
-        }
-        Insert: {
-          agreeableness?: number | null
-          analyzed_at?: string | null
-          conscientiousness?: number | null
-          extraversion?: number | null
-          id?: string
-          neuroticism?: number | null
-          openness?: number | null
-          raw_data?: Json | null
-          user_id: string
-        }
-        Update: {
-          agreeableness?: number | null
-          analyzed_at?: string | null
-          conscientiousness?: number | null
-          extraversion?: number | null
-          id?: string
-          neuroticism?: number | null
-          openness?: number | null
-          raw_data?: Json | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           bio: string | null
@@ -1006,30 +954,39 @@ export type Database = {
       }
       user_matches: {
         Row: {
-          compatibility_score: number
-          id: string
-          is_active: boolean
-          matched_at: string
+          compatibility_score: number | null
+          last_updated: string | null
           user1_id: string
           user2_id: string
         }
         Insert: {
-          compatibility_score?: number
-          id?: string
-          is_active?: boolean
-          matched_at?: string
+          compatibility_score?: number | null
+          last_updated?: string | null
           user1_id: string
           user2_id: string
         }
         Update: {
-          compatibility_score?: number
-          id?: string
-          is_active?: boolean
-          matched_at?: string
+          compatibility_score?: number | null
+          last_updated?: string | null
           user1_id?: string
           user2_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_matches_user1_id_fkey"
+            columns: ["user1_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_matches_user2_id_fkey"
+            columns: ["user2_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       user_presence: {
         Row: {
@@ -1054,55 +1011,46 @@ export type Database = {
       }
       user_profiles: {
         Row: {
-          avatar_url: string | null
+          age: number | null
           bio: string | null
           created_at: string | null
-          email: string | null
-          green_flags: string | null
-          id: number
+          embedding: string | null
+          gender: string | null
           interests: string[] | null
-          life_goals: string | null
-          personality_answers: Json | null
-          photos: string[] | null
-          search_vector: unknown | null
-          updated_at: string | null
-          user_id: string | null
-          values: string | null
-          verified: boolean | null
+          location: unknown | null
+          name: string
+          photo_url: string | null
+          profession: string | null
+          user_id: string
+          values: string[] | null
         }
         Insert: {
-          avatar_url?: string | null
+          age?: number | null
           bio?: string | null
           created_at?: string | null
-          email?: string | null
-          green_flags?: string | null
-          id?: never
+          embedding?: string | null
+          gender?: string | null
           interests?: string[] | null
-          life_goals?: string | null
-          personality_answers?: Json | null
-          photos?: string[] | null
-          search_vector?: unknown | null
-          updated_at?: string | null
-          user_id?: string | null
-          values?: string | null
-          verified?: boolean | null
+          location?: unknown | null
+          name: string
+          photo_url?: string | null
+          profession?: string | null
+          user_id: string
+          values?: string[] | null
         }
         Update: {
-          avatar_url?: string | null
+          age?: number | null
           bio?: string | null
           created_at?: string | null
-          email?: string | null
-          green_flags?: string | null
-          id?: never
+          embedding?: string | null
+          gender?: string | null
           interests?: string[] | null
-          life_goals?: string | null
-          personality_answers?: Json | null
-          photos?: string[] | null
-          search_vector?: unknown | null
-          updated_at?: string | null
-          user_id?: string | null
-          values?: string | null
-          verified?: boolean | null
+          location?: unknown | null
+          name?: string
+          photo_url?: string | null
+          profession?: string | null
+          user_id?: string
+          values?: string[] | null
         }
         Relationships: []
       }
@@ -1181,6 +1129,7 @@ export type Database = {
         Row: {
           age: number
           created_at: string | null
+          display_name: string | null
           gender: string
           id: string
           interests: string
@@ -1192,6 +1141,7 @@ export type Database = {
         Insert: {
           age: number
           created_at?: string | null
+          display_name?: string | null
           gender: string
           id?: string
           interests: string
@@ -1203,6 +1153,7 @@ export type Database = {
         Update: {
           age?: number
           created_at?: string | null
+          display_name?: string | null
           gender?: string
           id?: string
           interests?: string
@@ -1254,6 +1205,45 @@ export type Database = {
           f_table_schema?: unknown | null
           srid?: number | null
           type?: string | null
+        }
+        Relationships: []
+      }
+      secure_profiles: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          email: string | null
+          id: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_match_candidates: {
+        Row: {
+          age: number | null
+          display_name: string | null
+          gender: string | null
+          interests: string | null
+          location: string | null
+          match_id: string | null
+          values_embedding: string | null
         }
         Relationships: []
       }
@@ -1408,6 +1398,10 @@ export type Database = {
             }
         Returns: string
       }
+      analyze_and_match: {
+        Args: Record<PropertyKey, never> | { user_id: string }
+        Returns: Json
+      }
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
@@ -1514,6 +1508,25 @@ export type Database = {
       example_function: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      find_compatible_matches: {
+        Args:
+          | Record<PropertyKey, never>
+          | {
+              p_user_id: string
+              search_radius_km?: number
+              limit_matches?: number
+            }
+        Returns: {
+          match_id: string
+          name: string
+          age: number
+          bio: string
+          photo_url: string
+          profession: string
+          compatibility: number
+          distance_km: number
+        }[]
       }
       find_similar_users: {
         Args: { user_uuid: string; match_count?: number }

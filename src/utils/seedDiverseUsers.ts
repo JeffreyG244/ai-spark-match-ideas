@@ -1,6 +1,25 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { diverseUsersData } from '@/data/diverseUsersData';
+
+export const checkIfSeedingNeeded = async (): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('id', { count: 'exact' });
+
+    if (error) {
+      console.error('Error checking user profiles count:', error);
+      return true; // Default to needing seeding if we can't check
+    }
+
+    // If we have fewer than 5 profiles, we need seeding
+    const count = data?.length || 0;
+    return count < 5;
+  } catch (error) {
+    console.error('Error in checkIfSeedingNeeded:', error);
+    return true; // Default to needing seeding if there's an error
+  }
+};
 
 export const seedDiverseUsers = async (): Promise<{ success: boolean; message: string; count?: number }> => {
   try {
