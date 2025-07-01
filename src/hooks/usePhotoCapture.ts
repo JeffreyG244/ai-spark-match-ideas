@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -127,21 +128,20 @@ export const usePhotoCapture = () => {
   const updateUserProfile = async (photoUrl: string): Promise<void> => {
     try {
       const { data: currentProfile } = await supabase
-        .from('user_profiles')
-        .select('photos')
+        .from('profiles')
+        .select('photo_urls')
         .eq('user_id', user!.id)
         .maybeSingle();
 
-      const currentPhotos = currentProfile?.photos || [];
+      const currentPhotos = currentProfile?.photo_urls || [];
       const updatedPhotos = [...currentPhotos, photoUrl];
 
       const { error: updateError } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .upsert({
           user_id: user!.id,
-          name: user!.email?.split('@')[0] || 'User',
           email: user!.email || '',
-          photos: updatedPhotos
+          photo_urls: updatedPhotos
         });
 
       if (updateError) {

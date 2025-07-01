@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSwipeActions } from '@/hooks/useSwipeActions';
@@ -44,7 +45,7 @@ const Discover = () => {
       
       // Get all profiles except current user
       const { data: profilesData, error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('*')
         .neq('user_id', user?.id || '')
         .limit(50);
@@ -68,15 +69,15 @@ const Discover = () => {
         const compatibilityScore = Math.floor(Math.random() * 40) + 50; // Random score between 50-90
         
         return {
-          id: profile.user_id, // Use user_id as id since there's no separate id field
+          id: profile.user_id,
           user_id: profile.user_id,
           email: profile.email || 'No email',
           bio: profile.bio || 'No bio available',
-          values: profile.values || 'No values listed', // Keep as string | null
-          life_goals: profile.life_goals || 'No life goals shared',
-          green_flags: profile.green_flags || 'No green flags listed',
-          photos: profile.photos && profile.photos.length > 0 
-            ? profile.photos 
+          values: 'No values listed', // Default since not in profiles table
+          life_goals: 'No life goals shared', // Default since not in profiles table
+          green_flags: 'No green flags listed', // Default since not in profiles table
+          photos: profile.photo_urls && profile.photo_urls.length > 0 
+            ? profile.photo_urls 
             : ['https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60'],
           firstName,
           lastName: '',
