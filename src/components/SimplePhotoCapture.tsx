@@ -221,43 +221,38 @@ const SimplePhotoCapture = () => {
         .from('profile-photos')
         .getPublicUrl(filename);
 
-      // Get current profile photos - handle both new and old schema
+      // Get current profile photos using the correct table name 'profiles'
       const { data: currentProfile } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      // Handle both old and new schema
-      const currentPhotos = (currentProfile as any)?.photos || [];
+      // Handle photos array
+      const currentPhotos = currentProfile?.photo_urls || [];
       const updatedPhotos = [...currentPhotos, publicUrl];
 
-      // Update profile with new photo
-      const updateData: any = {
-        updated_at: new Date().toISOString()
-      };
-      
-      // Add photos field if it exists in schema
-      updateData.photos = updatedPhotos;
-      
-      // If profile doesn't exist, create it with required fields
+      // Update profile with new photo using correct table and column names
       if (!currentProfile) {
-        updateData.user_id = user.id;
-        updateData.name = user.email?.split('@')[0] || 'User';
-        updateData.email = user.email || '';
-        updateData.created_at = new Date().toISOString();
-        
+        // Create new profile
         const { error: insertError } = await supabase
-          .from('user_profiles')
-          .insert([updateData]);
+          .from('profiles')
+          .insert([{
+            user_id: user.id,
+            email: user.email || '',
+            photo_urls: updatedPhotos
+          }]);
           
         if (insertError) {
           throw new Error(`Profile creation failed: ${insertError.message}`);
         }
       } else {
+        // Update existing profile
         const { error: updateError } = await supabase
-          .from('user_profiles')
-          .update(updateData)
+          .from('profiles')
+          .update({
+            photo_urls: updatedPhotos
+          })
           .eq('user_id', user.id);
 
         if (updateError) {
@@ -294,14 +289,11 @@ const SimplePhotoCapture = () => {
     try {
       const updatedPhotos = photos.filter(p => p !== photoUrl);
       
-      const updateData: any = {
-        updated_at: new Date().toISOString()
-      };
-      updateData.photos = updatedPhotos;
-      
       const { error } = await supabase
-        .from('user_profiles')
-        .update(updateData)
+        .from('profiles')
+        .update({
+          photo_urls: updatedPhotos
+        })
         .eq('user_id', user.id);
 
       if (error) throw new Error(`Remove failed: ${error.message}`);
@@ -331,16 +323,15 @@ const SimplePhotoCapture = () => {
 
       try {
         const { data } = await supabase
-          .from('user_profiles')
-          .select('*')
+          .from('profiles')
+          .select('photo_urls')
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (data && (data as any).photos) {
-          const profilePhotos = (data as any).photos;
-          setPhotos(profilePhotos);
-          setPhotoCount(profilePhotos.length);
-          console.log('📂 Loaded existing photos:', profilePhotos.length);
+        if (data && data.photo_urls) {
+          setPhotos(data.photo_urls);
+          setPhotoCount(data.photo_urls.length);
+          console.log('📂 Loaded existing photos:', data.photo_urls.length);
         }
       } catch (error) {
         console.error('❌ Error loading photos:', error);
