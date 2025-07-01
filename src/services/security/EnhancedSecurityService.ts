@@ -1,6 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import DOMPurify from 'dompurify';
+import { validatePasswordWithDatabase, type DatabasePasswordValidationResult } from '@/utils/databasePasswordValidation';
 
 export interface SecurityValidationResult {
   isValid: boolean;
@@ -127,6 +127,13 @@ export class EnhancedSecurityService {
   }
 
   /**
+   * Enhanced password validation using database function
+   */
+  static async validatePasswordStrength(password: string): Promise<DatabasePasswordValidationResult> {
+    return await validatePasswordWithDatabase(password);
+  }
+
+  /**
    * Enhanced rate limiting with progressive penalties
    */
   static async checkRateLimit(
@@ -224,77 +231,6 @@ export class EnhancedSecurityService {
         resetTime: new Date(Date.now() + 60 * 1000)
       };
     }
-  }
-
-  /**
-   * Enhanced password validation
-   */
-  static validatePasswordStrength(password: string): SecurityValidationResult {
-    const errors: string[] = [];
-    const warnings: string[] = [];
-    let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
-
-    if (!password) {
-      return {
-        isValid: false,
-        errors: ['Password is required'],
-        warnings: [],
-        riskLevel: 'high'
-      };
-    }
-
-    // Length check
-    if (password.length < 8) {
-      errors.push('Password must be at least 8 characters long');
-      riskLevel = 'high';
-    }
-
-    if (password.length > 128) {
-      errors.push('Password must be less than 128 characters long');
-      riskLevel = 'medium';
-    }
-
-    // Character type checks
-    const hasUpper = /[A-Z]/.test(password);
-    const hasLower = /[a-z]/.test(password);
-    const hasDigit = /\d/.test(password);
-    const hasSpecial = /[^A-Za-z0-9]/.test(password);
-
-    const characterTypes = [hasUpper, hasLower, hasDigit, hasSpecial].filter(Boolean).length;
-    
-    if (characterTypes < 3) {
-      errors.push('Password must contain at least 3 of: uppercase letters, lowercase letters, numbers, special characters');
-      riskLevel = 'high';
-    }
-
-    // Common password check
-    const commonPasswords = [
-      'password', '12345678', 'qwerty123', 'password1', 'password123',
-      'admin123', 'welcome123', 'letmein123', 'monkey123', 'dragon123'
-    ];
-
-    if (commonPasswords.includes(password.toLowerCase())) {
-      errors.push('Password is too common. Please choose a stronger password.');
-      riskLevel = 'critical';
-    }
-
-    // Pattern checks
-    if (/^(.)\1+$/.test(password)) {
-      errors.push('Password cannot be all the same character');
-      riskLevel = 'high';
-    }
-
-    if (/(.)\1{2,}/.test(password)) {
-      warnings.push('Avoid repeating the same character multiple times');
-      if (riskLevel === 'low') riskLevel = 'medium';
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors,
-      warnings,
-      riskLevel
-    };
   }
 
   /**

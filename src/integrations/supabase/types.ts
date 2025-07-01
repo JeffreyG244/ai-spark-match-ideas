@@ -237,6 +237,21 @@ export type Database = {
         }
         Relationships: []
       }
+      compromised_passwords: {
+        Row: {
+          breach_count: number
+          password_hash: string
+        }
+        Insert: {
+          breach_count: number
+          password_hash: string
+        }
+        Update: {
+          breach_count?: number
+          password_hash?: string
+        }
+        Relationships: []
+      }
       conversation_ai_assist: {
         Row: {
           conversation_id: string
@@ -454,6 +469,48 @@ export type Database = {
           message_count?: number
           user_id?: string
           window_start?: string
+        }
+        Relationships: []
+      }
+      password_policy: {
+        Row: {
+          description: string
+          id: number
+          name: string
+          pattern: string
+        }
+        Insert: {
+          description: string
+          id?: number
+          name: string
+          pattern: string
+        }
+        Update: {
+          description?: string
+          id?: number
+          name?: string
+          pattern?: string
+        }
+        Relationships: []
+      }
+      password_rules: {
+        Row: {
+          created_at: string | null
+          description: string
+          pattern: string
+          rule_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          pattern: string
+          rule_id?: number
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          pattern?: string
+          rule_id?: number
         }
         Relationships: []
       }
@@ -1708,6 +1765,13 @@ export type Database = {
         Args: { "": string }
         Returns: unknown
       }
+      get_image_dimensions: {
+        Args: { "": string }
+        Returns: {
+          width: number
+          height: number
+        }[]
+      }
       get_proj4_from_srid: {
         Args: { "": number }
         Returns: string
@@ -1777,6 +1841,10 @@ export type Database = {
       hnswhandler: {
         Args: { "": unknown }
         Returns: unknown
+      }
+      initialize_password_protection: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       is_admin_or_higher: {
         Args: { check_user_id: string }
@@ -3106,6 +3174,10 @@ export type Database = {
         Args: { "": string }
         Returns: number
       }
+      update_compromised_passwords: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       updategeometrysrid: {
         Args: {
           catalogn_name: string
@@ -3118,21 +3190,38 @@ export type Database = {
       }
       upload_profile_photo: {
         Args:
+          | Record<PropertyKey, never>
           | { p_user_id: string; p_photo_data: string; p_content_type: string }
           | { user_id: string; file_name: string; file_data: string }
           | { user_id: string; file_name: string; file_path: string }
           | { user_uuid: string; new_photo_url: string }
-        Returns: string[]
+        Returns: undefined
       }
       upsert_user_presence: {
         Args: { p_user_id: string; p_is_online: boolean }
         Returns: undefined
+      }
+      validate_password: {
+        Args: { password: string }
+        Returns: string[]
+      }
+      validate_password_enhanced: {
+        Args: { password: string }
+        Returns: {
+          is_valid: boolean
+          errors: string[]
+          score: number
+        }[]
       }
       validate_password_sec: {
         Args: { password: string }
         Returns: boolean
       }
       validate_password_security: {
+        Args: { password: string }
+        Returns: boolean
+      }
+      validate_password_strength: {
         Args: { password: string }
         Returns: boolean
       }
