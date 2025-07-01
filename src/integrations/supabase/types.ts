@@ -1153,24 +1153,35 @@ export type Database = {
       }
       user_photo_gallery: {
         Row: {
-          filename: string | null
-          last_accessed: string | null
-          photo_url: string | null
-          url_length: number | null
+          id: number | null
+          photo_urls: string[] | null
           user_id: string | null
+        }
+        Insert: {
+          id?: number | null
+          photo_urls?: string[] | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: number | null
+          photo_urls?: string[] | null
+          user_id?: string | null
         }
         Relationships: []
       }
       user_photos: {
         Row: {
+          id: number | null
           photo_urls: string[] | null
           user_id: string | null
         }
         Insert: {
+          id?: number | null
           photo_urls?: string[] | null
           user_id?: string | null
         }
         Update: {
+          id?: number | null
           photo_urls?: string[] | null
           user_id?: string | null
         }
@@ -1393,7 +1404,7 @@ export type Database = {
       }
       clean_orphaned_photos: {
         Args: Record<PropertyKey, never>
-        Returns: number
+        Returns: undefined
       }
       cleanup_old_data: {
         Args: Record<PropertyKey, never>
@@ -1412,7 +1423,11 @@ export type Database = {
         Returns: Json
       }
       delete_profile_photo: {
-        Args: { photo_url: string } | { user_id: string; photo_url: string }
+        Args:
+          | Record<PropertyKey, never>
+          | { p_user_id: string }
+          | { photo_url: string }
+          | { user_uuid: string; photo_url: string }
         Returns: string[]
       }
       disablelongtransactions: {
@@ -1698,7 +1713,10 @@ export type Database = {
         Returns: string
       }
       get_secure_photo_url: {
-        Args: { filename: string }
+        Args:
+          | Record<PropertyKey, never>
+          | { filename: string }
+          | { p_user_id: string }
         Returns: string
       }
       gettransactionid: {
@@ -3100,8 +3118,10 @@ export type Database = {
       }
       upload_profile_photo: {
         Args:
+          | { p_user_id: string; p_photo_data: string; p_content_type: string }
           | { user_id: string; file_name: string; file_data: string }
           | { user_id: string; file_name: string; file_path: string }
+          | { user_uuid: string; new_photo_url: string }
         Returns: string[]
       }
       upsert_user_presence: {

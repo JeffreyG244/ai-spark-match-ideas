@@ -1,271 +1,272 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Progress } from '@/components/ui/progress';
 import { 
   Shield, 
   AlertTriangle, 
-  Users, 
-  Activity, 
+  CheckCircle, 
   Clock,
-  CheckCircle,
-  XCircle,
-  Filter
+  Lock,
+  Eye,
+  RefreshCw
 } from 'lucide-react';
-import { SecurityAuditService } from '@/services/security/SecurityAuditService';
-import { RoleManagementService } from '@/services/security/RoleManagementService';
-import { SecurityLogEntry } from '@/types/security';
-import { formatDistanceToNow } from 'date-fns';
+import { EnhancedSecurityService } from '@/services/security/EnhancedSecurityService';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
-const SecurityDashboard: React.FC = () => {
-  const [securityLogs, setSecurityLogs] = useState<SecurityLogEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [filterSeverity, setFilterSeverity] = useState<string>('all');
-  const [filterResolved, setFilterResolved] = useState<string>('all');
+interface SecurityMetrics {
+  totalScans: number;
+  threatsBlocked: number;
+  sessionHealth: number;
+  lastSecurityCheck: Date;
+  recentAlerts: SecurityAlert[];
+}
+
+interface SecurityAlert {
+  id: string;
+  type: 'info' | 'warning' | 'error' | 'success';
+  message: string;
+  timestamp: Date;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+}
+
+const SecurityDashboard = () => {
+  const { user } = useAuth();
+  const [metrics, setMetrics] = useState<SecurityMetrics>({
+    totalScans: 0,
+    threatsBlocked: 0,
+    sessionHealth: 85,
+    lastSecurityCheck: new Date(),
+    recentAlerts: []
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkAdminStatus();
-    loadSecurityLogs();
-  }, []);
+    if (user) {
+      loadSecurityMetrics();
+    }
+  }, [user]);
 
-  const checkAdminStatus = async () => {
-    const adminStatus = await RoleManagementService.checkUserRole('admin');
-    setIsAdmin(adminStatus);
-  };
-
-  const loadSecurityLogs = async () => {
+  const loadSecurityMetrics = async () => {
     try {
-      setLoading(true);
-      const logs = await SecurityAuditService.getSecurityLogs(100);
-      setSecurityLogs(logs);
+      setIsLoading(true);
+      
+      // Load recent security logs
+      const { data: logs, error } = await supabase
+        .from('security_logs')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      // Calculate metrics
+      const threats = logs?.filter(log => 
+        log.severity === 'high' || log.severity === 'critical'
+      ).length || 0;
+
+      const alerts: SecurityAlert[] = logs?.map(log => ({
+        id: log.id,
+        type: getAlertType(log.severity),
+        message: getAlertMessage(log.event_type, log.details),
+        timestamp: new Date(log.created_at!),
+        severity: log.severity as any
+      })) || [];
+
+      // Session health calculation
+      const sessionCheck = await EnhancedSecurityService.validateSession();
+      let sessionHealth = sessionCheck.isValid ? 100 : 0;
+      
+      if (sessionCheck.isValid && sessionCheck.user) {
+        const sessionAge = Date.now() - new Date(sessionCheck.user.last_sign_in_at || 0).getTime();
+        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+        sessionHealth = Math.max(0, 100 - (sessionAge / maxAge) * 100);
+      }
+
+      setMetrics({
+        totalScans: logs?.length || 0,
+        threatsBlocked: threats,
+        sessionHealth: Math.round(sessionHealth),
+        lastSecurityCheck: new Date(),
+        recentAlerts: alerts.slice(0, 5)
+      });
+
     } catch (error) {
-      console.error('Failed to load security logs:', error);
+      console.error('Failed to load security metrics:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleResolveLog = async (logId: string) => {
-    try {
-      await SecurityAuditService.resolveSecurityLog(logId);
-      await loadSecurityLogs();
-    } catch (error) {
-      console.error('Failed to resolve security log:', error);
-    }
-  };
-
-  const filteredLogs = securityLogs.filter(log => {
-    if (filterSeverity !== 'all' && log.severity !== filterSeverity) return false;
-    if (filterResolved === 'resolved' && !log.resolved) return false;
-    if (filterResolved === 'unresolved' && log.resolved) return false;
-    return true;
-  });
-
-  const severityStats = {
-    critical: securityLogs.filter(log => log.severity === 'critical' && !log.resolved).length,
-    high: securityLogs.filter(log => log.severity === 'high' && !log.resolved).length,
-    medium: securityLogs.filter(log => log.severity === 'medium' && !log.resolved).length,
-    low: securityLogs.filter(log => log.severity === 'low' && !log.resolved).length,
-  };
-
-  const getSeverityColor = (severity: string) => {
+  const getAlertType = (severity: string): 'info' | 'warning' | 'error' | 'success' => {
     switch (severity) {
-      case 'critical': return 'bg-red-600 text-white';
-      case 'high': return 'bg-red-500 text-white';
-      case 'medium': return 'bg-yellow-500 text-white';
-      case 'low': return 'bg-green-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'critical':
+      case 'high':
+        return 'error';
+      case 'medium':
+        return 'warning';
+      case 'low':
+        return 'info';
+      default:
+        return 'success';
     }
   };
 
-  if (!isAdmin) {
-    return (
-      <div className="p-6">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            You don't have permission to access the security dashboard.
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
+  const getAlertMessage = (eventType: string, details: any): string => {
+    const messages: Record<string, string> = {
+      'dangerous_content_detected': 'Blocked dangerous content in submission',
+      'rate_limit_exceeded': 'Rate limit exceeded - access temporarily restricted',
+      'session_validation_failed': 'Session validation failed',
+      'suspicious_login': 'Suspicious login attempt detected',
+      'profile_updated': 'Profile updated successfully',
+      'password_changed': 'Password changed successfully'
+    };
 
-  if (loading) {
+    return messages[eventType] || eventType.replace(/_/g, ' ');
+  };
+
+  const getHealthColor = (health: number): string => {
+    if (health >= 80) return 'text-green-600';
+    if (health >= 60) return 'text-yellow-600';
+    if (health >= 40) return 'text-orange-600';
+    return 'text-red-600';
+  };
+
+  const getHealthBadgeVariant = (health: number): 'default' | 'secondary' | 'destructive' => {
+    if (health >= 80) return 'default';
+    if (health >= 60) return 'secondary';
+    return 'destructive';
+  };
+
+  if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-          <span className="ml-2">Loading security dashboard...</span>
-        </div>
-      </div>
+      <Card className="border-blue-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-blue-600" />
+            Security Dashboard
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8">
+            <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+            <p className="text-gray-600">Loading security metrics...</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Shield className="h-8 w-8 text-green-600" />
-          Security Dashboard
-        </h1>
-        <Button onClick={loadSecurityLogs} variant="outline">
-          <Activity className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
-
-      {/* Security Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-red-600">Critical Issues</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{severityStats.critical}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-orange-600">High Priority</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{severityStats.high}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-yellow-600">Medium Priority</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{severityStats.medium}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-green-600">Low Priority</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{severityStats.low}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="flex gap-4">
-          <div>
-            <label className="text-sm font-medium mb-1 block">Severity</label>
-            <select 
-              value={filterSeverity} 
-              onChange={(e) => setFilterSeverity(e.target.value)}
-              className="border rounded px-3 py-1"
-            >
-              <option value="all">All Severities</option>
-              <option value="critical">Critical</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low</option>
-            </select>
+    <Card className="border-blue-200">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Shield className="h-5 w-5 text-blue-600" />
+            Security Dashboard
           </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Status</label>
-            <select 
-              value={filterResolved} 
-              onChange={(e) => setFilterResolved(e.target.value)}
-              className="border rounded px-3 py-1"
-            >
-              <option value="all">All</option>
-              <option value="unresolved">Unresolved</option>
-              <option value="resolved">Resolved</option>
-            </select>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={loadSecurityMetrics}
+            disabled={isLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Security Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">{metrics.totalScans}</div>
+            <div className="text-sm text-gray-600">Security Scans</div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="text-center p-4 bg-red-50 rounded-lg">
+            <div className="text-2xl font-bold text-red-600">{metrics.threatsBlocked}</div>
+            <div className="text-sm text-gray-600">Threats Blocked</div>
+          </div>
+          <div className="text-center p-4 bg-green-50 rounded-lg">
+            <div className={`text-2xl font-bold ${getHealthColor(metrics.sessionHealth)}`}>
+              {metrics.sessionHealth}%
+            </div>
+            <div className="text-sm text-gray-600">Session Health</div>
+          </div>
+        </div>
 
-      {/* Security Logs */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Activity className="h-5 w-5" />
-            Security Events ({filteredLogs.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3 max-h-96 overflow-y-auto">
-            {filteredLogs.map((log) => (
-              <div 
-                key={log.id} 
-                className={`p-4 border rounded-lg ${log.resolved ? 'bg-gray-50' : 'bg-white'}`}
-              >
-                <div className="flex items-start justify-between">
+        {/* Session Health Bar */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Session Security</span>
+            <Badge variant={getHealthBadgeVariant(metrics.sessionHealth)}>
+              {metrics.sessionHealth >= 80 ? 'Excellent' : 
+               metrics.sessionHealth >= 60 ? 'Good' : 
+               metrics.sessionHealth >= 40 ? 'Fair' : 'Poor'}
+            </Badge>
+          </div>
+          <Progress 
+            value={metrics.sessionHealth} 
+            className="h-2"
+          />
+        </div>
+
+        {/* Recent Security Alerts */}
+        <div className="space-y-3">
+          <h4 className="font-medium flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            Recent Security Activity
+          </h4>
+          {metrics.recentAlerts.length === 0 ? (
+            <div className="text-center py-4 text-gray-500">
+              <CheckCircle className="h-8 w-8 mx-auto mb-2 text-green-500" />
+              <p>No recent security alerts</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {metrics.recentAlerts.map((alert) => (
+                <div key={alert.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                  {alert.type === 'error' && <AlertTriangle className="h-4 w-4 text-red-500" />}
+                  {alert.type === 'warning' && <AlertTriangle className="h-4 w-4 text-yellow-500" />}
+                  {alert.type === 'info' && <Shield className="h-4 w-4 text-blue-500" />}
+                  {alert.type === 'success' && <CheckCircle className="h-4 w-4 text-green-500" />}
+                  
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className={getSeverityColor(log.severity)}>
-                        {log.severity.toUpperCase()}
-                      </Badge>
-                      <span className="font-medium">{log.event_type}</span>
-                      {log.resolved ? (
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                      ) : (
-                        <XCircle className="h-4 w-4 text-red-600" />
-                      )}
-                    </div>
-                    
-                    <div className="text-sm text-gray-600 mb-2">
-                      {typeof log.details === 'object' ? 
-                        log.details.message || JSON.stringify(log.details, null, 2) : 
-                        log.details
-                      }
-                    </div>
-                    
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {formatDistanceToNow(new Date(log.created_at!), { addSuffix: true })}
-                      </span>
-                      {log.user_id && (
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          User: {log.user_id.slice(-8)}
-                        </span>
-                      )}
-                    </div>
+                    <p className="text-sm font-medium">{alert.message}</p>
+                    <p className="text-xs text-gray-500">
+                      {alert.timestamp.toLocaleString()}
+                    </p>
                   </div>
                   
-                  {!log.resolved && (
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleResolveLog(log.id!)}
-                    >
-                      Resolve
-                    </Button>
-                  )}
+                  <Badge 
+                    variant={alert.severity === 'critical' || alert.severity === 'high' ? 'destructive' : 'secondary'}
+                    className="text-xs"
+                  >
+                    {alert.severity}
+                  </Badge>
                 </div>
-              </div>
-            ))}
-            
-            {filteredLogs.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No security events found matching the current filters.
-              </div>
-            )}
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Last Security Check */}
+        <div className="flex items-center justify-between pt-4 border-t">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Clock className="h-4 w-4" />
+            Last check: {metrics.lastSecurityCheck.toLocaleString()}
           </div>
-        </CardContent>
-      </Card>
-    </div>
+          <div className="flex items-center gap-2">
+            <Lock className="h-4 w-4 text-green-600" />
+            <span className="text-sm text-green-600 font-medium">Protected</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -2,9 +2,10 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useSecureForm } from '@/hooks/useSecureForm';
 import { toast } from '@/hooks/use-toast';
 import { profileSchema, ProfileData } from '@/schemas/profileValidation';
-import { sanitizeInput, logSecurityEvent } from '@/utils/security';
+import { EnhancedSecurityService } from '@/services/security/EnhancedSecurityService';
 
 export const useProfileData = () => {
   const { user } = useAuth();
@@ -16,7 +17,13 @@ export const useProfileData = () => {
   });
   const [profileExists, setProfileExists] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+
+  const { secureSubmit, validateField, isSubmitting: isSaving, validationErrors } = useSecureForm({
+    rateLimitAction: 'profile_update',
+    validateContent: true,
+    maxRequests: 10,
+    windowMinutes: 60
+  });
 
   const loadProfile = async () => {
     if (!user) return;
@@ -31,7 +38,6 @@ export const useProfileData = () => {
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading profile:', error);
-        logSecurityEvent('profile_load_error', `User ${user.id}: ${error.message}`, 'medium');
         toast({
           title: 'Error Loading Profile',
           description: 'Failed to load your profile data.',
@@ -51,7 +57,6 @@ export const useProfileData = () => {
       }
     } catch (error) {
       console.error('Error loading profile:', error);
-      logSecurityEvent('profile_load_exception', `User ${user.id}: ${error}`, 'high');
     } finally {
       setIsLoading(false);
     }
@@ -63,7 +68,6 @@ export const useProfileData = () => {
       return { isValid: true, errors: [] };
     } catch (error: any) {
       const errors = error.errors?.map((e: any) => e.message) || ['Validation failed'];
-      logSecurityEvent('profile_validation_failed', `User ${user?.id}: ${errors.join(', ')}`, 'low');
       return { isValid: false, errors };
     }
   };
@@ -71,26 +75,13 @@ export const useProfileData = () => {
   const saveProfile = async () => {
     if (!user) return;
 
-    // Sanitize all inputs
-    const sanitizedData = {
-      bio: sanitizeInput(profileData.bio),
-      values: sanitizeInput(profileData.values),
-      lifeGoals: sanitizeInput(profileData.lifeGoals),
-      greenFlags: sanitizeInput(profileData.greenFlags)
-    };
+    const submitFn = async (sanitizedData: ProfileData) => {
+      // Additional validation
+      const validation = validateProfile(sanitizedData);
+      if (!validation.isValid) {
+        throw new Error(validation.errors.join(', '));
+      }
 
-    const validation = validateProfile(sanitizedData);
-    if (!validation.isValid) {
-      toast({
-        title: 'Validation Error',
-        description: validation.errors.join(', '),
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    setIsSaving(true);
-    try {
       const profilePayload = {
         user_id: user.id,
         email: user.email || '',
@@ -114,37 +105,31 @@ export const useProfileData = () => {
       }
 
       if (result.error) {
-        console.error('Error saving profile:', result.error);
-        logSecurityEvent('profile_save_error', `User ${user.id}: ${result.error.message}`, 'medium');
-        toast({
-          title: 'Error Saving Profile',
-          description: result.error.message,
-          variant: 'destructive'
-        });
-      } else {
-        setProfileExists(true);
-        setProfileData(sanitizedData);
-        logSecurityEvent('profile_saved', `User ${user.id} updated profile`, 'low');
-        toast({
-          title: 'Profile Saved Successfully',
-          description: 'Your secure profile has been updated.',
-        });
+        throw new Error(result.error.message);
       }
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      logSecurityEvent('profile_save_exception', `User ${user.id}: ${error}`, 'high');
-      toast({
-        title: 'Error Saving Profile',
-        description: 'An unexpected error occurred.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsSaving(false);
+
+      setProfileExists(true);
+      return result.data;
+    };
+
+    const result = await secureSubmit(profileData, submitFn);
+    
+    if (result.success) {
+      setProfileData(profileData); // Keep the current data since it was successfully saved
     }
+
+    return result;
   };
 
-  const updateProfileField = (field: keyof ProfileData, value: string) => {
+  const updateProfileField = async (field: keyof ProfileData, value: string) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
+    
+    // Real-time validation
+    const contentType = field === 'bio' ? 'bio' : 
+                       field === 'values' ? 'values' :
+                       field === 'lifeGoals' ? 'goals' : 'greenFlags';
+    
+    await validateField(field, value, contentType);
   };
 
   return {
@@ -152,6 +137,7 @@ export const useProfileData = () => {
     profileExists,
     isLoading,
     isSaving,
+    validationErrors,
     loadProfile,
     saveProfile,
     updateProfileField

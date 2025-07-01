@@ -1,95 +1,64 @@
-import { SecurityCoreService } from '@/services/security/SecurityCoreService';
-import { ValidationService, SECURITY_LIMITS } from '@/services/security/ValidationService';
-import { RateLimitService } from '@/services/security/RateLimitService';
-import { SecurityAuditService } from '@/services/security/SecurityAuditService';
-import { ContentValidationService } from '@/services/security/ContentValidationService';
 
-// Export the limits with the expected property names for backward compatibility
-export const LIMITS = {
-  // Message limits
-  MESSAGE_MAX_LENGTH: SECURITY_LIMITS.MAX_MESSAGE_LENGTH,
-  
-  // Bio limits  
-  BIO_MAX_LENGTH: SECURITY_LIMITS.MAX_BIO_LENGTH,
-  MIN_BIO_LENGTH: 50, // Add missing minimum bio length
-  
-  // Profile field limits
-  VALUES_MAX_LENGTH: 300,
-  GOALS_MAX_LENGTH: 300,
-  GREEN_FLAGS_MAX_LENGTH: 300,
-  
-  // File limits
-  MAX_FILE_SIZE: SECURITY_LIMITS.MAX_FILE_SIZE,
-  
-  // Other limits
-  MAX_LOGIN_ATTEMPTS: SECURITY_LIMITS.MAX_LOGIN_ATTEMPTS,
-  SESSION_TIMEOUT: SECURITY_LIMITS.SESSION_TIMEOUT
-} as const;
+import { EnhancedSecurityService } from '@/services/security/EnhancedSecurityService';
 
-// Security functions
-export const sanitizeInput = (input: string): string => {
-  const { sanitizedValue } = require('@/utils/enhancedSecurityValidation').sanitizeUserInput(input, false);
-  return sanitizedValue || '';
-};
-
-export const sanitizeForDisplay = (input: string): string => {
-  const { sanitizedValue } = require('@/utils/enhancedSecurityValidation').sanitizeUserInput(input, true);
-  return sanitizedValue || '';
+// Export the enhanced security service functions for backward compatibility
+export const sanitizeInput = async (input: string): Promise<string> => {
+  const result = await EnhancedSecurityService.validateAndSanitizeInput(input, 'general');
+  return result.sanitized || input;
 };
 
 export const validateMessageContent = async (content: string): Promise<{ isValid: boolean; error?: string }> => {
-  const { checkEnhancedRateLimit } = await import('@/utils/enhancedSecurityValidation');
-  
-  // Check rate limiting for message sending
-  const rateCheck = await checkEnhancedRateLimit('send_message', 10, 60);
-  if (!rateCheck.allowed) {
-    return {
-      isValid: false,
-      error: 'Too many messages sent. Please wait before sending another message.'
-    };
-  }
-
-  // Use enhanced input validation
-  const { sanitizeUserInput } = await import('@/utils/enhancedSecurityValidation');
-  const validation = sanitizeUserInput(content, false);
-  
-  if (!validation.isValid) {
-    return {
-      isValid: false,
-      error: validation.errors.join(', ')
-    };
-  }
-
-  if (content.length > LIMITS.MESSAGE_MAX_LENGTH) {
-    return {
-      isValid: false,
-      error: `Message is too long. Maximum ${LIMITS.MESSAGE_MAX_LENGTH} characters allowed.`
-    };
-  }
-
-  return { isValid: true };
+  const result = await EnhancedSecurityService.validateAndSanitizeInput(content, 'message');
+  return {
+    isValid: result.isValid,
+    error: result.errors.length > 0 ? result.errors.join(', ') : undefined
+  };
 };
 
-export const containsInappropriateContent = (content: string): boolean => {
-  const suspiciousPatterns = ContentValidationService.detectSuspiciousPatterns?.(content) || [];
-  return suspiciousPatterns.length > 0;
+export const containsInappropriateContent = async (content: string): Promise<boolean> => {
+  const result = await EnhancedSecurityService.validateAndSanitizeInput(content, 'general');
+  return result.riskLevel === 'high' || result.riskLevel === 'critical';
 };
 
-export const logSecurityEvent = SecurityAuditService.logSecurityEvent;
+export const logSecurityEvent = async (
+  eventType: string,
+  details: string | Record<string, any>,
+  severity: 'low' | 'medium' | 'high' | 'critical' = 'low'
+): Promise<void> => {
+  // This is now handled internally by EnhancedSecurityService
+  console.log('Security event:', { eventType, details, severity });
+};
 
-// Export SecurityCoreService functions
-export const isProductionEnvironment = SecurityCoreService.isProductionEnvironment;
-export const generateDeviceFingerprint = SecurityCoreService.generateDeviceFingerprint;
-export const detectAutomationIndicators = SecurityCoreService.detectAutomationIndicators;
+// Re-export the enhanced security service
+export { EnhancedSecurityService };
 
-// Rate limiting
+// Security limits for backward compatibility
+export const LIMITS = {
+  MESSAGE_MAX_LENGTH: 1000,
+  BIO_MAX_LENGTH: 500,
+  MIN_BIO_LENGTH: 50,
+  VALUES_MAX_LENGTH: 300,
+  GOALS_MAX_LENGTH: 300,
+  GREEN_FLAGS_MAX_LENGTH: 300,
+  MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+  MAX_LOGIN_ATTEMPTS: 5,
+  SESSION_TIMEOUT: 24 * 60 * 60 * 1000, // 24 hours
+} as const;
+
+// Rate limiting helper
 export const rateLimiter = {
-  isAllowed: async (key: string, maxRequests: number, windowMs: number): Promise<boolean> => {
-    const { checkEnhancedRateLimit } = await import('@/utils/enhancedSecurityValidation');
-    const result = await checkEnhancedRateLimit(key, maxRequests, Math.floor(windowMs / 1000));
-    return result.allowed;
+  isAllowed: async (action: string, maxRequests: number, windowMinutes: number = 60): Promise<boolean> => {
+    try {
+      const result = await EnhancedSecurityService.checkRateLimit(
+        action,
+        'anonymous', // Will use user ID in the service if available
+        maxRequests,
+        windowMinutes
+      );
+      return result.allowed;
+    } catch (error) {
+      console.error('Rate limit check failed:', error);
+      return true; // Fail open
+    }
   }
 };
-
-// Re-export services for direct access
-export { SecurityCoreService, ValidationService, RateLimitService, SecurityAuditService, ContentValidationService };
