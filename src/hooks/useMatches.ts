@@ -5,17 +5,16 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface Match {
   id: string;
-  user1_id: string;
-  user2_id: string;
-  compatibility_score: number;
-  matched_at: string;
-  is_active: boolean;
+  user_id: string;
+  matched_user_id: string;
+  compatibility: number;
+  created_at: string;
+  status: string;
   match_profile?: {
     user_id: string;
-    name: string;
     email: string;
     bio: string | null;
-    photos: string[] | null;
+    photo_urls: string[] | null;
   };
 }
 
@@ -29,12 +28,13 @@ export const useMatches = () => {
 
     setIsLoading(true);
     try {
-      // Get matches first
+      // Get matches from the matches table
       const { data: matchesData, error: matchesError } = await supabase
-        .from('user_matches')
+        .from('matches')
         .select('*')
-        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-        .order('last_updated', { ascending: false });
+        .or(`user_id.eq.${user.id},matched_user_id.eq.${user.id}`)
+        .eq('status', 'accepted')
+        .order('created_at', { ascending: false });
 
       if (matchesError) {
         console.error('Error loading matches:', matchesError);
@@ -48,13 +48,13 @@ export const useMatches = () => {
 
       // Get the other user IDs from matches
       const otherUserIds = matchesData.map(match => {
-        return match.user1_id === user.id ? match.user2_id : match.user1_id;
+        return match.user_id === user.id ? match.matched_user_id : match.user_id;
       });
 
       // Get profiles for the other users
       const { data: profilesData, error: profilesError } = await supabase
-        .from('user_profiles')
-        .select('user_id, name, email, bio, photos')
+        .from('profiles')
+        .select('user_id, email, bio, photo_urls')
         .in('user_id', otherUserIds);
 
       if (profilesError) {
@@ -64,22 +64,21 @@ export const useMatches = () => {
 
       // Process matches to get the other user's profile
       const processedMatches = matchesData.map(match => {
-        const otherUserId = match.user1_id === user.id ? match.user2_id : match.user1_id;
+        const otherUserId = match.user_id === user.id ? match.matched_user_id : match.user_id;
         const profile = profilesData?.find(p => p.user_id === otherUserId);
         
         return {
-          id: match.id || `${match.user1_id}-${match.user2_id}`,
-          user1_id: match.user1_id,
-          user2_id: match.user2_id,
-          compatibility_score: match.compatibility_score || 75,
-          matched_at: match.matched_at || match.last_updated || new Date().toISOString(),
-          is_active: match.is_active !== undefined ? match.is_active : true,
+          id: match.uuid_id || `${match.user_id}-${match.matched_user_id}`,
+          user_id: match.user_id,
+          matched_user_id: match.matched_user_id,
+          compatibility: match.compatibility || 75,
+          created_at: match.created_at || new Date().toISOString(),
+          status: match.status || 'accepted',
           match_profile: profile ? {
             user_id: profile.user_id,
-            name: profile.name,
             email: profile.email || '',
             bio: profile.bio,
-            photos: profile.photos
+            photo_urls: profile.photo_urls
           } : undefined
         };
       });
