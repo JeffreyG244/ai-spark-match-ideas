@@ -78,8 +78,8 @@ export class ValidationService {
     return file.size <= SECURITY_LIMITS.MAX_FILE_SIZE;
   }
 
-  static validatePasswordStrength(password: string): { isValid: boolean; errors: string[] } {
-    const result = validatePasswordStrengthEnhanced(password);
+  static async validatePasswordStrength(password: string): Promise<{ isValid: boolean; errors: string[] }> {
+    const result = await validatePasswordStrengthEnhanced(password);
     return {
       isValid: result.isValid,
       errors: result.errors
