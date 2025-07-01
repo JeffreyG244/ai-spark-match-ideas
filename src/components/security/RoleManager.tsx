@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,24 +51,37 @@ const RoleManager: React.FC = () => {
     try {
       setLoading(true);
       
+      // Get user roles and join with profiles table for email
       const { data: roles, error } = await supabase
         .from('user_roles')
-        .select(`
-          *,
-          user_profiles!inner(email)
-        `)
+        .select('*')
         .order('granted_at', { ascending: false });
 
       if (error) {
         throw error;
       }
 
-      const rolesWithEmails = roles?.map(role => ({
-        ...role,
-        user_email: (role as any).user_profiles?.email || 'Unknown'
-      })) || [];
+      if (roles && roles.length > 0) {
+        // Get user emails from profiles table
+        const userIds = roles.map(role => role.user_id);
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, email')
+          .in('user_id', userIds);
 
-      setUserRoles(rolesWithEmails);
+        if (profilesError) {
+          console.error('Error loading profiles:', profilesError);
+        }
+
+        const rolesWithEmails = roles.map(role => ({
+          ...role,
+          user_email: profiles?.find(p => p.user_id === role.user_id)?.email || 'Unknown'
+        }));
+
+        setUserRoles(rolesWithEmails);
+      } else {
+        setUserRoles([]);
+      }
     } catch (error) {
       console.error('Failed to load user roles:', error);
       setUserRoles([]);
@@ -81,7 +95,7 @@ const RoleManager: React.FC = () => {
 
     try {
       const { data: profile, error: profileError } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('user_id')
         .eq('email', newUserEmail)
         .single();

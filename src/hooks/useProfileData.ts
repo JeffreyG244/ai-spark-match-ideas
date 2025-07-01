@@ -24,8 +24,8 @@ export const useProfileData = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
-        .select('bio, values, life_goals, green_flags, verified')
+        .from('profiles')
+        .select('bio, photo_urls')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -44,9 +44,9 @@ export const useProfileData = () => {
         setProfileExists(true);
         setProfileData({
           bio: data.bio || '',
-          values: typeof data.values === 'string' ? data.values : '', // Handle string | string[]
-          lifeGoals: data.life_goals || '',
-          greenFlags: data.green_flags || ''
+          values: '', // Not available in profiles table
+          lifeGoals: '', // Not available in profiles table  
+          greenFlags: '' // Not available in profiles table
         });
       }
     } catch (error) {
@@ -93,24 +93,20 @@ export const useProfileData = () => {
     try {
       const profilePayload = {
         user_id: user.id,
-        name: user.email?.split('@')[0] || 'User',
         email: user.email || '',
         bio: sanitizedData.bio,
-        values: sanitizedData.values, // Keep as string
-        life_goals: sanitizedData.lifeGoals,
-        green_flags: sanitizedData.greenFlags,
-        verified: false
+        updated_at: new Date().toISOString()
       };
 
       let result;
       if (profileExists) {
         result = await supabase
-          .from('user_profiles')
+          .from('profiles')
           .update(profilePayload)
           .eq('user_id', user.id);
       } else {
         result = await supabase
-          .from('user_profiles')
+          .from('profiles')
           .insert([{
             ...profilePayload,
             created_at: new Date().toISOString()

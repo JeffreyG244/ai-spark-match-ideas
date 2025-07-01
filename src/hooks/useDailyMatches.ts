@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,12 +13,9 @@ interface DailyMatch {
   created_at: string;
   user_profile?: {
     user_id: string;
-    name: string;
     email: string;
     bio: string | null;
-    values: string | null;
-    interests: string[] | null;
-    photos: string[] | null;
+    photo_urls: string[] | null;
   };
 }
 
@@ -49,14 +47,14 @@ export const useDailyMatches = () => {
       console.log('Daily matches data:', matchesData);
 
       if (!matchesData || matchesData.length === 0) {
-        console.log('No daily matches found, checking user_matches table...');
+        console.log('No daily matches found, checking matches table...');
         
-        // If no daily matches, try to get from user_matches
+        // If no daily matches, try to get from matches table
         const { data: userMatches, error: userMatchesError } = await supabase
-          .from('user_matches')
+          .from('matches')
           .select('*')
-          .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-          .order('compatibility_score', { ascending: false })
+          .or(`user_id.eq.${user.id},matched_user_id.eq.${user.id}`)
+          .order('compatibility', { ascending: false })
           .limit(5);
 
         if (userMatchesError) {
@@ -70,12 +68,12 @@ export const useDailyMatches = () => {
         if (userMatches && userMatches.length > 0) {
           // Get profiles for these matches
           const otherUserIds = userMatches.map(match => {
-            return match.user1_id === user.id ? match.user2_id : match.user1_id;
+            return match.user_id === user.id ? match.matched_user_id : match.user_id;
           });
 
           const { data: profilesData, error: profilesError } = await supabase
-            .from('user_profiles')
-            .select('user_id, name, email, bio, values, interests, photos')
+            .from('profiles')
+            .select('user_id, email, bio, photo_urls')
             .in('user_id', otherUserIds);
 
           if (profilesError) {
@@ -84,27 +82,24 @@ export const useDailyMatches = () => {
             return;
           }
 
-          // Convert user_matches to daily_matches format
+          // Convert matches to daily_matches format
           const convertedMatches = userMatches.map(match => {
-            const otherUserId = match.user1_id === user.id ? match.user2_id : match.user1_id;
+            const otherUserId = match.user_id === user.id ? match.matched_user_id : match.user_id;
             const profile = profilesData?.find(p => p.user_id === otherUserId);
 
             return {
-              id: `match-${match.user1_id}-${match.user2_id}`,
+              id: `match-${match.user_id}-${match.matched_user_id}`,
               user_id: user.id,
               suggested_user_id: otherUserId,
-              compatibility_score: match.compatibility_score || 75,
+              compatibility_score: match.compatibility || 75,
               suggested_date: new Date().toISOString().split('T')[0],
               viewed: false,
-              created_at: match.last_updated || new Date().toISOString(),
+              created_at: match.created_at || new Date().toISOString(),
               user_profile: profile ? {
                 user_id: profile.user_id,
-                name: profile.name,
                 email: profile.email || '',
                 bio: profile.bio,
-                values: profile.values, // Keep as string | null
-                interests: profile.interests,
-                photos: profile.photos
+                photo_urls: profile.photo_urls
               } : undefined
             };
           });
@@ -118,8 +113,8 @@ export const useDailyMatches = () => {
       if (matchesData && matchesData.length > 0) {
         const userIds = matchesData.map(match => match.suggested_user_id);
         const { data: profilesData, error: profilesError } = await supabase
-          .from('user_profiles')
-          .select('user_id, name, email, bio, values, interests, photos')
+          .from('profiles')
+          .select('user_id, email, bio, photo_urls')
           .in('user_id', userIds);
 
         if (profilesError) {
@@ -133,12 +128,9 @@ export const useDailyMatches = () => {
             ...match,
             user_profile: profile ? {
               user_id: profile.user_id,
-              name: profile.name,
               email: profile.email || '',
               bio: profile.bio,
-              values: profile.values, // Keep as string | null
-              interests: profile.interests,
-              photos: profile.photos
+              photo_urls: profile.photo_urls
             } : undefined
           };
         });
@@ -177,7 +169,7 @@ export const useDailyMatches = () => {
         
         // Manual generation fallback
         const { data: profiles, error: profilesError } = await supabase
-          .from('user_profiles')
+          .from('profiles')
           .select('*')
           .neq('user_id', user.id)
           .limit(matchCount);
