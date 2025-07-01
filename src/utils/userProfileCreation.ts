@@ -25,18 +25,12 @@ export async function createUserProfile(user: DiverseUser, userId: string, photo
   };
   
   const { error: profileError } = await supabase
-    .from('user_profiles')
+    .from('profiles')
     .insert({
       user_id: userId,
       email: user.email,
       bio: user.bio,
-      values: user.values,
-      life_goals: user.lifeGoals,
-      green_flags: user.greenFlags,
-      photos: photoUrls,
-      interests: user.interests,
-      personality_answers: personalityAnswers,
-      verified: true,
+      photo_urls: photoUrls,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     });
@@ -49,34 +43,34 @@ export async function createUserProfile(user: DiverseUser, userId: string, photo
   console.log(`✅ Profile created successfully for ${user.firstName} ${user.lastName}`);
   return true;
 }
-import { supabase } from '@/integrations/supabase/client';
-import type { Diverselser } from '@/data/diverselsersData';
 
-// ADD THIS FUNCTION (paste near top after imports)
+// Function to get secure photo URL
 function getSecurePhotoUrl(filename: string) {
   return `https://storage.luvlang.org/storage/v1/object/public/profile-photos/${filename}`;
 }
 
-export async function createUserProfile(user: Diverselser, userId: string, photoUrls: string[]) {
-  console.log(`Creating profile for ${user.firstName}...`);
+export async function updateProfilePhotos(user: DiverseUser, userId: string, photoUrls: string[]) {
+  console.log(`Updating photos for ${user.firstName}...`);
 
-  // Convert all photo URLs to secure versions (ADD THIS)
+  // Convert all photo URLs to secure versions
   const securePhotoUrls = photoUrls.map(url => {
     const filename = url.split('/').pop(); // Extract filename
     return getSecurePhotoUrl(filename!);
   });
 
-  const personalityAnswers = {
-    // ... (keep your existing code)
-  };
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({
+      photo_urls: securePhotoUrls,
+      updated_at: new Date().toISOString()
+    })
+    .eq('user_id', userId);
 
-  const { error: profileError } = await supabase
-    .from('user_profiles')
-    .insert({
-      user_id: userId,
-      email: user.email,
-      bio: user.bio,
-      photos: securePhotoUrls, // CHANGED: Now uses HTTPS URLs
-      // ... (rest of your existing fields)
-    });
+  if (updateError) {
+    console.error('Photo update error:', updateError);
+    return false;
+  }
+
+  console.log(`✅ Photos updated successfully for ${user.firstName}`);
+  return true;
 }

@@ -1,5 +1,23 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeInput, logSecurityEvent } from './security';
+
+// Add missing type definitions
+interface SecureProfileData {
+  email: string;
+  bio: string;
+}
+
+// Add missing validation function
+const validateSecureProfileData = (data: SecureProfileData) => {
+  if (!data.email || !data.bio) {
+    return { isValid: false, error: 'Email and bio are required' };
+  }
+  if (data.email.length > 255 || data.bio.length > 1000) {
+    return { isValid: false, error: 'Email or bio too long' };
+  }
+  return { isValid: true };
+};
 
 /**
  * Secure data operations with enhanced validation
@@ -34,12 +52,11 @@ export class SecureDataOperations {
       if (!user) throw new Error('User not authenticated');
 
       const { error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .upsert({
           user_id: user.id,
           email: user.email || '',
-          ...sanitizedData,
-          verified: false,
+          bio: sanitizedData.bio,
           updated_at: new Date().toISOString()
         });
 
