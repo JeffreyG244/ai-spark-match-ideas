@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { sanitizeInput, logSecurityEvent } from './security';
+import { sanitizeInputAsync, logSecurityEvent } from './security';
 
 // Add missing type definitions
 interface SecureProfileData {
@@ -34,12 +34,12 @@ export class SecureDataOperations {
     greenFlags: string;
   }) {
     try {
-      // Enhanced sanitization
+      // Enhanced sanitization - await all async operations
       const sanitizedData = {
-        bio: sanitizeInput(profileData.bio),
-        values: sanitizeInput(profileData.values),
-        lifeGoals: sanitizeInput(profileData.lifeGoals),
-        greenFlags: sanitizeInput(profileData.greenFlags)
+        bio: await sanitizeInputAsync(profileData.bio),
+        values: await sanitizeInputAsync(profileData.values),
+        lifeGoals: await sanitizeInputAsync(profileData.lifeGoals),
+        greenFlags: await sanitizeInputAsync(profileData.greenFlags)
       };
 
       // Additional security checks
@@ -97,7 +97,7 @@ export class SecureDataOperations {
    */
   static async sendSecureMessage(conversationId: string, content: string) {
     try {
-      const sanitizedContent = sanitizeInput(content);
+      const sanitizedContent = await sanitizeInputAsync(content);
       
       if (this.detectSuspiciousContent(sanitizedContent)) {
         logSecurityEvent('suspicious_message_content', 'Message contains suspicious content', 'high');

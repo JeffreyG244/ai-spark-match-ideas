@@ -1,10 +1,40 @@
 
 import { EnhancedSecurityService } from '@/services/security/EnhancedSecurityService';
 
-// Export the enhanced security service functions for backward compatibility
-export const sanitizeInput = async (input: string): Promise<string> => {
+// Synchronous sanitization for immediate use
+export const sanitizeInput = (input: string): string => {
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+  
+  // Basic synchronous sanitization
+  return input
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;')
+    .trim();
+};
+
+// Async sanitization for enhanced security
+export const sanitizeInputAsync = async (input: string): Promise<string> => {
   const result = await EnhancedSecurityService.validateAndSanitizeInput(input, 'general');
   return result.sanitized || input;
+};
+
+// Display sanitization for safe rendering
+export const sanitizeForDisplay = (input: string): string => {
+  if (!input || typeof input !== 'string') {
+    return '';
+  }
+  return sanitizeInput(input);
+};
+
+// Environment check
+export const isProductionEnvironment = (): boolean => {
+  return process.env.NODE_ENV === 'production';
 };
 
 export const validateMessageContent = async (content: string): Promise<{ isValid: boolean; error?: string }> => {

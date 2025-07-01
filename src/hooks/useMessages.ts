@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { validateMessageContent, sanitizeInput, logSecurityEvent, rateLimiter } from '@/utils/security';
+import { validateMessageContent, sanitizeInputAsync, logSecurityEvent, rateLimiter } from '@/utils/security';
 import { toast } from '@/hooks/use-toast';
 
 export interface Message {
@@ -144,10 +144,10 @@ export const useMessages = (conversationId: string | null) => {
         return;
       }
       
-      // Sanitize input
-      const sanitizedContent = sanitizeInput(content.trim());
+      // Sanitize input - await the async function
+      const sanitizedContent = await sanitizeInputAsync(content.trim());
       
-      // Validate content - FIX: await the async function
+      // Validate content - await the async function
       const validation = await validateMessageContent(sanitizedContent);
       if (!validation.isValid) {
         toast({
