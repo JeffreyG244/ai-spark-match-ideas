@@ -45,7 +45,7 @@ const Matches = () => {
   }
 
   const avgCompatibility = matches.length > 0 
-    ? Math.round(matches.reduce((acc, match) => acc + match.compatibility_score, 0) / matches.length)
+    ? Math.round(matches.reduce((acc, match) => acc + match.compatibility, 0) / matches.length)
     : 0;
 
   return (
@@ -147,8 +147,8 @@ const Matches = () => {
               if (!profile) return null;
 
               const firstName = profile.email.split('@')[0] || 'User';
-              const photo = profile.photos && profile.photos.length > 0 
-                ? profile.photos[0] 
+              const photo = profile.photo_urls && profile.photo_urls.length > 0 
+                ? profile.photo_urls[0] 
                 : 'https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60';
 
               return (
@@ -174,7 +174,7 @@ const Matches = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <CompatibilityScore score={match.compatibility_score} />
+                    <CompatibilityScore score={match.compatibility} />
                     
                     <p className="text-gray-700 text-sm leading-relaxed line-clamp-2">
                       {profile.bio || 'No bio available'}
@@ -182,7 +182,7 @@ const Matches = () => {
                     
                     <div className="flex items-center justify-between pt-2">
                       <span className="text-xs text-gray-500">
-                        Matched {new Date(match.matched_at).toLocaleDateString()}
+                        Matched {new Date(match.created_at).toLocaleDateString()}
                       </span>
                       <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
                         <MessageCircle className="h-4 w-4 mr-1" />

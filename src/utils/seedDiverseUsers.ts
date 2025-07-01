@@ -5,11 +5,11 @@ import { diverseUsersData } from '@/data/diverseUsersData';
 export const checkIfSeedingNeeded = async (): Promise<boolean> => {
   try {
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('profiles')
       .select('user_id', { count: 'exact' });
 
     if (error) {
-      console.error('Error checking user profiles count:', error);
+      console.error('Error checking profiles count:', error);
       return true; // Default to needing seeding if we can't check
     }
 
@@ -28,7 +28,7 @@ export const seedDiverseUsers = async (): Promise<{ success: boolean; message: s
     
     // Check if users already exist to prevent duplicates
     const { data: existingUsers, error: checkError } = await supabase
-      .from('user_profiles')
+      .from('profiles')
       .select('email')
       .in('email', diverseUsersData.map(user => user.email));
 
@@ -54,25 +54,9 @@ export const seedDiverseUsers = async (): Promise<{ success: boolean; message: s
     const userProfiles = newUsers.map(user => ({
       // Generate a fake user_id for each profile (in a real app, this would come from auth.users)
       user_id: `fake-${user.email.split('@')[0]}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      name: `${user.firstName} ${user.lastName}`,
       email: user.email,
       bio: user.bio,
-      values: user.values.split(', '), // Convert to array if schema expects array
-      life_goals: user.lifeGoals,
-      green_flags: user.greenFlags,
-      interests: user.interests,
-      photos: user.photos,
-      personality_answers: {
-        age: user.age.toString(),
-        gender: user.gender,
-        location: user.location,
-        occupation: user.occupation,
-        education: user.education,
-        lifestyle: user.lifestyle,
-        relationship_goals: user.relationshipGoals,
-        deal_breakers: user.dealBreakers
-      },
-      verified: true,
+      photo_urls: user.photos,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }));
@@ -85,7 +69,7 @@ export const seedDiverseUsers = async (): Promise<{ success: boolean; message: s
       const batch = userProfiles.slice(i, i + batchSize);
       
       const { error: insertError } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .insert(batch);
 
       if (insertError) {

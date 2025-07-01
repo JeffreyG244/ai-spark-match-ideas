@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeInput, logSecurityEvent } from './security';
 
@@ -125,3 +124,42 @@ export class SecureDataOperations {
     }
   }
 }
+
+/**
+ * Validates and saves secure user profile data
+ */
+export const saveSecureProfile = async (
+  userId: string,
+  profileData: SecureProfileData
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    // Validate input data
+    const validation = validateSecureProfileData(profileData);
+    if (!validation.isValid) {
+      return { success: false, error: validation.error };
+    }
+
+    // Save to database
+    const { error } = await supabase
+      .from('profiles')
+      .upsert({
+        user_id: userId,
+        email: profileData.email,
+        bio: profileData.bio,
+        updated_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error('Profile save error:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Save secure profile error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
+};
