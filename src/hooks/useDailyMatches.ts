@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -103,7 +102,7 @@ export const useDailyMatches = () => {
                 name: profile.name,
                 email: profile.email || '',
                 bio: profile.bio,
-                values: profile.values,
+                values: profile.values, // Keep as string | null
                 interests: profile.interests,
                 photos: profile.photos
               } : undefined
@@ -137,7 +136,7 @@ export const useDailyMatches = () => {
               name: profile.name,
               email: profile.email || '',
               bio: profile.bio,
-              values: profile.values,
+              values: profile.values, // Keep as string | null
               interests: profile.interests,
               photos: profile.photos
             } : undefined

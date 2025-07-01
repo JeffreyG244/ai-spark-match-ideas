@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Heart } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -32,7 +32,7 @@ const Auth = () => {
         if (error) throw error;
         setMessage('Verification email sent! Check your inbox.');
       }
-    } catch (error) {
+    } catch (error: any) {
       setMessage(error.message);
     } finally {
       setLoading(false);

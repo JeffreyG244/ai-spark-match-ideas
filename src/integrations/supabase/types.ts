@@ -50,7 +50,7 @@ export type Database = {
           generated_at: string | null
           id: string
           location: Json | null
-          match_id: string
+          match_id: number
           mutual_interests: string[] | null
           rationale: string | null
           suggestion: string
@@ -59,7 +59,7 @@ export type Database = {
           generated_at?: string | null
           id?: string
           location?: Json | null
-          match_id: string
+          match_id: number
           mutual_interests?: string[] | null
           rationale?: string | null
           suggestion: string
@@ -68,7 +68,7 @@ export type Database = {
           generated_at?: string | null
           id?: string
           location?: Json | null
-          match_id?: string
+          match_id?: number
           mutual_interests?: string[] | null
           rationale?: string | null
           suggestion?: string
@@ -118,6 +118,7 @@ export type Database = {
           icebreaker_text: string
           id: string
           match_id: string
+          numeric_id: number
           used: boolean | null
         }
         Insert: {
@@ -126,6 +127,7 @@ export type Database = {
           icebreaker_text: string
           id?: string
           match_id: string
+          numeric_id?: number
           used?: boolean | null
         }
         Update: {
@@ -134,6 +136,7 @@ export type Database = {
           icebreaker_text?: string
           id?: string
           match_id?: string
+          numeric_id?: number
           used?: boolean | null
         }
         Relationships: []
@@ -146,6 +149,7 @@ export type Database = {
           model_name: string
           provider: string
           updated_at: string | null
+          user_id: string
           version: string
         }
         Insert: {
@@ -155,6 +159,7 @@ export type Database = {
           model_name: string
           provider: string
           updated_at?: string | null
+          user_id: string
           version: string
         }
         Update: {
@@ -164,6 +169,7 @@ export type Database = {
           model_name?: string
           provider?: string
           updated_at?: string | null
+          user_id?: string
           version?: string
         }
         Relationships: []
@@ -369,6 +375,7 @@ export type Database = {
           matched_user_id: string
           status: Database["public"]["Enums"]["match_status"]
           user_id: string
+          uuid_id: string | null
         }
         Insert: {
           compatibility: number
@@ -377,6 +384,7 @@ export type Database = {
           matched_user_id: string
           status?: Database["public"]["Enums"]["match_status"]
           user_id: string
+          uuid_id?: string | null
         }
         Update: {
           compatibility?: number
@@ -385,6 +393,7 @@ export type Database = {
           matched_user_id?: string
           status?: Database["public"]["Enums"]["match_status"]
           user_id?: string
+          uuid_id?: string | null
         }
         Relationships: []
       }
@@ -445,33 +454,6 @@ export type Database = {
           message_count?: number
           user_id?: string
           window_start?: string
-        }
-        Relationships: []
-      }
-      messages: {
-        Row: {
-          content: string
-          id: number
-          read: boolean
-          receiver_id: string
-          sender_id: string
-          timestamp: string
-        }
-        Insert: {
-          content: string
-          id?: never
-          read?: boolean
-          receiver_id: string
-          sender_id: string
-          timestamp?: string
-        }
-        Update: {
-          content?: string
-          id?: never
-          read?: boolean
-          receiver_id?: string
-          sender_id?: string
-          timestamp?: string
         }
         Relationships: []
       }
@@ -560,6 +542,7 @@ export type Database = {
           email: string
           id: number
           location: unknown | null
+          photo_urls: string[] | null
           updated_at: string
           user_id: string
         }
@@ -569,6 +552,7 @@ export type Database = {
           email: string
           id?: never
           location?: unknown | null
+          photo_urls?: string[] | null
           updated_at?: string
           user_id: string
         }
@@ -578,6 +562,7 @@ export type Database = {
           email?: string
           id?: never
           location?: unknown | null
+          photo_urls?: string[] | null
           updated_at?: string
           user_id?: string
         }
@@ -952,51 +937,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_matches: {
-        Row: {
-          compatibility_score: number | null
-          id: string | null
-          is_active: boolean | null
-          last_updated: string | null
-          matched_at: string | null
-          user1_id: string
-          user2_id: string
-        }
-        Insert: {
-          compatibility_score?: number | null
-          id?: string | null
-          is_active?: boolean | null
-          last_updated?: string | null
-          matched_at?: string | null
-          user1_id: string
-          user2_id: string
-        }
-        Update: {
-          compatibility_score?: number | null
-          id?: string | null
-          is_active?: boolean | null
-          last_updated?: string | null
-          matched_at?: string | null
-          user1_id?: string
-          user2_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_matches_user1_id_fkey"
-            columns: ["user1_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "user_matches_user2_id_fkey"
-            columns: ["user2_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["user_id"]
-          },
-        ]
-      }
       user_presence: {
         Row: {
           is_online: boolean
@@ -1015,69 +955,6 @@ export type Database = {
           last_seen?: string
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      user_profiles: {
-        Row: {
-          age: number | null
-          bio: string | null
-          created_at: string | null
-          email: string | null
-          embedding: string | null
-          gender: string | null
-          green_flags: string | null
-          interests: string[] | null
-          life_goals: string | null
-          location: unknown | null
-          name: string
-          personality_answers: Json | null
-          photo_url: string | null
-          photos: string[] | null
-          profession: string | null
-          user_id: string
-          values: string[] | null
-          verified: boolean | null
-        }
-        Insert: {
-          age?: number | null
-          bio?: string | null
-          created_at?: string | null
-          email?: string | null
-          embedding?: string | null
-          gender?: string | null
-          green_flags?: string | null
-          interests?: string[] | null
-          life_goals?: string | null
-          location?: unknown | null
-          name: string
-          personality_answers?: Json | null
-          photo_url?: string | null
-          photos?: string[] | null
-          profession?: string | null
-          user_id: string
-          values?: string[] | null
-          verified?: boolean | null
-        }
-        Update: {
-          age?: number | null
-          bio?: string | null
-          created_at?: string | null
-          email?: string | null
-          embedding?: string | null
-          gender?: string | null
-          green_flags?: string | null
-          interests?: string[] | null
-          life_goals?: string | null
-          location?: unknown | null
-          name?: string
-          personality_answers?: Json | null
-          photo_url?: string | null
-          photos?: string[] | null
-          profession?: string | null
-          user_id?: string
-          values?: string[] | null
-          verified?: boolean | null
         }
         Relationships: []
       }
@@ -1271,6 +1148,31 @@ export type Database = {
           location: string | null
           match_id: string | null
           values_embedding: string | null
+        }
+        Relationships: []
+      }
+      user_photo_gallery: {
+        Row: {
+          filename: string | null
+          last_accessed: string | null
+          photo_url: string | null
+          url_length: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      user_photos: {
+        Row: {
+          photo_urls: string[] | null
+          user_id: string | null
+        }
+        Insert: {
+          photo_urls?: string[] | null
+          user_id?: string | null
+        }
+        Update: {
+          photo_urls?: string[] | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1485,6 +1387,14 @@ export type Database = {
         Args: { password: string }
         Returns: boolean
       }
+      check_https: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      clean_orphaned_photos: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       cleanup_old_data: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1500,6 +1410,10 @@ export type Database = {
       create_paypal_payment: {
         Args: { p_user_id: string; p_amount: number; p_currency: string }
         Returns: Json
+      }
+      delete_profile_photo: {
+        Args: { photo_url: string } | { user_id: string; photo_url: string }
+        Returns: string[]
       }
       disablelongtransactions: {
         Args: Record<PropertyKey, never>
@@ -1537,23 +1451,8 @@ export type Database = {
         Returns: undefined
       }
       find_compatible_matches: {
-        Args:
-          | Record<PropertyKey, never>
-          | {
-              p_user_id: string
-              search_radius_km?: number
-              limit_matches?: number
-            }
-        Returns: {
-          match_id: string
-          name: string
-          age: number
-          bio: string
-          photo_url: string
-          profession: string
-          compatibility: number
-          distance_km: number
-        }[]
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       find_similar_users: {
         Args: { user_uuid: string; match_count?: number }
@@ -1561,6 +1460,10 @@ export type Database = {
           matched_user_id: string
           similarity_score: number
         }[]
+      }
+      force_https: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       generate_daily_matches: {
         Args: { target_user_id: string; match_count?: number }
@@ -1792,6 +1695,10 @@ export type Database = {
       }
       get_proj4_from_srid: {
         Args: { "": number }
+        Returns: string
+      }
+      get_secure_photo_url: {
+        Args: { filename: string }
         Returns: string
       }
       gettransactionid: {
@@ -3190,6 +3097,12 @@ export type Database = {
           new_srid_in: number
         }
         Returns: string
+      }
+      upload_profile_photo: {
+        Args:
+          | { user_id: string; file_name: string; file_data: string }
+          | { user_id: string; file_name: string; file_path: string }
+        Returns: string[]
       }
       upsert_user_presence: {
         Args: { p_user_id: string; p_is_online: boolean }

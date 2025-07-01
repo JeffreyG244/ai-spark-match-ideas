@@ -44,7 +44,7 @@ export const useProfileData = () => {
         setProfileExists(true);
         setProfileData({
           bio: data.bio || '',
-          values: data.values || '',
+          values: typeof data.values === 'string' ? data.values : '', // Handle string | string[]
           lifeGoals: data.life_goals || '',
           greenFlags: data.green_flags || ''
         });
@@ -96,11 +96,10 @@ export const useProfileData = () => {
         name: user.email?.split('@')[0] || 'User',
         email: user.email || '',
         bio: sanitizedData.bio,
-        values: sanitizedData.values,
+        values: sanitizedData.values, // Keep as string
         life_goals: sanitizedData.lifeGoals,
         green_flags: sanitizedData.greenFlags,
-        verified: false,
-        updated_at: new Date().toISOString()
+        verified: false
       };
 
       let result;

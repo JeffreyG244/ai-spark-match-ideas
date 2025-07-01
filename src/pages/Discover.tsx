@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSwipeActions } from '@/hooks/useSwipeActions';
@@ -69,11 +68,11 @@ const Discover = () => {
         const compatibilityScore = Math.floor(Math.random() * 40) + 50; // Random score between 50-90
         
         return {
-          id: profile.id.toString(),
+          id: profile.user_id, // Use user_id as id since there's no separate id field
           user_id: profile.user_id,
           email: profile.email || 'No email',
           bio: profile.bio || 'No bio available',
-          values: profile.values || 'No values listed',
+          values: profile.values || 'No values listed', // Keep as string | null
           life_goals: profile.life_goals || 'No life goals shared',
           green_flags: profile.green_flags || 'No green flags listed',
           photos: profile.photos && profile.photos.length > 0 

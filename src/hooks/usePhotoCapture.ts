@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -140,9 +139,9 @@ export const usePhotoCapture = () => {
         .from('user_profiles')
         .upsert({
           user_id: user!.id,
+          name: user!.email?.split('@')[0] || 'User',
           email: user!.email || '',
-          photos: updatedPhotos,
-          updated_at: new Date().toISOString()
+          photos: updatedPhotos
         });
 
       if (updateError) {
