@@ -190,7 +190,14 @@ const ComprehensiveProfileBuilder = () => {
   };
 
   const saveCompleteProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to save your profile.',
+        variant: 'destructive'
+      });
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -228,7 +235,13 @@ const ComprehensiveProfileBuilder = () => {
       }
 
       if (result.error) {
-        throw result.error;
+        console.error('Database save error:', result.error);
+        toast({
+          title: 'Save Failed',
+          description: 'Failed to save profile to database. Please try again.',
+          variant: 'destructive'
+        });
+        return;
       }
 
       // Send data to webhook after successful database save

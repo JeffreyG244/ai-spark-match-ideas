@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Shield, CheckCircle } from 'lucide-react';
 import SecureInput from '@/components/SecureInput';
 import { ProfileData } from '@/schemas/profileValidation';
-import { LIMITS, containsInappropriateContent } from '@/utils/security';
+import { LIMITS, validateProfileContent } from '@/utils/security';
 
 interface ProfileFormProps {
   profileData: ProfileData;
@@ -45,10 +45,8 @@ const ProfileForm = ({
         minLength={LIMITS.MIN_BIO_LENGTH}
         required
         validation={(value) => {
-          if (containsInappropriateContent(value)) {
-            return "Bio contains inappropriate content";
-          }
-          return null;
+          const result = validateProfileContent(value, LIMITS.BIO_MAX_LENGTH);
+          return result.isValid ? null : result.errors.join(', ');
         }}
       />
 
@@ -60,10 +58,8 @@ const ProfileForm = ({
         onChange={(value) => updateProfileField('values', value)}
         maxLength={LIMITS.VALUES_MAX_LENGTH}
         validation={(value) => {
-          if (containsInappropriateContent(value)) {
-            return "Values contain inappropriate content";
-          }
-          return null;
+          const result = validateProfileContent(value, LIMITS.VALUES_MAX_LENGTH);
+          return result.isValid ? null : result.errors.join(', ');
         }}
       />
 
@@ -75,10 +71,8 @@ const ProfileForm = ({
         onChange={(value) => updateProfileField('lifeGoals', value)}
         maxLength={LIMITS.GOALS_MAX_LENGTH}
         validation={(value) => {
-          if (containsInappropriateContent(value)) {
-            return "Life goals contain inappropriate content";
-          }
-          return null;
+          const result = validateProfileContent(value, LIMITS.GOALS_MAX_LENGTH);
+          return result.isValid ? null : result.errors.join(', ');
         }}
       />
 
@@ -90,10 +84,8 @@ const ProfileForm = ({
         onChange={(value) => updateProfileField('greenFlags', value)}
         maxLength={LIMITS.GREEN_FLAGS_MAX_LENGTH}
         validation={(value) => {
-          if (containsInappropriateContent(value)) {
-            return "Green flags contain inappropriate content";
-          }
-          return null;
+          const result = validateProfileContent(value, LIMITS.GREEN_FLAGS_MAX_LENGTH);
+          return result.isValid ? null : result.errors.join(', ');
         }}
       />
 

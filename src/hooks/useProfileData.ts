@@ -2,10 +2,8 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { useSecureForm } from '@/hooks/useSecureForm';
 import { toast } from '@/hooks/use-toast';
 import { profileSchema, ProfileData } from '@/schemas/profileValidation';
-import { EnhancedSecurityService } from '@/services/security/EnhancedSecurityService';
 
 export const useProfileData = () => {
   const { user } = useAuth();
@@ -17,13 +15,8 @@ export const useProfileData = () => {
   });
   const [profileExists, setProfileExists] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  const { secureSubmit, validateField, isSubmitting: isSaving, validationErrors } = useSecureForm({
-    rateLimitAction: 'profile_update',
-    validateContent: true,
-    maxRequests: 10,
-    windowMinutes: 60
-  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
 
   const loadProfile = async () => {
     if (!user) return;
@@ -73,19 +66,32 @@ export const useProfileData = () => {
   };
 
   const saveProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to save your profile.',
+        variant: 'destructive'
+      });
+      return { success: false };
+    }
 
-    const submitFn = async (sanitizedData: ProfileData) => {
-      // Additional validation
-      const validation = validateProfile(sanitizedData);
+    setIsSaving(true);
+    try {
+      // Simple validation
+      const validation = validateProfile(profileData);
       if (!validation.isValid) {
-        throw new Error(validation.errors.join(', '));
+        toast({
+          title: 'Validation Error',
+          description: validation.errors.join(', '),
+          variant: 'destructive'
+        });
+        return { success: false };
       }
 
       const profilePayload = {
         user_id: user.id,
         email: user.email || '',
-        bio: sanitizedData.bio,
+        bio: profileData.bio,
         updated_at: new Date().toISOString()
       };
 
@@ -105,31 +111,39 @@ export const useProfileData = () => {
       }
 
       if (result.error) {
-        throw new Error(result.error.message);
+        console.error('Database error:', result.error);
+        toast({
+          title: 'Save Failed',
+          description: 'Failed to save profile. Please try again.',
+          variant: 'destructive'
+        });
+        return { success: false };
       }
 
       setProfileExists(true);
-      return result.data;
-    };
-
-    const result = await secureSubmit(profileData, submitFn);
-    
-    if (result.success) {
-      setProfileData(profileData); // Keep the current data since it was successfully saved
+      toast({
+        title: 'Profile Saved',
+        description: 'Your profile has been saved successfully!',
+      });
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Save error:', error);
+      toast({
+        title: 'Unexpected Error',
+        description: 'An unexpected error occurred. Please try again.',
+        variant: 'destructive'
+      });
+      return { success: false };
+    } finally {
+      setIsSaving(false);
     }
-
-    return result;
   };
 
-  const updateProfileField = async (field: keyof ProfileData, value: string) => {
+  const updateProfileField = (field: keyof ProfileData, value: string) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
-    
-    // Real-time validation
-    const contentType = field === 'bio' ? 'bio' : 
-                       field === 'values' ? 'values' :
-                       field === 'lifeGoals' ? 'goals' : 'greenFlags';
-    
-    await validateField(field, value, contentType);
+    // Clear validation errors for this field
+    setValidationErrors(prev => ({ ...prev, [field]: [] }));
   };
 
   return {
