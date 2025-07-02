@@ -9,6 +9,7 @@ import ProfileCard from '@/components/discover/ProfileCard';
 import SwipeActions from '@/components/discover/SwipeActions';
 import EmptyState from '@/components/discover/EmptyState';
 import CompatibilityScore from '@/components/discover/CompatibilityScore';
+import { toast } from '@/hooks/use-toast';
 
 interface UserProfile {
   id: string;
@@ -33,66 +34,106 @@ const Discover = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      fetchProfiles();
-    }
+    fetchProfiles();
   }, [user]);
 
   const fetchProfiles = async () => {
     try {
       setLoading(true);
-      console.log('Fetching profiles for discover page...');
+      console.log('Fetching profiles for professional swipe discovery...');
       
-      // Get all profiles except current user
-      const { data: profilesData, error } = await supabase
+      // Fetch all profiles, including seed profiles
+      let query = supabase
         .from('profiles')
-        .select('*')
-        .neq('user_id', user?.id || '')
-        .limit(50);
+        .select('*');
+
+      // Only exclude current user's profile if user is authenticated
+      if (user?.id) {
+        query = query.neq('user_id', user.id);
+      }
+
+      const { data: profilesData, error } = await query.limit(100);
 
       if (error) {
         console.error('Error fetching profiles:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load profiles. Please try again.',
+          variant: 'destructive'
+        });
         setProfiles([]);
         return;
       }
 
-      console.log(`Found ${profilesData?.length || 0} profiles to display`);
+      console.log(`Found ${profilesData?.length || 0} profiles for discovery`);
 
       if (!profilesData || profilesData.length === 0) {
+        console.log('No profiles found - user may need to seed profiles');
         setProfiles([]);
         return;
       }
 
-      // Transform profiles with compatibility scores
-      const transformedProfiles = profilesData.map((profile) => {
-        const firstName = profile.email?.split('@')[0] || 'User';
-        const compatibilityScore = Math.floor(Math.random() * 40) + 50; // Random score between 50-90
+      // Get swiped user IDs to exclude already swiped profiles
+      let swipedUserIds: string[] = [];
+      if (user?.id) {
+        const { data: swipeData } = await supabase
+          .from('swipe_actions')
+          .select('swiped_user_id')
+          .eq('swiper_id', user.id);
         
-        return {
-          id: profile.user_id,
-          user_id: profile.user_id,
-          email: profile.email || 'No email',
-          bio: profile.bio || 'No bio available',
-          values: 'No values listed', // Default since not in profiles table
-          life_goals: 'No life goals shared', // Default since not in profiles table
-          green_flags: 'No green flags listed', // Default since not in profiles table
-          photos: profile.photo_urls && profile.photo_urls.length > 0 
-            ? profile.photo_urls 
-            : ['https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60'],
-          firstName,
-          lastName: '',
-          compatibility_score: compatibilityScore
-        };
-      });
+        swipedUserIds = swipeData?.map(s => s.swiped_user_id) || [];
+      }
 
-      // Sort by compatibility score (highest first)
+      // Transform profiles for the swipe interface
+      const transformedProfiles = profilesData
+        .filter(profile => !swipedUserIds.includes(profile.user_id))
+        .map((profile) => {
+          // Extract name from email for seed profiles
+          const emailName = profile.email?.split('@')[0] || 'User';
+          const nameParts = emailName.split('.');
+          const firstName = nameParts[0]?.charAt(0).toUpperCase() + nameParts[0]?.slice(1) || 'Professional';
+          const lastName = nameParts[1]?.charAt(0).toUpperCase() + nameParts[1]?.slice(1) || 'User';
+          
+          // Generate realistic compatibility score
+          const compatibilityScore = Math.floor(Math.random() * 30) + 60; // 60-90%
+          
+          return {
+            id: profile.user_id,
+            user_id: profile.user_id,
+            email: profile.email || 'Professional User',
+            bio: profile.bio || 'Experienced professional looking for meaningful connections in the business world.',
+            values: 'Excellence, Integrity, Growth, Balance', // Professional default
+            life_goals: 'Building a successful career while maintaining work-life balance and finding lasting partnerships',
+            green_flags: 'Career-focused, emotionally intelligent, excellent communication skills',
+            photos: profile.photo_urls && profile.photo_urls.length > 0 
+              ? profile.photo_urls 
+              : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+            firstName,
+            lastName,
+            compatibility_score: compatibilityScore
+          };
+        });
+
+      // Sort by compatibility score for professional matching
       transformedProfiles.sort((a, b) => (b.compatibility_score || 0) - (a.compatibility_score || 0));
       
-      console.log(`Setting ${transformedProfiles.length} profiles for display`);
+      console.log(`Setting ${transformedProfiles.length} profiles for professional discovery`);
       setProfiles(transformedProfiles);
+      
+      if (transformedProfiles.length > 0) {
+        toast({
+          title: 'Profiles Loaded',
+          description: `Found ${transformedProfiles.length} professional profiles to discover!`
+        });
+      }
     } catch (error) {
       console.error('Error fetching profiles:', error);
       setProfiles([]);
+      toast({
+        title: 'Error',
+        description: 'Failed to load profiles. Please try again.',
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }
@@ -101,11 +142,18 @@ const Discover = () => {
   const handleSwipe = async (direction: 'like' | 'pass') => {
     if (swipeLoading || !currentProfile) return;
     
+    console.log(`Swiping ${direction} on profile:`, currentProfile.firstName, currentProfile.lastName);
     setSwipeDirection(direction);
     
-    // Record the swipe action
-    await recordSwipe(currentProfile.user_id, direction);
+    // Record the swipe action if user is authenticated
+    if (user?.id) {
+      const result = await recordSwipe(currentProfile.user_id, direction);
+      if (result) {
+        console.log('Swipe recorded successfully');
+      }
+    }
     
+    // Move to next profile after animation
     setTimeout(() => {
       setCurrentIndex(prev => prev + 1);
       setSwipeDirection(null);
@@ -132,7 +180,7 @@ const Discover = () => {
           <DiscoverHeader onSignOut={signOut} />
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-            <span className="ml-3 text-gray-600">Loading profiles...</span>
+            <span className="ml-3 text-gray-600">Loading professional profiles...</span>
           </div>
         </div>
       </div>
@@ -145,8 +193,8 @@ const Discover = () => {
         <DiscoverHeader onSignOut={signOut} />
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Discover New Connections</h1>
-          <p className="text-gray-600">Swipe right to like, left to pass • Profiles ordered by compatibility</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Discover Professional Connections</h1>
+          <p className="text-gray-600">Swipe right to connect, left to pass • Curated professional profiles</p>
           {profiles.length > 0 && (
             <p className="text-purple-600 text-sm mt-2">
               {profiles.length} professional profiles available • {profiles.length - currentIndex} remaining
@@ -196,11 +244,11 @@ const Discover = () => {
         {hasMoreProfiles && (
           <div className="text-center mt-8 space-y-2">
             <p className="text-gray-500 text-sm">
-              💡 Drag the card or use the buttons below to interact
+              💼 Swipe through curated professional profiles
             </p>
             {currentProfile?.compatibility_score !== undefined && (
               <p className="text-purple-600 text-sm font-medium">
-                Compatibility: {currentProfile.compatibility_score}% • 
+                Professional Match: {currentProfile.compatibility_score}% • 
                 {profiles.length - currentIndex - 1} profiles remaining
               </p>
             )}

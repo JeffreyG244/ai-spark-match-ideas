@@ -497,18 +497,21 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string
+          is_required: boolean
           pattern: string
           rule_id: number
         }
         Insert: {
           created_at?: string | null
           description: string
+          is_required?: boolean
           pattern: string
           rule_id?: number
         }
         Update: {
           created_at?: string | null
           description?: string
+          is_required?: boolean
           pattern?: string
           rule_id?: number
         }
@@ -1241,6 +1244,27 @@ export type Database = {
           id?: number | null
           photo_urls?: string[] | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      view_password_rules: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          requirement_level: string | null
+          rule_id: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          requirement_level?: never
+          rule_id?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          requirement_level?: never
+          rule_id?: number | null
         }
         Relationships: []
       }
@@ -3203,7 +3227,13 @@ export type Database = {
       }
       validate_password: {
         Args: { password: string }
-        Returns: string[]
+        Returns: {
+          is_valid: boolean
+          errors: string[]
+          warnings: string[]
+          strength: number
+          strength_label: string
+        }[]
       }
       validate_password_enhanced: {
         Args: { password: string }
