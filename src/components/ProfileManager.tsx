@@ -11,10 +11,11 @@ import ComprehensiveProfileBuilder from './profile/ComprehensiveProfileBuilder';
 import CompatibilityQuestions from './profile/CompatibilityQuestions';
 import SimplePhotoCapture from './SimplePhotoCapture';
 import ProfileForm from './profile/ProfileForm';
+import GuidedProfileFlow from './profile/GuidedProfileFlow';
 
 const ProfileManager = () => {
   const { user } = useAuth();
-  const [viewMode, setViewMode] = useState<'simple' | 'comprehensive'>('comprehensive');
+  const [viewMode, setViewMode] = useState<'guided' | 'comprehensive'>('guided');
   const [activeSection, setActiveSection] = useState<'profile' | 'questions' | 'photos'>('profile');
 
   const {
@@ -57,7 +58,26 @@ const ProfileManager = () => {
   const answeredQuestions = Object.keys(questionAnswers).length;
   const totalQuestions = 17;
 
-  // Show comprehensive profile builder by default
+  // Show guided profile flow by default for better UX
+  if (viewMode === 'guided') {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Complete Your Profile</h2>
+          <Button
+            variant="outline"
+            onClick={() => setViewMode('comprehensive')}
+            size="sm"
+          >
+            Switch to Advanced View
+          </Button>
+        </div>
+        <GuidedProfileFlow />
+      </div>
+    );
+  }
+
+  // Comprehensive view (existing functionality)
   if (viewMode === 'comprehensive') {
     return (
       <div className="space-y-6">
@@ -65,10 +85,10 @@ const ProfileManager = () => {
           <h2 className="text-xl font-semibold">Profile Builder</h2>
           <Button
             variant="outline"
-            onClick={() => setViewMode('simple')}
+            onClick={() => setViewMode('guided')}
             size="sm"
           >
-            Switch to Simple View
+            Switch to Guided Flow
           </Button>
         </div>
         <ComprehensiveProfileBuilder />
@@ -76,18 +96,27 @@ const ProfileManager = () => {
     );
   }
 
-  // Simple view (original ProfileManager functionality)
+  // Fallback to original simple view
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Profile Manager</h2>
-        <Button
-          variant="outline"
-          onClick={() => setViewMode('comprehensive')}
-          size="sm"
-        >
-          Switch to Enhanced View
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setViewMode('guided')}
+            size="sm"
+          >
+            Guided Flow
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setViewMode('comprehensive')}
+            size="sm"
+          >
+            Advanced View
+          </Button>
+        </div>
       </div>
 
       <Card className="border-purple-200">

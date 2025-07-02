@@ -1,9 +1,8 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -41,13 +40,13 @@ import AccountSuspension from "./pages/legal/AccountSuspension";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+import { EnhancedSecurityProvider } from '@/components/profile/EnhancedSecurityProvider';
+
+function App() {
+  return (
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+      <EnhancedSecurityProvider>
+        <Router>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -60,34 +59,31 @@ const App = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/legal" element={<Legal />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/pre-launch-audit" element={<PreLaunchAudit />} />
             <Route path="/seed-users" element={<SeedUsers />} />
-            
-            {/* Legal Routes */}
-            <Route path="/legal/terms" element={<TermsOfService />} />
-            <Route path="/legal/privacy" element={<PrivacyPolicy />} />
-            <Route path="/legal/community" element={<CommunityGuidelines />} />
-            <Route path="/legal/safety" element={<SafetyGuidelines />} />
-            <Route path="/legal/cookies" element={<CookiePolicy />} />
+            <Route path="/pre-launch-audit" element={<PreLaunchAudit />} />
+            <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/legal/terms-of-service" element={<TermsOfService />} />
+            <Route path="/legal/community-guidelines" element={<CommunityGuidelines />} />
+            <Route path="/legal/safety-guidelines" element={<SafetyGuidelines />} />
+            <Route path="/legal/cookie-policy" element={<CookiePolicy />} />
             <Route path="/legal/gdpr" element={<GDPR />} />
             <Route path="/legal/ccpa" element={<CCPA />} />
             <Route path="/legal/data-retention" element={<DataRetention />} />
             <Route path="/legal/intellectual-property" element={<IntellectualProperty />} />
-            <Route path="/legal/content-moderation" element={<ContentModerationPolicy />} />
-            <Route path="/legal/message-monitoring" element={<MessageMonitoring />} />
+            <Route path="/legal/content-moderation-policy" element={<ContentModerationPolicy />} />
+            <Route path="/legal/age-verification-policy" element={<AgeVerificationPolicy />} />
+            <Route path="/legal/identity-verification-policy" element={<IdentityVerificationPolicy />} />
             <Route path="/legal/photo-verification" element={<PhotoVerification />} />
-            <Route path="/legal/identity-verification" element={<IdentityVerificationPolicy />} />
-            <Route path="/legal/age-verification" element={<AgeVerificationPolicy />} />
-            <Route path="/legal/blocking-reporting" element={<BlockingReportingPolicy />} />
+            <Route path="/legal/blocking-reporting-policy" element={<BlockingReportingPolicy />} />
+            <Route path="/legal/message-monitoring" element={<MessageMonitoring />} />
             <Route path="/legal/romance-scam-prevention" element={<RomanceScamPrevention />} />
             <Route path="/legal/account-suspension" element={<AccountSuspension />} />
-            
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+        </Router>
+      </EnhancedSecurityProvider>
     </AuthProvider>
-  </QueryClientProvider>
-);
+  );
+}
 
 export default App;

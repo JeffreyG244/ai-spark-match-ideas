@@ -55,13 +55,18 @@ export const useProfileData = () => {
     }
   };
 
-  const saveProfile = async () => {
+  const saveProfile = async (showSuccessToast = true) => {
     if (!user) {
       toast({
         title: 'Authentication Required',
         description: 'Please log in to save your profile.',
         variant: 'destructive'
       });
+      return { success: false };
+    }
+
+    // Prevent multiple simultaneous saves
+    if (isSaving) {
       return { success: false };
     }
 
@@ -101,10 +106,13 @@ export const useProfileData = () => {
       }
 
       setProfileExists(true);
-      toast({
-        title: 'Profile Saved',
-        description: 'Your profile has been saved successfully!',
-      });
+      
+      if (showSuccessToast) {
+        toast({
+          title: 'Profile Saved',
+          description: 'Your profile has been saved successfully!',
+        });
+      }
       
       return { success: true };
     } catch (error) {
@@ -124,6 +132,13 @@ export const useProfileData = () => {
     setProfileData(prev => ({ ...prev, [field]: value }));
   };
 
+  const isBasicProfileComplete = () => {
+    return profileData.bio.length >= 10 && 
+           profileData.values.length > 0 && 
+           profileData.lifeGoals.length > 0 && 
+           profileData.greenFlags.length > 0;
+  };
+
   return {
     profileData,
     profileExists,
@@ -131,6 +146,7 @@ export const useProfileData = () => {
     isSaving,
     loadProfile,
     saveProfile,
-    updateProfileField
+    updateProfileField,
+    isBasicProfileComplete
   };
 };
