@@ -1,7 +1,8 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
-import { validateMessageContent, sanitizeInputAsync, logSecurityEvent, rateLimiter } from '@/utils/security';
+import { validateMessageContent, sanitizeInputAsync, logSecurityEvent, rateLimiter, LIMITS } from '@/utils/security';
 import { toast } from '@/hooks/use-toast';
 
 export interface Message {
