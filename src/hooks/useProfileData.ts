@@ -3,7 +3,13 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { profileSchema, ProfileData } from '@/schemas/profileValidation';
+
+export interface ProfileData {
+  bio: string;
+  values: string;
+  lifeGoals: string;
+  greenFlags: string;
+}
 
 export const useProfileData = () => {
   const { user } = useAuth();
@@ -16,7 +22,6 @@ export const useProfileData = () => {
   const [profileExists, setProfileExists] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
 
   const loadProfile = async () => {
     if (!user) return;
@@ -31,11 +36,6 @@ export const useProfileData = () => {
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading profile:', error);
-        toast({
-          title: 'Error Loading Profile',
-          description: 'Failed to load your profile data.',
-          variant: 'destructive'
-        });
         return;
       }
 
@@ -43,25 +43,15 @@ export const useProfileData = () => {
         setProfileExists(true);
         setProfileData({
           bio: data.bio || '',
-          values: '', // Not available in profiles table
-          lifeGoals: '', // Not available in profiles table  
-          greenFlags: '' // Not available in profiles table
+          values: '',
+          lifeGoals: '',
+          greenFlags: ''
         });
       }
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const validateProfile = (data: ProfileData) => {
-    try {
-      profileSchema.parse(data);
-      return { isValid: true, errors: [] };
-    } catch (error: any) {
-      const errors = error.errors?.map((e: any) => e.message) || ['Validation failed'];
-      return { isValid: false, errors };
     }
   };
 
@@ -77,21 +67,11 @@ export const useProfileData = () => {
 
     setIsSaving(true);
     try {
-      // Simple validation
-      const validation = validateProfile(profileData);
-      if (!validation.isValid) {
-        toast({
-          title: 'Validation Error',
-          description: validation.errors.join(', '),
-          variant: 'destructive'
-        });
-        return { success: false };
-      }
-
       const profilePayload = {
         user_id: user.id,
         email: user.email || '',
         bio: profileData.bio,
+        photo_urls: [],
         updated_at: new Date().toISOString()
       };
 
@@ -142,8 +122,6 @@ export const useProfileData = () => {
 
   const updateProfileField = (field: keyof ProfileData, value: string) => {
     setProfileData(prev => ({ ...prev, [field]: value }));
-    // Clear validation errors for this field
-    setValidationErrors(prev => ({ ...prev, [field]: [] }));
   };
 
   return {
@@ -151,7 +129,6 @@ export const useProfileData = () => {
     profileExists,
     isLoading,
     isSaving,
-    validationErrors,
     loadProfile,
     saveProfile,
     updateProfileField

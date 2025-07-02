@@ -1,8 +1,8 @@
 
-// Simplified and more reasonable security validation
+// Professional and reasonable security validation
 export const LIMITS = {
   BIO_MAX_LENGTH: 500,
-  MIN_BIO_LENGTH: 50,
+  MIN_BIO_LENGTH: 10, // Reduced from 50 to be more reasonable
   VALUES_MAX_LENGTH: 300,
   GOALS_MAX_LENGTH: 300,
   GREEN_FLAGS_MAX_LENGTH: 300,
@@ -12,14 +12,15 @@ export const LIMITS = {
 export const containsInappropriateContent = (content: string): boolean => {
   if (!content || typeof content !== 'string') return false;
   
-  // Only flag truly inappropriate content - be much more permissive
-  const reallyBadPatterns = [
+  // Very basic inappropriate content detection - only flag truly offensive content
+  const offensivePatterns = [
     /\b(fuck|shit|damn|hell|ass|bitch|dick|cock|pussy|cunt)\b/gi,
-    /\b(xxx|porn|sex for money|escort|prostitute)\b/gi,
-    /\b(buy drugs|selling drugs|cocaine|heroin|meth)\b/gi,
+    /\b(xxx|porn|hardcore|nude|naked)\b/gi,
+    /\b(kill|murder|hate|die)\b/gi,
   ];
 
-  return reallyBadPatterns.some(pattern => pattern.test(content));
+  // Be more lenient - allow most normal dating profile content
+  return offensivePatterns.some(pattern => pattern.test(content));
 };
 
 export const validateProfileContent = (content: string, maxLength: number): { isValid: boolean; errors: string[] } => {
@@ -33,6 +34,7 @@ export const validateProfileContent = (content: string, maxLength: number): { is
     errors.push(`Content exceeds maximum length of ${maxLength} characters`);
   }
 
+  // Much more lenient content validation
   if (containsInappropriateContent(content)) {
     errors.push('Content contains inappropriate language');
   }
@@ -44,11 +46,11 @@ export const validateProfileContent = (content: string, maxLength: number): { is
 };
 
 export const logSecurityEvent = (eventType: string, details: string, severity: string) => {
-  // Simple logging - don't block user actions
+  // Simple logging for development
   console.log(`Security Event: ${eventType}`, { details, severity });
 };
 
-// Add missing functions for components
+// Required functions for components
 export const sanitizeInput = (input: string): string => {
   if (!input || typeof input !== 'string') return '';
   
