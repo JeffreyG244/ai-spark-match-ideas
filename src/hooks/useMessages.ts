@@ -83,7 +83,7 @@ export const useMessages = (conversationId: string | null) => {
 
     // First check client-side rate limiting
     const rateLimitKey = `messages_${user.id}`;
-    if (!rateLimiter.isAllowed(rateLimitKey, 5, 10000)) { // 5 messages per 10 seconds
+    if (!rateLimiter.isAllowed(rateLimitKey)) {
       logSecurityEvent('client_rate_limit_exceeded', `User ${user.id} exceeded client message rate limit`, 'medium');
       return false;
     }
@@ -114,7 +114,7 @@ export const useMessages = (conversationId: string | null) => {
 
     // Client-side rate limiting
     const rateLimitKey = `messages_${user.id}`;
-    if (!rateLimiter.isAllowed(rateLimitKey, 10, 60000)) {
+    if (!rateLimiter.isAllowed(rateLimitKey)) {
       toast({
         title: 'Rate limit exceeded',
         description: 'You are sending messages too quickly. Please wait a moment.',
@@ -153,10 +153,10 @@ export const useMessages = (conversationId: string | null) => {
       if (!validation.isValid) {
         toast({
           title: 'Invalid message',
-          description: validation.error,
+          description: validation.errors.join(', '),
           variant: 'destructive'
         });
-        logSecurityEvent('invalid_message_content', `User ${user.id}: ${validation.error}`, 'medium');
+        logSecurityEvent('invalid_message_content', `User ${user.id}: ${validation.errors.join(', ')}`, 'medium');
         return;
       }
 

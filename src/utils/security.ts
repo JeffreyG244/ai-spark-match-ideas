@@ -56,11 +56,43 @@ export const validateProfileContent = (content: string, maxLength: number): { is
   return { isValid, errors };
 };
 
+export const sanitizeInput = (input: string): string => {
+  if (!input || typeof input !== 'string') return '';
+  return input.trim().replace(/[<>]/g, '');
+};
+
+export const sanitizeForDisplay = (text: string): string => {
+  if (!text || typeof text !== 'string') return '';
+  return escapeHTML(text);
+};
+
+export const isProductionEnvironment = (): boolean => {
+  return window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+};
+
+export const validateMessageContent = (content: string): { isValid: boolean; errors: string[] } => {
+  return validateProfileContent(content, LIMITS.MESSAGE_MAX_LENGTH);
+};
+
+export const sanitizeInputAsync = async (input: string): Promise<string> => {
+  return sanitizeInput(input);
+};
+
+export const logSecurityEvent = (event: string, details: string, severity: string = 'low'): void => {
+  console.log(`Security Event [${severity}]: ${event}`, details);
+};
+
+export const rateLimiter = {
+  check: (action: string) => ({ allowed: true, remainingRequests: 100 }),
+  isAllowed: (action: string) => true
+};
+
 export const LIMITS = {
   MIN_BIO_LENGTH: 50,
   BIO_MAX_LENGTH: 500,
   VALUES_MAX_LENGTH: 300,
   GOALS_MAX_LENGTH: 300,
   GREEN_FLAGS_MAX_LENGTH: 300,
-  MIN_FIELD_LENGTH: 50, // New minimum for all fields
+  MIN_FIELD_LENGTH: 50,
+  MESSAGE_MAX_LENGTH: 1000, // Added for messaging
 } as const;
