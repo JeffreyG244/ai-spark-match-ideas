@@ -382,6 +382,63 @@ export type Database = {
         }
         Relationships: []
       }
+      dating_profiles: {
+        Row: {
+          age: number
+          bio: string
+          city: string
+          created_at: string | null
+          email: string
+          first_name: string
+          gender: string
+          id: string
+          interests: string[]
+          last_name: string
+          partner_preferences: string
+          photo_urls: string[]
+          relationship_goals: string
+          state: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          age: number
+          bio: string
+          city: string
+          created_at?: string | null
+          email: string
+          first_name: string
+          gender: string
+          id?: string
+          interests: string[]
+          last_name: string
+          partner_preferences: string
+          photo_urls?: string[]
+          relationship_goals: string
+          state: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Update: {
+          age?: number
+          bio?: string
+          city?: string
+          created_at?: string | null
+          email?: string
+          first_name?: string
+          gender?: string
+          id?: string
+          interests?: string[]
+          last_name?: string
+          partner_preferences?: string
+          photo_urls?: string[]
+          relationship_goals?: string
+          state?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           compatibility: number

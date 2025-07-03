@@ -17,6 +17,7 @@ import Legal from "./pages/Legal";
 import HowItWorks from "./pages/HowItWorks";
 import PreLaunchAudit from "./pages/PreLaunchAudit";
 import SeedUsers from "./pages/SeedUsers";
+import SeedDatingProfiles from "./pages/SeedDatingProfiles";
 import NotFound from "./pages/NotFound";
 
 // Legal pages
@@ -60,6 +61,7 @@ function App() {
             <Route path="/legal" element={<Legal />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/seed-users" element={<SeedUsers />} />
+            <Route path="/seed-dating-profiles" element={<SeedDatingProfiles />} />
             <Route path="/pre-launch-audit" element={<PreLaunchAudit />} />
             <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/legal/terms-of-service" element={<TermsOfService />} />
