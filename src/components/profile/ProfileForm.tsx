@@ -42,9 +42,12 @@ const ProfileForm = ({
         value={profileData.bio}
         onChange={(value) => updateProfileField('bio', value)}
         maxLength={LIMITS.BIO_MAX_LENGTH}
-        minLength={LIMITS.MIN_BIO_LENGTH}
+        minLength={LIMITS.MIN_FIELD_LENGTH}
         required
         validation={(value) => {
+          if (value.length < LIMITS.MIN_FIELD_LENGTH) {
+            return `Bio must be at least ${LIMITS.MIN_FIELD_LENGTH} characters`;
+          }
           const result = validateProfileContent(value, LIMITS.BIO_MAX_LENGTH);
           return result.isValid ? null : result.errors.join(', ');
         }}
@@ -57,7 +60,11 @@ const ProfileForm = ({
         value={profileData.values}
         onChange={(value) => updateProfileField('values', value)}
         maxLength={LIMITS.VALUES_MAX_LENGTH}
+        minLength={LIMITS.MIN_FIELD_LENGTH}
         validation={(value) => {
+          if (value.length < LIMITS.MIN_FIELD_LENGTH) {
+            return `Values must be at least ${LIMITS.MIN_FIELD_LENGTH} characters`;
+          }
           const result = validateProfileContent(value, LIMITS.VALUES_MAX_LENGTH);
           return result.isValid ? null : result.errors.join(', ');
         }}
@@ -70,7 +77,11 @@ const ProfileForm = ({
         value={profileData.lifeGoals}
         onChange={(value) => updateProfileField('lifeGoals', value)}
         maxLength={LIMITS.GOALS_MAX_LENGTH}
+        minLength={LIMITS.MIN_FIELD_LENGTH}
         validation={(value) => {
+          if (value.length < LIMITS.MIN_FIELD_LENGTH) {
+            return `Life goals must be at least ${LIMITS.MIN_FIELD_LENGTH} characters`;
+          }
           const result = validateProfileContent(value, LIMITS.GOALS_MAX_LENGTH);
           return result.isValid ? null : result.errors.join(', ');
         }}
@@ -83,7 +94,11 @@ const ProfileForm = ({
         value={profileData.greenFlags}
         onChange={(value) => updateProfileField('greenFlags', value)}
         maxLength={LIMITS.GREEN_FLAGS_MAX_LENGTH}
+        minLength={LIMITS.MIN_FIELD_LENGTH}
         validation={(value) => {
+          if (value.length < LIMITS.MIN_FIELD_LENGTH) {
+            return `Green flags must be at least ${LIMITS.MIN_FIELD_LENGTH} characters`;
+          }
           const result = validateProfileContent(value, LIMITS.GREEN_FLAGS_MAX_LENGTH);
           return result.isValid ? null : result.errors.join(', ');
         }}

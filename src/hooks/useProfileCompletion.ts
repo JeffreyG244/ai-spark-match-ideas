@@ -18,8 +18,11 @@ export const useProfileCompletion = (
     let completed = 0;
     let total = 4;
 
-    // Basic profile (25%)
-    if (profileData.bio && profileData.values && profileData.lifeGoals && profileData.greenFlags) {
+    // Basic profile (25%) - requires 50+ characters each
+    if (profileData.bio.length >= 50 && 
+        profileData.values.length >= 50 && 
+        profileData.lifeGoals.length >= 50 && 
+        profileData.greenFlags.length >= 50) {
       completed += 1;
     }
 
@@ -33,7 +36,7 @@ export const useProfileCompletion = (
       completed += 1;
     }
 
-    // Photos (25%)
+    // Photos (25%) - requires at least 3 photos
     if (photos.length >= 3) {
       completed += 1;
     }
@@ -41,5 +44,7 @@ export const useProfileCompletion = (
     return Math.round((completed / total) * 100);
   }, [profileData, personalityAnswers, interests, photos]);
 
-  return { completionPercentage };
+  const isProfileComplete = completionPercentage === 100;
+
+  return { completionPercentage, isProfileComplete };
 };

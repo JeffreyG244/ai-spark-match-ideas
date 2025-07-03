@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { CheckCircle, User, Brain, Heart, Camera, ArrowRight } from 'lucide-react';
 import { useProfileData } from '@/hooks/useProfileData';
 import { useCompatibilityAnswers } from '@/hooks/useCompatibilityAnswers';
+import { useProfileCompletion } from '@/hooks/useProfileCompletion';
 import ProfileForm from './ProfileForm';
 import PersonalityQuestions from './PersonalityQuestions';
 import InterestsSelector from './InterestsSelector';
@@ -40,6 +41,13 @@ const GuidedProfileFlow = () => {
     loadCompatibilityAnswers,
     saveCompatibilityAnswers
   } = useCompatibilityAnswers();
+
+  const { completionPercentage, isProfileComplete } = useProfileCompletion(
+    profileData,
+    personalityAnswers,
+    interests,
+    photos
+  );
 
   useEffect(() => {
     loadProfile();
@@ -78,7 +86,6 @@ const GuidedProfileFlow = () => {
   ];
 
   const completedSteps = steps.filter(step => step.isComplete).length;
-  const progressPercentage = (completedSteps / steps.length) * 100;
 
   const handleStepComplete = async (stepId: number) => {
     if (stepId === 1 && isBasicProfileComplete()) {
@@ -130,11 +137,11 @@ const GuidedProfileFlow = () => {
             <div className="text-right">
               <div className="text-sm text-gray-600">Progress</div>
               <div className="text-lg font-semibold text-purple-600">
-                {completedSteps}/{steps.length} Complete
+                {completedSteps}/4 Complete
               </div>
             </div>
           </div>
-          <Progress value={progressPercentage} className="h-3" />
+          <Progress value={completionPercentage} className="h-3" />
         </CardHeader>
       </Card>
 
@@ -145,7 +152,9 @@ const GuidedProfileFlow = () => {
             key={step.id}
             className={`cursor-pointer transition-all ${
               currentStep === step.id
-                ? 'border-purple-500 bg-purple-50 shadow-lg'
+                ? step.id === 1 
+                  ? 'border-red-500 bg-red-50 shadow-lg' 
+                  : 'border-purple-500 bg-purple-50 shadow-lg'
                 : step.isComplete
                 ? 'border-green-500 bg-green-50'
                 : 'border-gray-200 hover:border-purple-300'
@@ -159,7 +168,7 @@ const GuidedProfileFlow = () => {
                     step.isComplete
                       ? 'text-green-600'
                       : currentStep === step.id
-                      ? 'text-purple-600'
+                      ? step.id === 1 ? 'text-red-600' : 'text-purple-600'
                       : 'text-gray-400'
                   }`}
                 />
@@ -167,7 +176,11 @@ const GuidedProfileFlow = () => {
                   <CheckCircle className="h-4 w-4 text-green-600 ml-1" />
                 )}
               </div>
-              <h3 className="font-semibold text-sm">{step.title}</h3>
+              <h3 className={`font-semibold text-sm ${
+                currentStep === step.id && step.id === 1 ? 'text-red-700' : ''
+              }`}>
+                {step.title}
+              </h3>
               <p className="text-xs text-gray-600 mt-1">{step.description}</p>
             </CardContent>
           </Card>
@@ -180,8 +193,8 @@ const GuidedProfileFlow = () => {
           {currentStep === 1 && (
             <div className="space-y-6">
               <div className="text-center mb-6">
-                <h2 className="text-xl font-semibold mb-2">Tell Us About Yourself</h2>
-                <p className="text-gray-600">Complete all fields to unlock personality questions</p>
+                <h2 className="text-xl font-semibold mb-2 text-red-700">Tell Us About Yourself</h2>
+                <p className="text-gray-600">Complete all fields with at least 50 characters each</p>
               </div>
               <ProfileForm
                 profileData={profileData}
@@ -268,8 +281,8 @@ const GuidedProfileFlow = () => {
         </CardContent>
       </Card>
 
-      {/* Final Completion */}
-      {completedSteps === steps.length && (
+      {/* Save Button - Show when profile is complete */}
+      {isProfileComplete && (
         <Card className="border-green-200 bg-green-50">
           <CardContent className="p-6 text-center">
             <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />

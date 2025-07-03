@@ -65,7 +65,6 @@ export const useProfileData = () => {
       return { success: false };
     }
 
-    // Prevent multiple simultaneous saves
     if (isSaving) {
       return { success: false };
     }
@@ -133,10 +132,10 @@ export const useProfileData = () => {
   };
 
   const isBasicProfileComplete = () => {
-    return profileData.bio.length >= 10 && 
-           profileData.values.length > 0 && 
-           profileData.lifeGoals.length > 0 && 
-           profileData.greenFlags.length > 0;
+    return profileData.bio.length >= 50 && 
+           profileData.values.length >= 50 && 
+           profileData.lifeGoals.length >= 50 && 
+           profileData.greenFlags.length >= 50;
   };
 
   return {

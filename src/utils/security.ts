@@ -1,122 +1,66 @@
-
-// Professional and reasonable security validation
-export const LIMITS = {
-  BIO_MAX_LENGTH: 500,
-  MIN_BIO_LENGTH: 10, // Reduced from 50 to be more reasonable
-  VALUES_MAX_LENGTH: 300,
-  GOALS_MAX_LENGTH: 300,
-  GREEN_FLAGS_MAX_LENGTH: 300,
-  MESSAGE_MAX_LENGTH: 1000,
+export const escapeHTML = (str: string): string => {
+  let p = document.createElement("p");
+  p.appendChild(document.createTextNode(str));
+  return p.innerHTML;
 };
 
-export const containsInappropriateContent = (content: string): boolean => {
-  if (!content || typeof content !== 'string') return false;
-  
-  // Very basic inappropriate content detection - only flag truly offensive content
-  const offensivePatterns = [
-    /\b(fuck|shit|damn|hell|ass|bitch|dick|cock|pussy|cunt)\b/gi,
-    /\b(xxx|porn|hardcore|nude|naked)\b/gi,
-    /\b(kill|murder|hate|die)\b/gi,
-  ];
+export const stripHTML = (html: string): string => {
+  let div = document.createElement("div");
+  div.innerHTML = html;
+  return div.textContent || div.innerText || "";
+};
 
-  // Be more lenient - allow most normal dating profile content
-  return offensivePatterns.some(pattern => pattern.test(content));
+export const removeEmojis = (text: string): string => {
+  const regex = /[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}]/gu;
+  return text.replace(regex, '');
 };
 
 export const validateProfileContent = (content: string, maxLength: number): { isValid: boolean; errors: string[] } => {
+  let isValid = true;
   const errors: string[] = [];
 
   if (!content) {
-    return { isValid: true, errors: [] };
+    isValid = false;
+    errors.push('Content cannot be empty.');
   }
 
   if (content.length > maxLength) {
-    errors.push(`Content exceeds maximum length of ${maxLength} characters`);
+    isValid = false;
+    errors.push(`Content exceeds the maximum length of ${maxLength} characters.`);
   }
 
-  // Much more lenient content validation
-  if (containsInappropriateContent(content)) {
-    errors.push('Content contains inappropriate language');
+  const escapedContent = escapeHTML(content);
+  if (escapedContent !== content) {
+    isValid = false;
+    errors.push('Content contains HTML or script tags.');
   }
 
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-};
-
-export const logSecurityEvent = (eventType: string, details: string, severity: string) => {
-  // Simple logging for development
-  console.log(`Security Event: ${eventType}`, { details, severity });
-};
-
-// Required functions for components
-export const sanitizeInput = (input: string): string => {
-  if (!input || typeof input !== 'string') return '';
-  
-  return input
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;');
-};
-
-export const sanitizeForDisplay = (input: string): string => {
-  if (!input || typeof input !== 'string') return '';
-  return sanitizeInput(input);
-};
-
-export const sanitizeInputAsync = async (input: string): Promise<string> => {
-  return sanitizeInput(input);
-};
-
-export const isProductionEnvironment = (): boolean => {
-  return window.location.hostname !== 'localhost' && 
-         !window.location.hostname.includes('127.0.0.1') &&
-         !window.location.hostname.includes('.local');
-};
-
-export const validateMessageContent = async (content: string): Promise<{ isValid: boolean; error?: string }> => {
-  if (!content || content.trim().length === 0) {
-    return { isValid: false, error: 'Message cannot be empty' };
+  const strippedContent = stripHTML(content);
+  if (strippedContent !== content) {
+    isValid = false;
+    errors.push('Content contains disallowed HTML.');
   }
 
-  if (content.length > LIMITS.MESSAGE_MAX_LENGTH) {
-    return { isValid: false, error: `Message too long (max ${LIMITS.MESSAGE_MAX_LENGTH} characters)` };
+  const emojiFreeContent = removeEmojis(content);
+  if (emojiFreeContent !== content) {
+    isValid = false;
+    errors.push('Content contains emojis.');
   }
 
-  if (containsInappropriateContent(content)) {
-    return { isValid: false, error: 'Message contains inappropriate content' };
+  const badWords = ['badword1', 'badword2', 'inappropriateword'];
+  if (badWords.some(word => content.toLowerCase().includes(word))) {
+    isValid = false;
+    errors.push('Content contains inappropriate language.');
   }
 
-  return { isValid: true };
+  return { isValid, errors };
 };
 
-// Simple rate limiter
-class SimpleRateLimiter {
-  private requests: Map<string, number[]> = new Map();
-
-  isAllowed(key: string, maxRequests: number, windowMs: number): boolean {
-    const now = Date.now();
-    const windowStart = now - windowMs;
-    
-    if (!this.requests.has(key)) {
-      this.requests.set(key, []);
-    }
-    
-    const requests = this.requests.get(key)!;
-    const validRequests = requests.filter(time => time > windowStart);
-    
-    if (validRequests.length >= maxRequests) {
-      return false;
-    }
-    
-    validRequests.push(now);
-    this.requests.set(key, validRequests);
-    return true;
-  }
-}
-
-export const rateLimiter = new SimpleRateLimiter();
+export const LIMITS = {
+  MIN_BIO_LENGTH: 50,
+  BIO_MAX_LENGTH: 500,
+  VALUES_MAX_LENGTH: 300,
+  GOALS_MAX_LENGTH: 300,
+  GREEN_FLAGS_MAX_LENGTH: 300,
+  MIN_FIELD_LENGTH: 50, // New minimum for all fields
+} as const;
