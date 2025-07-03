@@ -153,8 +153,12 @@ const GuidedProfileFlow = () => {
             className={`cursor-pointer transition-all ${
               currentStep === step.id
                 ? step.id === 1 
-                  ? 'border-red-500 bg-red-50 shadow-lg' 
-                  : 'border-purple-500 bg-purple-50 shadow-lg'
+                  ? 'border-red-500 bg-gradient-to-br from-red-50 to-red-100 shadow-lg' 
+                  : step.id === 2
+                  ? 'border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg'
+                  : step.id === 3
+                  ? 'border-orange-500 bg-gradient-to-br from-orange-50 to-orange-100 shadow-lg'
+                  : 'border-green-500 bg-gradient-to-br from-green-50 to-green-100 shadow-lg'
                 : step.isComplete
                 ? 'border-green-500 bg-green-50'
                 : 'border-gray-200 hover:border-purple-300'
@@ -168,7 +172,13 @@ const GuidedProfileFlow = () => {
                     step.isComplete
                       ? 'text-green-600'
                       : currentStep === step.id
-                      ? step.id === 1 ? 'text-red-600' : 'text-purple-600'
+                      ? step.id === 1 
+                        ? 'text-red-600' 
+                        : step.id === 2
+                        ? 'text-blue-600'
+                        : step.id === 3
+                        ? 'text-orange-600'
+                        : 'text-green-600'
                       : 'text-gray-400'
                   }`}
                 />
@@ -177,7 +187,15 @@ const GuidedProfileFlow = () => {
                 )}
               </div>
               <h3 className={`font-semibold text-sm ${
-                currentStep === step.id && step.id === 1 ? 'text-red-700' : ''
+                currentStep === step.id 
+                  ? step.id === 1 
+                    ? 'text-red-700' 
+                    : step.id === 2
+                    ? 'text-blue-700'
+                    : step.id === 3
+                    ? 'text-orange-700'
+                    : 'text-green-700'
+                  : ''
               }`}>
                 {step.title}
               </h3>
@@ -276,6 +294,17 @@ const GuidedProfileFlow = () => {
                 photos={photos}
                 onPhotosChange={setPhotos}
               />
+              {photos.length >= 3 && (
+                <div className="text-center pt-4">
+                  <Button
+                    onClick={() => window.location.href = '/discover'}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    Complete Profile & Start Discovering Matches
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

@@ -42,13 +42,29 @@ const Discover = () => {
       setLoading(true);
       console.log('Fetching profiles for discovery...');
       
-      let query = supabase.from('profiles').select('*');
-      
-      if (user?.id) {
-        query = query.neq('user_id', user.id);
-      }
+      // First try to get from dating_profiles (seeded data)
+      let { data: datingProfilesData, error: datingError } = await supabase
+        .from('dating_profiles')
+        .select('*')
+        .limit(50);
 
-      const { data: profilesData, error } = await query.limit(50);
+      let profilesData: any[] = [];
+      let error = datingError;
+
+      if (datingProfilesData && datingProfilesData.length > 0) {
+        profilesData = datingProfilesData;
+      } else {
+        // If no dating profiles, fall back to user profiles
+        let query = supabase.from('profiles').select('*');
+        
+        if (user?.id) {
+          query = query.neq('user_id', user.id);
+        }
+
+        const result = await query.limit(50);
+        profilesData = result.data || [];
+        error = result.error;
+      }
 
       if (error) {
         console.error('Error fetching profiles:', error);
@@ -81,32 +97,53 @@ const Discover = () => {
 
       // Transform profiles
       const transformedProfiles = profilesData
-        .filter(profile => !swipedUserIds.includes(profile.user_id))
+        .filter(profile => {
+          // For dating_profiles, filter by id; for user profiles, filter by user_id
+          const profileId = profile.user_id || profile.id;
+          return !swipedUserIds.includes(profileId);
+        })
         .map((profile) => {
-          const emailName = profile.email?.split('@')[0] || 'User';
-          const nameParts = emailName.split('.');
-          const firstName = nameParts[0]?.charAt(0).toUpperCase() + nameParts[0]?.slice(1) || 'Professional';
-          const lastName = nameParts[1]?.charAt(0).toUpperCase() + nameParts[1]?.slice(1) || 'User';
-          
-          const compatibilityScore = Math.floor(Math.random() * 30) + 60;
-          const age = Math.floor(Math.random() * 20) + 25;
-          const locations = ['New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'Houston, TX', 'Phoenix, AZ'];
-          const location = locations[Math.floor(Math.random() * locations.length)];
-          
-          return {
-            id: profile.user_id,
-            user_id: profile.user_id,
-            email: profile.email || 'Professional User',
-            bio: profile.bio || 'Experienced professional looking for meaningful connections.',
-            photo_urls: profile.photo_urls && profile.photo_urls.length > 0 
-              ? profile.photo_urls 
-              : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
-            firstName,
-            lastName,
-            age,
-            location,
-            compatibility_score: compatibilityScore
-          };
+          // Check if this is from dating_profiles table (has first_name, last_name, age)
+          if (profile.first_name && profile.last_name && profile.age) {
+            return {
+              id: profile.id,
+              user_id: profile.user_id || profile.id,
+              email: profile.email,
+              bio: profile.bio,
+              photo_urls: profile.photo_urls || ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+              firstName: profile.first_name,
+              lastName: profile.last_name,
+              age: profile.age,
+              location: `${profile.city}, ${profile.state}`,
+              compatibility_score: Math.floor(Math.random() * 30) + 60
+            };
+          } else {
+            // Transform user profiles (fallback)
+            const emailName = profile.email?.split('@')[0] || 'User';
+            const nameParts = emailName.split('.');
+            const firstName = nameParts[0]?.charAt(0).toUpperCase() + nameParts[0]?.slice(1) || 'Professional';
+            const lastName = nameParts[1]?.charAt(0).toUpperCase() + nameParts[1]?.slice(1) || 'User';
+            
+            const compatibilityScore = Math.floor(Math.random() * 30) + 60;
+            const age = Math.floor(Math.random() * 20) + 25;
+            const locations = ['New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'Houston, TX', 'Phoenix, AZ'];
+            const location = locations[Math.floor(Math.random() * locations.length)];
+            
+            return {
+              id: profile.user_id,
+              user_id: profile.user_id,
+              email: profile.email || 'Professional User',
+              bio: profile.bio || 'Experienced professional looking for meaningful connections.',
+              photo_urls: profile.photo_urls && profile.photo_urls.length > 0 
+                ? profile.photo_urls 
+                : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+              firstName,
+              lastName,
+              age,
+              location,
+              compatibility_score: compatibilityScore
+            };
+          }
         });
 
       transformedProfiles.sort((a, b) => (b.compatibility_score || 0) - (a.compatibility_score || 0));
