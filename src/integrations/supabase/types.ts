@@ -2162,6 +2162,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      seed_dating_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       sparsevec_out: {
         Args: { "": unknown }
         Returns: unknown
