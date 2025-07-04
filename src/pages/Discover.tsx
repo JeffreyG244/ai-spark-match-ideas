@@ -51,6 +51,8 @@ const Discover = () => {
       let profilesData: any[] = [];
       let error = datingError;
 
+      console.log(`Found ${datingProfilesData?.length || 0} dating profiles`);
+
       if (datingProfilesData && datingProfilesData.length > 0) {
         profilesData = datingProfilesData;
       } else {
@@ -64,6 +66,7 @@ const Discover = () => {
         const result = await query.limit(50);
         profilesData = result.data || [];
         error = result.error;
+        console.log(`Fallback to ${profilesData?.length || 0} user profiles`);
       }
 
       if (error) {

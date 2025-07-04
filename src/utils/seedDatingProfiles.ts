@@ -706,24 +706,74 @@ export const datingProfiles = [
   }
 ];
 
-export const seedDatingProfiles = async () => {
+export const seedDatingProfiles = async (): Promise<{ success: boolean; message: string; count?: number }> => {
   try {
     console.log('Starting to seed dating profiles...');
     
-    const { data, error } = await supabase
+    // Check if profiles already exist
+    const { data: existingProfiles, error: checkError } = await supabase
       .from('dating_profiles')
-      .insert(datingProfiles)
-      .select();
+      .select('id', { count: 'exact' });
 
-    if (error) {
-      console.error('Error seeding dating profiles:', error);
-      throw error;
+    if (checkError) {
+      console.error('Error checking existing profiles:', checkError);
+      return { success: false, message: 'Failed to check existing profiles' };
     }
 
-    console.log('Successfully seeded dating profiles:', data?.length);
-    return { success: true, count: data?.length };
+    if (existingProfiles && existingProfiles.length >= 40) {
+      console.log(`Database already has ${existingProfiles.length} dating profiles`);
+      return { 
+        success: true, 
+        message: `Database already has ${existingProfiles.length} dating profiles`,
+        count: existingProfiles.length
+      };
+    }
+
+    console.log(`Creating ${datingProfiles.length} new dating profiles...`);
+
+    // Insert profiles in batches to avoid timeout
+    const batchSize = 10;
+    let insertedCount = 0;
+
+    for (let i = 0; i < datingProfiles.length; i += batchSize) {
+      const batch = datingProfiles.slice(i, i + batchSize);
+      
+      const { data, error } = await supabase
+        .from('dating_profiles')
+        .insert(batch)
+        .select();
+
+      if (error) {
+        console.error(`Error inserting batch ${i / batchSize + 1}:`, error);
+        // Continue with other batches even if one fails
+      } else {
+        insertedCount += data?.length || 0;
+        console.log(`Successfully inserted batch ${i / batchSize + 1}: ${data?.length || 0} profiles`);
+      }
+      
+      // Small delay between batches
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    if (insertedCount > 0) {
+      console.log(`Successfully seeded ${insertedCount} dating profiles!`);
+      return { 
+        success: true, 
+        message: `Successfully seeded ${insertedCount} realistic dating profiles for your platform!`,
+        count: insertedCount
+      };
+    } else {
+      return { 
+        success: false, 
+        message: 'Failed to insert any profiles due to database errors' 
+      };
+    }
+
   } catch (error) {
-    console.error('Failed to seed dating profiles:', error);
-    throw error;
+    console.error('Error seeding dating profiles:', error);
+    return { 
+      success: false, 
+      message: `Failed to seed profiles: ${error instanceof Error ? error.message : 'Unknown error'}` 
+    };
   }
 };
