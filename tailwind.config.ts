@@ -52,6 +52,16 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// Modern dating app colors
+				love: {
+					primary: 'hsl(var(--love-primary))',
+					secondary: 'hsl(var(--love-secondary))',
+					accent: 'hsl(var(--love-accent))',
+					background: 'hsl(var(--love-background))',
+					surface: 'hsl(var(--love-surface))',
+					text: 'hsl(var(--love-text))',
+					'text-light': 'hsl(var(--love-text-light))'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

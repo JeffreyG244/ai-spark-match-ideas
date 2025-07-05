@@ -43,28 +43,74 @@ const Discover = () => {
       setLoading(true);
       console.log('Fetching profiles for discovery...');
       
-      // First try to get from dating_profiles (seeded data)
-      let { data: datingProfilesData, error: datingError } = await supabase
+      // Get user's preferences first
+      let userPreferences = {
+        gender_preference: 'Any',
+        age_min: 18,
+        age_max: 65
+      };
+
+      if (user?.id) {
+        const { data: userProfileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        // Get user's preferences from compatibility answers
+        const { data: compatibilityData } = await supabase
+          .from('compatibility_answers')
+          .select('answers')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (compatibilityData?.answers) {
+          const answers = compatibilityData.answers as any;
+          userPreferences.gender_preference = answers.partner_gender || answers.interested_in || 'Any';
+          userPreferences.age_min = parseInt(answers.partner_age_min || answers.age_preference_min) || 18;
+          userPreferences.age_max = parseInt(answers.partner_age_max || answers.age_preference_max) || 65;
+        }
+      }
+
+      console.log('User preferences:', userPreferences);
+      
+      // Build query with user preferences
+      let query = supabase
         .from('dating_profiles')
         .select('*')
-        .limit(50);
+        .gte('age', userPreferences.age_min)
+        .lte('age', userPreferences.age_max);
+
+        // Filter by gender preference if not 'Any'
+      if (userPreferences.gender_preference !== 'Any' && userPreferences.gender_preference !== 'everyone') {
+        let genderFilter = userPreferences.gender_preference;
+        
+        // Convert preference format to match database
+        if (genderFilter === 'men') genderFilter = 'Male';
+        if (genderFilter === 'women') genderFilter = 'Female';
+        if (genderFilter === 'non_binary') genderFilter = 'Non-binary';
+        
+        query = query.eq('gender', genderFilter);
+      }
+
+      const { data: datingProfilesData, error: datingError } = await query.limit(50);
 
       let profilesData: any[] = [];
       let error = datingError;
 
-      console.log(`Found ${datingProfilesData?.length || 0} dating profiles`);
+      console.log(`Found ${datingProfilesData?.length || 0} dating profiles matching preferences`);
 
       if (datingProfilesData && datingProfilesData.length > 0) {
         profilesData = datingProfilesData;
       } else {
         // If no dating profiles, fall back to user profiles
-        let query = supabase.from('profiles').select('*');
+        let fallbackQuery = supabase.from('profiles').select('*');
         
         if (user?.id) {
-          query = query.neq('user_id', user.id);
+          fallbackQuery = fallbackQuery.neq('user_id', user.id);
         }
 
-        const result = await query.limit(50);
+        const result = await fallbackQuery.limit(50);
         profilesData = result.data || [];
         error = result.error;
         console.log(`Fallback to ${profilesData?.length || 0} user profiles`);
@@ -215,17 +261,17 @@ const Discover = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-love-background via-white to-pink-50">
       <NavigationTabs />
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-pink-100 sticky top-0 z-50">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-love-primary/20 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-r from-love-primary to-love-secondary rounded-full flex items-center justify-center">
                 <Heart className="h-5 w-5 text-white" />
               </div>
-              <span className="font-bold text-xl bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="font-bold text-xl bg-gradient-to-r from-love-primary to-love-secondary bg-clip-text text-transparent">
                 Discover
               </span>
             </div>
@@ -261,7 +307,7 @@ const Discover = () => {
                   </p>
                   <Button 
                     onClick={() => navigate('/dashboard')}
-                    className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white"
+                    className="bg-gradient-to-r from-love-primary to-love-secondary hover:from-love-primary/90 hover:to-love-secondary/90 text-white"
                   >
                     Back to Dashboard
                   </Button>
@@ -303,7 +349,7 @@ const Discover = () => {
                         
                         {/* Compatibility Score Overlay */}
                         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
-                          <span className="text-sm font-bold text-pink-600">
+                          <span className="text-sm font-bold text-love-primary">
                             {currentProfile.compatibility_score}% Match
                           </span>
                         </div>
@@ -326,10 +372,10 @@ const Discover = () => {
                         </p>
 
                         <div className="flex flex-wrap gap-2">
-                          <Badge variant="outline" className="border-pink-200 text-pink-700">
+                          <Badge variant="outline" className="border-love-primary/30 text-love-primary">
                             Professional
                           </Badge>
-                          <Badge variant="outline" className="border-purple-200 text-purple-700">
+                          <Badge variant="outline" className="border-love-secondary/30 text-love-secondary">
                             Career-focused
                           </Badge>
                         </div>
@@ -353,14 +399,14 @@ const Discover = () => {
                   <X className="h-6 w-6 text-gray-600" />
                 </Button>
                 
-                <Button
-                  onClick={() => handleSwipe('like')}
-                  disabled={swipeLoading}
-                  size="lg"
-                  className="w-14 h-14 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white border-0"
-                >
-                  <Heart className="h-6 w-6" />
-                </Button>
+                  <Button
+                    onClick={() => handleSwipe('like')}
+                    disabled={swipeLoading}
+                    size="lg"
+                    className="w-14 h-14 rounded-full bg-gradient-to-r from-love-primary to-love-secondary hover:from-love-primary/90 hover:to-love-secondary/90 text-white border-0"
+                  >
+                    <Heart className="h-6 w-6" />
+                  </Button>
               </div>
             )}
           </div>
