@@ -236,10 +236,11 @@ const Discover = () => {
 
   const handleDragEnd = (event: any, info: any) => {
     const threshold = 100;
+    const velocity = Math.abs(info.velocity.x);
     
-    if (info.offset.x > threshold) {
+    if (info.offset.x > threshold || velocity > 500) {
       handleSwipe('like');
-    } else if (info.offset.x < -threshold) {
+    } else if (info.offset.x < -threshold || velocity < -500) {
       handleSwipe('pass');
     }
   };
@@ -249,11 +250,11 @@ const Discover = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
+      <div className="min-h-screen bg-gradient-to-br from-love-background via-white to-love-surface">
         <div className="container mx-auto p-6">
           <div className="flex justify-center items-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
-            <span className="ml-3 text-gray-600">Loading profiles...</span>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-love-primary"></div>
+            <span className="ml-3 text-love-text-light">Loading profiles...</span>
           </div>
         </div>
       </div>
@@ -261,7 +262,7 @@ const Discover = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-love-background via-white to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-love-background via-white to-love-surface/30">
       <NavigationTabs />
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-love-primary/20 sticky top-0 z-50">
@@ -289,28 +290,45 @@ const Discover = () => {
       </div>
 
       <div className="container mx-auto p-6">
-        <div className="mb-6 text-center">
-          <p className="text-gray-600">
-            {hasMoreProfiles ? `${profiles.length - currentIndex} potential matches remaining` : 'No more profiles to show'}
+        <div className="mb-8 text-center">
+          <h3 className="text-lg font-semibold text-love-text mb-2">
+            Discover Your Perfect Match
+          </h3>
+          <p className="text-love-text-light">
+            {hasMoreProfiles ? `${profiles.length - currentIndex} curated matches waiting` : 'No more profiles to show'}
           </p>
         </div>
 
         <div className="flex justify-center">
           <div className="relative w-full max-w-sm h-[600px]">
             {!hasMoreProfiles ? (
-              <Card className="border-pink-200 text-center py-12 h-full flex items-center justify-center">
-                <CardContent>
-                  <Heart className="h-12 w-12 text-pink-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">That's everyone for now!</h3>
-                  <p className="text-gray-600 mb-6">
-                    Check back later for new matches, or expand your preferences.
-                  </p>
-                  <Button 
-                    onClick={() => navigate('/dashboard')}
-                    className="bg-gradient-to-r from-love-primary to-love-secondary hover:from-love-primary/90 hover:to-love-secondary/90 text-white"
-                  >
-                    Back to Dashboard
-                  </Button>
+              <Card className="border-love-primary/20 text-center py-16 h-full flex items-center justify-center bg-gradient-to-br from-love-surface to-white">
+                <CardContent className="space-y-6">
+                  <div className="w-20 h-20 bg-gradient-to-r from-love-primary to-love-secondary rounded-full flex items-center justify-center mx-auto">
+                    <Heart className="h-10 w-10 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-love-text mb-3">You're All Caught Up!</h3>
+                    <p className="text-love-text-light mb-6 max-w-sm mx-auto">
+                      You've seen all available matches. Check back later for new profiles, or adjust your preferences to discover more connections.
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    <Button 
+                      onClick={() => navigate('/dashboard')}
+                      className="bg-gradient-to-r from-love-primary to-love-secondary hover:from-love-primary/90 hover:to-love-secondary/90 text-white shadow-lg"
+                      size="lg"
+                    >
+                      Back to Dashboard
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => window.location.reload()}
+                      className="border-love-primary/30 text-love-primary hover:bg-love-primary/5"
+                    >
+                      Refresh Matches
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
@@ -318,34 +336,42 @@ const Discover = () => {
                 {currentProfile && (
                   <motion.div
                     key={currentIndex}
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
+                    initial={{ scale: 0.9, opacity: 0, rotateY: 10 }}
+                    animate={{ scale: 1, opacity: 1, rotateY: 0 }}
                     exit={{ 
-                      scale: 0.9, 
+                      scale: 0.8, 
                       opacity: 0,
-                      x: swipeDirection === 'like' ? 300 : swipeDirection === 'pass' ? -300 : 0,
-                      rotate: swipeDirection === 'like' ? 15 : swipeDirection === 'pass' ? -15 : 0
+                      x: swipeDirection === 'like' ? 400 : swipeDirection === 'pass' ? -400 : 0,
+                      rotate: swipeDirection === 'like' ? 20 : swipeDirection === 'pass' ? -20 : 0,
+                      transition: { duration: 0.4, ease: "easeInOut" }
                     }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
                     drag="x"
-                    dragConstraints={{ left: -50, right: 50 }}
-                    dragElastic={0.2}
+                    dragConstraints={{ left: -100, right: 100 }}
+                    dragElastic={0.3}
                     onDragEnd={handleDragEnd}
-                    whileDrag={{ rotate: 5, scale: 1.02 }}
+                    whileDrag={{ 
+                      rotate: 8, 
+                      scale: 1.05,
+                      cursor: 'grabbing',
+                      zIndex: 10
+                    }}
                     className="absolute w-full cursor-grab active:cursor-grabbing"
                   >
-                    <Card className="shadow-xl border-0 overflow-hidden bg-white">
-                      {/* Photo */}
-                      <div className="relative h-96 bg-gradient-to-br from-pink-100 to-purple-100">
-                        <img 
-                          src={currentProfile.photo_urls[0]}
-                          alt={`${currentProfile.firstName}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.currentTarget;
-                            target.src = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop";
-                          }}
-                        />
+                    <Card className="shadow-2xl border-0 overflow-hidden bg-white/95 backdrop-blur-sm">
+                        {/* Photo */}
+                        <div className="relative h-96 bg-gradient-to-br from-love-primary/10 to-love-secondary/10">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
+                          
+                          <img 
+                            src={currentProfile.photo_urls[0]}
+                            alt={`${currentProfile.firstName}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.currentTarget;
+                              target.src = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop";
+                            }}
+                          />
                         
                         {/* Compatibility Score Overlay */}
                         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">

@@ -12,10 +12,10 @@ const Navigation = () => {
   return (
     <nav className="flex justify-between items-center mb-16">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+        <div className="w-10 h-10 bg-gradient-to-br from-love-primary to-love-secondary rounded-xl flex items-center justify-center">
           <Heart className="h-6 w-6 text-white" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Luvlang</h1>
+        <h1 className="text-2xl font-bold text-love-text">Luvlang</h1>
       </div>
       <div className="flex gap-3">
         {!user && (
@@ -23,7 +23,7 @@ const Navigation = () => {
             <Button onClick={() => navigate("/auth")} variant="outline">
               Sign In
             </Button>
-            <Button onClick={() => navigate("/auth")} className="bg-purple-600 hover:bg-purple-700">
+            <Button onClick={() => navigate("/auth")} className="bg-gradient-to-r from-love-primary to-love-secondary hover:from-love-primary/90 hover:to-love-secondary/90 text-white">
               Get Started
             </Button>
           </>
