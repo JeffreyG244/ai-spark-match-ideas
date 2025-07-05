@@ -7,7 +7,7 @@ import { CheckCircle, User, Brain, Heart, Camera, ArrowRight } from 'lucide-reac
 import { useProfileData } from '@/hooks/useProfileData';
 import { useCompatibilityAnswers } from '@/hooks/useCompatibilityAnswers';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
-import ProfileForm from './ProfileForm';
+import BasicProfileQuestions from './BasicProfileQuestions';
 import PersonalityQuestions from './PersonalityQuestions';
 import InterestsSelector from './InterestsSelector';
 import EnhancedPhotoUpload from './EnhancedPhotoUpload';
@@ -21,6 +21,7 @@ interface Photo {
 
 const GuidedProfileFlow = () => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [basicProfileAnswers, setBasicProfileAnswers] = useState<Record<string, string>>({});
   const [personalityAnswers, setPersonalityAnswers] = useState<Record<string, string>>({});
   const [interests, setInterests] = useState<string[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -44,7 +45,7 @@ const GuidedProfileFlow = () => {
 
   const { completionPercentage, isProfileComplete } = useProfileCompletion(
     profileData,
-    personalityAnswers,
+    { ...basicProfileAnswers, ...personalityAnswers },
     interests,
     photos
   );
@@ -58,9 +59,9 @@ const GuidedProfileFlow = () => {
     {
       id: 1,
       title: 'Basic Profile',
-      description: 'Tell us about yourself',
+      description: 'Personal info & preferences',
       icon: User,
-      isComplete: isBasicProfileComplete()
+      isComplete: Object.keys(basicProfileAnswers).length >= 8 && basicProfileAnswers.age && basicProfileAnswers.gender && basicProfileAnswers.sexual_orientation
     },
     {
       id: 2,
@@ -88,15 +89,12 @@ const GuidedProfileFlow = () => {
   const completedSteps = steps.filter(step => step.isComplete).length;
 
   const handleStepComplete = async (stepId: number) => {
-    if (stepId === 1 && isBasicProfileComplete()) {
-      const result = await saveProfile(false);
-      if (result.success) {
-        toast({
-          title: 'Basic Profile Completed!',
-          description: 'Moving to personality questions...',
-        });
-        setCurrentStep(2);
-      }
+    if (stepId === 1 && Object.keys(basicProfileAnswers).length >= 8 && basicProfileAnswers.age && basicProfileAnswers.gender && basicProfileAnswers.sexual_orientation) {
+      toast({
+        title: 'Basic Profile Completed!',
+        description: 'Moving to personality questions...',
+      });
+      setCurrentStep(2);
     } else if (stepId === 2 && Object.keys(personalityAnswers).length >= 6) {
       await saveCompatibilityAnswers();
       toast({
@@ -111,6 +109,10 @@ const GuidedProfileFlow = () => {
       });
       setCurrentStep(4);
     }
+  };
+
+  const handleBasicProfileAnswer = (questionId: string, answer: string) => {
+    setBasicProfileAnswers(prev => ({ ...prev, [questionId]: answer }));
   };
 
   const handlePersonalityAnswer = (questionId: string, answer: string) => {
@@ -211,22 +213,18 @@ const GuidedProfileFlow = () => {
           {currentStep === 1 && (
             <div className="space-y-6">
               <div className="text-center mb-6">
-                <h2 className="text-xl font-semibold mb-2 text-red-700">Tell Us About Yourself</h2>
-                <p className="text-gray-600">Complete all fields with at least 50 characters each</p>
+                <h2 className="text-xl font-semibold mb-2 text-red-700">Complete Your Basic Profile</h2>
+                <p className="text-gray-600">This information helps us find your perfect matches</p>
               </div>
-              <ProfileForm
-                profileData={profileData}
-                updateProfileField={updateProfileField}
-                saveProfile={() => handleStepComplete(1)}
-                isSaving={isSaving}
-                profileExists={profileExists}
+              <BasicProfileQuestions
+                answers={basicProfileAnswers}
+                onAnswerChange={handleBasicProfileAnswer}
               />
-              {isBasicProfileComplete() && (
+              {Object.keys(basicProfileAnswers).length >= 8 && basicProfileAnswers.age && basicProfileAnswers.gender && basicProfileAnswers.sexual_orientation && (
                 <div className="text-center pt-4">
                   <Button
                     onClick={() => handleStepComplete(1)}
                     className="bg-purple-600 hover:bg-purple-700"
-                    disabled={isSaving}
                   >
                     Continue to Personality Questions
                     <ArrowRight className="h-4 w-4 ml-2" />

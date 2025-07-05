@@ -1,0 +1,464 @@
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { User, Heart, MapPin, Calendar, Target, Users } from 'lucide-react';
+
+const SEXUAL_ORIENTATIONS = [
+  { value: 'heterosexual', label: 'Heterosexual/Straight', description: 'Attracted to opposite gender' },
+  { value: 'homosexual', label: 'Homosexual/Gay/Lesbian', description: 'Attracted to same gender' },
+  { value: 'bisexual', label: 'Bisexual', description: 'Attracted to both genders' },
+  { value: 'pansexual', label: 'Pansexual', description: 'Attracted to all gender identities' },
+  { value: 'asexual', label: 'Asexual', description: 'Little to no sexual attraction' },
+  { value: 'demisexual', label: 'Demisexual', description: 'Attraction develops after emotional bond' },
+  { value: 'questioning', label: 'Questioning', description: 'Exploring sexual orientation' },
+  { value: 'other', label: 'Other', description: 'Prefer to specify' },
+  { value: 'prefer_not_to_say', label: 'Prefer not to say', description: 'Keep private' }
+];
+
+const GENDER_IDENTITIES = [
+  'Man', 'Woman', 'Non-binary', 'Genderfluid', 'Transgender man', 
+  'Transgender woman', 'Agender', 'Two-spirit', 'Other', 'Prefer not to say'
+];
+
+const RELATIONSHIP_GOALS = [
+  { value: 'serious_relationship', label: 'Serious Long-term Relationship', icon: '💍' },
+  { value: 'marriage', label: 'Marriage & Family', icon: '👨‍👩‍👧‍👦' },
+  { value: 'casual_dating', label: 'Casual Dating', icon: '☕' },
+  { value: 'friends_first', label: 'Friends First', icon: '🤝' },
+  { value: 'companionship', label: 'Companionship', icon: '🫂' },
+  { value: 'exploring', label: 'Still Exploring', icon: '🔍' }
+];
+
+const LIFESTYLE_QUESTIONS = [
+  {
+    id: 'smoking',
+    question: 'Do you smoke?',
+    options: [
+      { value: 'never', label: 'Never' },
+      { value: 'socially', label: 'Socially' },
+      { value: 'regularly', label: 'Regularly' },
+      { value: 'trying_to_quit', label: 'Trying to quit' }
+    ]
+  },
+  {
+    id: 'drinking',
+    question: 'How often do you drink alcohol?',
+    options: [
+      { value: 'never', label: 'Never' },
+      { value: 'rarely', label: 'Rarely' },
+      { value: 'socially', label: 'Socially' },
+      { value: 'regularly', label: 'Regularly' }
+    ]
+  },
+  {
+    id: 'exercise',
+    question: 'How often do you exercise?',
+    options: [
+      { value: 'daily', label: 'Daily' },
+      { value: 'few_times_week', label: 'Few times a week' },
+      { value: 'weekly', label: 'Weekly' },
+      { value: 'rarely', label: 'Rarely' },
+      { value: 'never', label: 'Never' }
+    ]
+  },
+  {
+    id: 'diet',
+    question: 'What best describes your diet?',
+    options: [
+      { value: 'omnivore', label: 'Omnivore' },
+      { value: 'vegetarian', label: 'Vegetarian' },
+      { value: 'vegan', label: 'Vegan' },
+      { value: 'pescatarian', label: 'Pescatarian' },
+      { value: 'keto', label: 'Keto' },
+      { value: 'other', label: 'Other' }
+    ]
+  }
+];
+
+const PERSONALITY_TRAITS = [
+  {
+    id: 'extroversion',
+    question: 'In social situations, I am:',
+    options: [
+      { value: 'very_extroverted', label: 'Very outgoing and energetic' },
+      { value: 'somewhat_extroverted', label: 'Generally social and talkative' },
+      { value: 'balanced', label: 'Sometimes social, sometimes quiet' },
+      { value: 'somewhat_introverted', label: 'Prefer smaller groups' },
+      { value: 'very_introverted', label: 'Prefer solitude or one-on-one' }
+    ]
+  },
+  {
+    id: 'communication_style',
+    question: 'My communication style is:',
+    options: [
+      { value: 'direct', label: 'Direct and straightforward' },
+      { value: 'diplomatic', label: 'Diplomatic and thoughtful' },
+      { value: 'emotional', label: 'Emotional and expressive' },
+      { value: 'analytical', label: 'Logical and analytical' },
+      { value: 'supportive', label: 'Supportive and encouraging' }
+    ]
+  }
+];
+
+interface BasicProfileQuestionsProps {
+  answers: Record<string, string>;
+  onAnswerChange: (questionId: string, answer: string) => void;
+}
+
+const BasicProfileQuestions = ({ answers, onAnswerChange }: BasicProfileQuestionsProps) => {
+  return (
+    <div className="space-y-8">
+      {/* Demographics Section */}
+      <Card className="border-blue-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-800">
+            <User className="h-5 w-5" />
+            Personal Information
+          </CardTitle>
+          <p className="text-sm text-gray-600">
+            Help us understand who you are
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label htmlFor="age" className="text-sm font-medium">Age *</Label>
+              <Input
+                id="age"
+                type="number"
+                min="18"
+                max="100"
+                value={answers.age || ''}
+                onChange={(e) => onAnswerChange('age', e.target.value)}
+                placeholder="Enter your age"
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="location" className="text-sm font-medium">Location *</Label>
+              <Input
+                id="location"
+                value={answers.location || ''}
+                onChange={(e) => onAnswerChange('location', e.target.value)}
+                placeholder="City, State/Province"
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Gender Identity *</Label>
+            <Select 
+              value={answers.gender || ''} 
+              onValueChange={(value) => onAnswerChange('gender', value)}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select your gender identity" />
+              </SelectTrigger>
+              <SelectContent>
+                {GENDER_IDENTITIES.map((gender) => (
+                  <SelectItem key={gender} value={gender}>
+                    {gender}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label className="text-sm font-medium">Height (optional)</Label>
+            <Select 
+              value={answers.height || ''} 
+              onValueChange={(value) => onAnswerChange('height', value)}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select your height" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 24 }, (_, i) => {
+                  const totalInches = 48 + i * 2; // 4'0" to 6'10"
+                  const feet = Math.floor(totalInches / 12);
+                  const inches = totalInches % 12;
+                  return (
+                    <SelectItem key={totalInches} value={`${feet}'${inches}"`}>
+                      {feet}'{inches}"
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sexual Orientation Section */}
+      <Card className="border-pink-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-pink-800">
+            <Heart className="h-5 w-5" />
+            Sexual Orientation & Dating Preferences
+          </CardTitle>
+          <p className="text-sm text-gray-600">
+            This helps us match you with compatible people
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <Label className="text-sm font-medium mb-3 block">Sexual Orientation *</Label>
+            <RadioGroup
+              value={answers.sexual_orientation || ''}
+              onValueChange={(value) => onAnswerChange('sexual_orientation', value)}
+              className="space-y-3"
+            >
+              {SEXUAL_ORIENTATIONS.map((orientation) => (
+                <div key={orientation.value} className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50">
+                  <RadioGroupItem value={orientation.value} id={orientation.value} className="mt-1" />
+                  <div className="flex-1">
+                    <Label htmlFor={orientation.value} className="font-medium cursor-pointer">
+                      {orientation.label}
+                    </Label>
+                    <p className="text-sm text-gray-500 mt-1">{orientation.description}</p>
+                  </div>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+
+          <Separator />
+
+          <div>
+            <Label className="text-sm font-medium">Interested In *</Label>
+            <Select 
+              value={answers.interested_in || ''} 
+              onValueChange={(value) => onAnswerChange('interested_in', value)}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Who are you interested in meeting?" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="men">Men</SelectItem>
+                <SelectItem value="women">Women</SelectItem>
+                <SelectItem value="non_binary">Non-binary people</SelectItem>
+                <SelectItem value="everyone">Everyone</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm font-medium">Preferred Age Range - Min *</Label>
+              <Input
+                type="number"
+                min="18"
+                max="100"
+                value={answers.age_preference_min || ''}
+                onChange={(e) => onAnswerChange('age_preference_min', e.target.value)}
+                placeholder="18"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Preferred Age Range - Max *</Label>
+              <Input
+                type="number"
+                min="18"
+                max="100"
+                value={answers.age_preference_max || ''}
+                onChange={(e) => onAnswerChange('age_preference_max', e.target.value)}
+                placeholder="65"
+                className="mt-1"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Relationship Goals */}
+      <Card className="border-purple-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-purple-800">
+            <Target className="h-5 w-5" />
+            Relationship Goals
+          </CardTitle>
+          <p className="text-sm text-gray-600">
+            What are you looking for in a relationship?
+          </p>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup
+            value={answers.relationship_goals || ''}
+            onValueChange={(value) => onAnswerChange('relationship_goals', value)}
+            className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          >
+            {RELATIONSHIP_GOALS.map((goal) => (
+              <div key={goal.value} className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-gray-50">
+                <RadioGroupItem value={goal.value} id={goal.value} />
+                <div className="flex items-center space-x-2">
+                  <span className="text-lg">{goal.icon}</span>
+                  <Label htmlFor={goal.value} className="font-medium cursor-pointer">
+                    {goal.label}
+                  </Label>
+                </div>
+              </div>
+            ))}
+          </RadioGroup>
+        </CardContent>
+      </Card>
+
+      {/* Lifestyle Questions */}
+      <Card className="border-green-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-green-800">
+            <Users className="h-5 w-5" />
+            Lifestyle & Habits
+          </CardTitle>
+          <p className="text-sm text-gray-600">
+            These help us find compatible matches for you
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {LIFESTYLE_QUESTIONS.map((question) => (
+            <div key={question.id}>
+              <Label className="text-sm font-medium mb-3 block">{question.question}</Label>
+              <RadioGroup
+                value={answers[question.id] || ''}
+                onValueChange={(value) => onAnswerChange(question.id, value)}
+                className="flex flex-wrap gap-3"
+              >
+                {question.options.map((option) => (
+                  <div key={option.value} className="flex items-center space-x-2 p-2 rounded border hover:bg-gray-50">
+                    <RadioGroupItem value={option.value} id={`${question.id}-${option.value}`} />
+                    <Label
+                      htmlFor={`${question.id}-${option.value}`}
+                      className="text-sm cursor-pointer"
+                    >
+                      {option.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Personality Traits */}
+      <Card className="border-orange-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-orange-800">
+            <Calendar className="h-5 w-5" />
+            Personality Insights
+          </CardTitle>
+          <p className="text-sm text-gray-600">
+            Help us understand your personality for better matches
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {PERSONALITY_TRAITS.map((trait) => (
+            <div key={trait.id}>
+              <Label className="text-sm font-medium mb-3 block">{trait.question}</Label>
+              <RadioGroup
+                value={answers[trait.id] || ''}
+                onValueChange={(value) => onAnswerChange(trait.id, value)}
+                className="space-y-2"
+              >
+                {trait.options.map((option) => (
+                  <div key={option.value} className="flex items-center space-x-3 p-3 rounded border hover:bg-gray-50">
+                    <RadioGroupItem value={option.value} id={`${trait.id}-${option.value}`} />
+                    <Label
+                      htmlFor={`${trait.id}-${option.value}`}
+                      className="text-sm cursor-pointer flex-1"
+                    >
+                      {option.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      {/* Bio Section */}
+      <Card className="border-indigo-200">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-indigo-800">
+            <MapPin className="h-5 w-5" />
+            About You
+          </CardTitle>
+          <p className="text-sm text-gray-600">
+            Share what makes you unique
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="bio" className="text-sm font-medium">Tell us about yourself *</Label>
+            <Textarea
+              id="bio"
+              value={answers.bio || ''}
+              onChange={(e) => onAnswerChange('bio', e.target.value)}
+              placeholder="Share your interests, what you're passionate about, what you're looking for in a partner..."
+              className="mt-1 min-h-[120px]"
+              maxLength={500}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              {(answers.bio || '').length}/500 characters
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="interests" className="text-sm font-medium">Interests & Hobbies</Label>
+            <Input
+              id="interests"
+              value={answers.interests || ''}
+              onChange={(e) => onAnswerChange('interests', e.target.value)}
+              placeholder="e.g., hiking, cooking, photography, travel, music..."
+              className="mt-1"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="profession" className="text-sm font-medium">Profession</Label>
+            <Input
+              id="profession"
+              value={answers.profession || ''}
+              onChange={(e) => onAnswerChange('profession', e.target.value)}
+              placeholder="What do you do for work?"
+              className="mt-1"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="education" className="text-sm font-medium">Education</Label>
+            <Select 
+              value={answers.education || ''} 
+              onValueChange={(value) => onAnswerChange('education', value)}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder="Select your education level" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="high_school">High School</SelectItem>
+                <SelectItem value="some_college">Some College</SelectItem>
+                <SelectItem value="associate">Associate Degree</SelectItem>
+                <SelectItem value="bachelor">Bachelor's Degree</SelectItem>
+                <SelectItem value="master">Master's Degree</SelectItem>
+                <SelectItem value="doctorate">Doctorate</SelectItem>
+                <SelectItem value="trade_school">Trade School</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default BasicProfileQuestions;
