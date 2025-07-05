@@ -71,55 +71,140 @@ export const useMatches = () => {
       }
 
       if (!matchesData || matchesData.length === 0) {
-        // If no matches in matches table, show sample profiles based on preferences
-        console.log('No matches found, getting sample profiles with preference:', userPreferences.gender_preference);
+        // If no matches in matches table, show sample profiles with BIDIRECTIONAL matching
+        console.log('No matches found, applying bidirectional filtering for:', userPreferences.gender_preference);
 
+        // Get user's own gender from compatibility answers
+        let userGender = 'Unknown';
+        if (compatibilityData?.answers) {
+          const answers = compatibilityData.answers as any;
+          userGender = answers['7'] || 'Unknown'; // Question 7 is user's gender identity
+          console.log('Current user gender:', userGender);
+        }
+
+        // Apply bidirectional matching logic
         let query = supabase
           .from('dating_profiles')
-          .select('*')
+          .select(`
+            *,
+            compatibility_answers!inner(answers)
+          `)
           .gte('age', userPreferences.age_min)
           .lte('age', userPreferences.age_max);
 
-        // Filter by gender preference if not 'Everyone'
-        if (userPreferences.gender_preference !== 'Everyone') {
-          let genderFilter = userPreferences.gender_preference;
-          
-          // Convert preference format to match database - answers store "Men"/"Women"/"Non-binary"
-          if (genderFilter === 'Men') genderFilter = 'Male';
-          if (genderFilter === 'Women') genderFilter = 'Female';
-          if (genderFilter === 'Non-binary') genderFilter = 'Non-binary';
-          
-          console.log('Filtering sample profiles by gender:', genderFilter);
-          query = query.eq('gender', genderFilter);
-        }
+        const { data: profilesWithAnswers, error: profilesError } = await query;
 
-        const { data: sampleProfiles, error: sampleError } = await query.limit(10);
+        if (profilesError) {
+          console.error('Error loading profiles with answers:', profilesError);
+          // Fallback to basic filtering without bidirectional matching
+          let basicQuery = supabase
+            .from('dating_profiles')
+            .select('*')
+            .gte('age', userPreferences.age_min)
+            .lte('age', userPreferences.age_max);
 
-        if (sampleError) {
-          console.error('Error loading sample profiles:', sampleError);
-          setMatches([]);
+          if (userPreferences.gender_preference !== 'Everyone') {
+            let genderFilter = userPreferences.gender_preference;
+            if (genderFilter === 'Men') genderFilter = 'Male';
+            if (genderFilter === 'Women') genderFilter = 'Female';
+            if (genderFilter === 'Non-binary') genderFilter = 'Non-binary';
+            basicQuery = basicQuery.eq('gender', genderFilter);
+          }
+
+          const { data: sampleProfiles, error: sampleError } = await basicQuery.limit(10);
+
+          if (sampleError) {
+            console.error('Error loading basic profiles:', sampleError);
+            setMatches([]);
+            return;
+          }
+
+          // Apply basic filtering for fallback
+          let filteredProfiles = sampleProfiles || [];
+          if (userPreferences.gender_preference !== 'Everyone') {
+            filteredProfiles = filteredProfiles.filter(profile => {
+              const profileGender = profile.gender?.toLowerCase();
+              const preferredGender = userPreferences.gender_preference;
+              
+              if (preferredGender === 'Men') return profileGender === 'male';
+              if (preferredGender === 'Women') return profileGender === 'female';
+              if (preferredGender === 'Non-binary') return profileGender === 'non-binary';
+              
+              return false; // Strict filtering - hide all mismatches
+            });
+          }
+
+          console.log('Basic filtered profiles count:', filteredProfiles.length);
+          
+          // Convert to matches and return
+          const basicMatches = filteredProfiles.map((profile) => ({
+            id: `sample-${profile.id}`,
+            user_id: user.id,
+            matched_user_id: profile.user_id,
+            compatibility: Math.floor(Math.random() * 30) + 70,
+            created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+            status: 'accepted',
+            match_profile: {
+              user_id: profile.user_id,
+              email: profile.email,
+              bio: profile.bio,
+              photo_urls: profile.photo_urls,
+              first_name: profile.first_name,
+              age: profile.age,
+              gender: profile.gender
+            }
+          }));
+
+          setMatches(basicMatches);
           return;
         }
 
-        // Filter by gender preference if specified
-        let filteredProfiles = sampleProfiles || [];
-        if (userPreferences.gender_preference !== 'Everyone') {
-          filteredProfiles = filteredProfiles.filter(profile => {
-            const profileGender = profile.gender?.toLowerCase();
-            const preferredGender = userPreferences.gender_preference;
-            
-            // Match stored answers "Men"/"Women"/"Non-binary" to database gender values
-            if (preferredGender === 'Men') return profileGender === 'male';
-            if (preferredGender === 'Women') return profileGender === 'female';
-            if (preferredGender === 'Non-binary') return profileGender === 'non-binary';
-            
-            return true;
-          });
-          console.log('Filtered sample profiles by gender preference:', userPreferences.gender_preference, 'Count:', filteredProfiles.length);
-        }
+        // Apply BIDIRECTIONAL filtering for profiles with compatibility answers
+        console.log('Applying bidirectional matching...');
+        const bidirectionalMatches = profilesWithAnswers?.filter(profile => {
+          const profileAnswers = (profile as any).compatibility_answers?.[0]?.answers as any;
+          if (!profileAnswers) return false;
 
-        // Convert sample profiles to match format
-        const sampleMatches = filteredProfiles.map((profile, index) => ({
+          const profileGender = profile.gender?.toLowerCase();
+          const profileSeekingGender = profileAnswers['12']; // What they're seeking
+          const profileUserGender = profileAnswers['7']; // Their own gender
+
+          // USER WANTS TO SEE THIS PROFILE
+          let userWantsProfile = false;
+          if (userPreferences.gender_preference === 'Everyone') {
+            userWantsProfile = true;
+          } else if (userPreferences.gender_preference === 'Men' && profileGender === 'male') {
+            userWantsProfile = true;
+          } else if (userPreferences.gender_preference === 'Women' && profileGender === 'female') {
+            userWantsProfile = true;
+          } else if (userPreferences.gender_preference === 'Non-binary' && profileGender === 'non-binary') {
+            userWantsProfile = true;
+          }
+
+          // PROFILE WANTS TO SEE USER (BIDIRECTIONAL CHECK)
+          let profileWantsUser = false;
+          if (profileSeekingGender === 'Everyone') {
+            profileWantsUser = true;
+          } else if (profileSeekingGender === 'Men' && userGender === 'Male') {
+            profileWantsUser = true;
+          } else if (profileSeekingGender === 'Women' && userGender === 'Female') {
+            profileWantsUser = true;
+          } else if (profileSeekingGender === 'Non-binary' && userGender === 'Non-binary') {
+            profileWantsUser = true;
+          }
+
+          const match = userWantsProfile && profileWantsUser;
+          if (match) {
+            console.log(`✅ Bidirectional match: ${userGender} user seeking ${userPreferences.gender_preference} ↔ ${profileGender} profile seeking ${profileSeekingGender}`);
+          }
+
+          return match;
+        }) || [];
+
+        console.log('Bidirectional filtered profiles count:', bidirectionalMatches.length);
+
+        // Convert bidirectional matches to match format
+        const sampleMatches = bidirectionalMatches.map((profile) => ({
           id: `sample-${profile.id}`,
           user_id: user.id,
           matched_user_id: profile.user_id,

@@ -46,14 +46,15 @@ export const useDailyMatches = () => {
       console.log('Daily matches data:', matchesData);
 
       if (!matchesData || matchesData.length === 0) {
-        console.log('No daily matches found, getting profiles for matching...');
+        console.log('No daily matches found, applying bidirectional filtering...');
         
-        // Get user's preferences first
+        // Get user's preferences and gender
         let userPreferences = {
           gender_preference: 'Everyone',
           age_min: 18,
           age_max: 65
         };
+        let userGender = 'Unknown';
 
         const { data: compatibilityData } = await supabase
           .from('compatibility_answers')
@@ -64,42 +65,93 @@ export const useDailyMatches = () => {
         if (compatibilityData?.answers) {
           const answers = compatibilityData.answers as any;
           userPreferences.gender_preference = answers['12'] || 'Everyone';
-          console.log('Daily matches - User gender preference:', userPreferences.gender_preference);
+          userGender = answers['7'] || 'Unknown';
+          console.log('Daily matches - User:', userGender, 'seeking:', userPreferences.gender_preference);
         }
         
-        // Try dating_profiles first, then fallback to profiles
-        let query = supabase
+        // Try dating_profiles with bidirectional matching first
+        let { data: profilesWithAnswers, error: profilesError } = await supabase
           .from('dating_profiles')
-          .select('*')
+          .select(`
+            *,
+            compatibility_answers!inner(answers)
+          `)
           .gte('age', userPreferences.age_min)
           .lte('age', userPreferences.age_max);
 
-        // Filter by gender preference if not 'Everyone'
-        if (userPreferences.gender_preference !== 'Everyone') {
-          let genderFilter = userPreferences.gender_preference;
-          
-          // Convert preference format to match database
-          if (genderFilter === 'Men') genderFilter = 'Male';
-          if (genderFilter === 'Women') genderFilter = 'Female';
-          if (genderFilter === 'Non-binary') genderFilter = 'Non-binary';
-          
-          console.log('Daily matches - Filtering by gender:', genderFilter);
-          query = query.eq('gender', genderFilter);
-        }
+        let profilesData: any[] = [];
 
-        let { data: profilesData, error: profilesError } = await query.limit(10);
+        if (profilesWithAnswers && profilesWithAnswers.length > 0) {
+          // Apply BIDIRECTIONAL filtering
+          profilesData = profilesWithAnswers.filter(profile => {
+            const profileAnswers = (profile as any).compatibility_answers?.[0]?.answers as any;
+            if (!profileAnswers) return false;
 
-        // If no dating profiles, fallback to regular profiles
-        if (!profilesData || profilesData.length === 0) {
-          console.log('No dating profiles found, falling back to regular profiles');
-          const { data: fallbackProfiles, error: fallbackError } = await supabase
-            .from('profiles')
+            const profileGender = profile.gender?.toLowerCase();
+            const profileSeekingGender = profileAnswers['12'];
+
+            // USER WANTS TO SEE THIS PROFILE
+            let userWantsProfile = false;
+            if (userPreferences.gender_preference === 'Everyone') {
+              userWantsProfile = true;
+            } else if (userPreferences.gender_preference === 'Men' && profileGender === 'male') {
+              userWantsProfile = true;
+            } else if (userPreferences.gender_preference === 'Women' && profileGender === 'female') {
+              userWantsProfile = true;
+            } else if (userPreferences.gender_preference === 'Non-binary' && profileGender === 'non-binary') {
+              userWantsProfile = true;
+            }
+
+            // PROFILE WANTS TO SEE USER (BIDIRECTIONAL CHECK)
+            let profileWantsUser = false;
+            if (profileSeekingGender === 'Everyone') {
+              profileWantsUser = true;
+            } else if (profileSeekingGender === 'Men' && userGender === 'Male') {
+              profileWantsUser = true;
+            } else if (profileSeekingGender === 'Women' && userGender === 'Female') {
+              profileWantsUser = true;
+            } else if (profileSeekingGender === 'Non-binary' && userGender === 'Non-binary') {
+              profileWantsUser = true;
+            }
+
+            const match = userWantsProfile && profileWantsUser;
+            if (match) {
+              console.log(`✅ Daily match bidirectional: ${userGender} seeking ${userPreferences.gender_preference} ↔ ${profileGender} seeking ${profileSeekingGender}`);
+            }
+
+            return match;
+          });
+        } else {
+          // Fallback to basic filtering if no profiles with answers
+          console.log('Daily matches - No profiles with answers, using basic filtering');
+          let basicQuery = supabase
+            .from('dating_profiles')
             .select('*')
-            .neq('user_id', user.id)
-            .limit(10);
-          
-          profilesData = fallbackProfiles as any;
-          profilesError = fallbackError;
+            .gte('age', userPreferences.age_min)
+            .lte('age', userPreferences.age_max);
+
+          if (userPreferences.gender_preference !== 'Everyone') {
+            let genderFilter = userPreferences.gender_preference;
+            if (genderFilter === 'Men') genderFilter = 'Male';
+            if (genderFilter === 'Women') genderFilter = 'Female';
+            if (genderFilter === 'Non-binary') genderFilter = 'Non-binary';
+            basicQuery = basicQuery.eq('gender', genderFilter);
+          }
+
+          const { data: basicProfiles, error: basicError } = await basicQuery.limit(10);
+          profilesData = basicProfiles || [];
+
+          // If still no dating profiles, fallback to regular profiles
+          if (profilesData.length === 0) {
+            console.log('No dating profiles found, falling back to regular profiles');
+            const { data: fallbackProfiles, error: fallbackError } = await supabase
+              .from('profiles')
+              .select('*')
+              .neq('user_id', user.id)
+              .limit(10);
+            
+            profilesData = fallbackProfiles as any;
+          }
         }
 
         if (profilesError) {
@@ -108,7 +160,7 @@ export const useDailyMatches = () => {
           return;
         }
 
-        console.log('Found profiles for matching:', profilesData?.length);
+        console.log('Daily matches filtered profiles count:', profilesData.length);
 
         if (profilesData && profilesData.length > 0) {
           // Convert profiles to daily matches format (handle both dating_profiles and profiles)

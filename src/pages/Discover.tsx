@@ -54,6 +54,9 @@ const Discover = () => {
         age_max: 65
       };
 
+      let userGender = 'Unknown';
+      let compatibilityData = null;
+
       if (user?.id) {
         const { data: userProfileData } = await supabase
           .from('profiles')
@@ -62,43 +65,104 @@ const Discover = () => {
           .maybeSingle();
 
         // Get user's preferences from compatibility answers
-        const { data: compatibilityData } = await supabase
+        const result = await supabase
           .from('compatibility_answers')
           .select('answers')
           .eq('user_id', user.id)
           .maybeSingle();
+        
+        compatibilityData = result.data;
 
         if (compatibilityData?.answers) {
           const answers = compatibilityData.answers as any;
           // Question 12 is "What partner gender are you interested in?"
           userPreferences.gender_preference = answers['12'] || 'Everyone';
-          console.log('User gender preference from answers:', userPreferences.gender_preference);
+          // Question 7 is user's own gender
+          userGender = answers['7'] || 'Unknown';
+          console.log('User preferences - Gender:', userGender, 'Seeking:', userPreferences.gender_preference);
         }
       }
 
       console.log('User preferences:', userPreferences);
       
-      // Build query with user preferences
-      let query = supabase
+      // Build query with BIDIRECTIONAL matching
+      console.log('Applying bidirectional filtering for discover...');
+      
+      let { data: profilesWithAnswers, error: profilesError } = await supabase
         .from('dating_profiles')
-        .select('*')
+        .select(`
+          *,
+          compatibility_answers!inner(answers)
+        `)
         .gte('age', userPreferences.age_min)
         .lte('age', userPreferences.age_max);
 
-        // Filter by gender preference if not 'Everyone'
-      if (userPreferences.gender_preference !== 'Everyone') {
-        let genderFilter = userPreferences.gender_preference;
-        
-        // Convert preference format to match database - answers store "Men"/"Women"/"Non-binary"
-        if (genderFilter === 'Men') genderFilter = 'Male';
-        if (genderFilter === 'Women') genderFilter = 'Female';
-        if (genderFilter === 'Non-binary') genderFilter = 'Non-binary';
-        
-        console.log('Filtering profiles by gender:', genderFilter);
-        query = query.eq('gender', genderFilter);
-      }
+      let datingProfilesData: any[] = [];
+      let datingError = profilesError;
 
-      const { data: datingProfilesData, error: datingError } = await query.limit(50);
+      if (profilesWithAnswers && profilesWithAnswers.length > 0) {
+        // Apply BIDIRECTIONAL filtering
+        datingProfilesData = profilesWithAnswers.filter(profile => {
+          const profileAnswers = (profile as any).compatibility_answers?.[0]?.answers as any;
+          if (!profileAnswers) return false;
+
+          const profileGender = profile.gender?.toLowerCase();
+          const profileSeekingGender = profileAnswers['12']; // What they're seeking
+
+          // USER WANTS TO SEE THIS PROFILE
+          let userWantsProfile = false;
+          if (userPreferences.gender_preference === 'Everyone') {
+            userWantsProfile = true;
+          } else if (userPreferences.gender_preference === 'Men' && profileGender === 'male') {
+            userWantsProfile = true;
+          } else if (userPreferences.gender_preference === 'Women' && profileGender === 'female') {
+            userWantsProfile = true;
+          } else if (userPreferences.gender_preference === 'Non-binary' && profileGender === 'non-binary') {
+            userWantsProfile = true;
+          }
+
+          // PROFILE WANTS TO SEE USER (BIDIRECTIONAL CHECK)
+          let profileWantsUser = false;
+          if (profileSeekingGender === 'Everyone') {
+            profileWantsUser = true;
+          } else if (profileSeekingGender === 'Men' && userGender === 'Male') {
+            profileWantsUser = true;
+          } else if (profileSeekingGender === 'Women' && userGender === 'Female') {
+            profileWantsUser = true;
+          } else if (profileSeekingGender === 'Non-binary' && userGender === 'Non-binary') {
+            profileWantsUser = true;
+          }
+
+          const match = userWantsProfile && profileWantsUser;
+          if (match) {
+            console.log(`✅ Discover bidirectional match: ${userGender} user seeking ${userPreferences.gender_preference} ↔ ${profileGender} profile seeking ${profileSeekingGender}`);
+          } else {
+            console.log(`❌ Discover mismatch: ${userGender} user seeking ${userPreferences.gender_preference} ↔ ${profileGender} profile seeking ${profileSeekingGender}`);
+          }
+
+          return match;
+        });
+      } else {
+        // Fallback to basic filtering if no profiles with answers
+        console.log('No profiles with compatibility answers, using basic filtering');
+        let basicQuery = supabase
+          .from('dating_profiles')
+          .select('*')
+          .gte('age', userPreferences.age_min)
+          .lte('age', userPreferences.age_max);
+
+        if (userPreferences.gender_preference !== 'Everyone') {
+          let genderFilter = userPreferences.gender_preference;
+          if (genderFilter === 'Men') genderFilter = 'Male';
+          if (genderFilter === 'Women') genderFilter = 'Female';
+          if (genderFilter === 'Non-binary') genderFilter = 'Non-binary';
+          basicQuery = basicQuery.eq('gender', genderFilter);
+        }
+
+        const result = await basicQuery.limit(50);
+        datingProfilesData = result.data || [];
+        datingError = result.error;
+      }
 
       let profilesData: any[] = [];
       let error = datingError;
