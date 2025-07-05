@@ -11,6 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import NavigationTabs from '@/components/navigation/NavigationTabs';
+import SwipeIndicators from '@/components/discover/SwipeIndicators';
+import ProfessionalProfileCard from '@/components/discover/ProfessionalProfileCard';
 
 interface UserProfile {
   id: string;
@@ -33,6 +35,8 @@ const Discover = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<'like' | 'pass' | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dragX, setDragX] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     fetchProfiles();
@@ -238,9 +242,9 @@ const Discover = () => {
     const threshold = 100;
     const velocity = Math.abs(info.velocity.x);
     
-    if (info.offset.x > threshold || velocity > 500) {
+    if (info.offset.x > threshold || (velocity > 500 && info.offset.x > 50)) {
       handleSwipe('like');
-    } else if (info.offset.x < -threshold || velocity < -500) {
+    } else if (info.offset.x < -threshold || (velocity > 500 && info.offset.x < -50)) {
       handleSwipe('pass');
     }
   };
@@ -262,7 +266,7 @@ const Discover = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-love-background via-white to-love-surface/30">
+    <div className="min-h-screen" style={{ background: 'var(--love-gradient-bg)' }}>
       <NavigationTabs />
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-love-primary/20 sticky top-0 z-50">
@@ -350,89 +354,59 @@ const Discover = () => {
                     dragConstraints={{ left: -100, right: 100 }}
                     dragElastic={0.3}
                     onDragEnd={handleDragEnd}
+                    onDrag={(event, info) => {
+                      setDragX(info.offset.x);
+                      setIsDragging(Math.abs(info.offset.x) > 10);
+                    }}
+                    onDragStart={() => setIsDragging(true)}
                     whileDrag={{ 
-                      rotate: 8, 
+                      rotate: dragX * 0.1, 
                       scale: 1.05,
                       cursor: 'grabbing',
                       zIndex: 10
                     }}
                     className="absolute w-full cursor-grab active:cursor-grabbing"
                   >
-                    <Card className="shadow-2xl border-0 overflow-hidden bg-white/95 backdrop-blur-sm">
-                        {/* Photo */}
-                        <div className="relative h-96 bg-gradient-to-br from-love-primary/10 to-love-secondary/10">
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"></div>
-                          
-                          <img 
-                            src={currentProfile.photo_urls[0]}
-                            alt={`${currentProfile.firstName}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.currentTarget;
-                              target.src = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop";
-                            }}
-                          />
-                        
-                        {/* Compatibility Score Overlay */}
-                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1">
-                          <span className="text-sm font-bold text-love-primary">
-                            {currentProfile.compatibility_score}% Match
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Profile Info */}
-                      <CardContent className="p-6">
-                        <div className="mb-4">
-                          <h2 className="text-2xl font-bold text-gray-900">
-                            {currentProfile.firstName}, {currentProfile.age}
-                          </h2>
-                          <p className="text-gray-600 flex items-center mt-1">
-                            <User className="h-4 w-4 mr-1" />
-                            {currentProfile.location}
-                          </p>
-                        </div>
-
-                        <p className="text-gray-700 mb-4 line-clamp-3">
-                          {currentProfile.bio}
-                        </p>
-
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="outline" className="border-love-primary/30 text-love-primary">
-                            Professional
-                          </Badge>
-                          <Badge variant="outline" className="border-love-secondary/30 text-love-secondary">
-                            Career-focused
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <ProfessionalProfileCard 
+                      profile={currentProfile}
+                      dragX={dragX}
+                    />
+                    <SwipeIndicators 
+                      dragX={dragX}
+                      isVisible={isDragging}
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>
             )}
 
-            {/* Action Buttons */}
+            {/* Enhanced Action Buttons */}
             {hasMoreProfiles && (
-              <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 flex gap-4">
-                <Button
-                  onClick={() => handleSwipe('pass')}
-                  disabled={swipeLoading}
-                  size="lg"
-                  variant="outline"
-                  className="w-14 h-14 rounded-full border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50"
-                >
-                  <X className="h-6 w-6 text-gray-600" />
-                </Button>
+              <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 flex items-center gap-6">
+                <div className="text-center">
+                  <Button
+                    onClick={() => handleSwipe('pass')}
+                    disabled={swipeLoading}
+                    size="lg"
+                    variant="outline"
+                    className="w-16 h-16 rounded-full border-3 border-red-400/60 hover:border-red-500 hover:bg-red-50 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110"
+                  >
+                    <X className="h-7 w-7 text-red-500" />
+                  </Button>
+                  <p className="text-xs text-love-text-light mt-2 font-medium">Pass</p>
+                </div>
                 
+                <div className="text-center">
                   <Button
                     onClick={() => handleSwipe('like')}
                     disabled={swipeLoading}
                     size="lg"
-                    className="w-14 h-14 rounded-full bg-gradient-to-r from-love-primary to-love-secondary hover:from-love-primary/90 hover:to-love-secondary/90 text-white border-0"
+                    className="w-16 h-16 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
                   >
-                    <Heart className="h-6 w-6" />
+                    <Heart className="h-7 w-7 fill-current" />
                   </Button>
+                  <p className="text-xs text-love-text-light mt-2 font-medium">Like</p>
+                </div>
               </div>
             )}
           </div>

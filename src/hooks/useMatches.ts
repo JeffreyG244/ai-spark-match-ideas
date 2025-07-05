@@ -38,18 +38,24 @@ export const useMatches = () => {
         .eq('user_id', user.id)
         .maybeSingle();
 
-      // Get user's orientation preferences from personality answers
+      // Get user's preferences from compatibility answers
       let userPreferences = {
-        gender_preference: 'Any',
+        gender_preference: 'Everyone',
         age_min: 18,
         age_max: 65
       };
 
-      if (userProfileData && (userProfileData as any).personality_answers) {
-        const answers = (userProfileData as any).personality_answers;
-        userPreferences.gender_preference = answers.partner_gender || answers.gender_preference || 'Any';
-        userPreferences.age_min = parseInt(answers.partner_age_min) || 18;
-        userPreferences.age_max = parseInt(answers.partner_age_max) || 65;
+      const { data: compatibilityData } = await supabase
+        .from('compatibility_answers')
+        .select('answers')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (compatibilityData?.answers) {
+        const answers = compatibilityData.answers as any;
+        // Question 12 is "What partner gender are you interested in?"
+        userPreferences.gender_preference = answers['12'] || 'Everyone';
+        console.log('User gender preference:', userPreferences.gender_preference);
       }
 
       // Get matches from the matches table
@@ -87,10 +93,17 @@ export const useMatches = () => {
 
         // Filter by gender preference if specified
         let filteredProfiles = sampleProfiles || [];
-        if (userPreferences.gender_preference !== 'Any') {
-          filteredProfiles = filteredProfiles.filter(profile => 
-            profile.gender === userPreferences.gender_preference
-          );
+        if (userPreferences.gender_preference !== 'Everyone') {
+          filteredProfiles = filteredProfiles.filter(profile => {
+            const profileGender = profile.gender?.toLowerCase();
+            const preferredGender = userPreferences.gender_preference.toLowerCase();
+            
+            if (preferredGender === 'men') return profileGender === 'male';
+            if (preferredGender === 'women') return profileGender === 'female';
+            if (preferredGender === 'non-binary') return profileGender === 'non-binary';
+            
+            return true;
+          });
         }
 
         // Convert sample profiles to match format

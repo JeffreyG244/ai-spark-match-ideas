@@ -135,16 +135,12 @@ export const compatibilityQuestions: QuestionData[] = [
   },
   {
     id: 12,
-    question: "Which Compatibility Qualities Matter Most to You in a Match?",
+    question: "What partner gender are you interested in?",
     options: [
-      "Physical vibe (height, fitness level, style)",
-      "Financial values (spender vs. saver, investment mindset)",
-      "Parenting/family goals (kids now or in future, family dynamics)",
-      "Political or social beliefs (aligning on major issues)",
-      "Career ambition or work-life balance preferences",
-      "Pet love (dog person, cat person, or pet allergies)",
-      "Health & fitness routine (gym goer, outdoor enthusiast, wellness-focused)",
-      "Emotional maturity & communication style"
+      "Men",
+      "Women", 
+      "Non-binary",
+      "Everyone"
     ]
   },
   {

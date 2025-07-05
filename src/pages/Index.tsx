@@ -15,7 +15,7 @@ const Index = () => {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-love-background via-white to-love-surface">
+    <div className="min-h-screen" style={{ background: 'var(--love-gradient-bg)' }}>
       <div className="container mx-auto px-6 py-8">
         <Navigation />
 
