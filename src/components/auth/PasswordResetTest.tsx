@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,29 +13,32 @@ const PasswordResetTest = () => {
 
   const testPasswordReset = async () => {
     setLoading(true);
+    console.log('Testing password reset for:', email);
+    
     try {
-      console.log('Testing password reset for:', email);
-      
       const { data, error } = await supabase.functions.invoke('send-password-reset', {
         body: { email }
       });
 
+      console.log('Password reset test response:', { data, error });
+
       if (error) {
-        console.error('Password reset error:', error);
+        console.error('Password reset test error:', error);
         toast({
           title: 'Test Failed',
           description: `Error: ${error.message}`,
           variant: 'destructive'
         });
       } else {
-        console.log('Password reset response:', data);
+        console.log('Password reset test successful:', data);
         toast({
-          title: 'Test Successful!',
-          description: `Password reset email sent to ${email}. Check your inbox!`,
+          title: '✅ Test Successful!',
+          description: `Password reset email sent to ${email}. Check your inbox and spam folder!`,
+          duration: 6000,
         });
       }
     } catch (error) {
-      console.error('Unexpected error:', error);
+      console.error('Unexpected test error:', error);
       toast({
         title: 'Test Failed',
         description: 'Unexpected error occurred. Check console for details.',
@@ -64,11 +68,15 @@ const PasswordResetTest = () => {
         
         <Button 
           onClick={testPasswordReset}
-          disabled={loading || !email}
+          disabled={loading || !email.trim()}
           className="w-full"
         >
           {loading ? 'Sending Test Email...' : 'Test Password Reset'}
         </Button>
+        
+        <p className="text-sm text-gray-600">
+          This will send a test password reset email using our custom function.
+        </p>
       </CardContent>
     </Card>
   );

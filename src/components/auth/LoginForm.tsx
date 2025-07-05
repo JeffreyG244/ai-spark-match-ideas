@@ -63,31 +63,44 @@ const LoginForm = () => {
       return;
     }
 
+    console.log('Attempting to send password reset email to:', forgotPasswordEmail);
     setForgotPasswordLoading(true);
+    
     try {
-      // Use our custom password reset function to bypass Supabase rate limits
-      const { error } = await supabase.functions.invoke('send-password-reset', {
+      // Use our custom password reset function
+      console.log('Calling send-password-reset function...');
+      const { data, error } = await supabase.functions.invoke('send-password-reset', {
         body: { email: forgotPasswordEmail }
       });
 
+      console.log('Password reset response:', { data, error });
+
       if (error) {
+        console.error('Password reset error details:', error);
         toast({
-          title: 'Reset Error',
-          description: `Error: ${error.message}. Please try again.`,
+          title: 'Reset Failed',
+          description: `Error: ${error.message}. Please try again or contact support.`,
           variant: 'destructive'
         });
       } else {
+        console.log('Password reset email sent successfully');
         toast({
-          title: 'Reset Email Sent',
-          description: 'If an account with this email exists, a password reset link has been sent to your email.',
+          title: '✅ Reset Email Sent!',
+          description: `A password reset link has been sent to ${forgotPasswordEmail}. Please check your email (including spam folder).`,
+          duration: 6000,
         });
-        setShowForgotPassword(false);
+        
+        // Clear the form and go back to login after success
         setForgotPasswordEmail('');
+        setTimeout(() => {
+          setShowForgotPassword(false);
+        }, 2000);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Unexpected password reset error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
-        title: 'Reset Error',
+        title: 'Reset Failed',
         description: `Unexpected error: ${errorMessage}. Please try again or contact support.`,
         variant: 'destructive'
       });
@@ -105,9 +118,9 @@ const LoginForm = () => {
               <Heart className="h-8 w-8 text-white" />
             </div>
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-              Forgot Password
+              Reset Your Password
             </CardTitle>
-            <p className="text-gray-600 text-sm">Enter your email to receive a reset link</p>
+            <p className="text-gray-600 text-sm">Enter your email to receive a password reset link</p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleForgotPassword} className="space-y-4">
@@ -120,12 +133,13 @@ const LoginForm = () => {
                   onChange={(e) => setForgotPasswordEmail(e.target.value)}
                   placeholder="Enter your email address"
                   required
+                  disabled={forgotPasswordLoading}
                 />
               </div>
 
               <Button 
                 type="submit"
-                disabled={forgotPasswordLoading}
+                disabled={forgotPasswordLoading || !forgotPasswordEmail.trim()}
                 className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-semibold py-6 text-lg"
               >
                 {forgotPasswordLoading ? 'Sending Reset Link...' : 'Send Reset Link'}
@@ -139,6 +153,7 @@ const LoginForm = () => {
                   setShowForgotPassword(false);
                   setForgotPasswordEmail('');
                 }}
+                disabled={forgotPasswordLoading}
                 className="text-gray-600 hover:text-gray-800"
               >
                 Back to Sign In
