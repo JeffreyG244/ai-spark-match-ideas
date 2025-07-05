@@ -70,3 +70,6 @@ verify_jwt = true
 
 [functions.send-reengagement-email]
 verify_jwt = true
+
+[functions.send-password-reset]
+verify_jwt = false

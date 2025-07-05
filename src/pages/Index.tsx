@@ -10,6 +10,7 @@ import FeaturesSection from '@/components/home/FeaturesSection';
 import HowItWorksSection from '@/components/home/HowItWorksSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import CallToAction from '@/components/home/CallToAction';
+import PasswordResetTest from '@/components/auth/PasswordResetTest';
 
 const Index = () => {
   const { user } = useAuth();
@@ -32,6 +33,11 @@ const Index = () => {
         <HowItWorksSection />
 
         <TestimonialsSection />
+
+        {/* Temporary Password Reset Test - Remove after testing */}
+        <div className="flex justify-center py-8">
+          <PasswordResetTest />
+        </div>
 
         <CallToAction showButton={!user} />
       </div>

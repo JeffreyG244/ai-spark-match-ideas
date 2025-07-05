@@ -65,8 +65,9 @@ const LoginForm = () => {
 
     setForgotPasswordLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
-        redirectTo: `${window.location.origin}/auth`
+      // Use our custom password reset function to bypass Supabase rate limits
+      const { error } = await supabase.functions.invoke('send-password-reset', {
+        body: { email: forgotPasswordEmail }
       });
 
       if (error) {
@@ -78,7 +79,7 @@ const LoginForm = () => {
       } else {
         toast({
           title: 'Reset Email Sent',
-          description: 'If an account with this email exists, a password reset link has been sent.',
+          description: 'If an account with this email exists, a password reset link has been sent to your email.',
         });
         setShowForgotPassword(false);
         setForgotPasswordEmail('');

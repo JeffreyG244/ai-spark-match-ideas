@@ -1185,6 +1185,27 @@ export type Database = {
         }
         Relationships: []
       }
+      welcome_emails: {
+        Row: {
+          email: string
+          id: string
+          name: string
+          sent_at: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          name: string
+          sent_at?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          name?: string
+          sent_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       geography_columns: {
