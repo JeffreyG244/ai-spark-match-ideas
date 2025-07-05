@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import NavigationTabs from '@/components/navigation/NavigationTabs';
 
 interface UserProfile {
   id: string;
@@ -215,19 +216,11 @@ const Discover = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
+      <NavigationTabs />
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-pink-100 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/dashboard')}
-              className="text-gray-600 hover:text-gray-800"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Dashboard
-            </Button>
-
             <div className="flex items-center space-x-2">
               <div className="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center">
                 <Heart className="h-5 w-5 text-white" />
@@ -237,24 +230,14 @@ const Discover = () => {
               </span>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/dashboard')}
-                className="border-pink-200 text-pink-600 hover:bg-pink-50"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={signOut}
-                className="border-gray-200 text-gray-600 hover:bg-gray-50"
-              >
-                Sign Out
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={signOut}
+              className="border-gray-200 text-gray-600 hover:bg-gray-50"
+            >
+              Sign Out
+            </Button>
           </div>
         </div>
       </div>

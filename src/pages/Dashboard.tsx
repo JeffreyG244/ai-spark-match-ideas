@@ -7,6 +7,7 @@ import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import ProfileSetupSection from '@/components/dashboard/ProfileSetupSection';
 import DashboardGrid from '@/components/dashboard/DashboardGrid';
 import ProfileSetupView from '@/components/dashboard/ProfileSetupView';
+import NavigationTabs from '@/components/navigation/NavigationTabs';
 
 const Dashboard = () => {
   const { user, signOut, loading } = useAuth();
@@ -45,6 +46,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+      <NavigationTabs />
       <div className="container mx-auto p-6">
         <DashboardHeader onSignOut={signOut} />
         <WelcomeSection user={user} />

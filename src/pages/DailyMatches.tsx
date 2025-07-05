@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useDailyMatches } from '@/hooks/useDailyMatches';
 import DailyMatchCard from '@/components/discover/DailyMatchCard';
+import NavigationTabs from '@/components/navigation/NavigationTabs';
 
 const DailyMatches = () => {
   const { user, signOut } = useAuth();
@@ -51,6 +52,7 @@ const DailyMatches = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+      <NavigationTabs />
       <div className="container mx-auto p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -60,14 +62,6 @@ const DailyMatches = () => {
                 <Sparkles className="h-6 w-6 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">Daily Matches</h2>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link to="/discover">
-                <Button variant="outline">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Discover
-                </Button>
-              </Link>
             </div>
           </div>
           <Button onClick={signOut} variant="outline">

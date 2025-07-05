@@ -11,6 +11,7 @@ import { useCompatibilityAnswers } from '@/hooks/useCompatibilityAnswers';
 import { useProfileData } from '@/hooks/useProfileData';
 import { useMatches } from '@/hooks/useMatches';
 import CompatibilityScore from '@/components/discover/CompatibilityScore';
+import NavigationTabs from '@/components/navigation/NavigationTabs';
 
 const Matches = () => {
   const { user, signOut } = useAuth();
@@ -50,6 +51,7 @@ const Matches = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+      <NavigationTabs />
       <div className="container mx-auto p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
@@ -59,20 +61,6 @@ const Matches = () => {
                 <Heart className="h-6 w-6 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900">Luvlang</h2>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link to="/dashboard">
-                <Button variant="outline">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
-                </Button>
-              </Link>
-              <Link to="/daily-matches">
-                <Button className="bg-purple-600 hover:bg-purple-700">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Daily Matches
-                </Button>
-              </Link>
             </div>
           </div>
           <Button onClick={signOut} variant="outline">
@@ -146,7 +134,8 @@ const Matches = () => {
               const profile = match.match_profile;
               if (!profile) return null;
 
-              const firstName = profile.email.split('@')[0] || 'User';
+              const firstName = profile.first_name || profile.email.split('@')[0] || 'User';
+              const age = profile.age ? `, ${profile.age}` : '';
               const photo = profile.photo_urls && profile.photo_urls.length > 0 
                 ? profile.photo_urls[0] 
                 : 'https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60';
@@ -166,7 +155,7 @@ const Matches = () => {
                       />
                     </div>
                     <CardTitle className="flex items-center justify-between">
-                      <span className="text-xl">{firstName}</span>
+                      <span className="text-xl">{firstName}{age}</span>
                       <Badge className="bg-green-100 text-green-800">
                         <Heart className="h-3 w-3 mr-1 fill-current" />
                         Match!

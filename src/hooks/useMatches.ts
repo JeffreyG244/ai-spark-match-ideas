@@ -15,6 +15,9 @@ interface Match {
     email: string;
     bio: string | null;
     photo_urls: string[] | null;
+    first_name?: string;
+    age?: number;
+    gender?: string;
   };
 }
 
@@ -28,6 +31,27 @@ export const useMatches = () => {
 
     setIsLoading(true);
     try {
+      // Get user's preferences first
+      const { data: userProfileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      // Get user's orientation preferences from personality answers
+      let userPreferences = {
+        gender_preference: 'Any',
+        age_min: 18,
+        age_max: 65
+      };
+
+      if (userProfileData && (userProfileData as any).personality_answers) {
+        const answers = (userProfileData as any).personality_answers;
+        userPreferences.gender_preference = answers.partner_gender || answers.gender_preference || 'Any';
+        userPreferences.age_min = parseInt(answers.partner_age_min) || 18;
+        userPreferences.age_max = parseInt(answers.partner_age_max) || 65;
+      }
+
       // Get matches from the matches table
       const { data: matchesData, error: matchesError } = await supabase
         .from('matches')
@@ -42,7 +66,53 @@ export const useMatches = () => {
       }
 
       if (!matchesData || matchesData.length === 0) {
-        setMatches([]);
+        // If no matches in matches table, show sample profiles based on preferences
+        let genderFilter = '';
+        if (userPreferences.gender_preference !== 'Any') {
+          genderFilter = userPreferences.gender_preference;
+        }
+
+        const { data: sampleProfiles, error: sampleError } = await supabase
+          .from('dating_profiles')
+          .select('*')
+          .gte('age', userPreferences.age_min)
+          .lte('age', userPreferences.age_max)
+          .limit(10);
+
+        if (sampleError) {
+          console.error('Error loading sample profiles:', sampleError);
+          setMatches([]);
+          return;
+        }
+
+        // Filter by gender preference if specified
+        let filteredProfiles = sampleProfiles || [];
+        if (userPreferences.gender_preference !== 'Any') {
+          filteredProfiles = filteredProfiles.filter(profile => 
+            profile.gender === userPreferences.gender_preference
+          );
+        }
+
+        // Convert sample profiles to match format
+        const sampleMatches = filteredProfiles.map((profile, index) => ({
+          id: `sample-${profile.id}`,
+          user_id: user.id,
+          matched_user_id: profile.user_id,
+          compatibility: Math.floor(Math.random() * 30) + 70, // Random compatibility 70-100%
+          created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(), // Random date within last week
+          status: 'accepted',
+          match_profile: {
+            user_id: profile.user_id,
+            email: profile.email,
+            bio: profile.bio,
+            photo_urls: profile.photo_urls,
+            first_name: profile.first_name,
+            age: profile.age,
+            gender: profile.gender
+          }
+        }));
+
+        setMatches(sampleMatches);
         return;
       }
 
@@ -51,10 +121,10 @@ export const useMatches = () => {
         return match.user_id === user.id ? match.matched_user_id : match.user_id;
       });
 
-      // Get profiles for the other users
+      // Get profiles for the other users from dating_profiles table
       const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, email, bio, photo_urls')
+        .from('dating_profiles')
+        .select('*')
         .in('user_id', otherUserIds);
 
       if (profilesError) {
@@ -78,7 +148,10 @@ export const useMatches = () => {
             user_id: profile.user_id,
             email: profile.email || '',
             bio: profile.bio,
-            photo_urls: profile.photo_urls
+            photo_urls: profile.photo_urls,
+            first_name: profile.first_name,
+            age: profile.age,
+            gender: profile.gender
           } : undefined
         };
       });
