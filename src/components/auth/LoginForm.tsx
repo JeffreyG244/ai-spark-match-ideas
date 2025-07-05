@@ -53,8 +53,10 @@ const LoginForm = () => {
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('handleForgotPassword called with email:', forgotPasswordEmail);
     
     if (!forgotPasswordEmail) {
+      console.log('No email provided');
       toast({
         title: 'Email Required',
         description: 'Please enter your email address.',
@@ -63,20 +65,25 @@ const LoginForm = () => {
       return;
     }
 
+    console.log('Starting password reset process...');
     setForgotPasswordLoading(true);
     try {
+      console.log('Calling supabase.auth.resetPasswordForEmail...');
       const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
         redirectTo: `${window.location.origin}/auth`
       });
+
+      console.log('Password reset result:', { error });
 
       if (error) {
         console.error('Password reset error:', error);
         toast({
           title: 'Reset Error',
-          description: 'There was a problem sending the reset email. Please try again.',
+          description: `Error: ${error.message}. Please try again.`,
           variant: 'destructive'
         });
       } else {
+        console.log('Password reset email sent successfully');
         toast({
           title: 'Reset Email Sent',
           description: 'If an account with this email exists, a password reset link has been sent.',
@@ -85,13 +92,15 @@ const LoginForm = () => {
         setForgotPasswordEmail('');
       }
     } catch (error) {
-      console.error('Password reset error:', error);
+      console.error('Password reset unexpected error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       toast({
         title: 'Reset Error',
-        description: 'There was a problem. Please try again or contact support.',
+        description: `Unexpected error: ${errorMessage}. Please try again or contact support.`,
         variant: 'destructive'
       });
     } finally {
+      console.log('Password reset process completed');
       setForgotPasswordLoading(false);
     }
   };
