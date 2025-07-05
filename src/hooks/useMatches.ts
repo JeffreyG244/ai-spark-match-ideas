@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -73,17 +72,28 @@ export const useMatches = () => {
 
       if (!matchesData || matchesData.length === 0) {
         // If no matches in matches table, show sample profiles based on preferences
-        let genderFilter = '';
-        if (userPreferences.gender_preference !== 'Any') {
-          genderFilter = userPreferences.gender_preference;
-        }
+        console.log('No matches found, getting sample profiles with preference:', userPreferences.gender_preference);
 
-        const { data: sampleProfiles, error: sampleError } = await supabase
+        let query = supabase
           .from('dating_profiles')
           .select('*')
           .gte('age', userPreferences.age_min)
-          .lte('age', userPreferences.age_max)
-          .limit(10);
+          .lte('age', userPreferences.age_max);
+
+        // Filter by gender preference if not 'Everyone'
+        if (userPreferences.gender_preference !== 'Everyone') {
+          let genderFilter = userPreferences.gender_preference;
+          
+          // Convert preference format to match database - answers store "Men"/"Women"/"Non-binary"
+          if (genderFilter === 'Men') genderFilter = 'Male';
+          if (genderFilter === 'Women') genderFilter = 'Female';
+          if (genderFilter === 'Non-binary') genderFilter = 'Non-binary';
+          
+          console.log('Filtering sample profiles by gender:', genderFilter);
+          query = query.eq('gender', genderFilter);
+        }
+
+        const { data: sampleProfiles, error: sampleError } = await query.limit(10);
 
         if (sampleError) {
           console.error('Error loading sample profiles:', sampleError);

@@ -48,12 +48,59 @@ export const useDailyMatches = () => {
       if (!matchesData || matchesData.length === 0) {
         console.log('No daily matches found, getting profiles for matching...');
         
-        // Get all available profiles except user's own and already swiped
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
+        // Get user's preferences first
+        let userPreferences = {
+          gender_preference: 'Everyone',
+          age_min: 18,
+          age_max: 65
+        };
+
+        const { data: compatibilityData } = await supabase
+          .from('compatibility_answers')
+          .select('answers')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (compatibilityData?.answers) {
+          const answers = compatibilityData.answers as any;
+          userPreferences.gender_preference = answers['12'] || 'Everyone';
+          console.log('Daily matches - User gender preference:', userPreferences.gender_preference);
+        }
+        
+        // Try dating_profiles first, then fallback to profiles
+        let query = supabase
+          .from('dating_profiles')
           .select('*')
-          .neq('user_id', user.id)
-          .limit(10);
+          .gte('age', userPreferences.age_min)
+          .lte('age', userPreferences.age_max);
+
+        // Filter by gender preference if not 'Everyone'
+        if (userPreferences.gender_preference !== 'Everyone') {
+          let genderFilter = userPreferences.gender_preference;
+          
+          // Convert preference format to match database
+          if (genderFilter === 'Men') genderFilter = 'Male';
+          if (genderFilter === 'Women') genderFilter = 'Female';
+          if (genderFilter === 'Non-binary') genderFilter = 'Non-binary';
+          
+          console.log('Daily matches - Filtering by gender:', genderFilter);
+          query = query.eq('gender', genderFilter);
+        }
+
+        let { data: profilesData, error: profilesError } = await query.limit(10);
+
+        // If no dating profiles, fallback to regular profiles
+        if (!profilesData || profilesData.length === 0) {
+          console.log('No dating profiles found, falling back to regular profiles');
+          const { data: fallbackProfiles, error: fallbackError } = await supabase
+            .from('profiles')
+            .select('*')
+            .neq('user_id', user.id)
+            .limit(10);
+          
+          profilesData = fallbackProfiles as any;
+          profilesError = fallbackError;
+        }
 
         if (profilesError) {
           console.error('Error loading profiles for matching:', profilesError);
@@ -64,22 +111,29 @@ export const useDailyMatches = () => {
         console.log('Found profiles for matching:', profilesData?.length);
 
         if (profilesData && profilesData.length > 0) {
-          // Convert profiles to daily matches format
-          const convertedMatches = profilesData.map(profile => ({
-            id: `match-${user.id}-${profile.user_id}`,
-            user_id: user.id,
-            suggested_user_id: profile.user_id,
-            compatibility_score: Math.floor(Math.random() * 30) + 60, // 60-90%
-            suggested_date: new Date().toISOString().split('T')[0],
-            viewed: false,
-            created_at: new Date().toISOString(),
-            user_profile: {
-              user_id: profile.user_id,
-              email: profile.email || '',
-              bio: profile.bio,
-              photo_urls: profile.photo_urls
-            }
-          }));
+          // Convert profiles to daily matches format (handle both dating_profiles and profiles)
+          const convertedMatches = profilesData.map(profile => {
+            // Handle different table structures
+            const isFromDatingProfiles = 'first_name' in profile;
+            const userId = profile.user_id || (profile as any).id;
+            const email = profile.email || '';
+            
+            return {
+              id: `match-${user.id}-${userId}`,
+              user_id: user.id,
+              suggested_user_id: userId,
+              compatibility_score: Math.floor(Math.random() * 30) + 60, // 60-90%
+              suggested_date: new Date().toISOString().split('T')[0],
+              viewed: false,
+              created_at: new Date().toISOString(),
+              user_profile: {
+                user_id: userId,
+                email: email,
+                bio: profile.bio,
+                photo_urls: profile.photo_urls
+              }
+            };
+          });
 
           setDailyMatches(convertedMatches);
           console.log(`Created ${convertedMatches.length} matches from available profiles`);
@@ -131,12 +185,24 @@ export const useDailyMatches = () => {
     try {
       console.log('Generating daily matches for user:', user.id);
       
-      // Get available profiles for matching
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
+      // Get available profiles for matching - try dating_profiles first
+      let { data: profiles, error: profilesError } = await supabase
+        .from('dating_profiles')
         .select('*')
-        .neq('user_id', user.id)
         .limit(matchCount * 2); // Get more to filter from
+
+      // If no dating profiles, fallback to regular profiles
+      if (!profiles || profiles.length === 0) {
+        const fallbackResult = await supabase
+          .from('profiles')
+          .select('*')
+          .neq('user_id', user.id)
+          .limit(matchCount * 2);
+        
+        // Handle the different data structure by casting to any
+        profiles = fallbackResult.data as any;
+        profilesError = fallbackResult.error;
+      }
 
       if (profilesError) {
         console.error('Error fetching profiles for matching:', profilesError);
@@ -145,13 +211,16 @@ export const useDailyMatches = () => {
 
       if (profiles && profiles.length > 0) {
         // Create daily matches
-        const dailyMatchData = profiles.slice(0, matchCount).map(profile => ({
-          user_id: user.id,
-          suggested_user_id: profile.user_id,
-          compatibility_score: Math.floor(Math.random() * 30) + 60, // 60-90% professional compatibility
-          suggested_date: new Date().toISOString().split('T')[0],
-          viewed: false
-        }));
+        const dailyMatchData = profiles.slice(0, matchCount).map(profile => {
+          const userId = profile.user_id || (profile as any).id;
+          return {
+            user_id: user.id,
+            suggested_user_id: userId,
+            compatibility_score: Math.floor(Math.random() * 30) + 60, // 60-90% professional compatibility
+            suggested_date: new Date().toISOString().split('T')[0],
+            viewed: false
+          };
+        });
 
         const { error: insertError } = await supabase
           .from('daily_matches')
