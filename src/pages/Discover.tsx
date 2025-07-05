@@ -70,9 +70,9 @@ const Discover = () => {
 
         if (compatibilityData?.answers) {
           const answers = compatibilityData.answers as any;
-          userPreferences.gender_preference = answers.partner_gender || answers.interested_in || 'Any';
-          userPreferences.age_min = parseInt(answers.partner_age_min || answers.age_preference_min) || 18;
-          userPreferences.age_max = parseInt(answers.partner_age_max || answers.age_preference_max) || 65;
+          // Question 12 is "What partner gender are you interested in?"
+          userPreferences.gender_preference = answers['12'] || 'Everyone';
+          console.log('User gender preference from answers:', userPreferences.gender_preference);
         }
       }
 
@@ -85,15 +85,16 @@ const Discover = () => {
         .gte('age', userPreferences.age_min)
         .lte('age', userPreferences.age_max);
 
-        // Filter by gender preference if not 'Any'
-      if (userPreferences.gender_preference !== 'Any' && userPreferences.gender_preference !== 'everyone') {
+        // Filter by gender preference if not 'Everyone'
+      if (userPreferences.gender_preference !== 'Everyone') {
         let genderFilter = userPreferences.gender_preference;
         
-        // Convert preference format to match database
-        if (genderFilter === 'men') genderFilter = 'Male';
-        if (genderFilter === 'women') genderFilter = 'Female';
-        if (genderFilter === 'non_binary') genderFilter = 'Non-binary';
+        // Convert preference format to match database - answers store "Men"/"Women"/"Non-binary"
+        if (genderFilter === 'Men') genderFilter = 'Male';
+        if (genderFilter === 'Women') genderFilter = 'Female';
+        if (genderFilter === 'Non-binary') genderFilter = 'Non-binary';
         
+        console.log('Filtering profiles by gender:', genderFilter);
         query = query.eq('gender', genderFilter);
       }
 

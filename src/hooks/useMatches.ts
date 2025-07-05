@@ -96,14 +96,16 @@ export const useMatches = () => {
         if (userPreferences.gender_preference !== 'Everyone') {
           filteredProfiles = filteredProfiles.filter(profile => {
             const profileGender = profile.gender?.toLowerCase();
-            const preferredGender = userPreferences.gender_preference.toLowerCase();
+            const preferredGender = userPreferences.gender_preference;
             
-            if (preferredGender === 'men') return profileGender === 'male';
-            if (preferredGender === 'women') return profileGender === 'female';
-            if (preferredGender === 'non-binary') return profileGender === 'non-binary';
+            // Match stored answers "Men"/"Women"/"Non-binary" to database gender values
+            if (preferredGender === 'Men') return profileGender === 'male';
+            if (preferredGender === 'Women') return profileGender === 'female';
+            if (preferredGender === 'Non-binary') return profileGender === 'non-binary';
             
             return true;
           });
+          console.log('Filtered sample profiles by gender preference:', userPreferences.gender_preference, 'Count:', filteredProfiles.length);
         }
 
         // Convert sample profiles to match format
