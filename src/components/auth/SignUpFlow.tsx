@@ -114,9 +114,23 @@ const SignUpFlow = () => {
         throw error;
       }
 
+      // Send welcome email
+      try {
+        await supabase.functions.invoke('send-welcome-email', {
+          body: {
+            email: formData.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send welcome email:', emailError);
+        // Don't block the signup process if email fails
+      }
+
       toast({
         title: 'Welcome to the community!',
-        description: 'Your profile has been created successfully.',
+        description: 'Your profile has been created successfully. Check your email for a welcome message!',
       });
 
       // Redirect to dashboard
