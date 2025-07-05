@@ -85,10 +85,22 @@ const SignUpFlow = () => {
   };
 
   const saveProfile = async () => {
-    if (!user) return;
+    console.log('saveProfile called, user:', user);
+    
+    if (!user) {
+      console.error('No user found when trying to save profile');
+      toast({
+        title: 'Authentication Error',
+        description: 'Please sign in again to complete your profile.',
+        variant: 'destructive'
+      });
+      return;
+    }
 
     setLoading(true);
     try {
+      console.log('Creating profile with data:', formData);
+      
       const profileData = {
         user_id: user.id,
         email: formData.email,
@@ -98,11 +110,21 @@ const SignUpFlow = () => {
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
-        .from('profiles')
-        .upsert(profileData);
+      console.log('Attempting to save profile data:', profileData);
 
-      if (error) throw error;
+      const { data, error } = await supabase
+        .from('profiles')
+        .upsert(profileData)
+        .select();
+
+      console.log('Profile save result:', { data, error });
+
+      if (error) {
+        console.error('Profile save error:', error);
+        throw error;
+      }
+
+      console.log('Profile saved successfully:', data);
 
       toast({
         title: 'Welcome to the community!',
@@ -110,12 +132,15 @@ const SignUpFlow = () => {
       });
 
       // Redirect to dashboard
-      window.location.href = '/dashboard';
+      setTimeout(() => {
+        window.location.href = '/dashboard';
+      }, 1000);
     } catch (error) {
       console.error('Profile creation error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: 'Profile Creation Failed',
-        description: 'Please try again or contact support.',
+        description: `Error: ${errorMessage}. Please try again or contact support.`,
         variant: 'destructive'
       });
     } finally {
