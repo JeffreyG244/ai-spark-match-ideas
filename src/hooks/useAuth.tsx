@@ -11,6 +11,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, confirmPassword: string, firstName: string, lastName: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -88,6 +89,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('send-password-reset', {
+        body: { email }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Password Reset Sent',
+        description: 'Check your email for password reset instructions.',
+      });
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to send password reset email',
+        variant: 'destructive'
+      });
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -96,7 +122,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut, signIn, signUp }}>
+    <AuthContext.Provider value={{ user, session, loading, signOut, signIn, signUp, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

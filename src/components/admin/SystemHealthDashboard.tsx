@@ -19,6 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import SecurityMonitor from '../security/SecurityMonitor';
 import MessagingTest from '../messaging/MessagingTest';
+import DataSeeder from './DataSeeder';
 
 interface SystemStats {
   totalUsers: number;
@@ -324,6 +325,9 @@ const SystemHealthDashboard = () => {
 
       {/* Messaging Test */}
       <MessagingTest />
+
+      {/* Data Seeder */}
+      <DataSeeder />
 
       {/* System Info */}
       <Card>
