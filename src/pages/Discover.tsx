@@ -25,6 +25,7 @@ interface UserProfile {
   age: number;
   location: string;
   compatibility_score?: number;
+  gender?: string;
 }
 
 const Discover = () => {
@@ -47,47 +48,34 @@ const Discover = () => {
       setLoading(true);
       console.log('Fetching profiles for discovery...');
       
-      // Get user's preferences first
+      if (!user?.id) {
+        console.log('No user found, redirecting to auth');
+        navigate('/auth');
+        return;
+      }
+
+      // Get user's preferences and gender from compatibility answers
       let userPreferences = {
-        gender_preference: 'Any',
+        gender_preference: 'Everyone',
         age_min: 18,
         age_max: 65
       };
-
       let userGender = 'Unknown';
-      let compatibilityData = null;
 
-      if (user?.id) {
-        const { data: userProfileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .maybeSingle();
+      const { data: compatibilityData } = await supabase
+        .from('compatibility_answers')
+        .select('answers')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-        // Get user's preferences from compatibility answers
-        const result = await supabase
-          .from('compatibility_answers')
-          .select('answers')
-          .eq('user_id', user.id)
-          .maybeSingle();
-        
-        compatibilityData = result.data;
-
-        if (compatibilityData?.answers) {
-          const answers = compatibilityData.answers as any;
-          // Question 12 is "What partner gender are you interested in?"
-          userPreferences.gender_preference = answers['12'] || 'Everyone';
-          // Question 7 is user's own gender
-          userGender = answers['7'] || 'Unknown';
-          console.log('User preferences - Gender:', userGender, 'Seeking:', userPreferences.gender_preference);
-        }
+      if (compatibilityData?.answers) {
+        const answers = compatibilityData.answers as any;
+        userPreferences.gender_preference = answers['12'] || 'Everyone';
+        userGender = answers['7'] || 'Unknown';
+        console.log('User preferences - Gender:', userGender, 'Seeking:', userPreferences.gender_preference);
       }
 
-      console.log('User preferences:', userPreferences);
-      
-      // Build query with BIDIRECTIONAL matching
-      console.log('Applying bidirectional filtering for discover...');
-      
+      // Get profiles from dating_profiles with bidirectional matching
       let { data: profilesWithAnswers, error: profilesError } = await supabase
         .from('dating_profiles')
         .select(`
@@ -95,98 +83,11 @@ const Discover = () => {
           compatibility_answers!inner(answers)
         `)
         .gte('age', userPreferences.age_min)
-        .lte('age', userPreferences.age_max);
+        .lte('age', userPreferences.age_max)
+        .neq('user_id', user.id);
 
-      let datingProfilesData: any[] = [];
-      let datingError = profilesError;
-
-      if (profilesWithAnswers && profilesWithAnswers.length > 0) {
-        // Apply BIDIRECTIONAL filtering
-        datingProfilesData = profilesWithAnswers.filter(profile => {
-          const profileAnswers = (profile as any).compatibility_answers?.[0]?.answers as any;
-          if (!profileAnswers) return false;
-
-          const profileGender = profile.gender?.toLowerCase();
-          const profileSeekingGender = profileAnswers['12']; // What they're seeking
-
-          // USER WANTS TO SEE THIS PROFILE
-          let userWantsProfile = false;
-          if (userPreferences.gender_preference === 'Everyone') {
-            userWantsProfile = true;
-          } else if (userPreferences.gender_preference === 'Men' && profileGender === 'male') {
-            userWantsProfile = true;
-          } else if (userPreferences.gender_preference === 'Women' && profileGender === 'female') {
-            userWantsProfile = true;
-          } else if (userPreferences.gender_preference === 'Non-binary' && profileGender === 'non-binary') {
-            userWantsProfile = true;
-          }
-
-          // PROFILE WANTS TO SEE USER (BIDIRECTIONAL CHECK)
-          let profileWantsUser = false;
-          if (profileSeekingGender === 'Everyone') {
-            profileWantsUser = true;
-          } else if (profileSeekingGender === 'Men' && userGender === 'Male') {
-            profileWantsUser = true;
-          } else if (profileSeekingGender === 'Women' && userGender === 'Female') {
-            profileWantsUser = true;
-          } else if (profileSeekingGender === 'Non-binary' && userGender === 'Non-binary') {
-            profileWantsUser = true;
-          }
-
-          const match = userWantsProfile && profileWantsUser;
-          if (match) {
-            console.log(`✅ Discover bidirectional match: ${userGender} user seeking ${userPreferences.gender_preference} ↔ ${profileGender} profile seeking ${profileSeekingGender}`);
-          } else {
-            console.log(`❌ Discover mismatch: ${userGender} user seeking ${userPreferences.gender_preference} ↔ ${profileGender} profile seeking ${profileSeekingGender}`);
-          }
-
-          return match;
-        });
-      } else {
-        // Fallback to basic filtering if no profiles with answers
-        console.log('No profiles with compatibility answers, using basic filtering');
-        let basicQuery = supabase
-          .from('dating_profiles')
-          .select('*')
-          .gte('age', userPreferences.age_min)
-          .lte('age', userPreferences.age_max);
-
-        if (userPreferences.gender_preference !== 'Everyone') {
-          let genderFilter = userPreferences.gender_preference;
-          if (genderFilter === 'Men') genderFilter = 'Male';
-          if (genderFilter === 'Women') genderFilter = 'Female';
-          if (genderFilter === 'Non-binary') genderFilter = 'Non-binary';
-          basicQuery = basicQuery.eq('gender', genderFilter);
-        }
-
-        const result = await basicQuery.limit(50);
-        datingProfilesData = result.data || [];
-        datingError = result.error;
-      }
-
-      let profilesData: any[] = [];
-      let error = datingError;
-
-      console.log(`Found ${datingProfilesData?.length || 0} dating profiles matching preferences`);
-
-      if (datingProfilesData && datingProfilesData.length > 0) {
-        profilesData = datingProfilesData;
-      } else {
-        // If no dating profiles, fall back to user profiles
-        let fallbackQuery = supabase.from('profiles').select('*');
-        
-        if (user?.id) {
-          fallbackQuery = fallbackQuery.neq('user_id', user.id);
-        }
-
-        const result = await fallbackQuery.limit(50);
-        profilesData = result.data || [];
-        error = result.error;
-        console.log(`Fallback to ${profilesData?.length || 0} user profiles`);
-      }
-
-      if (error) {
-        console.error('Error fetching profiles:', error);
+      if (profilesError) {
+        console.error('Error loading profiles:', profilesError);
         toast({
           title: 'Error',
           description: 'Failed to load profiles. Please try again.',
@@ -196,75 +97,72 @@ const Discover = () => {
         return;
       }
 
-      console.log(`Found ${profilesData?.length || 0} profiles`);
+      // Apply strict bidirectional filtering
+      const bidirectionalMatches = profilesWithAnswers?.filter(profile => {
+        const profileAnswers = (profile as any).compatibility_answers?.[0]?.answers as any;
+        if (!profileAnswers) return false;
 
-      if (!profilesData || profilesData.length === 0) {
-        setProfiles([]);
-        return;
-      }
+        const profileGender = profile.gender?.toLowerCase();
+        const profileSeekingGender = profileAnswers['12']; // What they're seeking
 
-      // Get swiped user IDs to exclude
-      let swipedUserIds: string[] = [];
-      if (user?.id) {
-        const { data: swipeData } = await supabase
-          .from('swipe_actions')
-          .select('swiped_user_id')
-          .eq('swiper_id', user.id);
+        // USER WANTS TO SEE THIS PROFILE
+        let userWantsProfile = false;
+        if (userPreferences.gender_preference === 'Everyone') {
+          userWantsProfile = true;
+        } else if (userPreferences.gender_preference === 'Men' && profileGender === 'male') {
+          userWantsProfile = true;
+        } else if (userPreferences.gender_preference === 'Women' && profileGender === 'female') {
+          userWantsProfile = true;
+        } else if (userPreferences.gender_preference === 'Non-binary' && profileGender === 'non-binary') {
+          userWantsProfile = true;
+        }
+
+        // PROFILE WANTS TO SEE USER (BIDIRECTIONAL CHECK)
+        let profileWantsUser = false;
+        if (profileSeekingGender === 'Everyone') {
+          profileWantsUser = true;
+        } else if (profileSeekingGender === 'Men' && userGender === 'Male') {
+          profileWantsUser = true;
+        } else if (profileSeekingGender === 'Women' && userGender === 'Female') {
+          profileWantsUser = true;
+        } else if (profileSeekingGender === 'Non-binary' && userGender === 'Non-binary') {
+          profileWantsUser = true;
+        }
+
+        const isMatch = userWantsProfile && profileWantsUser;
+        console.log(`Profile ${profile.first_name}: User wants: ${userWantsProfile}, Profile wants user: ${profileWantsUser}, Match: ${isMatch}`);
         
-        swipedUserIds = swipeData?.map(s => s.swiped_user_id) || [];
-      }
+        return isMatch;
+      }) || [];
 
-      // Transform profiles
-      const transformedProfiles = profilesData
-        .filter(profile => {
-          // For dating_profiles, filter by id; for user profiles, filter by user_id
-          const profileId = profile.user_id || profile.id;
-          return !swipedUserIds.includes(profileId);
-        })
-        .map((profile) => {
-          // Check if this is from dating_profiles table (has first_name, last_name, age)
-          if (profile.first_name && profile.last_name && profile.age) {
-            return {
-              id: profile.id,
-              user_id: profile.user_id || profile.id,
-              email: profile.email,
-              bio: profile.bio,
-              photo_urls: profile.photo_urls || ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
-              firstName: profile.first_name,
-              lastName: profile.last_name,
-              age: profile.age,
-              location: `${profile.city}, ${profile.state}`,
-              compatibility_score: Math.floor(Math.random() * 30) + 60
-            };
-          } else {
-            // Transform user profiles (fallback)
-            const emailName = profile.email?.split('@')[0] || 'User';
-            const nameParts = emailName.split('.');
-            const firstName = nameParts[0]?.charAt(0).toUpperCase() + nameParts[0]?.slice(1) || 'Professional';
-            const lastName = nameParts[1]?.charAt(0).toUpperCase() + nameParts[1]?.slice(1) || 'User';
-            
-            const compatibilityScore = Math.floor(Math.random() * 30) + 60;
-            const age = Math.floor(Math.random() * 20) + 25;
-            const locations = ['New York, NY', 'Los Angeles, CA', 'Chicago, IL', 'Houston, TX', 'Phoenix, AZ'];
-            const location = locations[Math.floor(Math.random() * locations.length)];
-            
-            return {
-              id: profile.user_id,
-              user_id: profile.user_id,
-              email: profile.email || 'Professional User',
-              bio: profile.bio || 'Experienced professional looking for meaningful connections.',
-              photo_urls: profile.photo_urls && profile.photo_urls.length > 0 
-                ? profile.photo_urls 
-                : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
-              firstName,
-              lastName,
-              age,
-              location,
-              compatibility_score: compatibilityScore
-            };
-          }
-        });
+      console.log(`Found ${bidirectionalMatches.length} bidirectional matches`);
 
+      // Get already swiped user IDs to exclude
+      const { data: swipeData } = await supabase
+        .from('swipe_actions')
+        .select('swiped_user_id')
+        .eq('swiper_id', user.id);
+      
+      const swipedUserIds = swipeData?.map(s => s.swiped_user_id) || [];
+
+      // Filter out already swiped profiles and transform data
+      const transformedProfiles = bidirectionalMatches
+        .filter(profile => !swipedUserIds.includes(profile.user_id))
+        .map((profile) => ({
+          id: profile.id,
+          user_id: profile.user_id,
+          email: profile.email,
+          bio: profile.bio,
+          photo_urls: profile.photo_urls || ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+          firstName: profile.first_name,
+          lastName: profile.last_name,
+          age: profile.age,
+          location: `${profile.city}, ${profile.state}`,
+          compatibility_score: Math.floor(Math.random() * 30) + 60,
+          gender: profile.gender
+        }));
+
+      // Sort by compatibility score
       transformedProfiles.sort((a, b) => (b.compatibility_score || 0) - (a.compatibility_score || 0));
       
       setProfiles(transformedProfiles);
@@ -272,7 +170,12 @@ const Discover = () => {
       if (transformedProfiles.length > 0) {
         toast({
           title: 'Profiles Loaded',
-          description: `Found ${transformedProfiles.length} potential matches!`
+          description: `Found ${transformedProfiles.length} compatible matches!`
+        });
+      } else {
+        toast({
+          title: 'No Matches Found',
+          description: 'Try adjusting your preferences or check back later for new profiles.'
         });
       }
     } catch (error) {
@@ -295,6 +198,13 @@ const Discover = () => {
     
     if (user?.id) {
       await recordSwipe(currentProfile.user_id, direction);
+      
+      if (direction === 'like') {
+        toast({
+          title: '💖 Great choice!',
+          description: `You liked ${currentProfile.firstName}. They'll be notified if it's a match!`,
+        });
+      }
     }
     
     setTimeout(() => {
@@ -320,10 +230,11 @@ const Discover = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-love-background via-white to-love-surface">
+        <NavigationTabs />
         <div className="container mx-auto p-6">
           <div className="flex justify-center items-center min-h-[400px]">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-love-primary"></div>
-            <span className="ml-3 text-love-text-light">Loading profiles...</span>
+            <span className="ml-3 text-love-text-light">Loading compatible profiles...</span>
           </div>
         </div>
       </div>
@@ -333,6 +244,7 @@ const Discover = () => {
   return (
     <div className="min-h-screen" style={{ background: 'var(--love-gradient-bg)' }}>
       <NavigationTabs />
+      
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-love-primary/20 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
@@ -345,7 +257,6 @@ const Discover = () => {
                 Discover
               </span>
             </div>
-
             <Button
               variant="outline"
               size="sm"
@@ -364,7 +275,7 @@ const Discover = () => {
             Discover Your Perfect Match
           </h3>
           <p className="text-love-text-light">
-            {hasMoreProfiles ? `${profiles.length - currentIndex} curated matches waiting` : 'No more profiles to show'}
+            {hasMoreProfiles ? `${profiles.length - currentIndex} compatible matches waiting` : 'No more profiles to show'}
           </p>
         </div>
 
@@ -379,7 +290,7 @@ const Discover = () => {
                   <div>
                     <h3 className="text-2xl font-bold text-love-text mb-3">You're All Caught Up!</h3>
                     <p className="text-love-text-light mb-6 max-w-sm mx-auto">
-                      You've seen all available matches. Check back later for new profiles, or adjust your preferences to discover more connections.
+                      You've seen all compatible matches. Check back later for new profiles, or adjust your preferences to discover more connections.
                     </p>
                   </div>
                   <div className="space-y-3">

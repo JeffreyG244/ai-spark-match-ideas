@@ -11,6 +11,7 @@ import HowItWorksSection from '@/components/home/HowItWorksSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import CallToAction from '@/components/home/CallToAction';
 import PasswordResetTest from '@/components/auth/PasswordResetTest';
+import SystemHealthDashboard from '@/components/admin/SystemHealthDashboard';
 
 const Index = () => {
   const { user } = useAuth();
@@ -33,6 +34,14 @@ const Index = () => {
         <HowItWorksSection />
 
         <TestimonialsSection />
+
+        {/* Temporary System Admin Panel - Remove after testing */}
+        {user && (
+          <div className="py-8">
+            <h2 className="text-2xl font-bold mb-6 text-center">🔧 Admin Panel (Testing)</h2>
+            <SystemHealthDashboard />
+          </div>
+        )}
 
         {/* Temporary Password Reset Test - Remove after testing */}
         <div className="flex justify-center py-8">

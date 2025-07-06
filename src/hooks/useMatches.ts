@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,19 +31,11 @@ export const useMatches = () => {
 
     setIsLoading(true);
     try {
-      // Get user's preferences first
-      const { data: userProfileData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      console.log('Loading matches for user:', user.id);
 
-      // Get user's preferences from compatibility answers
-      let userPreferences = {
-        gender_preference: 'Everyone',
-        age_min: 18,
-        age_max: 65
-      };
+      // Get user's gender and preferences for proper filtering
+      let userGender = 'Unknown';
+      let userPreferences = { gender_preference: 'Everyone' };
 
       const { data: compatibilityData } = await supabase
         .from('compatibility_answers')
@@ -52,9 +45,9 @@ export const useMatches = () => {
 
       if (compatibilityData?.answers) {
         const answers = compatibilityData.answers as any;
-        // Question 12 is "What partner gender are you interested in?"
+        userGender = answers['7'] || 'Unknown';
         userPreferences.gender_preference = answers['12'] || 'Everyone';
-        console.log('User gender preference:', userPreferences.gender_preference);
+        console.log('User gender:', userGender, 'seeking:', userPreferences.gender_preference);
       }
 
       // Get matches from the matches table
@@ -71,103 +64,30 @@ export const useMatches = () => {
       }
 
       if (!matchesData || matchesData.length === 0) {
-        // If no matches in matches table, show sample profiles with BIDIRECTIONAL matching
-        console.log('No matches found, applying bidirectional filtering for:', userPreferences.gender_preference);
+        console.log('No matches found, applying bidirectional filtering for sample profiles');
 
-        // Get user's own gender from compatibility answers
-        let userGender = 'Unknown';
-        if (compatibilityData?.answers) {
-          const answers = compatibilityData.answers as any;
-          userGender = answers['7'] || 'Unknown'; // Question 7 is user's gender identity
-          console.log('Current user gender:', userGender);
-        }
-
-        // Apply bidirectional matching logic
-        let query = supabase
+        // Get profiles with bidirectional matching applied
+        let { data: profilesWithAnswers, error: profilesError } = await supabase
           .from('dating_profiles')
           .select(`
             *,
             compatibility_answers!inner(answers)
           `)
-          .gte('age', userPreferences.age_min)
-          .lte('age', userPreferences.age_max);
+          .neq('user_id', user.id);
 
-        const { data: profilesWithAnswers, error: profilesError } = await query;
-
-        if (profilesError) {
-          console.error('Error loading profiles with answers:', profilesError);
-          // Fallback to basic filtering without bidirectional matching
-          let basicQuery = supabase
-            .from('dating_profiles')
-            .select('*')
-            .gte('age', userPreferences.age_min)
-            .lte('age', userPreferences.age_max);
-
-          if (userPreferences.gender_preference !== 'Everyone') {
-            let genderFilter = userPreferences.gender_preference;
-            if (genderFilter === 'Men') genderFilter = 'Male';
-            if (genderFilter === 'Women') genderFilter = 'Female';
-            if (genderFilter === 'Non-binary') genderFilter = 'Non-binary';
-            basicQuery = basicQuery.eq('gender', genderFilter);
-          }
-
-          const { data: sampleProfiles, error: sampleError } = await basicQuery.limit(10);
-
-          if (sampleError) {
-            console.error('Error loading basic profiles:', sampleError);
-            setMatches([]);
-            return;
-          }
-
-          // Apply basic filtering for fallback
-          let filteredProfiles = sampleProfiles || [];
-          if (userPreferences.gender_preference !== 'Everyone') {
-            filteredProfiles = filteredProfiles.filter(profile => {
-              const profileGender = profile.gender?.toLowerCase();
-              const preferredGender = userPreferences.gender_preference;
-              
-              if (preferredGender === 'Men') return profileGender === 'male';
-              if (preferredGender === 'Women') return profileGender === 'female';
-              if (preferredGender === 'Non-binary') return profileGender === 'non-binary';
-              
-              return false; // Strict filtering - hide all mismatches
-            });
-          }
-
-          console.log('Basic filtered profiles count:', filteredProfiles.length);
-          
-          // Convert to matches and return
-          const basicMatches = filteredProfiles.map((profile) => ({
-            id: `sample-${profile.id}`,
-            user_id: user.id,
-            matched_user_id: profile.user_id,
-            compatibility: Math.floor(Math.random() * 30) + 70,
-            created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-            status: 'accepted',
-            match_profile: {
-              user_id: profile.user_id,
-              email: profile.email,
-              bio: profile.bio,
-              photo_urls: profile.photo_urls,
-              first_name: profile.first_name,
-              age: profile.age,
-              gender: profile.gender
-            }
-          }));
-
-          setMatches(basicMatches);
+        if (profilesError || !profilesWithAnswers) {
+          console.error('Error loading profiles:', profilesError);
+          setMatches([]);
           return;
         }
 
-        // Apply BIDIRECTIONAL filtering for profiles with compatibility answers
-        console.log('Applying bidirectional matching...');
-        const bidirectionalMatches = profilesWithAnswers?.filter(profile => {
+        // Apply strict bidirectional filtering
+        const bidirectionalMatches = profilesWithAnswers.filter(profile => {
           const profileAnswers = (profile as any).compatibility_answers?.[0]?.answers as any;
           if (!profileAnswers) return false;
 
           const profileGender = profile.gender?.toLowerCase();
-          const profileSeekingGender = profileAnswers['12']; // What they're seeking
-          const profileUserGender = profileAnswers['7']; // Their own gender
+          const profileSeekingGender = profileAnswers['12'];
 
           // USER WANTS TO SEE THIS PROFILE
           let userWantsProfile = false;
@@ -193,23 +113,21 @@ export const useMatches = () => {
             profileWantsUser = true;
           }
 
-          const match = userWantsProfile && profileWantsUser;
-          if (match) {
-            console.log(`✅ Bidirectional match: ${userGender} user seeking ${userPreferences.gender_preference} ↔ ${profileGender} profile seeking ${profileSeekingGender}`);
-          }
+          const isMatch = userWantsProfile && profileWantsUser;
+          console.log(`Match check for ${profile.first_name}: User wants: ${userWantsProfile}, Profile wants user: ${profileWantsUser}, Result: ${isMatch}`);
+          
+          return isMatch;
+        });
 
-          return match;
-        }) || [];
+        console.log('Bidirectional filtered matches count:', bidirectionalMatches.length);
 
-        console.log('Bidirectional filtered profiles count:', bidirectionalMatches.length);
-
-        // Convert bidirectional matches to match format
-        const sampleMatches = bidirectionalMatches.map((profile) => ({
+        // Convert to matches format
+        const sampleMatches = bidirectionalMatches.slice(0, 10).map((profile) => ({
           id: `sample-${profile.id}`,
           user_id: user.id,
           matched_user_id: profile.user_id,
-          compatibility: Math.floor(Math.random() * 30) + 70, // Random compatibility 70-100%
-          created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(), // Random date within last week
+          compatibility: Math.floor(Math.random() * 30) + 70,
+          created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
           status: 'accepted',
           match_profile: {
             user_id: profile.user_id,
@@ -226,12 +144,11 @@ export const useMatches = () => {
         return;
       }
 
-      // Get the other user IDs from matches
+      // Process existing matches
       const otherUserIds = matchesData.map(match => {
         return match.user_id === user.id ? match.matched_user_id : match.user_id;
       });
 
-      // Get profiles for the other users from dating_profiles table
       const { data: profilesData, error: profilesError } = await supabase
         .from('dating_profiles')
         .select('*')
@@ -242,7 +159,6 @@ export const useMatches = () => {
         return;
       }
 
-      // Process matches to get the other user's profile
       const processedMatches = matchesData.map(match => {
         const otherUserId = match.user_id === user.id ? match.matched_user_id : match.user_id;
         const profile = profilesData?.find(p => p.user_id === otherUserId);
