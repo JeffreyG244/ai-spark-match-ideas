@@ -286,9 +286,22 @@ const DataSeeder = () => {
 
       setProgress(100);
       
+      // Trigger N8N webhook for the user profile
+      try {
+        await supabase.functions.invoke('profile-webhook', {
+          body: { 
+            user_id: user.id, 
+            event_type: 'profile_seeded' 
+          }
+        });
+        console.log('N8N webhook triggered for user profile');
+      } catch (webhookError) {
+        console.warn('N8N webhook failed:', webhookError);
+      }
+      
       toast({
         title: 'Database Seeded Successfully!',
-        description: 'Test data has been created. You can now test all features.',
+        description: 'Test data has been created and N8N workflow triggered. You can now test all features.',
       });
 
     } catch (error: any) {
