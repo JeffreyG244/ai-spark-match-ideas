@@ -41,7 +41,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send password reset email
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: `${req.headers.get('origin') || 'https://tzskjzkolyiwhijslqmq.supabase.co'}/auth?reset=true`,
+      redirectTo: `${req.headers.get('origin') || req.headers.get('referer') || 'https://delightful-desert-023e80e0f.4.azurestaticapps.net'}/auth?reset=true`,
     });
 
     if (error) {

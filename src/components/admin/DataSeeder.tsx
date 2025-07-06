@@ -7,6 +7,7 @@ import { Database, Users, Heart, MessageCircle, Calendar, CheckCircle, AlertTria
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { seedDiverseProfiles } from '@/utils/diverseSeedProfiles';
 
 interface SeedingStatus {
   profiles: number;
@@ -101,23 +102,34 @@ const DataSeeder = () => {
   };
 
   const generateCompatibilityAnswers = (profiles: any[]) => {
-    return profiles.map(profile => ({
-      user_id: profile.user_id,
-      answers: {
-        "1": "Moderate importance",
-        "2": "A few times a week", 
-        "3": "Movies at home",
-        "4": "Early bird",
-        "5": "Cats",
-        "6": "Ambitious",
-        "7": profile.gender === 'male' ? 'Male' : profile.gender === 'female' ? 'Female' : 'Non-binary',
-        "8": "City",
-        "9": "Save it",
-        "10": "Emotional connection",
-        "11": "Long-term relationship",
-        "12": profile.gender === 'male' ? 'Women' : profile.gender === 'female' ? 'Men' : 'Everyone'
+    return profiles.map(profile => {
+      // Determine seeking preference based on profile context
+      let seeking = 'Everyone';
+      if (profile.partner_preferences) {
+        const prefs = profile.partner_preferences.toLowerCase();
+        if (prefs.includes('men') && !prefs.includes('women')) seeking = 'Men';
+        else if (prefs.includes('women') && !prefs.includes('men')) seeking = 'Women';
+        else if (prefs.includes('regardless of gender') || prefs.includes('any gender') || prefs.includes('transcends gender')) seeking = 'Everyone';
       }
-    }));
+
+      return {
+        user_id: profile.user_id,
+        answers: {
+          "1": "Moderate importance",
+          "2": "A few times a week", 
+          "3": "Movies at home",
+          "4": "Early bird",
+          "5": "Cats",
+          "6": "Ambitious",
+          "7": profile.gender === 'Male' ? 'Male' : profile.gender === 'Female' ? 'Female' : 'Non-binary',
+          "8": "City",
+          "9": "Save it",
+          "10": "Emotional connection",
+          "11": "Long-term relationship",
+          "12": seeking
+        }
+      };
+    });
   };
 
   const seedDatabase = async () => {
@@ -188,14 +200,22 @@ const DataSeeder = () => {
 
       setProgress(10);
 
-      // Step 1: Generate and insert dating profiles
+      // Step 1: Generate and insert dating profiles (including diverse LGBTQ+ profiles)
       const profiles = generateTestProfiles();
       const { error: profilesError } = await supabase
         .from('dating_profiles')
         .upsert(profiles, { onConflict: 'user_id' });
       
       if (profilesError) throw profilesError;
-      setStatus(prev => ({ ...prev, profiles: profiles.length + 1 })); // +1 for user profile
+
+      // Step 1.5: Add diverse LGBTQ+ profiles
+      const diverseResult = await seedDiverseProfiles();
+      let diverseCount = 0;
+      if (diverseResult.success && diverseResult.count) {
+        diverseCount = diverseResult.count;
+      }
+      
+      setStatus(prev => ({ ...prev, profiles: profiles.length + 1 + diverseCount })); // +1 for user profile + diverse profiles
       setProgress(25);
 
       // Step 2: Generate and insert compatibility answers
@@ -457,12 +477,11 @@ const DataSeeder = () => {
           </Button>
         </div>
 
-        {/* Warning */}
-        <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" />
-          <div className="text-sm text-yellow-800">
-            <strong>Note:</strong> This will create test profiles and data for testing purposes. 
-            Use "Clear Test Data" to remove all test data when done testing.
+        {/* Info */}
+        <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <AlertTriangle className="h-4 w-4 text-blue-600 mt-0.5" />
+          <div className="text-sm text-blue-800">
+            <strong>Inclusive Dating Platform:</strong> This will create diverse test profiles including LGBTQ+ representation (lesbian, gay, bisexual, transgender, non-binary, and pansexual profiles) to ensure your platform works for all users. Use "Clear Test Data" to remove when done testing.
           </div>
         </div>
       </CardContent>
