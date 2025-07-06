@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,8 +12,7 @@ import {
   CheckCircle,
   Activity,
   RefreshCw,
-  Github,
-  Docker
+  Github
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -190,7 +188,7 @@ const SystemHealthDashboard = () => {
     });
 
     checks.push({
-      service: 'Supabase Integration',
+      service: 'Database Integration',
       status: 'healthy',
       message: 'All services connected',
       icon: <Database className="h-4 w-4" />

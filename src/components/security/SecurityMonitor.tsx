@@ -40,7 +40,17 @@ const SecurityMonitor = () => {
         return;
       }
 
-      setSecurityEvents(data || []);
+      // Convert the database response to match our interface
+      const formattedEvents: SecurityEvent[] = (data || []).map(event => ({
+        id: event.id.toString(), // Convert number to string
+        event_type: event.event_type,
+        severity: event.severity,
+        details: event.details || '',
+        created_at: event.created_at,
+        ip_address: event.ip_address || undefined
+      }));
+
+      setSecurityEvents(formattedEvents);
     } catch (error) {
       console.error('Error loading security events:', error);
     } finally {
