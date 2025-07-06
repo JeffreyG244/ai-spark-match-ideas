@@ -37,12 +37,32 @@ const RELATIONSHIP_GOALS = [
 const LIFESTYLE_QUESTIONS = [
   {
     id: 'smoking',
-    question: 'Do you smoke?',
+    question: 'Do you smoke cigarettes?',
     options: [
       { value: 'never', label: 'Never' },
       { value: 'socially', label: 'Socially' },
       { value: 'regularly', label: 'Regularly' },
       { value: 'trying_to_quit', label: 'Trying to quit' }
+    ]
+  },
+  {
+    id: 'vaping',
+    question: 'Do you vape?',
+    options: [
+      { value: 'never', label: 'Never' },
+      { value: 'occasionally', label: 'Occasionally' },
+      { value: 'regularly', label: 'Regularly' },
+      { value: 'trying_to_quit', label: 'Trying to quit' }
+    ]
+  },
+  {
+    id: 'cannabis',
+    question: 'Do you use cannabis?',
+    options: [
+      { value: 'never', label: 'Never' },
+      { value: 'occasionally', label: 'Occasionally' },
+      { value: 'regularly', label: 'Regularly' },
+      { value: 'medical_only', label: 'Medical use only' }
     ]
   },
   {
@@ -75,6 +95,7 @@ const LIFESTYLE_QUESTIONS = [
       { value: 'vegan', label: 'Vegan' },
       { value: 'pescatarian', label: 'Pescatarian' },
       { value: 'keto', label: 'Keto' },
+      { value: 'paleo', label: 'Paleo' },
       { value: 'other', label: 'Other' }
     ]
   }
@@ -106,7 +127,7 @@ const PERSONALITY_TRAITS = [
 ];
 
 interface BasicProfileQuestionsProps {
-  answers: Record<string, string>;
+  answers: any; // Allow any type to be more flexible
   onAnswerChange: (questionId: string, answer: string) => void;
 }
 
@@ -127,28 +148,88 @@ const BasicProfileQuestions = ({ answers, onAnswerChange }: BasicProfileQuestion
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <Label htmlFor="age" className="text-sm font-medium">Age *</Label>
-              <Input
-                id="age"
-                type="number"
-                min="18"
-                max="100"
-                value={answers.age || ''}
-                onChange={(e) => onAnswerChange('age', e.target.value)}
-                placeholder="Enter your age"
-                className="mt-1"
-              />
+              <Label className="text-sm font-medium">Age *</Label>
+              <Select 
+                value={answers.age || ''} 
+                onValueChange={(value) => onAnswerChange('age', value)}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select your age" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 63 }, (_, i) => i + 18).map((age) => (
+                    <SelectItem key={age} value={age.toString()}>
+                      {age} years old
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div>
-              <Label htmlFor="location" className="text-sm font-medium">Location *</Label>
-              <Input
-                id="location"
-                value={answers.location || ''}
-                onChange={(e) => onAnswerChange('location', e.target.value)}
-                placeholder="City, State/Province"
-                className="mt-1"
-              />
+              <Label className="text-sm font-medium">Location *</Label>
+              <Select 
+                value={answers.location || ''} 
+                onValueChange={(value) => onAnswerChange('location', value)}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select your city" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="New York, NY">New York, NY</SelectItem>
+                  <SelectItem value="Los Angeles, CA">Los Angeles, CA</SelectItem>
+                  <SelectItem value="Chicago, IL">Chicago, IL</SelectItem>
+                  <SelectItem value="Houston, TX">Houston, TX</SelectItem>
+                  <SelectItem value="Phoenix, AZ">Phoenix, AZ</SelectItem>
+                  <SelectItem value="Philadelphia, PA">Philadelphia, PA</SelectItem>
+                  <SelectItem value="San Antonio, TX">San Antonio, TX</SelectItem>
+                  <SelectItem value="San Diego, CA">San Diego, CA</SelectItem>
+                  <SelectItem value="Dallas, TX">Dallas, TX</SelectItem>
+                  <SelectItem value="San Jose, CA">San Jose, CA</SelectItem>
+                  <SelectItem value="Austin, TX">Austin, TX</SelectItem>
+                  <SelectItem value="Jacksonville, FL">Jacksonville, FL</SelectItem>
+                  <SelectItem value="Fort Worth, TX">Fort Worth, TX</SelectItem>
+                  <SelectItem value="Columbus, OH">Columbus, OH</SelectItem>
+                  <SelectItem value="Charlotte, NC">Charlotte, NC</SelectItem>
+                  <SelectItem value="San Francisco, CA">San Francisco, CA</SelectItem>
+                  <SelectItem value="Indianapolis, IN">Indianapolis, IN</SelectItem>
+                  <SelectItem value="Seattle, WA">Seattle, WA</SelectItem>
+                  <SelectItem value="Denver, CO">Denver, CO</SelectItem>
+                  <SelectItem value="Washington, DC">Washington, DC</SelectItem>
+                  <SelectItem value="Boston, MA">Boston, MA</SelectItem>
+                  <SelectItem value="Nashville, TN">Nashville, TN</SelectItem>
+                  <SelectItem value="Detroit, MI">Detroit, MI</SelectItem>
+                  <SelectItem value="Portland, OR">Portland, OR</SelectItem>
+                  <SelectItem value="Las Vegas, NV">Las Vegas, NV</SelectItem>
+                  <SelectItem value="Memphis, TN">Memphis, TN</SelectItem>
+                  <SelectItem value="Louisville, KY">Louisville, KY</SelectItem>
+                  <SelectItem value="Baltimore, MD">Baltimore, MD</SelectItem>
+                  <SelectItem value="Milwaukee, WI">Milwaukee, WI</SelectItem>
+                  <SelectItem value="Albuquerque, NM">Albuquerque, NM</SelectItem>
+                  <SelectItem value="Tucson, AZ">Tucson, AZ</SelectItem>
+                  <SelectItem value="Fresno, CA">Fresno, CA</SelectItem>
+                  <SelectItem value="Sacramento, CA">Sacramento, CA</SelectItem>
+                  <SelectItem value="Mesa, AZ">Mesa, AZ</SelectItem>
+                  <SelectItem value="Kansas City, MO">Kansas City, MO</SelectItem>
+                  <SelectItem value="Atlanta, GA">Atlanta, GA</SelectItem>
+                  <SelectItem value="Long Beach, CA">Long Beach, CA</SelectItem>
+                  <SelectItem value="Colorado Springs, CO">Colorado Springs, CO</SelectItem>
+                  <SelectItem value="Raleigh, NC">Raleigh, NC</SelectItem>
+                  <SelectItem value="Miami, FL">Miami, FL</SelectItem>
+                  <SelectItem value="Virginia Beach, VA">Virginia Beach, VA</SelectItem>
+                  <SelectItem value="Omaha, NE">Omaha, NE</SelectItem>
+                  <SelectItem value="Oakland, CA">Oakland, CA</SelectItem>
+                  <SelectItem value="Minneapolis, MN">Minneapolis, MN</SelectItem>
+                  <SelectItem value="Tulsa, OK">Tulsa, OK</SelectItem>
+                  <SelectItem value="Arlington, TX">Arlington, TX</SelectItem>
+                  <SelectItem value="Tampa, FL">Tampa, FL</SelectItem>
+                  <SelectItem value="New Orleans, LA">New Orleans, LA</SelectItem>
+                  <SelectItem value="Wichita, KS">Wichita, KS</SelectItem>
+                  <SelectItem value="Cleveland, OH">Cleveland, OH</SelectItem>
+                  <SelectItem value="Bakersfield, CA">Bakersfield, CA</SelectItem>
+                  <SelectItem value="Other">Other (specify in bio)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -403,13 +484,18 @@ const BasicProfileQuestions = ({ answers, onAnswerChange }: BasicProfileQuestion
               id="bio"
               value={answers.bio || ''}
               onChange={(e) => onAnswerChange('bio', e.target.value)}
-              placeholder="Share your interests, what you're passionate about, what you're looking for in a partner..."
-              className="mt-1 min-h-[120px]"
+              placeholder="Share your interests, what you're passionate about, what you're looking for in a partner... (minimum 150 characters)"
+              className={`mt-1 min-h-[120px] ${(answers.bio || '').length < 150 ? 'border-red-300' : ''}`}
               maxLength={500}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              {(answers.bio || '').length}/500 characters
-            </p>
+            <div className="flex justify-between items-center mt-1">
+              <p className={`text-xs ${(answers.bio || '').length < 150 ? 'text-red-500' : 'text-gray-500'}`}>
+                {(answers.bio || '').length < 150 
+                  ? `Minimum 150 characters required (${150 - (answers.bio || '').length} more needed)`
+                  : `${(answers.bio || '').length}/500 characters`
+                }
+              </p>
+            </div>
           </div>
 
           <div>

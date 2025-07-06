@@ -2,7 +2,7 @@
 import React from 'react';
 import { Heart, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ProfileManager from '@/components/ProfileManager';
+import GuidedProfileFlow from '@/components/profile/GuidedProfileFlow';
 
 interface ProfileSetupViewProps {
   onBack: () => void;
@@ -33,7 +33,7 @@ const ProfileSetupView = ({ onBack, onSignOut }: ProfileSetupViewProps) => {
           </Button>
         </div>
 
-        <ProfileManager />
+        <GuidedProfileFlow />
       </div>
     </div>
   );

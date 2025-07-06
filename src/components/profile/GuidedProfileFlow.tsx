@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, User, Brain, Heart, Camera, ArrowRight } from 'lucide-react';
-import { useProfileData } from '@/hooks/useProfileData';
+import { useEnhancedProfileData } from '@/hooks/useEnhancedProfileData';
 import { useCompatibilityAnswers } from '@/hooks/useCompatibilityAnswers';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
 import BasicProfileQuestions from './BasicProfileQuestions';
@@ -21,7 +21,6 @@ interface Photo {
 
 const GuidedProfileFlow = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [basicProfileAnswers, setBasicProfileAnswers] = useState<Record<string, string>>({});
   const [personalityAnswers, setPersonalityAnswers] = useState<Record<string, string>>({});
   const [interests, setInterests] = useState<string[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -35,7 +34,7 @@ const GuidedProfileFlow = () => {
     saveProfile,
     updateProfileField,
     isBasicProfileComplete
-  } = useProfileData();
+  } = useEnhancedProfileData();
 
   const {
     questionAnswers,
@@ -44,8 +43,8 @@ const GuidedProfileFlow = () => {
   } = useCompatibilityAnswers();
 
   const { completionPercentage, isProfileComplete } = useProfileCompletion(
-    profileData,
-    { ...basicProfileAnswers, ...personalityAnswers },
+    { bio: profileData.bio || '' },
+    { ...personalityAnswers },
     interests,
     photos
   );
@@ -61,7 +60,7 @@ const GuidedProfileFlow = () => {
       title: 'Basic Profile',
       description: 'Personal info & preferences',
       icon: User,
-      isComplete: Object.keys(basicProfileAnswers).length >= 8 && basicProfileAnswers.age && basicProfileAnswers.gender && basicProfileAnswers.sexual_orientation
+      isComplete: isBasicProfileComplete()
     },
     {
       id: 2,
@@ -89,7 +88,9 @@ const GuidedProfileFlow = () => {
   const completedSteps = steps.filter(step => step.isComplete).length;
 
   const handleStepComplete = async (stepId: number) => {
-    if (stepId === 1 && Object.keys(basicProfileAnswers).length >= 8 && basicProfileAnswers.age && basicProfileAnswers.gender && basicProfileAnswers.sexual_orientation) {
+    if (stepId === 1 && isBasicProfileComplete()) {
+      // Save the profile data
+      await saveProfile(false);
       toast({
         title: 'Basic Profile Completed!',
         description: 'Moving to personality questions...',
@@ -112,7 +113,7 @@ const GuidedProfileFlow = () => {
   };
 
   const handleBasicProfileAnswer = (questionId: string, answer: string) => {
-    setBasicProfileAnswers(prev => ({ ...prev, [questionId]: answer }));
+    updateProfileField(questionId as any, answer);
   };
 
   const handlePersonalityAnswer = (questionId: string, answer: string) => {
@@ -216,11 +217,11 @@ const GuidedProfileFlow = () => {
                 <h2 className="text-xl font-semibold mb-2 text-red-700">Complete Your Basic Profile</h2>
                 <p className="text-gray-600">This information helps us find your perfect matches</p>
               </div>
-              <BasicProfileQuestions
-                answers={basicProfileAnswers}
+               <BasicProfileQuestions
+                answers={profileData}
                 onAnswerChange={handleBasicProfileAnswer}
               />
-              {Object.keys(basicProfileAnswers).length >= 8 && basicProfileAnswers.age && basicProfileAnswers.gender && basicProfileAnswers.sexual_orientation && (
+              {isBasicProfileComplete() && (
                 <div className="text-center pt-4">
                   <Button
                     onClick={() => handleStepComplete(1)}

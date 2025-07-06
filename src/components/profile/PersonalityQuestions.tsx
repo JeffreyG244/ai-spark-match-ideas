@@ -9,86 +9,6 @@ import { Brain } from 'lucide-react';
 
 const PERSONALITY_QUESTIONS = [
   {
-    id: 'age',
-    question: 'What is your age?',
-    type: 'number',
-    min: 18,
-    max: 80,
-    placeholder: 'Enter your age'
-  },
-  {
-    id: 'gender',
-    question: 'What is your gender?',
-    type: 'select',
-    options: [
-      { value: 'Male', label: 'Male' },
-      { value: 'Female', label: 'Female' },
-      { value: 'Non-binary', label: 'Non-binary' },
-      { value: 'Other', label: 'Other' },
-      { value: 'Prefer not to say', label: 'Prefer not to say' }
-    ]
-  },
-  {
-    id: 'sexual_orientation',
-    question: 'What is your sexual orientation?',
-    type: 'select',
-    options: [
-      { value: 'Straight', label: 'Straight' },
-      { value: 'Gay', label: 'Gay' },
-      { value: 'Lesbian', label: 'Lesbian' },
-      { value: 'Bisexual', label: 'Bisexual' },
-      { value: 'Pansexual', label: 'Pansexual' },
-      { value: 'Asexual', label: 'Asexual' },
-      { value: 'Questioning', label: 'Questioning' },
-      { value: 'Other', label: 'Other' }
-    ]
-  },
-  {
-    id: 'partner_gender',
-    question: 'What gender are you interested in?',
-    type: 'select',
-    options: [
-      { value: 'Male', label: 'Male' },
-      { value: 'Female', label: 'Female' },
-      { value: 'Non-binary', label: 'Non-binary' },
-      { value: 'Any', label: 'Any gender' }
-    ]
-  },
-  {
-    id: 'partner_age_min',
-    question: 'Minimum age preference for partner',
-    type: 'number',
-    min: 18,
-    max: 80,
-    placeholder: 'Minimum age'
-  },
-  {
-    id: 'partner_age_max',
-    question: 'Maximum age preference for partner',
-    type: 'number',
-    min: 18,
-    max: 80,
-    placeholder: 'Maximum age'
-  },
-  {
-    id: 'location',
-    question: 'What city are you located in?',
-    type: 'text',
-    placeholder: 'Enter your city'
-  },
-  {
-    id: 'relationship_goals',
-    question: 'What are you looking for?',
-    type: 'select',
-    options: [
-      { value: 'Long-term relationship', label: 'Long-term relationship' },
-      { value: 'Casual dating', label: 'Casual dating' },
-      { value: 'Marriage', label: 'Marriage' },
-      { value: 'Friendship', label: 'Friendship' },
-      { value: 'Not sure yet', label: 'Not sure yet' }
-    ]
-  },
-  {
     id: 'social_energy',
     question: 'How do you recharge your energy?',
     type: 'radio',
@@ -211,18 +131,6 @@ const PersonalityQuestions = ({ answers, onAnswerChange }: PersonalityQuestionsP
                   ))}
                 </SelectContent>
               </Select>
-            )}
-
-            {(question.type === 'number' || question.type === 'text') && (
-              <Input
-                type={question.type}
-                value={answers[question.id] || ''}
-                onChange={(e) => onAnswerChange(question.id, e.target.value)}
-                placeholder={question.placeholder}
-                min={question.min}
-                max={question.max}
-                className="max-w-xs"
-              />
             )}
           </div>
         ))}
