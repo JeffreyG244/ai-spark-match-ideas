@@ -111,6 +111,9 @@ export const useMatches = () => {
             profileWantsUser = true;
           } else if (profileSeekingGender === 'Non-binary' && userGender === 'Non-binary') {
             profileWantsUser = true;
+          } else if (userGender === 'Unknown') {
+            // If user gender is unknown, be more lenient
+            profileWantsUser = true;
           }
 
           const isMatch = userWantsProfile && profileWantsUser;

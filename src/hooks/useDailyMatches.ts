@@ -245,10 +245,11 @@ export const useDailyMatches = () => {
             (userPreferences.gender_preference === 'Women' && profileGender === 'female') ||
             (userPreferences.gender_preference === 'Non-binary' && profileGender === 'non-binary');
 
-          let profileWantsUser = profileSeekingGender === 'Everyone' ||
+           let profileWantsUser = profileSeekingGender === 'Everyone' ||
             (profileSeekingGender === 'Men' && userGender === 'Male') ||
             (profileSeekingGender === 'Women' && userGender === 'Female') ||
-            (profileSeekingGender === 'Non-binary' && userGender === 'Non-binary');
+            (profileSeekingGender === 'Non-binary' && userGender === 'Non-binary') ||
+            userGender === 'Unknown'; // Be lenient if user gender is unknown
 
           return userWantsProfile && profileWantsUser;
         });
