@@ -65,6 +65,7 @@ function App() {
                 <Route path="/seed-users" element={<SeedUsers />} />
                 <Route path="/seed-dating-profiles" element={<SeedDatingProfiles />} />
                 <Route path="/pre-launch-audit" element={<PreLaunchAudit />} />
+                <Route path="/admin" element={<PreLaunchAudit />} />
                 <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/legal/terms-of-service" element={<TermsOfService />} />
                 <Route path="/legal/community-guidelines" element={<CommunityGuidelines />} />

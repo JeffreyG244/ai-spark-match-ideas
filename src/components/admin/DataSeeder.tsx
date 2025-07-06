@@ -134,15 +134,68 @@ const DataSeeder = () => {
     setProgress(0);
     
     try {
-      // Step 1: Generate and insert dating profiles
+      // Step 0: Create current user's dating profile and compatibility answers
+      setProgress(5);
+      
+      // Get user metadata
+      const userData = user.user_metadata || {};
+      const firstName = userData.first_name || 'User';
+      const lastName = userData.last_name || 'Name';
+      
+      // Create user's dating profile
+      const userProfile = {
+        user_id: user.id,
+        email: user.email || 'user@example.com',
+        first_name: firstName,
+        last_name: lastName,
+        age: 28,
+        gender: 'male', // Set based on your preference
+        bio: 'Looking for meaningful connections and genuine relationships.',
+        city: 'San Francisco',
+        state: 'CA',
+        interests: ['technology', 'travel', 'cooking', 'music'],
+        photo_urls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+        relationship_goals: 'Long-term relationship',
+        partner_preferences: 'Someone who shares similar interests and values'
+      };
+
+      await supabase
+        .from('dating_profiles')
+        .upsert(userProfile, { onConflict: 'user_id' });
+
+      // Create user's compatibility answers
+      const userCompatibilityAnswers = {
+        user_id: user.id,
+        answers: {
+          "1": "Very important",
+          "2": "A few times a week", 
+          "3": "Movies at home",
+          "4": "Early bird",
+          "5": "Dogs",
+          "6": "Ambitious",
+          "7": "Male", // User's gender
+          "8": "City",
+          "9": "Save it",
+          "10": "Emotional connection",
+          "11": "Long-term relationship",
+          "12": "Women" // What user is seeking
+        }
+      };
+
+      await supabase
+        .from('compatibility_answers')
+        .upsert(userCompatibilityAnswers, { onConflict: 'user_id' });
+
       setProgress(10);
+
+      // Step 1: Generate and insert dating profiles
       const profiles = generateTestProfiles();
       const { error: profilesError } = await supabase
         .from('dating_profiles')
         .upsert(profiles, { onConflict: 'user_id' });
       
       if (profilesError) throw profilesError;
-      setStatus(prev => ({ ...prev, profiles: profiles.length }));
+      setStatus(prev => ({ ...prev, profiles: profiles.length + 1 })); // +1 for user profile
       setProgress(25);
 
       // Step 2: Generate and insert compatibility answers
@@ -152,7 +205,7 @@ const DataSeeder = () => {
         .upsert(compatibilityAnswers, { onConflict: 'user_id' });
       
       if (compatibilityError) throw compatibilityError;
-      setStatus(prev => ({ ...prev, compatibility: compatibilityAnswers.length }));
+      setStatus(prev => ({ ...prev, compatibility: compatibilityAnswers.length + 1 })); // +1 for user
       setProgress(40);
 
       // Step 3: Create sample matches for current user
@@ -252,12 +305,24 @@ const DataSeeder = () => {
       setIsSeeding(true);
       
       // Clear test data (be careful not to delete real user data)
-      await supabase.from('conversation_messages').delete().like('content', '%Hey! I saw your profile%');
-      await supabase.from('conversations').delete().in('participant_2', ['test-user-0', 'test-user-1', 'test-user-2']);
-      await supabase.from('daily_matches').delete().like('suggested_user_id', 'test-user-%');
-      await supabase.from('matches').delete().like('matched_user_id', 'test-user-%');
-      await supabase.from('compatibility_answers').delete().like('user_id', 'test-user-%');
-      await supabase.from('dating_profiles').delete().like('user_id', 'test-user-%');
+      // Use the uuids directly since we can't use LIKE with uuid columns in Supabase
+      const { data: testProfiles } = await supabase
+        .from('dating_profiles')
+        .select('user_id')
+        .filter('email', 'like', '%@example.com');
+      
+      if (testProfiles && testProfiles.length > 0) {
+        const testUserIds = testProfiles.map(p => p.user_id);
+        
+        // Delete related data
+        await supabase.from('conversation_messages').delete().in('sender_id', testUserIds);
+        await supabase.from('conversations').delete().in('participant_1', testUserIds);
+        await supabase.from('conversations').delete().in('participant_2', testUserIds);
+        await supabase.from('daily_matches').delete().in('suggested_user_id', testUserIds);
+        await supabase.from('matches').delete().in('matched_user_id', testUserIds);
+        await supabase.from('compatibility_answers').delete().in('user_id', testUserIds);
+        await supabase.from('dating_profiles').delete().in('user_id', testUserIds);
+      }
       
       setStatus({
         profiles: 0,
