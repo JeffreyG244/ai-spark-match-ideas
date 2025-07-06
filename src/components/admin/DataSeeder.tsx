@@ -204,7 +204,10 @@ const DataSeeder = () => {
         .from('compatibility_answers')
         .upsert(compatibilityAnswers, { onConflict: 'user_id' });
       
-      if (compatibilityError) throw compatibilityError;
+      if (compatibilityError) {
+        console.error('Compatibility answers error:', compatibilityError);
+        throw compatibilityError;
+      }
       setStatus(prev => ({ ...prev, compatibility: compatibilityAnswers.length + 1 })); // +1 for user
       setProgress(40);
 
