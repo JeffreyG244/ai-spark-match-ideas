@@ -84,9 +84,12 @@ export const useDailyMatches = () => {
           .neq('user_id', user.id);
 
         if (profilesWithAnswers && profilesWithAnswers.length > 0) {
-          // Apply bidirectional filtering
+          // Apply bidirectional filtering - add safety checks
           profilesData = profilesWithAnswers.filter(profile => {
-            const profileAnswers = (profile as any).compatibility_answers?.[0]?.answers as any;
+            if (!profile || !profile.compatibility_answers || !Array.isArray(profile.compatibility_answers) || profile.compatibility_answers.length === 0) {
+              return false;
+            }
+            const profileAnswers = profile.compatibility_answers[0]?.answers;
             if (!profileAnswers) return false;
 
             const profileGender = profile.gender?.toLowerCase();
@@ -243,9 +246,12 @@ export const useDailyMatches = () => {
       }
 
       if (profiles && profiles.length > 0) {
-        // Apply bidirectional filtering
+        // Apply bidirectional filtering - add safety checks
         const filteredProfiles = profiles.filter(profile => {
-          const profileAnswers = (profile as any).compatibility_answers?.[0]?.answers as any;
+          if (!profile || !profile.compatibility_answers || !Array.isArray(profile.compatibility_answers) || profile.compatibility_answers.length === 0) {
+            return false;
+          }
+          const profileAnswers = profile.compatibility_answers[0]?.answers;
           if (!profileAnswers) return false;
 
           const profileGender = profile.gender?.toLowerCase();
