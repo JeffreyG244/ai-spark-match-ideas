@@ -5,6 +5,9 @@ export interface SecurityValidationResult {
   isValid: boolean;
   errors: string[];
   sanitizedValue?: string;
+  score?: number;
+  securityScore?: number;
+  suggestions?: string[];
 }
 
 export interface RateLimitResult {
@@ -24,30 +27,47 @@ export interface SessionValidationResult {
  */
 export const validatePasswordSecurity = (password: string): SecurityValidationResult => {
   const errors: string[] = [];
+  const suggestions: string[] = [];
+  let score = 100;
   
   if (!password || password.length < 12) {
     errors.push('Password must be at least 12 characters long');
+    suggestions.push('Use at least 12 characters');
+    score -= 30;
   }
   
   if (!/[A-Z]/.test(password)) {
     errors.push('Password must contain at least one uppercase letter');
+    suggestions.push('Add uppercase letters');
+    score -= 20;
   }
   
   if (!/[a-z]/.test(password)) {
     errors.push('Password must contain at least one lowercase letter');
+    suggestions.push('Add lowercase letters');
+    score -= 20;
   }
   
   if (!/\d/.test(password)) {
     errors.push('Password must contain at least one number');
+    suggestions.push('Add numbers');
+    score -= 15;
   }
   
   if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
     errors.push('Password must contain at least one special character');
+    suggestions.push('Add special characters');
+    score -= 15;
   }
+  
+  const finalScore = Math.max(0, score);
   
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
+    score: finalScore,
+    securityScore: finalScore,
+    suggestions
   };
 };
 
@@ -133,7 +153,7 @@ export const validateSessionSecurity = async (): Promise<SessionValidationResult
   }
 };
 
-export const validateAdminAction = async (): Promise<boolean> => {
+export const validateAdminAction = async (actionType?: string): Promise<boolean> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;

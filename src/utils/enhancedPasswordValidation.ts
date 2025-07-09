@@ -12,6 +12,7 @@ export const validatePasswordSecurity = async (password: string) => {
   return {
     isValid: result.isValid,
     errors: result.errors,
+    score: result.score,
     securityScore: result.score,
     suggestions: result.errors.map(error => `Fix: ${error}`)
   };
