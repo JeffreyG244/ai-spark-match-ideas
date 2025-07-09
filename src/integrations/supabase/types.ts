@@ -253,6 +253,36 @@ export type Database = {
         }
         Relationships: []
       }
+      cities_states: {
+        Row: {
+          city: string
+          country: string | null
+          created_at: string | null
+          id: number
+          population: number | null
+          state: string
+          state_code: string
+        }
+        Insert: {
+          city: string
+          country?: string | null
+          created_at?: string | null
+          id?: number
+          population?: number | null
+          state: string
+          state_code: string
+        }
+        Update: {
+          city?: string
+          country?: string | null
+          created_at?: string | null
+          id?: number
+          population?: number | null
+          state?: string
+          state_code?: string
+        }
+        Relationships: []
+      }
       compatibility_answers: {
         Row: {
           answers: Json
@@ -430,6 +460,7 @@ export type Database = {
           age: number | null
           bio: string | null
           city: string | null
+          country: string | null
           created_at: string | null
           email: string | null
           first_name: string | null
@@ -442,6 +473,7 @@ export type Database = {
           longitude: number | null
           orientation: string | null
           photo_urls: string[] | null
+          postal_code: string | null
           profile_image_url: string | null
           seeking_gender: string | null
           state: string | null
@@ -453,6 +485,7 @@ export type Database = {
           age?: number | null
           bio?: string | null
           city?: string | null
+          country?: string | null
           created_at?: string | null
           email?: string | null
           first_name?: string | null
@@ -465,6 +498,7 @@ export type Database = {
           longitude?: number | null
           orientation?: string | null
           photo_urls?: string[] | null
+          postal_code?: string | null
           profile_image_url?: string | null
           seeking_gender?: string | null
           state?: string | null
@@ -476,6 +510,7 @@ export type Database = {
           age?: number | null
           bio?: string | null
           city?: string | null
+          country?: string | null
           created_at?: string | null
           email?: string | null
           first_name?: string | null
@@ -488,6 +523,7 @@ export type Database = {
           longitude?: number | null
           orientation?: string | null
           photo_urls?: string[] | null
+          postal_code?: string | null
           profile_image_url?: string | null
           seeking_gender?: string | null
           state?: string | null
@@ -2475,6 +2511,14 @@ export type Database = {
       seed_dating_profiles: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      seed_diverse_dating_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          success: boolean
+          message: string
+          count: number
+        }[]
       }
       sparsevec_out: {
         Args: { "": unknown }
