@@ -43,10 +43,10 @@ const GuidedProfileFlow = () => {
   } = useCompatibilityAnswers();
 
   const { completionPercentage, isProfileComplete } = useProfileCompletion(
-    { bio: profileData.bio || '' },
-    { ...personalityAnswers },
-    interests,
-    photos
+    profileData || { bio: '' },
+    personalityAnswers || {},
+    interests || [],
+    photos || []
   );
 
   useEffect(() => {
@@ -67,21 +67,21 @@ const GuidedProfileFlow = () => {
       title: 'Personality',
       description: 'Answer compatibility questions',
       icon: Brain,
-      isComplete: Object.keys(personalityAnswers).length >= 6
+      isComplete: Object.keys(personalityAnswers || {}).length >= 6
     },
     {
       id: 3,
       title: 'Interests',
       description: 'Select your interests',
       icon: Heart,
-      isComplete: interests.length >= 5
+      isComplete: (interests || []).length >= 5
     },
     {
       id: 4,
       title: 'Photos',
       description: 'Add your best photos',
       icon: Camera,
-      isComplete: photos.length >= 3
+      isComplete: (photos || []).length >= 3
     }
   ];
 
@@ -96,14 +96,14 @@ const GuidedProfileFlow = () => {
         description: 'Moving to personality questions...',
       });
       setCurrentStep(2);
-    } else if (stepId === 2 && Object.keys(personalityAnswers).length >= 6) {
+    } else if (stepId === 2 && Object.keys(personalityAnswers || {}).length >= 6) {
       await saveCompatibilityAnswers();
       toast({
         title: 'Personality Questions Completed!',
         description: 'Now let\'s add your interests...',
       });
       setCurrentStep(3);
-    } else if (stepId === 3 && interests.length >= 5) {
+    } else if (stepId === 3 && (interests || []).length >= 5) {
       toast({
         title: 'Interests Added!',
         description: 'Finally, let\'s add some photos...',
@@ -245,7 +245,7 @@ const GuidedProfileFlow = () => {
                 answers={personalityAnswers}
                 onAnswerChange={handlePersonalityAnswer}
               />
-              {Object.keys(personalityAnswers).length >= 6 && (
+              {Object.keys(personalityAnswers || {}).length >= 6 && (
                 <div className="text-center pt-4">
                   <Button
                     onClick={() => handleStepComplete(2)}
@@ -269,7 +269,7 @@ const GuidedProfileFlow = () => {
                 selectedInterests={interests}
                 onInterestsChange={setInterests}
               />
-              {interests.length >= 5 && (
+              {(interests || []).length >= 5 && (
                 <div className="text-center pt-4">
                   <Button
                     onClick={() => handleStepComplete(3)}
@@ -293,7 +293,7 @@ const GuidedProfileFlow = () => {
                 photos={photos}
                 onPhotosChange={setPhotos}
               />
-              {photos.length >= 3 && (
+              {(photos || []).length >= 3 && (
                 <div className="text-center pt-4">
                   <Button
                     onClick={() => window.location.href = '/discover'}
