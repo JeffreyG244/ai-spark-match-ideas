@@ -7,7 +7,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const N8N_WEBHOOK_URL = 'http://localhost:5678/webhook/010d0476-0e1c-4d10-bab7-955a933d1ca1';
+// Secure configuration retrieval
+async function getN8NWebhookUrl(): Promise<string> {
+  const webhookUrl = Deno.env.get('N8N_WEBHOOK_URL');
+  if (!webhookUrl) {
+    console.error('N8N_WEBHOOK_URL not configured in environment');
+    throw new Error('N8N webhook URL not configured');
+  }
+  return webhookUrl;
+}
 
 interface ProfileData {
   user_id: string;
@@ -78,10 +86,13 @@ const handler = async (req: Request): Promise<Response> => {
       }
     };
 
-    console.log('Sending to N8N webhook:', N8N_WEBHOOK_URL);
+    // Get secure N8N webhook URL
+    const N8N_WEBHOOK_URL = await getN8NWebhookUrl();
+    
+    console.log('Sending to N8N webhook (secure)');
     console.log('Payload:', JSON.stringify(webhookData, null, 2));
 
-    // Send to N8N webhook
+    // Send to N8N webhook with enhanced security
     const webhookResponse = await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
       headers: {
