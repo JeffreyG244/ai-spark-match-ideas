@@ -75,18 +75,16 @@ const Discover = () => {
         console.log('User preferences - Gender:', userGender, 'Seeking:', userPreferences.gender_preference);
       }
 
-      // Get profiles from dating_profiles with bidirectional matching
-      let { data: profilesWithAnswers, error: profilesError } = await supabase
+      // Get all profiles and compatibility answers separately
+      let { data: allProfiles, error: profilesError } = await supabase
         .from('dating_profiles')
-        .select(`
-          *,
-          compatibility_answers!inner(answers)
-        `)
+        .select('*')
+        .eq('visible', true)
         .gte('age', userPreferences.age_min)
         .lte('age', userPreferences.age_max)
         .neq('user_id', user.id);
 
-      if (profilesError) {
+      if (profilesError || !allProfiles) {
         console.error('Error loading profiles:', profilesError);
         toast({
           title: 'Error',
@@ -97,9 +95,34 @@ const Discover = () => {
         return;
       }
 
+      // Get compatibility answers for these profiles
+      const profileUserIds = allProfiles.map(p => p.user_id).filter(Boolean);
+      let { data: answersData, error: answersError } = await supabase
+        .from('compatibility_answers')
+        .select('user_id, answers')
+        .in('user_id', profileUserIds);
+
+      if (answersError) {
+        console.error('Error loading compatibility answers:', answersError);
+        // Continue without answers - still show profiles
+        answersData = [];
+      }
+
+      // Create a map of user_id to answers for quick lookup
+      const answersMap = new Map();
+      answersData?.forEach(answer => {
+        answersMap.set(answer.user_id, answer.answers);
+      });
+
+      // Combine profiles with their answers
+      const profilesWithAnswers = allProfiles.map(profile => ({
+        ...profile,
+        compatibility_answers: answersMap.get(profile.user_id) || null
+      }));
+
       // Apply strict bidirectional filtering
       const bidirectionalMatches = profilesWithAnswers?.filter(profile => {
-        const profileAnswers = (profile as any).compatibility_answers?.[0]?.answers as any;
+        const profileAnswers = (profile as any).compatibility_answers as any;
         if (!profileAnswers) return false;
 
         const profileGender = profile.gender?.toLowerCase();

@@ -221,17 +221,16 @@ const GuidedProfileFlow = () => {
                 answers={profileData}
                 onAnswerChange={handleBasicProfileAnswer}
               />
-              {isBasicProfileComplete() && (
-                <div className="text-center pt-4">
-                  <Button
-                    onClick={() => handleStepComplete(1)}
-                    className="bg-purple-600 hover:bg-purple-700"
-                  >
-                    Continue to Personality Questions
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              )}
+              <div className="text-center pt-6">
+                <Button
+                  onClick={() => setCurrentStep(3)}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 text-lg font-semibold"
+                  size="lg"
+                >
+                  Continue to Interests
+                  <ArrowRight className="h-5 w-5 ml-2" />
+                </Button>
+              </div>
             </div>
           )}
 

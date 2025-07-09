@@ -55,13 +55,11 @@ const Matches = () => {
       <div className="container mx-auto p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                <Heart className="h-6 w-6 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">Luvlang</h2>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
+              <Heart className="h-6 w-6 text-white" />
             </div>
+            <h2 className="text-2xl font-bold text-gray-900">Luvlang</h2>
           </div>
           <Button onClick={signOut} variant="outline">
             Sign Out
