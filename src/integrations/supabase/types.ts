@@ -146,6 +146,51 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_match_feedback: {
+        Row: {
+          created_at: string | null
+          feedback: string | null
+          id: string
+          match_score: number | null
+          matched_profile_id: string | null
+          thumbs_up: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          match_score?: number | null
+          matched_profile_id?: string | null
+          thumbs_up?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          match_score?: number | null
+          matched_profile_id?: string | null
+          thumbs_up?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_match_feedback_matched_profile_id_fkey"
+            columns: ["matched_profile_id"]
+            isOneToOne: false
+            referencedRelation: "dating_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_match_feedback_matched_profile_id_fkey"
+            columns: ["matched_profile_id"]
+            isOneToOne: false
+            referencedRelation: "view_profile_matches"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
       ai_models: {
         Row: {
           created_at: string | null
@@ -359,88 +404,114 @@ export type Database = {
       }
       daily_matches: {
         Row: {
-          compatibility_score: number
-          created_at: string
+          created_at: string | null
           id: string
-          suggested_date: string
-          suggested_user_id: string
-          user_id: string
-          viewed: boolean
+          match_id: string | null
+          profile_id: string | null
+          score: number | null
         }
         Insert: {
-          compatibility_score?: number
-          created_at?: string
+          created_at?: string | null
           id?: string
-          suggested_date?: string
-          suggested_user_id: string
-          user_id: string
-          viewed?: boolean
+          match_id?: string | null
+          profile_id?: string | null
+          score?: number | null
         }
         Update: {
-          compatibility_score?: number
-          created_at?: string
+          created_at?: string | null
           id?: string
-          suggested_date?: string
-          suggested_user_id?: string
-          user_id?: string
-          viewed?: boolean
+          match_id?: string | null
+          profile_id?: string | null
+          score?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "daily_matches_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "dating_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_matches_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "view_profile_matches"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "daily_matches_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "dating_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_matches_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "view_profile_matches"
+            referencedColumns: ["profile_id"]
+          },
+        ]
       }
       dating_profiles: {
         Row: {
-          age: number
-          bio: string
-          city: string
+          age: number | null
+          bio: string | null
           created_at: string | null
-          email: string
-          first_name: string
-          gender: string
+          first_name: string | null
+          gender: string | null
           id: string
-          interests: string[]
-          last_name: string
-          partner_preferences: string
-          photo_urls: string[]
-          relationship_goals: string
-          state: string
+          interests: string[] | null
+          last_name: string | null
+          latitude: number | null
+          location: string | null
+          longitude: number | null
+          orientation: string | null
+          profile_image_url: string | null
+          seeking_gender: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
+          visible: boolean | null
         }
         Insert: {
-          age: number
-          bio: string
-          city: string
+          age?: number | null
+          bio?: string | null
           created_at?: string | null
-          email: string
-          first_name: string
-          gender: string
+          first_name?: string | null
+          gender?: string | null
           id?: string
-          interests: string[]
-          last_name: string
-          partner_preferences: string
-          photo_urls?: string[]
-          relationship_goals: string
-          state: string
+          interests?: string[] | null
+          last_name?: string | null
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          orientation?: string | null
+          profile_image_url?: string | null
+          seeking_gender?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
+          visible?: boolean | null
         }
         Update: {
-          age?: number
-          bio?: string
-          city?: string
+          age?: number | null
+          bio?: string | null
           created_at?: string | null
-          email?: string
-          first_name?: string
-          gender?: string
+          first_name?: string | null
+          gender?: string | null
           id?: string
-          interests?: string[]
-          last_name?: string
-          partner_preferences?: string
-          photo_urls?: string[]
-          relationship_goals?: string
-          state?: string
+          interests?: string[] | null
+          last_name?: string | null
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          orientation?: string | null
+          profile_image_url?: string | null
+          seeking_gender?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
+          visible?: boolean | null
         }
         Relationships: []
       }
@@ -663,7 +734,9 @@ export type Database = {
           created_at: string
           email: string
           id: number
+          latitude: number | null
           location: unknown | null
+          longitude: number | null
           photo_urls: string[] | null
           updated_at: string
           user_id: string
@@ -673,7 +746,9 @@ export type Database = {
           created_at?: string
           email: string
           id?: never
+          latitude?: number | null
           location?: unknown | null
+          longitude?: number | null
           photo_urls?: string[] | null
           updated_at?: string
           user_id: string
@@ -683,7 +758,9 @@ export type Database = {
           created_at?: string
           email?: string
           id?: never
+          latitude?: number | null
           location?: unknown | null
+          longitude?: number | null
           photo_urls?: string[] | null
           updated_at?: string
           user_id?: string
@@ -941,6 +1018,59 @@ export type Database = {
           swiper_id?: string
         }
         Relationships: []
+      }
+      swipes: {
+        Row: {
+          created_at: string | null
+          direction: string | null
+          id: string
+          swiped_profile_id: string | null
+          swiper_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          direction?: string | null
+          id?: string
+          swiped_profile_id?: string | null
+          swiper_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          direction?: string | null
+          id?: string
+          swiped_profile_id?: string | null
+          swiper_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swipes_swiped_profile_id_fkey"
+            columns: ["swiped_profile_id"]
+            isOneToOne: false
+            referencedRelation: "dating_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "swipes_swiped_profile_id_fkey"
+            columns: ["swiped_profile_id"]
+            isOneToOne: false
+            referencedRelation: "view_profile_matches"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "swipes_swiper_id_fkey"
+            columns: ["swiper_id"]
+            isOneToOne: false
+            referencedRelation: "dating_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "swipes_swiper_id_fkey"
+            columns: ["swiper_id"]
+            isOneToOne: false
+            referencedRelation: "view_profile_matches"
+            referencedColumns: ["profile_id"]
+          },
+        ]
       }
       temp_users: {
         Row: {
@@ -1264,6 +1394,43 @@ export type Database = {
         }
         Relationships: []
       }
+      mutual_matches: {
+        Row: {
+          match_time: string | null
+          profile_id_1: string | null
+          profile_id_2: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swipes_swiped_profile_id_fkey"
+            columns: ["profile_id_2"]
+            isOneToOne: false
+            referencedRelation: "dating_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "swipes_swiped_profile_id_fkey"
+            columns: ["profile_id_2"]
+            isOneToOne: false
+            referencedRelation: "view_profile_matches"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "swipes_swiper_id_fkey"
+            columns: ["profile_id_1"]
+            isOneToOne: false
+            referencedRelation: "dating_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "swipes_swiper_id_fkey"
+            columns: ["profile_id_1"]
+            isOneToOne: false
+            referencedRelation: "view_profile_matches"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
       secure_profiles: {
         Row: {
           bio: string | null
@@ -1327,6 +1494,31 @@ export type Database = {
         }
         Relationships: []
       }
+      view_all_matches_with_reverse: {
+        Row: {
+          match_age: number | null
+          match_bio: string | null
+          match_first_name: string | null
+          match_gender: string | null
+          match_id: string | null
+          match_image: string | null
+          match_interests: string[] | null
+          match_location: string | null
+          match_orientation: string | null
+          profile_id: string | null
+          score: number | null
+          user_age: number | null
+          user_bio: string | null
+          user_first_name: string | null
+          user_gender: string | null
+          user_image: string | null
+          user_interests: string[] | null
+          user_location: string | null
+          user_orientation: string | null
+          user_seeking: string | null
+        }
+        Relationships: []
+      }
       view_password_rules: {
         Row: {
           created_at: string | null
@@ -1347,6 +1539,37 @@ export type Database = {
           rule_id?: number | null
         }
         Relationships: []
+      }
+      view_profile_matches: {
+        Row: {
+          match_age: number | null
+          match_first_name: string | null
+          match_gender: string | null
+          match_id: string | null
+          match_image: string | null
+          match_location: string | null
+          profile_id: string | null
+          score: number | null
+          user_first_name: string | null
+          user_gender: string | null
+          user_seeking_gender: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_matches_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "dating_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_matches_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "view_profile_matches"
+            referencedColumns: ["profile_id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -1645,6 +1868,16 @@ export type Database = {
         Args: { target_user_id: string; match_count?: number }
         Returns: undefined
       }
+      generate_daily_matches_for_user: {
+        Args: {
+          source_profile_id: string
+          input_lat: number
+          input_lng: number
+          max_distance?: number
+          match_limit?: number
+        }
+        Returns: undefined
+      }
       geography: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
@@ -1876,6 +2109,26 @@ export type Database = {
           height: number
         }[]
       }
+      get_nearby_profiles: {
+        Args:
+          | { input_lat: number; input_lng: number; max_distance?: number }
+          | {
+              input_lat: number
+              input_lng: number
+              max_distance?: number
+              result_offset?: number
+              result_limit?: number
+            }
+        Returns: {
+          id: string
+          first_name: string
+          age: number
+          gender: string
+          location: string
+          profile_image_url: string
+          distance_meters: number
+        }[]
+      }
       get_proj4_from_srid: {
         Args: { "": number }
         Returns: string
@@ -1886,6 +2139,20 @@ export type Database = {
           | { filename: string }
           | { p_user_id: string }
         Returns: string
+      }
+      get_top_matches: {
+        Args: { profile: string; match_limit?: number }
+        Returns: {
+          match_id: string
+          match_first_name: string
+          match_age: number
+          match_gender: string
+          match_bio: string
+          match_location: string
+          match_interests: string[]
+          match_image: string
+          score: number
+        }[]
       }
       gettransactionid: {
         Args: Record<PropertyKey, never>
@@ -3370,6 +3637,14 @@ export type Database = {
       vector_typmod_in: {
         Args: { "": unknown[] }
         Returns: number
+      }
+      view_nearby_matches: {
+        Args: { p_profile_id: number }
+        Returns: {
+          matched_profile_id: number
+          name: string
+          distance_meters: number
+        }[]
       }
     }
     Enums: {
