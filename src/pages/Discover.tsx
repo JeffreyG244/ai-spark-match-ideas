@@ -151,15 +151,15 @@ const Discover = () => {
         .map((profile) => ({
           id: profile.id,
           user_id: profile.user_id,
-          email: profile.email,
-          bio: profile.bio,
-          photo_urls: profile.photo_urls || ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
-          firstName: profile.first_name,
-          lastName: profile.last_name,
-          age: profile.age,
-          location: `${profile.city}, ${profile.state}`,
+          email: profile.email || `${profile.user_id}@example.com`,
+          bio: profile.bio || '',
+          photo_urls: profile.photo_urls && Array.isArray(profile.photo_urls) ? profile.photo_urls : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+          firstName: profile.first_name || 'User',
+          lastName: profile.last_name || '',
+          age: profile.age || 25,
+          location: `${profile.city || 'Unknown'}, ${profile.state || 'Unknown'}`,
           compatibility_score: Math.floor(Math.random() * 30) + 60,
-          gender: profile.gender
+          gender: profile.gender || 'Unknown'
         }));
 
       // Sort by compatibility score

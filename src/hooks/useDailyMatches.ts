@@ -28,7 +28,11 @@ export const useDailyMatches = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const loadDailyMatches = async () => {
-    if (!user) return;
+    if (!user) {
+      setDailyMatches([]);
+      setIsLoading(false);
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -167,15 +171,23 @@ export const useDailyMatches = () => {
             ...match,
             user_profile: profile ? {
               user_id: profile.user_id,
-              email: profile.email || '',
-              bio: profile.bio,
-              photo_urls: Array.isArray(profile.photo_urls) && profile.photo_urls.length > 0 
+              email: profile.email || `${profile.user_id}@example.com`,
+              bio: profile.bio || '',
+              photo_urls: profile.photo_urls && Array.isArray(profile.photo_urls) && profile.photo_urls.length > 0 
                 ? profile.photo_urls 
                 : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
-              first_name: profile.first_name,
-              age: profile.age,
-              gender: profile.gender
-            } : undefined
+              first_name: profile.first_name || 'User',
+              age: profile.age || 25,
+              gender: profile.gender || 'Unknown'
+            } : {
+              user_id: match.suggested_user_id,
+              email: `${match.suggested_user_id}@example.com`,
+              bio: '',
+              photo_urls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+              first_name: 'User',
+              age: 25,
+              gender: 'Unknown'
+            }
           };
         });
 
