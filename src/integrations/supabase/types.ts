@@ -182,13 +182,6 @@ export type Database = {
             referencedRelation: "dating_profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "ai_match_feedback_matched_profile_id_fkey"
-            columns: ["matched_profile_id"]
-            isOneToOne: false
-            referencedRelation: "view_profile_matches"
-            referencedColumns: ["profile_id"]
-          },
         ]
       }
       ai_models: {
@@ -404,62 +397,41 @@ export type Database = {
       }
       daily_matches: {
         Row: {
+          compatibility_score: number
           created_at: string | null
           id: string
-          match_id: string | null
-          profile_id: string | null
-          score: number | null
+          suggested_date: string
+          suggested_user_id: string
+          user_id: string
+          viewed: boolean
         }
         Insert: {
+          compatibility_score?: number
           created_at?: string | null
           id?: string
-          match_id?: string | null
-          profile_id?: string | null
-          score?: number | null
+          suggested_date?: string
+          suggested_user_id: string
+          user_id: string
+          viewed?: boolean
         }
         Update: {
+          compatibility_score?: number
           created_at?: string | null
           id?: string
-          match_id?: string | null
-          profile_id?: string | null
-          score?: number | null
+          suggested_date?: string
+          suggested_user_id?: string
+          user_id?: string
+          viewed?: boolean
         }
-        Relationships: [
-          {
-            foreignKeyName: "daily_matches_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "dating_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "daily_matches_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "view_profile_matches"
-            referencedColumns: ["profile_id"]
-          },
-          {
-            foreignKeyName: "daily_matches_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "dating_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "daily_matches_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "view_profile_matches"
-            referencedColumns: ["profile_id"]
-          },
-        ]
+        Relationships: []
       }
       dating_profiles: {
         Row: {
           age: number | null
           bio: string | null
+          city: string | null
           created_at: string | null
+          email: string | null
           first_name: string | null
           gender: string | null
           id: string
@@ -469,8 +441,10 @@ export type Database = {
           location: string | null
           longitude: number | null
           orientation: string | null
+          photo_urls: string[] | null
           profile_image_url: string | null
           seeking_gender: string | null
+          state: string | null
           updated_at: string | null
           user_id: string | null
           visible: boolean | null
@@ -478,7 +452,9 @@ export type Database = {
         Insert: {
           age?: number | null
           bio?: string | null
+          city?: string | null
           created_at?: string | null
+          email?: string | null
           first_name?: string | null
           gender?: string | null
           id?: string
@@ -488,8 +464,10 @@ export type Database = {
           location?: string | null
           longitude?: number | null
           orientation?: string | null
+          photo_urls?: string[] | null
           profile_image_url?: string | null
           seeking_gender?: string | null
+          state?: string | null
           updated_at?: string | null
           user_id?: string | null
           visible?: boolean | null
@@ -497,7 +475,9 @@ export type Database = {
         Update: {
           age?: number | null
           bio?: string | null
+          city?: string | null
           created_at?: string | null
+          email?: string | null
           first_name?: string | null
           gender?: string | null
           id?: string
@@ -507,8 +487,10 @@ export type Database = {
           location?: string | null
           longitude?: number | null
           orientation?: string | null
+          photo_urls?: string[] | null
           profile_image_url?: string | null
           seeking_gender?: string | null
+          state?: string | null
           updated_at?: string | null
           user_id?: string | null
           visible?: boolean | null
@@ -1154,25 +1136,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "swipes_swiped_profile_id_fkey"
-            columns: ["swiped_profile_id"]
-            isOneToOne: false
-            referencedRelation: "view_profile_matches"
-            referencedColumns: ["profile_id"]
-          },
-          {
             foreignKeyName: "swipes_swiper_id_fkey"
             columns: ["swiper_id"]
             isOneToOne: false
             referencedRelation: "dating_profiles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "swipes_swiper_id_fkey"
-            columns: ["swiper_id"]
-            isOneToOne: false
-            referencedRelation: "view_profile_matches"
-            referencedColumns: ["profile_id"]
           },
         ]
       }
@@ -1531,25 +1499,11 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "swipes_swiped_profile_id_fkey"
-            columns: ["profile_id_2"]
-            isOneToOne: false
-            referencedRelation: "view_profile_matches"
-            referencedColumns: ["profile_id"]
-          },
-          {
             foreignKeyName: "swipes_swiper_id_fkey"
             columns: ["profile_id_1"]
             isOneToOne: false
             referencedRelation: "dating_profiles"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "swipes_swiper_id_fkey"
-            columns: ["profile_id_1"]
-            isOneToOne: false
-            referencedRelation: "view_profile_matches"
-            referencedColumns: ["profile_id"]
           },
         ]
       }
@@ -1616,31 +1570,6 @@ export type Database = {
         }
         Relationships: []
       }
-      view_all_matches_with_reverse: {
-        Row: {
-          match_age: number | null
-          match_bio: string | null
-          match_first_name: string | null
-          match_gender: string | null
-          match_id: string | null
-          match_image: string | null
-          match_interests: string[] | null
-          match_location: string | null
-          match_orientation: string | null
-          profile_id: string | null
-          score: number | null
-          user_age: number | null
-          user_bio: string | null
-          user_first_name: string | null
-          user_gender: string | null
-          user_image: string | null
-          user_interests: string[] | null
-          user_location: string | null
-          user_orientation: string | null
-          user_seeking: string | null
-        }
-        Relationships: []
-      }
       view_password_rules: {
         Row: {
           created_at: string | null
@@ -1661,37 +1590,6 @@ export type Database = {
           rule_id?: number | null
         }
         Relationships: []
-      }
-      view_profile_matches: {
-        Row: {
-          match_age: number | null
-          match_first_name: string | null
-          match_gender: string | null
-          match_id: string | null
-          match_image: string | null
-          match_location: string | null
-          profile_id: string | null
-          score: number | null
-          user_first_name: string | null
-          user_gender: string | null
-          user_seeking_gender: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "daily_matches_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "dating_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "daily_matches_match_id_fkey"
-            columns: ["match_id"]
-            isOneToOne: false
-            referencedRelation: "view_profile_matches"
-            referencedColumns: ["profile_id"]
-          },
-        ]
       }
     }
     Functions: {
