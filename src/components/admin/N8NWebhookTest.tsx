@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -75,7 +76,7 @@ const N8NWebhookTest = () => {
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="border-purple-300 text-purple-600">
             <Webhook className="h-3 w-3 mr-1" />
-            Webhook URL: localhost:5678/webhook-test/profile-updated
+            Webhook URL: localhost:5678/webhook/010d0476-0e1c-4d10-bab7-955a933d1ca1
           </Badge>
         </div>
 
@@ -109,7 +110,7 @@ const N8NWebhookTest = () => {
           <AlertTriangle className="h-4 w-4 text-blue-600 mt-0.5" />
           <div className="text-sm text-blue-800">
             <strong>Instructions:</strong> Make sure your N8N workflow is running on localhost:5678 
-            and listening for the webhook-test/profile-updated endpoint. The webhook will send your 
+            and listening for the webhook/010d0476-0e1c-4d10-bab7-955a933d1ca1 endpoint. The webhook will send your 
             profile data including preferences, compatibility answers, and matching criteria.
           </div>
         </div>

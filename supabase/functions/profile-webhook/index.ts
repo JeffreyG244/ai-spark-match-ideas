@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -6,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const N8N_WEBHOOK_URL = 'http://localhost:5678/webhook-test/profile-updated';
+const N8N_WEBHOOK_URL = 'http://localhost:5678/webhook/010d0476-0e1c-4d10-bab7-955a933d1ca1';
 
 interface ProfileData {
   user_id: string;

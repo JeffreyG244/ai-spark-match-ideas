@@ -124,7 +124,7 @@ export type Database = {
           id: string
           match_id: string
           numeric_id: number
-          used: boolean | null
+          used: string | null
         }
         Insert: {
           created_at?: string | null
@@ -133,7 +133,7 @@ export type Database = {
           id?: string
           match_id: string
           numeric_id?: number
-          used?: boolean | null
+          used?: string | null
         }
         Update: {
           created_at?: string | null
@@ -142,7 +142,7 @@ export type Database = {
           id?: string
           match_id?: string
           numeric_id?: number
-          used?: boolean | null
+          used?: string | null
         }
         Relationships: []
       }
@@ -543,7 +543,15 @@ export type Database = {
           user_id?: string
           uuid_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       membership_plans: {
         Row: {
@@ -728,6 +736,63 @@ export type Database = {
         }
         Relationships: []
       }
+      pre_migration_profiles_backup: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          email: string | null
+          id: number | null
+          latitude: number | null
+          location: unknown | null
+          longitude: number | null
+          photo_urls: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: number | null
+          latitude?: number | null
+          location?: unknown | null
+          longitude?: number | null
+          photo_urls?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: number | null
+          latitude?: number | null
+          location?: unknown | null
+          longitude?: number | null
+          photo_urls?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      pre_migration_view_backups: {
+        Row: {
+          backup_name: string | null
+          definition: string | null
+          viewname: unknown | null
+        }
+        Insert: {
+          backup_name?: string | null
+          definition?: string | null
+          viewname?: unknown | null
+        }
+        Update: {
+          backup_name?: string | null
+          definition?: string | null
+          viewname?: unknown | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           bio: string | null
@@ -764,6 +829,45 @@ export type Database = {
           photo_urls?: string[] | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      profiles_backup: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          email: string | null
+          id: number | null
+          latitude: number | null
+          location: unknown | null
+          longitude: number | null
+          photo_urls: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: number | null
+          latitude?: number | null
+          location?: unknown | null
+          longitude?: number | null
+          photo_urls?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: number | null
+          latitude?: number | null
+          location?: unknown | null
+          longitude?: number | null
+          photo_urls?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1312,6 +1416,7 @@ export type Database = {
           email: string | null
           id: string
           name: string
+          user_id: string
         }
         Insert: {
           age?: number | null
@@ -1319,6 +1424,7 @@ export type Database = {
           email?: string | null
           id?: string
           name: string
+          user_id: string
         }
         Update: {
           age?: number | null
@@ -1326,6 +1432,22 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      view_backups: {
+        Row: {
+          definition: string | null
+          viewname: unknown | null
+        }
+        Insert: {
+          definition?: string | null
+          viewname?: unknown | null
+        }
+        Update: {
+          definition?: string | null
+          viewname?: unknown | null
         }
         Relationships: []
       }

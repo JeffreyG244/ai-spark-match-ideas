@@ -1,3 +1,4 @@
+
 -- Create function to trigger N8N webhook when profile is updated
 CREATE OR REPLACE FUNCTION trigger_n8n_profile_webhook()
 RETURNS TRIGGER AS $$
