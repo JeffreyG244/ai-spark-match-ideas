@@ -120,10 +120,15 @@ const Discover = () => {
         compatibility_answers: answersMap.get(profile.user_id) || null
       }));
 
-      // Apply strict bidirectional filtering
+      // Apply more permissive bidirectional filtering
       const bidirectionalMatches = profilesWithAnswers?.filter(profile => {
         const profileAnswers = (profile as any).compatibility_answers as any;
-        if (!profileAnswers) return false;
+        
+        // If no compatibility answers, still include the profile (be permissive)
+        if (!profileAnswers) {
+          console.log(`Profile ${profile.first_name}: No compatibility answers, including anyway`);
+          return true;
+        }
 
         const profileGender = profile.gender?.toLowerCase();
         const profileSeekingGender = profileAnswers['12']; // What they're seeking
@@ -140,15 +145,18 @@ const Discover = () => {
           userWantsProfile = true;
         }
 
-        // PROFILE WANTS TO SEE USER (BIDIRECTIONAL CHECK)
+        // PROFILE WANTS TO SEE USER (BIDIRECTIONAL CHECK) - Be more lenient
         let profileWantsUser = false;
-        if (profileSeekingGender === 'Everyone') {
+        if (!profileSeekingGender || profileSeekingGender === 'Everyone') {
           profileWantsUser = true;
         } else if (profileSeekingGender === 'Men' && userGender === 'Male') {
           profileWantsUser = true;
         } else if (profileSeekingGender === 'Women' && userGender === 'Female') {
           profileWantsUser = true;
         } else if (profileSeekingGender === 'Non-binary' && userGender === 'Non-binary') {
+          profileWantsUser = true;
+        } else if (userGender === 'Unknown') {
+          // If user gender is unknown, be very permissive
           profileWantsUser = true;
         }
 
