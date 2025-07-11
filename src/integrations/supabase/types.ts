@@ -2501,12 +2501,12 @@ export type Database = {
       }
       secure_rate_limit_check: {
         Args: {
-          p_user_id: string
-          p_action: string
-          p_max_requests: number
-          p_window_seconds: number
+          user_id_param: string
+          action_type?: string
+          max_requests?: number
+          window_minutes?: number
         }
-        Returns: boolean
+        Returns: Json
       }
       seed_dating_profiles: {
         Args: Record<PropertyKey, never>
@@ -3671,11 +3671,17 @@ export type Database = {
         Returns: boolean
       }
       validate_role_assignment: {
-        Args: {
-          assigner_id: string
-          target_user_id: string
-          new_role: Database["public"]["Enums"]["user_role"]
-        }
+        Args:
+          | {
+              assigner_id: string
+              target_user_id: string
+              new_role: Database["public"]["Enums"]["user_role"]
+            }
+          | {
+              target_user_id: string
+              new_role: Database["public"]["Enums"]["user_role"]
+              assigning_user_id: string
+            }
         Returns: boolean
       }
       vector_avg: {
