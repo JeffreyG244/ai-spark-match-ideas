@@ -9,7 +9,7 @@ interface Photo {
 }
 
 export const useProfileCompletion = (
-  profileData: ProfileData,
+  profileData: ProfileData | any,
   personalityAnswers: Record<string, string>,
   interests: string[],
   photos: Photo[]
@@ -18,26 +18,24 @@ export const useProfileCompletion = (
     let completed = 0;
     let total = 4;
 
-    // Basic profile (25%) - requires 50+ characters each
-    if (profileData.bio.length >= 50 && 
-        profileData.values.length >= 50 && 
-        profileData.lifeGoals.length >= 50 && 
-        profileData.greenFlags.length >= 50) {
+    // Basic profile (25%) - safely check bio length
+    const bioLength = profileData?.bio?.length || 0;
+    if (bioLength >= 50) {
       completed += 1;
     }
 
     // Personality questions (25%)
-    if (Object.keys(personalityAnswers).length >= 6) {
+    if (personalityAnswers && Object.keys(personalityAnswers).length >= 6) {
       completed += 1;
     }
 
     // Interests (25%)
-    if (interests.length >= 5) {
+    if (interests && interests.length >= 5) {
       completed += 1;
     }
 
     // Photos (25%) - requires at least 3 photos
-    if (photos.length >= 3) {
+    if (photos && photos.length >= 3) {
       completed += 1;
     }
 

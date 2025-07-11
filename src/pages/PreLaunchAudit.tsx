@@ -3,6 +3,8 @@ import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
 import PreLaunchDashboard from '@/components/admin/PreLaunchDashboard';
+import SystemIntegrationTest from '@/components/admin/SystemIntegrationTest';
+import PreLaunchSecurityAuditComponent from '@/components/admin/PreLaunchSecurityAudit';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -26,7 +28,11 @@ const PreLaunchAudit = () => {
             </Button>
           </Link>
         </div>
-        <PreLaunchDashboard />
+        <div className="space-y-8">
+          <PreLaunchSecurityAuditComponent />
+          <SystemIntegrationTest />
+          <PreLaunchDashboard />
+        </div>
       </div>
     </div>
   );

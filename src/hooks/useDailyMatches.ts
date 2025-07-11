@@ -28,7 +28,11 @@ export const useDailyMatches = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const loadDailyMatches = async () => {
-    if (!user) return;
+    if (!user) {
+      setDailyMatches([]);
+      setIsLoading(false);
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -68,21 +72,52 @@ export const useDailyMatches = () => {
       if (!existingMatches || existingMatches.length === 0) {
         console.log('No existing daily matches, generating new ones with bidirectional filtering...');
         
-        // Get profiles with bidirectional matching
-        let { data: profilesWithAnswers, error: profilesError } = await supabase
+        // Get profiles first
+        let { data: allProfiles, error: profilesError } = await supabase
           .from('dating_profiles')
-          .select(`
-            *,
-            compatibility_answers!inner(answers)
-          `)
+          .select('*')
+          .eq('visible', true)
           .gte('age', userPreferences.age_min)
           .lte('age', userPreferences.age_max)
           .neq('user_id', user.id);
 
+        if (profilesError || !allProfiles) {
+          console.error('Error loading profiles:', profilesError);
+          setDailyMatches([]);
+          return;
+        }
+
+        // Get compatibility answers for these profiles
+        const profileUserIds = allProfiles.map(p => p.user_id).filter(Boolean);
+        let { data: answersData, error: answersError } = await supabase
+          .from('compatibility_answers')
+          .select('user_id, answers')
+          .in('user_id', profileUserIds);
+
+        if (answersError) {
+          console.error('Error loading compatibility answers:', answersError);
+          answersData = [];
+        }
+
+        // Create a map of user_id to answers for quick lookup
+        const answersMap = new Map();
+        answersData?.forEach(answer => {
+          answersMap.set(answer.user_id, answer.answers);
+        });
+
+        // Combine profiles with their answers
+        const profilesWithAnswers = allProfiles.map(profile => ({
+          ...profile,
+          compatibility_answers: answersMap.get(profile.user_id) || null
+        }));
+
         if (profilesWithAnswers && profilesWithAnswers.length > 0) {
-          // Apply bidirectional filtering
+          // Apply bidirectional filtering - add safety checks
           profilesData = profilesWithAnswers.filter(profile => {
-            const profileAnswers = (profile as any).compatibility_answers?.[0]?.answers as any;
+            if (!profile || !profile.compatibility_answers) {
+              return false;
+            }
+            const profileAnswers = profile.compatibility_answers;
             if (!profileAnswers) return false;
 
             const profileGender = profile.gender?.toLowerCase();
@@ -167,15 +202,23 @@ export const useDailyMatches = () => {
             ...match,
             user_profile: profile ? {
               user_id: profile.user_id,
-              email: profile.email || '',
-              bio: profile.bio,
-              photo_urls: Array.isArray(profile.photo_urls) && profile.photo_urls.length > 0 
+              email: profile.email || `${profile.user_id}@example.com`,
+              bio: profile.bio || '',
+              photo_urls: profile.photo_urls && Array.isArray(profile.photo_urls) && profile.photo_urls.length > 0 
                 ? profile.photo_urls 
                 : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
-              first_name: profile.first_name,
-              age: profile.age,
-              gender: profile.gender
-            } : undefined
+              first_name: profile.first_name || 'User',
+              age: profile.age || 25,
+              gender: profile.gender || 'Unknown'
+            } : {
+              user_id: match.suggested_user_id,
+              email: `${match.suggested_user_id}@example.com`,
+              bio: '',
+              photo_urls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+              first_name: 'User',
+              age: 25,
+              gender: 'Unknown'
+            }
           };
         });
 
@@ -213,27 +256,53 @@ export const useDailyMatches = () => {
         userGender = answers['7'] || 'Unknown';
       }
 
-      // Get compatible profiles with bidirectional matching
-      let { data: profiles, error: profilesError } = await supabase
+      // Get compatible profiles first
+      let { data: allProfiles, error: profilesError } = await supabase
         .from('dating_profiles')
-        .select(`
-          *,
-          compatibility_answers!inner(answers)
-        `)
+        .select('*')
+        .eq('visible', true)
         .gte('age', userPreferences.age_min)
         .lte('age', userPreferences.age_max)
         .neq('user_id', user.id)
         .limit(matchCount * 2);
 
-      if (profilesError) {
+      if (profilesError || !allProfiles) {
         console.error('Error fetching profiles for daily matches:', profilesError);
         return;
       }
 
+      // Get compatibility answers for these profiles
+      const profileUserIds = allProfiles.map(p => p.user_id).filter(Boolean);
+      let { data: answersData, error: answersError } = await supabase
+        .from('compatibility_answers')
+        .select('user_id, answers')
+        .in('user_id', profileUserIds);
+
+      if (answersError) {
+        console.error('Error loading compatibility answers:', answersError);
+        answersData = [];
+      }
+
+      // Create a map of user_id to answers for quick lookup
+      const answersMap = new Map();
+      answersData?.forEach(answer => {
+        answersMap.set(answer.user_id, answer.answers);
+      });
+
+      // Combine profiles with their answers
+      const profiles = allProfiles.map(profile => ({
+        ...profile,
+        compatibility_answers: answersMap.get(profile.user_id) || null
+      }));
+
+
       if (profiles && profiles.length > 0) {
-        // Apply bidirectional filtering
+        // Apply bidirectional filtering - add safety checks
         const filteredProfiles = profiles.filter(profile => {
-          const profileAnswers = (profile as any).compatibility_answers?.[0]?.answers as any;
+          if (!profile || !profile.compatibility_answers) {
+            return false;
+          }
+          const profileAnswers = profile.compatibility_answers;
           if (!profileAnswers) return false;
 
           const profileGender = profile.gender?.toLowerCase();

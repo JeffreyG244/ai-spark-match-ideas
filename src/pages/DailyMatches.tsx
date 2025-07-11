@@ -1,12 +1,13 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Sparkles, RefreshCw, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useDailyMatches } from '@/hooks/useDailyMatches';
-import DailyMatchCard from '@/components/discover/DailyMatchCard';
+import { AnimatePresence } from 'framer-motion';
+import SwipeableDailyMatch from '@/components/discover/SwipeableDailyMatch';
 import NavigationTabs from '@/components/navigation/NavigationTabs';
 
 const DailyMatches = () => {
@@ -20,6 +21,8 @@ const DailyMatches = () => {
   } = useDailyMatches();
   
   const hasGeneratedMatches = useRef(false);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+  const [swipedMatches, setSwipedMatches] = useState<string[]>([]);
 
   useEffect(() => {
     if (user && !hasGeneratedMatches.current && dailyMatches.length === 0 && !isLoading) {
@@ -29,15 +32,24 @@ const DailyMatches = () => {
     }
   }, [user, dailyMatches.length, isLoading, generateDailyMatches]);
 
-  const handleViewMatch = (matchId: string) => {
-    markAsViewed(matchId);
-    // You could navigate to a detailed view here
+  const handleSwipe = (direction: 'like' | 'pass') => {
+    const currentMatch = dailyMatches[currentMatchIndex];
+    if (currentMatch) {
+      markAsViewed(currentMatch.id);
+      setSwipedMatches(prev => [...prev, currentMatch.id]);
+      setCurrentMatchIndex(prev => prev + 1);
+    }
   };
 
   const handleRefreshMatches = () => {
     hasGeneratedMatches.current = false;
+    setCurrentMatchIndex(0);
+    setSwipedMatches([]);
     generateDailyMatches();
   };
+
+  const availableMatches = dailyMatches.filter(match => !swipedMatches.includes(match.id));
+  const currentMatch = availableMatches[0];
 
   if (isLoading) {
     return (
@@ -58,10 +70,10 @@ const DailyMatches = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                <Sparkles className="h-6 w-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-love-primary to-love-secondary rounded-xl flex items-center justify-center">
+                <Heart className="h-6 w-6 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">Daily Matches</h2>
+              <h1 className="text-2xl font-bold text-love-text">Luvlang</h1>
             </div>
           </div>
           <Button onClick={signOut} variant="outline">
@@ -86,7 +98,7 @@ const DailyMatches = () => {
           </div>
         </div>
 
-        {dailyMatches.length === 0 ? (
+        {availableMatches.length === 0 ? (
           <Card className="border-purple-200 text-center py-12">
             <CardContent>
               <Heart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -127,33 +139,63 @@ const DailyMatches = () => {
                     <div className="text-2xl font-bold text-purple-600">
                       {dailyMatches.length}
                     </div>
-                    <div className="text-sm text-gray-600">Daily Matches</div>
+                    <div className="text-sm text-gray-600">Total Matches</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600">
-                      {Math.round(dailyMatches.reduce((acc, match) => acc + match.compatibility_score, 0) / dailyMatches.length) || 0}%
+                      {availableMatches.length}
                     </div>
-                    <div className="text-sm text-gray-600">Avg Compatibility</div>
+                    <div className="text-sm text-gray-600">Remaining</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-purple-600">
-                      {dailyMatches.filter(match => match.compatibility_score >= 80).length}
+                      {swipedMatches.length}
                     </div>
-                    <div className="text-sm text-gray-600">Excellent Matches</div>
+                    <div className="text-sm text-gray-600">Viewed</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Matches Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {dailyMatches.map((match) => (
-                <DailyMatchCard
-                  key={match.id}
-                  match={match}
-                  onView={handleViewMatch}
-                />
-              ))}
+            {/* Swipeable Match Card */}
+            <div className="flex justify-center">
+              <div className="relative w-full max-w-md">
+                {currentMatch ? (
+                  <div className="relative">
+                    <p className="text-center text-sm text-gray-600 mb-4">
+                      Swipe left to pass, right to like!
+                    </p>
+                    <AnimatePresence mode="wait">
+                      <SwipeableDailyMatch
+                        key={currentMatch.id}
+                        match={currentMatch}
+                        onSwipe={handleSwipe}
+                      />
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <Card className="border-purple-200 text-center py-16">
+                    <CardContent className="space-y-6">
+                      <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto">
+                        <Heart className="h-10 w-10 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-3">All caught up!</h3>
+                        <p className="text-gray-600 mb-6 max-w-sm mx-auto">
+                          You've viewed all your daily matches. Come back tomorrow for new suggestions!
+                        </p>
+                      </div>
+                      <Button 
+                        onClick={handleRefreshMatches}
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Get More Matches
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             </div>
           </>
         )}

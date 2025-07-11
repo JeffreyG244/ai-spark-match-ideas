@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
       admin_actions: {
@@ -119,7 +124,7 @@ export type Database = {
           id: string
           match_id: string
           numeric_id: number
-          used: boolean | null
+          used: string | null
         }
         Insert: {
           created_at?: string | null
@@ -128,7 +133,7 @@ export type Database = {
           id?: string
           match_id: string
           numeric_id?: number
-          used?: boolean | null
+          used?: string | null
         }
         Update: {
           created_at?: string | null
@@ -137,9 +142,47 @@ export type Database = {
           id?: string
           match_id?: string
           numeric_id?: number
-          used?: boolean | null
+          used?: string | null
         }
         Relationships: []
+      }
+      ai_match_feedback: {
+        Row: {
+          created_at: string | null
+          feedback: string | null
+          id: string
+          match_score: number | null
+          matched_profile_id: string | null
+          thumbs_up: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          match_score?: number | null
+          matched_profile_id?: string | null
+          thumbs_up?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          match_score?: number | null
+          matched_profile_id?: string | null
+          thumbs_up?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_match_feedback_matched_profile_id_fkey"
+            columns: ["matched_profile_id"]
+            isOneToOne: false
+            referencedRelation: "dating_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ai_models: {
         Row: {
@@ -207,6 +250,36 @@ export type Database = {
           id?: string
           reviewed_by?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      cities_states: {
+        Row: {
+          city: string
+          country: string | null
+          created_at: string | null
+          id: number
+          population: number | null
+          state: string
+          state_code: string
+        }
+        Insert: {
+          city: string
+          country?: string | null
+          created_at?: string | null
+          id?: number
+          population?: number | null
+          state: string
+          state_code: string
+        }
+        Update: {
+          city?: string
+          country?: string | null
+          created_at?: string | null
+          id?: number
+          population?: number | null
+          state?: string
+          state_code?: string
         }
         Relationships: []
       }
@@ -355,7 +428,7 @@ export type Database = {
       daily_matches: {
         Row: {
           compatibility_score: number
-          created_at: string
+          created_at: string | null
           id: string
           suggested_date: string
           suggested_user_id: string
@@ -364,7 +437,7 @@ export type Database = {
         }
         Insert: {
           compatibility_score?: number
-          created_at?: string
+          created_at?: string | null
           id?: string
           suggested_date?: string
           suggested_user_id: string
@@ -373,7 +446,7 @@ export type Database = {
         }
         Update: {
           compatibility_score?: number
-          created_at?: string
+          created_at?: string | null
           id?: string
           suggested_date?: string
           suggested_user_id?: string
@@ -384,58 +457,79 @@ export type Database = {
       }
       dating_profiles: {
         Row: {
-          age: number
-          bio: string
-          city: string
+          age: number | null
+          bio: string | null
+          city: string | null
+          country: string | null
           created_at: string | null
-          email: string
-          first_name: string
-          gender: string
+          email: string | null
+          first_name: string | null
+          gender: string | null
           id: string
-          interests: string[]
-          last_name: string
-          partner_preferences: string
-          photo_urls: string[]
-          relationship_goals: string
-          state: string
+          interests: string[] | null
+          last_name: string | null
+          latitude: number | null
+          location: string | null
+          longitude: number | null
+          orientation: string | null
+          photo_urls: string[] | null
+          postal_code: string | null
+          profile_image_url: string | null
+          seeking_gender: string | null
+          state: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
+          visible: boolean | null
         }
         Insert: {
-          age: number
-          bio: string
-          city: string
+          age?: number | null
+          bio?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string | null
-          email: string
-          first_name: string
-          gender: string
+          email?: string | null
+          first_name?: string | null
+          gender?: string | null
           id?: string
-          interests: string[]
-          last_name: string
-          partner_preferences: string
-          photo_urls?: string[]
-          relationship_goals: string
-          state: string
+          interests?: string[] | null
+          last_name?: string | null
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          orientation?: string | null
+          photo_urls?: string[] | null
+          postal_code?: string | null
+          profile_image_url?: string | null
+          seeking_gender?: string | null
+          state?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
+          visible?: boolean | null
         }
         Update: {
-          age?: number
-          bio?: string
-          city?: string
+          age?: number | null
+          bio?: string | null
+          city?: string | null
+          country?: string | null
           created_at?: string | null
-          email?: string
-          first_name?: string
-          gender?: string
+          email?: string | null
+          first_name?: string | null
+          gender?: string | null
           id?: string
-          interests?: string[]
-          last_name?: string
-          partner_preferences?: string
-          photo_urls?: string[]
-          relationship_goals?: string
-          state?: string
+          interests?: string[] | null
+          last_name?: string | null
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          orientation?: string | null
+          photo_urls?: string[] | null
+          postal_code?: string | null
+          profile_image_url?: string | null
+          seeking_gender?: string | null
+          state?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
+          visible?: boolean | null
         }
         Relationships: []
       }
@@ -467,7 +561,15 @@ export type Database = {
           user_id?: string
           uuid_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       membership_plans: {
         Row: {
@@ -652,13 +754,72 @@ export type Database = {
         }
         Relationships: []
       }
+      pre_migration_profiles_backup: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          email: string | null
+          id: number | null
+          latitude: number | null
+          location: unknown | null
+          longitude: number | null
+          photo_urls: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: number | null
+          latitude?: number | null
+          location?: unknown | null
+          longitude?: number | null
+          photo_urls?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: number | null
+          latitude?: number | null
+          location?: unknown | null
+          longitude?: number | null
+          photo_urls?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      pre_migration_view_backups: {
+        Row: {
+          backup_name: string | null
+          definition: string | null
+          viewname: unknown | null
+        }
+        Insert: {
+          backup_name?: string | null
+          definition?: string | null
+          viewname?: unknown | null
+        }
+        Update: {
+          backup_name?: string | null
+          definition?: string | null
+          viewname?: unknown | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           bio: string | null
           created_at: string
           email: string
           id: number
+          latitude: number | null
           location: unknown | null
+          longitude: number | null
           photo_urls: string[] | null
           updated_at: string
           user_id: string
@@ -668,7 +829,9 @@ export type Database = {
           created_at?: string
           email: string
           id?: never
+          latitude?: number | null
           location?: unknown | null
+          longitude?: number | null
           photo_urls?: string[] | null
           updated_at?: string
           user_id: string
@@ -678,10 +841,51 @@ export type Database = {
           created_at?: string
           email?: string
           id?: never
+          latitude?: number | null
           location?: unknown | null
+          longitude?: number | null
           photo_urls?: string[] | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      profiles_backup: {
+        Row: {
+          bio: string | null
+          created_at: string | null
+          email: string | null
+          id: number | null
+          latitude: number | null
+          location: unknown | null
+          longitude: number | null
+          photo_urls: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: number | null
+          latitude?: number | null
+          location?: unknown | null
+          longitude?: number | null
+          photo_urls?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: number | null
+          latitude?: number | null
+          location?: unknown | null
+          longitude?: number | null
+          photo_urls?: string[] | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -937,6 +1141,69 @@ export type Database = {
         }
         Relationships: []
       }
+      swipes: {
+        Row: {
+          created_at: string | null
+          direction: string | null
+          id: string
+          swiped_profile_id: string | null
+          swiper_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          direction?: string | null
+          id?: string
+          swiped_profile_id?: string | null
+          swiper_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          direction?: string | null
+          id?: string
+          swiped_profile_id?: string | null
+          swiper_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swipes_swiped_profile_id_fkey"
+            columns: ["swiped_profile_id"]
+            isOneToOne: false
+            referencedRelation: "dating_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "swipes_swiper_id_fkey"
+            columns: ["swiper_id"]
+            isOneToOne: false
+            referencedRelation: "dating_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      temp_users: {
+        Row: {
+          age: number | null
+          created_at: string | null
+          email: string | null
+          id: string | null
+          name: string | null
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Update: {
+          age?: number | null
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
       user_behavior: {
         Row: {
           active_hours: Json | null
@@ -1148,40 +1415,43 @@ export type Database = {
       }
       users: {
         Row: {
-          age: number
+          age: number | null
           created_at: string | null
-          display_name: string | null
-          gender: string
+          email: string | null
           id: string
-          interests: string
-          location: string
-          partner_preferences: string
-          relationship_goals: string
-          values: string
+          name: string
+          user_id: string
         }
         Insert: {
-          age: number
+          age?: number | null
           created_at?: string | null
-          display_name?: string | null
-          gender: string
+          email?: string | null
           id?: string
-          interests: string
-          location: string
-          partner_preferences: string
-          relationship_goals: string
-          values: string
+          name: string
+          user_id: string
         }
         Update: {
-          age?: number
+          age?: number | null
           created_at?: string | null
-          display_name?: string | null
-          gender?: string
+          email?: string | null
           id?: string
-          interests?: string
-          location?: string
-          partner_preferences?: string
-          relationship_goals?: string
-          values?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      view_backups: {
+        Row: {
+          definition: string | null
+          viewname: unknown | null
+        }
+        Insert: {
+          definition?: string | null
+          viewname?: unknown | null
+        }
+        Update: {
+          definition?: string | null
+          viewname?: unknown | null
         }
         Relationships: []
       }
@@ -1250,6 +1520,29 @@ export type Database = {
         }
         Relationships: []
       }
+      mutual_matches: {
+        Row: {
+          match_time: string | null
+          profile_id_1: string | null
+          profile_id_2: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swipes_swiped_profile_id_fkey"
+            columns: ["profile_id_2"]
+            isOneToOne: false
+            referencedRelation: "dating_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "swipes_swiper_id_fkey"
+            columns: ["profile_id_1"]
+            isOneToOne: false
+            referencedRelation: "dating_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       secure_profiles: {
         Row: {
           bio: string | null
@@ -1274,18 +1567,6 @@ export type Database = {
           id?: number | null
           updated_at?: string | null
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      user_match_candidates: {
-        Row: {
-          age: number | null
-          display_name: string | null
-          gender: string | null
-          interests: string | null
-          location: string | null
-          match_id: string | null
-          values_embedding: string | null
         }
         Relationships: []
       }
@@ -1643,6 +1924,16 @@ export type Database = {
         Args: { target_user_id: string; match_count?: number }
         Returns: undefined
       }
+      generate_daily_matches_for_user: {
+        Args: {
+          source_profile_id: string
+          input_lat: number
+          input_lng: number
+          max_distance?: number
+          match_limit?: number
+        }
+        Returns: undefined
+      }
       geography: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
@@ -1874,6 +2165,26 @@ export type Database = {
           height: number
         }[]
       }
+      get_nearby_profiles: {
+        Args:
+          | { input_lat: number; input_lng: number; max_distance?: number }
+          | {
+              input_lat: number
+              input_lng: number
+              max_distance?: number
+              result_offset?: number
+              result_limit?: number
+            }
+        Returns: {
+          id: string
+          first_name: string
+          age: number
+          gender: string
+          location: string
+          profile_image_url: string
+          distance_meters: number
+        }[]
+      }
       get_proj4_from_srid: {
         Args: { "": number }
         Returns: string
@@ -1884,6 +2195,20 @@ export type Database = {
           | { filename: string }
           | { p_user_id: string }
         Returns: string
+      }
+      get_top_matches: {
+        Args: { profile: string; match_limit?: number }
+        Returns: {
+          match_id: string
+          match_first_name: string
+          match_age: number
+          match_gender: string
+          match_bio: string
+          match_location: string
+          match_interests: string[]
+          match_image: string
+          score: number
+        }[]
       }
       gettransactionid: {
         Args: Record<PropertyKey, never>
@@ -2186,6 +2511,14 @@ export type Database = {
       seed_dating_profiles: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      seed_diverse_dating_profiles: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          success: boolean
+          message: string
+          count: number
+        }[]
       }
       sparsevec_out: {
         Args: { "": unknown }
@@ -3369,6 +3702,14 @@ export type Database = {
         Args: { "": unknown[] }
         Returns: number
       }
+      view_nearby_matches: {
+        Args: { p_profile_id: number }
+        Returns: {
+          matched_profile_id: number
+          name: string
+          distance_meters: number
+        }[]
+      }
     }
     Enums: {
       match_status: "pending" | "accepted" | "rejected"
@@ -3395,21 +3736,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -3427,14 +3772,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -3450,14 +3797,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -3473,14 +3822,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -3488,14 +3839,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never

@@ -42,12 +42,14 @@ import AccountSuspension from "./pages/legal/AccountSuspension";
 const queryClient = new QueryClient();
 
 import { EnhancedSecurityProvider } from '@/components/profile/EnhancedSecurityProvider';
+import SecureSessionManager from '@/components/security/SecureSessionManager';
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
+          <SecureSessionManager />
           <EnhancedSecurityProvider>
             <Router>
               <Routes>

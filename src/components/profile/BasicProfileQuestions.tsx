@@ -165,71 +165,150 @@ const BasicProfileQuestions = ({ answers, onAnswerChange }: BasicProfileQuestion
                 </SelectContent>
               </Select>
             </div>
-            
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label className="text-sm font-medium">Location *</Label>
+              <Label className="text-sm font-medium">City *</Label>
               <Select 
-                value={answers.location || ''} 
-                onValueChange={(value) => onAnswerChange('location', value)}
+                value={answers.city || ''} 
+                onValueChange={(value) => onAnswerChange('city', value)}
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select your city" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="New York, NY">New York, NY</SelectItem>
-                  <SelectItem value="Los Angeles, CA">Los Angeles, CA</SelectItem>
-                  <SelectItem value="Chicago, IL">Chicago, IL</SelectItem>
-                  <SelectItem value="Houston, TX">Houston, TX</SelectItem>
-                  <SelectItem value="Phoenix, AZ">Phoenix, AZ</SelectItem>
-                  <SelectItem value="Philadelphia, PA">Philadelphia, PA</SelectItem>
-                  <SelectItem value="San Antonio, TX">San Antonio, TX</SelectItem>
-                  <SelectItem value="San Diego, CA">San Diego, CA</SelectItem>
-                  <SelectItem value="Dallas, TX">Dallas, TX</SelectItem>
-                  <SelectItem value="San Jose, CA">San Jose, CA</SelectItem>
-                  <SelectItem value="Austin, TX">Austin, TX</SelectItem>
-                  <SelectItem value="Jacksonville, FL">Jacksonville, FL</SelectItem>
-                  <SelectItem value="Fort Worth, TX">Fort Worth, TX</SelectItem>
-                  <SelectItem value="Columbus, OH">Columbus, OH</SelectItem>
-                  <SelectItem value="Charlotte, NC">Charlotte, NC</SelectItem>
-                  <SelectItem value="San Francisco, CA">San Francisco, CA</SelectItem>
-                  <SelectItem value="Indianapolis, IN">Indianapolis, IN</SelectItem>
-                  <SelectItem value="Seattle, WA">Seattle, WA</SelectItem>
-                  <SelectItem value="Denver, CO">Denver, CO</SelectItem>
-                  <SelectItem value="Washington, DC">Washington, DC</SelectItem>
-                  <SelectItem value="Boston, MA">Boston, MA</SelectItem>
-                  <SelectItem value="Nashville, TN">Nashville, TN</SelectItem>
-                  <SelectItem value="Detroit, MI">Detroit, MI</SelectItem>
-                  <SelectItem value="Portland, OR">Portland, OR</SelectItem>
-                  <SelectItem value="Las Vegas, NV">Las Vegas, NV</SelectItem>
-                  <SelectItem value="Memphis, TN">Memphis, TN</SelectItem>
-                  <SelectItem value="Louisville, KY">Louisville, KY</SelectItem>
-                  <SelectItem value="Baltimore, MD">Baltimore, MD</SelectItem>
-                  <SelectItem value="Milwaukee, WI">Milwaukee, WI</SelectItem>
-                  <SelectItem value="Albuquerque, NM">Albuquerque, NM</SelectItem>
-                  <SelectItem value="Tucson, AZ">Tucson, AZ</SelectItem>
-                  <SelectItem value="Fresno, CA">Fresno, CA</SelectItem>
-                  <SelectItem value="Sacramento, CA">Sacramento, CA</SelectItem>
-                  <SelectItem value="Mesa, AZ">Mesa, AZ</SelectItem>
-                  <SelectItem value="Kansas City, MO">Kansas City, MO</SelectItem>
-                  <SelectItem value="Atlanta, GA">Atlanta, GA</SelectItem>
-                  <SelectItem value="Long Beach, CA">Long Beach, CA</SelectItem>
-                  <SelectItem value="Colorado Springs, CO">Colorado Springs, CO</SelectItem>
-                  <SelectItem value="Raleigh, NC">Raleigh, NC</SelectItem>
-                  <SelectItem value="Miami, FL">Miami, FL</SelectItem>
-                  <SelectItem value="Virginia Beach, VA">Virginia Beach, VA</SelectItem>
-                  <SelectItem value="Omaha, NE">Omaha, NE</SelectItem>
-                  <SelectItem value="Oakland, CA">Oakland, CA</SelectItem>
-                  <SelectItem value="Minneapolis, MN">Minneapolis, MN</SelectItem>
-                  <SelectItem value="Tulsa, OK">Tulsa, OK</SelectItem>
-                  <SelectItem value="Arlington, TX">Arlington, TX</SelectItem>
-                  <SelectItem value="Tampa, FL">Tampa, FL</SelectItem>
-                  <SelectItem value="New Orleans, LA">New Orleans, LA</SelectItem>
-                  <SelectItem value="Wichita, KS">Wichita, KS</SelectItem>
-                  <SelectItem value="Cleveland, OH">Cleveland, OH</SelectItem>
-                  <SelectItem value="Bakersfield, CA">Bakersfield, CA</SelectItem>
-                  <SelectItem value="Other">Other (specify in bio)</SelectItem>
+                  <SelectItem value="New York">New York</SelectItem>
+                  <SelectItem value="Los Angeles">Los Angeles</SelectItem>
+                  <SelectItem value="Chicago">Chicago</SelectItem>
+                  <SelectItem value="Houston">Houston</SelectItem>
+                  <SelectItem value="Phoenix">Phoenix</SelectItem>
+                  <SelectItem value="Philadelphia">Philadelphia</SelectItem>
+                  <SelectItem value="San Antonio">San Antonio</SelectItem>
+                  <SelectItem value="San Diego">San Diego</SelectItem>
+                  <SelectItem value="Dallas">Dallas</SelectItem>
+                  <SelectItem value="San Jose">San Jose</SelectItem>
+                  <SelectItem value="Austin">Austin</SelectItem>
+                  <SelectItem value="Jacksonville">Jacksonville</SelectItem>
+                  <SelectItem value="Fort Worth">Fort Worth</SelectItem>
+                  <SelectItem value="Columbus">Columbus</SelectItem>
+                  <SelectItem value="Charlotte">Charlotte</SelectItem>
+                  <SelectItem value="San Francisco">San Francisco</SelectItem>
+                  <SelectItem value="Indianapolis">Indianapolis</SelectItem>
+                  <SelectItem value="Seattle">Seattle</SelectItem>
+                  <SelectItem value="Denver">Denver</SelectItem>
+                  <SelectItem value="Washington">Washington</SelectItem>
+                  <SelectItem value="Boston">Boston</SelectItem>
+                  <SelectItem value="Nashville">Nashville</SelectItem>
+                  <SelectItem value="Detroit">Detroit</SelectItem>
+                  <SelectItem value="Portland">Portland</SelectItem>
+                  <SelectItem value="Las Vegas">Las Vegas</SelectItem>
+                  <SelectItem value="Memphis">Memphis</SelectItem>
+                  <SelectItem value="Louisville">Louisville</SelectItem>
+                  <SelectItem value="Baltimore">Baltimore</SelectItem>
+                  <SelectItem value="Milwaukee">Milwaukee</SelectItem>
+                  <SelectItem value="Albuquerque">Albuquerque</SelectItem>
+                  <SelectItem value="Tucson">Tucson</SelectItem>
+                  <SelectItem value="Fresno">Fresno</SelectItem>
+                  <SelectItem value="Sacramento">Sacramento</SelectItem>
+                  <SelectItem value="Mesa">Mesa</SelectItem>
+                  <SelectItem value="Kansas City">Kansas City</SelectItem>
+                  <SelectItem value="Atlanta">Atlanta</SelectItem>
+                  <SelectItem value="Long Beach">Long Beach</SelectItem>
+                  <SelectItem value="Colorado Springs">Colorado Springs</SelectItem>
+                  <SelectItem value="Raleigh">Raleigh</SelectItem>
+                  <SelectItem value="Miami">Miami</SelectItem>
+                  <SelectItem value="Virginia Beach">Virginia Beach</SelectItem>
+                  <SelectItem value="Omaha">Omaha</SelectItem>
+                  <SelectItem value="Oakland">Oakland</SelectItem>
+                  <SelectItem value="Minneapolis">Minneapolis</SelectItem>
+                  <SelectItem value="Tulsa">Tulsa</SelectItem>
+                  <SelectItem value="Arlington">Arlington</SelectItem>
+                  <SelectItem value="Tampa">Tampa</SelectItem>
+                  <SelectItem value="New Orleans">New Orleans</SelectItem>
+                  <SelectItem value="Wichita">Wichita</SelectItem>
+                  <SelectItem value="Cleveland">Cleveland</SelectItem>
+                  <SelectItem value="Bakersfield">Bakersfield</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">State *</Label>
+              <Select 
+                value={answers.state || ''} 
+                onValueChange={(value) => onAnswerChange('state', value)}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select your state" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="AL">Alabama</SelectItem>
+                  <SelectItem value="AK">Alaska</SelectItem>
+                  <SelectItem value="AZ">Arizona</SelectItem>
+                  <SelectItem value="AR">Arkansas</SelectItem>
+                  <SelectItem value="CA">California</SelectItem>
+                  <SelectItem value="CO">Colorado</SelectItem>
+                  <SelectItem value="CT">Connecticut</SelectItem>
+                  <SelectItem value="DE">Delaware</SelectItem>
+                  <SelectItem value="DC">District of Columbia</SelectItem>
+                  <SelectItem value="FL">Florida</SelectItem>
+                  <SelectItem value="GA">Georgia</SelectItem>
+                  <SelectItem value="HI">Hawaii</SelectItem>
+                  <SelectItem value="ID">Idaho</SelectItem>
+                  <SelectItem value="IL">Illinois</SelectItem>
+                  <SelectItem value="IN">Indiana</SelectItem>
+                  <SelectItem value="IA">Iowa</SelectItem>
+                  <SelectItem value="KS">Kansas</SelectItem>
+                  <SelectItem value="KY">Kentucky</SelectItem>
+                  <SelectItem value="LA">Louisiana</SelectItem>
+                  <SelectItem value="ME">Maine</SelectItem>
+                  <SelectItem value="MD">Maryland</SelectItem>
+                  <SelectItem value="MA">Massachusetts</SelectItem>
+                  <SelectItem value="MI">Michigan</SelectItem>
+                  <SelectItem value="MN">Minnesota</SelectItem>
+                  <SelectItem value="MS">Mississippi</SelectItem>
+                  <SelectItem value="MO">Missouri</SelectItem>
+                  <SelectItem value="MT">Montana</SelectItem>
+                  <SelectItem value="NE">Nebraska</SelectItem>
+                  <SelectItem value="NV">Nevada</SelectItem>
+                  <SelectItem value="NH">New Hampshire</SelectItem>
+                  <SelectItem value="NJ">New Jersey</SelectItem>
+                  <SelectItem value="NM">New Mexico</SelectItem>
+                  <SelectItem value="NY">New York</SelectItem>
+                  <SelectItem value="NC">North Carolina</SelectItem>
+                  <SelectItem value="ND">North Dakota</SelectItem>
+                  <SelectItem value="OH">Ohio</SelectItem>
+                  <SelectItem value="OK">Oklahoma</SelectItem>
+                  <SelectItem value="OR">Oregon</SelectItem>
+                  <SelectItem value="PA">Pennsylvania</SelectItem>
+                  <SelectItem value="RI">Rhode Island</SelectItem>
+                  <SelectItem value="SC">South Carolina</SelectItem>
+                  <SelectItem value="SD">South Dakota</SelectItem>
+                  <SelectItem value="TN">Tennessee</SelectItem>
+                  <SelectItem value="TX">Texas</SelectItem>
+                  <SelectItem value="UT">Utah</SelectItem>
+                  <SelectItem value="VT">Vermont</SelectItem>
+                  <SelectItem value="VA">Virginia</SelectItem>
+                  <SelectItem value="WA">Washington</SelectItem>
+                  <SelectItem value="WV">West Virginia</SelectItem>
+                  <SelectItem value="WI">Wisconsin</SelectItem>
+                  <SelectItem value="WY">Wyoming</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium">Zip Code</Label>
+              <Input
+                type="text"
+                value={answers.zipcode || ''}
+                onChange={(e) => onAnswerChange('zipcode', e.target.value)}
+                placeholder="12345"
+                className="mt-1"
+                maxLength={5}
+                pattern="[0-9]{5}"
+              />
             </div>
           </div>
 
