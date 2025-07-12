@@ -37,6 +37,15 @@ export interface EnhancedProfileData {
   
   // Photos
   photo_urls?: string[];
+  
+  // Name fields
+  first_name?: string;
+  last_name?: string;
+  
+  // Location fields (separate for better handling)
+  city?: string;
+  state?: string;
+  zipcode?: string;
 }
 
 export const useEnhancedProfileData = () => {
@@ -51,7 +60,18 @@ export const useEnhancedProfileData = () => {
     
     setIsLoading(true);
     try {
-      // Load from profiles table
+      // Load from dating_profiles table (primary table)
+      const { data: datingProfile, error: datingProfileError } = await supabase
+        .from('dating_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (datingProfileError && datingProfileError.code !== 'PGRST116') {
+        console.error('Error loading dating profile:', datingProfileError);
+      }
+
+      // Load from profiles table (secondary)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -60,7 +80,6 @@ export const useEnhancedProfileData = () => {
 
       if (profileError && profileError.code !== 'PGRST116') {
         console.error('Error loading profile:', profileError);
-        return;
       }
 
       // Load from compatibility_answers table
@@ -74,15 +93,25 @@ export const useEnhancedProfileData = () => {
         console.error('Error loading compatibility answers:', compatibilityError);
       }
 
-      // Combine the data
+      // Combine the data, prioritizing dating_profiles
       const combinedData: EnhancedProfileData = {
-        bio: profileData?.bio || '',
-        photo_urls: profileData?.photo_urls || [],
+        first_name: datingProfile?.first_name || '',
+        last_name: datingProfile?.last_name || '',
+        age: datingProfile?.age?.toString() || '',
+        gender: datingProfile?.gender || '',
+        bio: datingProfile?.bio || profileData?.bio || '',
+        city: datingProfile?.city || '',
+        state: datingProfile?.state || '',
+        zipcode: datingProfile?.postal_code || '',
+        sexual_orientation: datingProfile?.orientation || '',
+        interested_in: datingProfile?.seeking_gender || '',
+        interests: datingProfile?.interests?.join(', ') || '',
+        photo_urls: datingProfile?.photo_urls || profileData?.photo_urls || [],
         ...((compatibilityData?.answers as any) || {})
       };
 
       setProfileData(combinedData);
-      setProfileExists(!!profileData || !!compatibilityData);
+      setProfileExists(!!datingProfile || !!profileData || !!compatibilityData);
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
@@ -150,6 +179,38 @@ export const useEnhancedProfileData = () => {
         return { success: false };
       }
 
+      // Save to dating_profiles table (the main profile table used for matching)
+      const datingProfilePayload = {
+        user_id: user.id,
+        first_name: profileData.first_name || '',
+        last_name: profileData.last_name || '',
+        age: profileData.age ? parseInt(profileData.age) : null,
+        gender: profileData.gender || null,
+        bio: profileData.bio || '',
+        city: profileData.city || null,
+        state: profileData.state || null,
+        postal_code: profileData.zipcode || null,
+        orientation: profileData.sexual_orientation || null,
+        seeking_gender: profileData.interested_in || null,
+        interests: profileData.interests ? profileData.interests.split(',').map(i => i.trim()) : null,
+        photo_urls: profileData.photo_urls || [],
+        updated_at: new Date().toISOString()
+      };
+
+      const { error: datingProfileError } = await supabase
+        .from('dating_profiles')
+        .upsert(datingProfilePayload);
+
+      if (datingProfileError) {
+        console.error('Dating profile save error:', datingProfileError);
+        toast({
+          title: 'Save Failed',
+          description: 'Failed to save dating profile. Please try again.',
+          variant: 'destructive'
+        });
+        return { success: false };
+      }
+
       // Save compatibility answers
       const compatibilityPayload = {
         user_id: user.id,
@@ -204,7 +265,8 @@ export const useEnhancedProfileData = () => {
               profileData.age && 
               profileData.gender && 
               profileData.sexual_orientation &&
-              profileData.location);
+              profileData.city &&
+              profileData.state);
   };
 
   return {
