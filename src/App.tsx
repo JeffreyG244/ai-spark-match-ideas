@@ -70,6 +70,11 @@ function App() {
                 <Route path="/seed-enhanced-profiles" element={<SeedEnhancedProfiles />} />
                 <Route path="/pre-launch-audit" element={<PreLaunchAudit />} />
                 <Route path="/admin" element={<PreLaunchAudit />} />
+                <Route path="/verification" element={<Verification />} />
+                <Route path="/safety" element={<Safety />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/success-stories" element={<SuccessStories />} />
+                <Route path="/moderation" element={<Moderation />} />
                 <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/legal/terms-of-service" element={<TermsOfService />} />
                 <Route path="/legal/community-guidelines" element={<CommunityGuidelines />} />

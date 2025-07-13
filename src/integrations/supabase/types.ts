@@ -325,6 +325,54 @@ export type Database = {
         }
         Relationships: []
       }
+      content_moderation_queue: {
+        Row: {
+          admin_notes: string | null
+          ai_flags: Json | null
+          ai_score: number | null
+          content_id: string
+          content_text: string | null
+          content_type: string
+          content_url: string | null
+          created_at: string | null
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          ai_flags?: Json | null
+          ai_score?: number | null
+          content_id: string
+          content_text?: string | null
+          content_type: string
+          content_url?: string | null
+          created_at?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          ai_flags?: Json | null
+          ai_score?: number | null
+          content_id?: string
+          content_text?: string | null
+          content_type?: string
+          content_url?: string | null
+          created_at?: string | null
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_ai_assist: {
         Row: {
           conversation_id: string
@@ -533,6 +581,36 @@ export type Database = {
         }
         Relationships: []
       }
+      emergency_contacts: {
+        Row: {
+          contact_name: string
+          contact_phone: string
+          created_at: string | null
+          id: string
+          is_primary: boolean | null
+          relationship: string | null
+          user_id: string
+        }
+        Insert: {
+          contact_name: string
+          contact_phone: string
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          relationship?: string | null
+          user_id: string
+        }
+        Update: {
+          contact_name?: string
+          contact_phone?: string
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean | null
+          relationship?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           compatibility: number
@@ -607,6 +685,41 @@ export type Database = {
         }
         Relationships: []
       }
+      message_media: {
+        Row: {
+          created_at: string | null
+          duration: number | null
+          id: string
+          media_type: string
+          media_url: string
+          message_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          duration?: number | null
+          id?: string
+          media_type: string
+          media_url: string
+          message_id: string
+        }
+        Update: {
+          created_at?: string | null
+          duration?: number | null
+          id?: string
+          media_type?: string
+          media_url?: string
+          message_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_media_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_rate_limits: {
         Row: {
           id: string
@@ -630,6 +743,38 @@ export type Database = {
           window_start?: string
         }
         Relationships: []
+      }
+      message_reactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          message_id: string
+          reaction: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message_id: string
+          reaction: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message_id?: string
+          reaction?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       password_policy: {
         Row: {
@@ -808,6 +953,30 @@ export type Database = {
           backup_name?: string | null
           definition?: string | null
           viewname?: unknown | null
+        }
+        Relationships: []
+      }
+      profile_badges: {
+        Row: {
+          badge_type: string
+          earned_at: string | null
+          expires_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_type: string
+          earned_at?: string | null
+          expires_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_type?: string
+          earned_at?: string | null
+          expires_at?: string | null
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1117,6 +1286,48 @@ export type Database = {
         }
         Relationships: []
       }
+      success_stories: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          id: string
+          is_approved: boolean | null
+          is_featured: boolean | null
+          photo_url: string | null
+          story: string
+          submitted_at: string | null
+          title: string
+          user1_id: string | null
+          user2_id: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          id?: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          photo_url?: string | null
+          story: string
+          submitted_at?: string | null
+          title: string
+          user1_id?: string | null
+          user2_id?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          id?: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          photo_url?: string | null
+          story?: string
+          submitted_at?: string | null
+          title?: string
+          user1_id?: string | null
+          user2_id?: string | null
+        }
+        Relationships: []
+      }
       swipe_actions: {
         Row: {
           action: string
@@ -1201,6 +1412,48 @@ export type Database = {
           email?: string | null
           id?: string | null
           name?: string | null
+        }
+        Relationships: []
+      }
+      user_analytics: {
+        Row: {
+          created_at: string | null
+          id: string
+          last_calculated: string | null
+          messages_received: number | null
+          messages_sent: number | null
+          photos_liked: number | null
+          profile_views: number | null
+          success_rate: number | null
+          total_conversations: number | null
+          total_matches: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          last_calculated?: string | null
+          messages_received?: number | null
+          messages_sent?: number | null
+          photos_liked?: number | null
+          profile_views?: number | null
+          success_rate?: number | null
+          total_conversations?: number | null
+          total_matches?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          last_calculated?: string | null
+          messages_received?: number | null
+          messages_sent?: number | null
+          photos_liked?: number | null
+          profile_views?: number | null
+          success_rate?: number | null
+          total_conversations?: number | null
+          total_matches?: number | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1342,6 +1595,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_reports: {
+        Row: {
+          admin_notes: string | null
+          created_at: string | null
+          description: string | null
+          evidence_urls: string[] | null
+          id: string
+          reason: string
+          reported_user_id: string
+          reporter_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string | null
+          description?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          reason: string
+          reported_user_id: string
+          reporter_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string | null
+          description?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          reason?: string
+          reported_user_id?: string
+          reporter_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           expires_at: string | null
@@ -1412,6 +1707,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_verifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          identity_verified: boolean | null
+          identity_verified_at: string | null
+          phone_number: string | null
+          phone_verified: boolean | null
+          phone_verified_at: string | null
+          photo_verified: boolean | null
+          photo_verified_at: string | null
+          social_media_linked: Json | null
+          updated_at: string | null
+          user_id: string
+          verification_documents: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          identity_verified?: boolean | null
+          identity_verified_at?: string | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          phone_verified_at?: string | null
+          photo_verified?: boolean | null
+          photo_verified_at?: string | null
+          social_media_linked?: Json | null
+          updated_at?: string | null
+          user_id: string
+          verification_documents?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          identity_verified?: boolean | null
+          identity_verified_at?: string | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          phone_verified_at?: string | null
+          photo_verified?: boolean | null
+          photo_verified_at?: string | null
+          social_media_linked?: Json | null
+          updated_at?: string | null
+          user_id?: string
+          verification_documents?: Json | null
+        }
+        Relationships: []
       }
       users: {
         Row: {
