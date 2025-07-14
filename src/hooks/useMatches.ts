@@ -120,11 +120,11 @@ export const useMatches = () => {
           let userWantsProfile = false;
           if (userPreferences.gender_preference === 'Everyone') {
             userWantsProfile = true;
-          } else if (userPreferences.gender_preference === 'Men' && profileGender === 'male') {
+          } else if (userPreferences.gender_preference === 'Men' && (profileGender === 'male' || profileGender === 'man' || profileGender === 'men')) {
             userWantsProfile = true;
-          } else if (userPreferences.gender_preference === 'Women' && profileGender === 'female') {
+          } else if (userPreferences.gender_preference === 'Women' && (profileGender === 'female' || profileGender === 'woman' || profileGender === 'women')) {
             userWantsProfile = true;
-          } else if (userPreferences.gender_preference === 'Non-binary' && profileGender === 'non-binary') {
+          } else if (userPreferences.gender_preference === 'Non-binary' && (profileGender === 'non-binary' || profileGender === 'nonbinary')) {
             userWantsProfile = true;
           }
 
@@ -132,11 +132,11 @@ export const useMatches = () => {
           let profileWantsUser = false;
           if (profileSeekingGender === 'Everyone') {
             profileWantsUser = true;
-          } else if (profileSeekingGender === 'Men' && userGender === 'Male') {
+          } else if (profileSeekingGender === 'Men' && (userGender === 'Male' || userGender === 'Man' || userGender === 'male' || userGender === 'man')) {
             profileWantsUser = true;
-          } else if (profileSeekingGender === 'Women' && userGender === 'Female') {
+          } else if (profileSeekingGender === 'Women' && (userGender === 'Female' || userGender === 'Woman' || userGender === 'female' || userGender === 'woman')) {
             profileWantsUser = true;
-          } else if (profileSeekingGender === 'Non-binary' && userGender === 'Non-binary') {
+          } else if (profileSeekingGender === 'Non-binary' && (userGender === 'Non-binary' || userGender === 'Nonbinary' || userGender === 'non-binary' || userGender === 'nonbinary')) {
             profileWantsUser = true;
           } else if (userGender === 'Unknown') {
             // If user gender is unknown, be more lenient

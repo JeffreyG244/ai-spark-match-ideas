@@ -14,7 +14,7 @@ const DashboardHeader = ({ onSignOut }: DashboardHeaderProps) => {
       <div>
         <div className="flex items-center gap-3 mb-2">
           <img 
-            src="/lovable-uploads/269847e6-3bff-46df-8891-daec032bacb4.png" 
+            src="/lovable-uploads/762c6ba0-ecfb-43e5-a89b-f538f6491d07.png" 
             alt="Luvlang Logo" 
             className="w-10 h-10 rounded-xl object-contain"
           />
