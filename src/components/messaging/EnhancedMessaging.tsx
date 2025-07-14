@@ -48,7 +48,7 @@ const EnhancedMessaging: React.FC<EnhancedMessagingProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  const reactions = ['❤️', '👍', '😂', '😮', '😢', '😡'];
+  const availableReactions = ['❤️', '👍', '😂', '😮', '😢', '😡'];
 
   const handleSendText = () => {
     if (newMessage.trim()) {
@@ -109,7 +109,6 @@ const EnhancedMessaging: React.FC<EnhancedMessagingProps> = ({
 
   const renderMessage = (message: Message) => {
     const isOwn = message.sender_id === currentUserId;
-    const reactions = message.reactions || [];
 
     return (
       <div key={message.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-4`}>
@@ -167,9 +166,9 @@ const EnhancedMessaging: React.FC<EnhancedMessagingProps> = ({
           )}
 
           {/* Reactions */}
-          {reactions.length > 0 && (
+          {message.reactions && message.reactions.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
-              {Object.entries(reactions.reduce((acc: { [key: string]: number }, reaction) => {
+              {Object.entries(message.reactions.reduce((acc: { [key: string]: number }, reaction) => {
                 acc[reaction.reaction] = (acc[reaction.reaction] || 0) + 1;
                 return acc;
               }, {})).map(([emoji, count]) => (
@@ -203,7 +202,7 @@ const EnhancedMessaging: React.FC<EnhancedMessagingProps> = ({
 
             {showEmojiPicker === message.id && (
               <div className="absolute bottom-full left-0 mb-2 bg-white border rounded-lg shadow-lg p-2 flex gap-1 z-10">
-                {reactions.map((reaction) => (
+                {availableReactions.map((reaction) => (
                   <button
                     key={reaction}
                     className="hover:bg-gray-100 p-1 rounded"

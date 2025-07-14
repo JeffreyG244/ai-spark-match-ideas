@@ -20,6 +20,11 @@ import SeedUsers from "./pages/SeedUsers";
 import SeedDatingProfiles from "./pages/SeedDatingProfiles";
 import SeedEnhancedProfiles from "./pages/SeedEnhancedProfiles";
 import NotFound from "./pages/NotFound";
+import Verification from "./pages/Verification";
+import Safety from "./pages/Safety";
+import Analytics from "./pages/Analytics";
+import SuccessStories from "./pages/SuccessStories";
+import Moderation from "./pages/Moderation";
 
 // Legal pages
 import TermsOfService from "./pages/legal/TermsOfService";
