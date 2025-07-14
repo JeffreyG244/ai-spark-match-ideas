@@ -13,11 +13,10 @@ const Navigation = () => {
     <nav className="flex justify-between items-center mb-16">
       <div className="flex items-center gap-3">
         <img 
-          src="/lovable-uploads/94fd3267-c16b-4e6f-95bf-6043d9f798d2.png" 
+          src="/lovable-uploads/c9f4488e-3013-4e94-8393-ad5ecf13d1a6.png" 
           alt="Luvlang Logo" 
-          className="w-10 h-10 rounded-xl object-contain"
+          className="h-8 object-contain"
         />
-        <h1 className="text-2xl font-bold text-love-text">Luvlang</h1>
       </div>
       <div className="flex gap-3">
         {!user && (
