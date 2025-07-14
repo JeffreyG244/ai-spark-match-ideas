@@ -46,6 +46,7 @@ import RomanceScamPrevention from "./pages/legal/RomanceScamPrevention";
 import AccountSuspension from "./pages/legal/AccountSuspension";
 
 const queryClient = new QueryClient();
+// Force rebuild
 
 import { EnhancedSecurityProvider } from '@/components/profile/EnhancedSecurityProvider';
 import SecureSessionManager from '@/components/security/SecureSessionManager';
