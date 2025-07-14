@@ -17,18 +17,25 @@ const NavigationTabs = () => {
   ];
 
   return (
-    <div className="w-full bg-white/80 backdrop-blur-sm border-b border-purple-200 mb-6 sticky top-0 z-40">
+    <div className="w-full bg-gradient-to-r from-love-primary/5 to-love-secondary/5 backdrop-blur-sm border-b border-love-primary/20 mb-6 sticky top-0 z-40">
       <div className="container mx-auto px-4">
         <Tabs value={currentPath} className="w-full">
-          <TabsList className="w-full justify-start overflow-x-auto bg-transparent h-16 p-2">
+          <TabsList className="w-full justify-start overflow-x-auto bg-transparent h-16 p-2 gap-2">
             {tabs.map(({ value, label, path, icon: Icon }) => (
               <Link key={value} to={path} className="flex-shrink-0">
                 <TabsTrigger
                   value={path}
-                  className="flex items-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700 data-[state=active]:shadow-sm hover:bg-purple-50 transition-all duration-200 whitespace-nowrap"
+                  className="flex items-center gap-2 px-6 py-3 rounded-full 
+                  data-[state=active]:bg-gradient-to-r data-[state=active]:from-love-primary data-[state=active]:to-love-secondary 
+                  data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-love-primary/25
+                  hover:bg-love-primary/10 hover:text-love-primary hover:scale-105
+                  transition-all duration-300 ease-out whitespace-nowrap
+                  border border-transparent hover:border-love-primary/20
+                  font-medium text-love-text-muted
+                  animate-fade-in"
                 >
                   <Icon className="h-4 w-4" />
-                  <span className="font-medium">{label}</span>
+                  <span>{label}</span>
                 </TabsTrigger>
               </Link>
             ))}

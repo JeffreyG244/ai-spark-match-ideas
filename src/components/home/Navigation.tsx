@@ -13,7 +13,7 @@ const Navigation = () => {
     <nav className="flex justify-between items-center mb-16">
       <div className="flex items-center gap-3">
         <img 
-          src="/lovable-uploads/762c6ba0-ecfb-43e5-a89b-f538f6491d07.png" 
+          src="/lovable-uploads/94fd3267-c16b-4e6f-95bf-6043d9f798d2.png" 
           alt="Luvlang Logo" 
           className="w-10 h-10 rounded-xl object-contain"
         />
