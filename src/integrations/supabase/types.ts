@@ -611,6 +611,27 @@ export type Database = {
         }
         Relationships: []
       }
+      match_suggestions: {
+        Row: {
+          created_at: string | null
+          id: number
+          user_id: number | null
+          uuid_user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: never
+          user_id?: number | null
+          uuid_user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: never
+          user_id?: number | null
+          uuid_user_id?: string | null
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           compatibility: number
@@ -985,7 +1006,9 @@ export type Database = {
           bio: string | null
           created_at: string
           email: string
+          embedding: string | null
           id: number
+          last_processed: string | null
           latitude: number | null
           location: unknown | null
           longitude: number | null
@@ -997,7 +1020,9 @@ export type Database = {
           bio?: string | null
           created_at?: string
           email: string
+          embedding?: string | null
           id?: never
+          last_processed?: string | null
           latitude?: number | null
           location?: unknown | null
           longitude?: number | null
@@ -1009,7 +1034,9 @@ export type Database = {
           bio?: string | null
           created_at?: string
           email?: string
+          embedding?: string | null
           id?: never
+          last_processed?: string | null
           latitude?: number | null
           location?: unknown | null
           longitude?: number | null
@@ -2528,6 +2555,18 @@ export type Database = {
           distance_meters: number
         }[]
       }
+      get_profile_by_user_id: {
+        Args: { user_id: number } | { user_id_input: unknown }
+        Returns: {
+          id: string
+          username: string
+          avatar_url: string
+        }[]
+      }
+      get_profile_user_id_as_uuid: {
+        Args: { user_id: number }
+        Returns: string
+      }
       get_proj4_from_srid: {
         Args: { "": number }
         Returns: string
@@ -2651,6 +2690,10 @@ export type Database = {
       longtransactionsenabled: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      match_suggestions_user_id_to_uuid: {
+        Args: { user_id: number }
+        Returns: string
       }
       path: {
         Args: { "": unknown }
@@ -2841,6 +2884,15 @@ export type Database = {
       postgis_wagyu_version: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      search_products: {
+        Args: { query: string; vector_column: string; table_name: string }
+        Returns: {
+          id: string
+          name: string
+          description: string
+          similarity: number
+        }[]
       }
       secure_rate_limit_check: {
         Args: {
