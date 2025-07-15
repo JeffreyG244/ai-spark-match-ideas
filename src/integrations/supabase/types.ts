@@ -262,6 +262,7 @@ export type Database = {
           population: number | null
           state: string
           state_code: string
+          zipcode: string | null
         }
         Insert: {
           city: string
@@ -271,6 +272,7 @@ export type Database = {
           population?: number | null
           state: string
           state_code: string
+          zipcode?: string | null
         }
         Update: {
           city?: string
@@ -280,6 +282,7 @@ export type Database = {
           population?: number | null
           state?: string
           state_code?: string
+          zipcode?: string | null
         }
         Relationships: []
       }

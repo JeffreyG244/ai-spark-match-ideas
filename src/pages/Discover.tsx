@@ -75,6 +75,8 @@ const Discover = () => {
         console.log('User preferences - Gender:', userGender, 'Seeking:', userPreferences.gender_preference);
       }
 
+      console.log('Final user preferences:', userPreferences);
+
       // Get all profiles and compatibility answers separately
       let { data: allProfiles, error: profilesError } = await supabase
         .from('dating_profiles')
@@ -120,53 +122,31 @@ const Discover = () => {
         compatibility_answers: answersMap.get(profile.user_id) || null
       }));
 
-      // Apply more permissive bidirectional filtering
-      const bidirectionalMatches = profilesWithAnswers?.filter(profile => {
-        const profileAnswers = (profile as any).compatibility_answers as any;
+      // Apply strict gender filtering based on user preferences
+      const genderFilteredProfiles = profilesWithAnswers?.filter(profile => {
+        const profileGender = profile.gender?.toLowerCase() || 'unknown';
         
-        // If no compatibility answers, still include the profile (be permissive)
-        if (!profileAnswers) {
-          console.log(`Profile ${profile.first_name}: No compatibility answers, including anyway`);
-          return true;
-        }
-
-        const profileGender = profile.gender?.toLowerCase();
-        const profileSeekingGender = profileAnswers['12']; // What they're seeking
-
-        // USER WANTS TO SEE THIS PROFILE
-        let userWantsProfile = false;
+        // Apply user's gender preference filter
         if (userPreferences.gender_preference === 'Everyone') {
-          userWantsProfile = true;
-        } else if (userPreferences.gender_preference === 'Men' && profileGender === 'male') {
-          userWantsProfile = true;
-        } else if (userPreferences.gender_preference === 'Women' && profileGender === 'female') {
-          userWantsProfile = true;
-        } else if (userPreferences.gender_preference === 'Non-binary' && profileGender === 'non-binary') {
-          userWantsProfile = true;
+          return true;
+        } else if (userPreferences.gender_preference === 'Women') {
+          const isWoman = ['female', 'woman', 'women', 'f'].includes(profileGender);
+          console.log(`Profile ${profile.first_name} (${profileGender}): Is woman? ${isWoman}`);
+          return isWoman;
+        } else if (userPreferences.gender_preference === 'Men') {
+          const isMan = ['male', 'man', 'men', 'm'].includes(profileGender);
+          console.log(`Profile ${profile.first_name} (${profileGender}): Is man? ${isMan}`);
+          return isMan;
+        } else if (userPreferences.gender_preference === 'Non-binary') {
+          const isNonBinary = ['non-binary', 'nonbinary', 'nb', 'enby'].includes(profileGender);
+          console.log(`Profile ${profile.first_name} (${profileGender}): Is non-binary? ${isNonBinary}`);
+          return isNonBinary;
         }
-
-        // PROFILE WANTS TO SEE USER (BIDIRECTIONAL CHECK) - Be more lenient
-        let profileWantsUser = false;
-        if (!profileSeekingGender || profileSeekingGender === 'Everyone') {
-          profileWantsUser = true;
-        } else if (profileSeekingGender === 'Men' && userGender === 'Male') {
-          profileWantsUser = true;
-        } else if (profileSeekingGender === 'Women' && userGender === 'Female') {
-          profileWantsUser = true;
-        } else if (profileSeekingGender === 'Non-binary' && userGender === 'Non-binary') {
-          profileWantsUser = true;
-        } else if (userGender === 'Unknown') {
-          // If user gender is unknown, be very permissive
-          profileWantsUser = true;
-        }
-
-        const isMatch = userWantsProfile && profileWantsUser;
-        console.log(`Profile ${profile.first_name}: User wants: ${userWantsProfile}, Profile wants user: ${profileWantsUser}, Match: ${isMatch}`);
         
-        return isMatch;
+        return false;
       }) || [];
 
-      console.log(`Found ${bidirectionalMatches.length} bidirectional matches`);
+      console.log(`Found ${genderFilteredProfiles.length} gender-filtered profiles`);
 
       // Get already swiped user IDs to exclude
       const { data: swipeData } = await supabase
@@ -177,7 +157,7 @@ const Discover = () => {
       const swipedUserIds = swipeData?.map(s => s.swiped_user_id) || [];
 
       // Filter out already swiped profiles and transform data
-      const transformedProfiles = bidirectionalMatches
+      const transformedProfiles = genderFilteredProfiles
         .filter(profile => !swipedUserIds.includes(profile.user_id))
         .map((profile) => ({
           id: profile.id,
