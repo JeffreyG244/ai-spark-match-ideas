@@ -614,6 +614,60 @@ export type Database = {
         }
         Relationships: []
       }
+      errors: {
+        Row: {
+          context: Json | null
+          error_type: string | null
+          id: number
+          message: string | null
+          occurred_at: string | null
+          stack: string | null
+        }
+        Insert: {
+          context?: Json | null
+          error_type?: string | null
+          id?: number
+          message?: string | null
+          occurred_at?: string | null
+          stack?: string | null
+        }
+        Update: {
+          context?: Json | null
+          error_type?: string | null
+          id?: number
+          message?: string | null
+          occurred_at?: string | null
+          stack?: string | null
+        }
+        Relationships: []
+      }
+      match_preferences: {
+        Row: {
+          age_range: unknown
+          created_at: string
+          gender_preference: string[]
+          max_distance_km: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age_range?: unknown
+          created_at?: string
+          gender_preference?: string[]
+          max_distance_km?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age_range?: unknown
+          created_at?: string
+          gender_preference?: string[]
+          max_distance_km?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       match_suggestions: {
         Row: {
           created_at: string | null
@@ -641,6 +695,7 @@ export type Database = {
           created_at: string
           id: number
           matched_user_id: string
+          preferences: Json
           status: Database["public"]["Enums"]["match_status"]
           user_id: string
           uuid_id: string | null
@@ -650,6 +705,7 @@ export type Database = {
           created_at?: string
           id?: never
           matched_user_id: string
+          preferences?: Json
           status?: Database["public"]["Enums"]["match_status"]
           user_id: string
           uuid_id?: string | null
@@ -659,19 +715,12 @@ export type Database = {
           created_at?: string
           id?: never
           matched_user_id?: string
+          preferences?: Json
           status?: Database["public"]["Enums"]["match_status"]
           user_id?: string
           uuid_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "matches_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       membership_plans: {
         Row: {
@@ -799,6 +848,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      my_new_table: {
+        Row: {
+          created_at: string | null
+          id: number
+          name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: never
+          name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: never
+          name?: string | null
+        }
+        Relationships: []
       }
       password_policy: {
         Row: {
@@ -1007,10 +1074,13 @@ export type Database = {
       profiles: {
         Row: {
           bio: string | null
+          birthdate: string | null
           created_at: string
           email: string
           embedding: string | null
+          gender: string | null
           id: number
+          is_active: boolean | null
           last_processed: string | null
           latitude: number | null
           location: unknown | null
@@ -1021,10 +1091,13 @@ export type Database = {
         }
         Insert: {
           bio?: string | null
+          birthdate?: string | null
           created_at?: string
           email: string
           embedding?: string | null
+          gender?: string | null
           id?: never
+          is_active?: boolean | null
           last_processed?: string | null
           latitude?: number | null
           location?: unknown | null
@@ -1035,10 +1108,13 @@ export type Database = {
         }
         Update: {
           bio?: string | null
+          birthdate?: string | null
           created_at?: string
           email?: string
           embedding?: string | null
+          gender?: string | null
           id?: never
+          is_active?: boolean | null
           last_processed?: string | null
           latitude?: number | null
           location?: unknown | null
@@ -1793,6 +1869,7 @@ export type Database = {
           email: string | null
           id: string
           name: string
+          preferences: Json
           user_id: string
         }
         Insert: {
@@ -1801,6 +1878,7 @@ export type Database = {
           email?: string | null
           id?: string
           name: string
+          preferences?: Json
           user_id: string
         }
         Update: {
@@ -1809,6 +1887,7 @@ export type Database = {
           email?: string | null
           id?: string
           name?: string
+          preferences?: Json
           user_id?: string
         }
         Relationships: []
@@ -1851,6 +1930,26 @@ export type Database = {
       }
     }
     Views: {
+      active_users: {
+        Row: {
+          bio: string | null
+          birthdate: string | null
+          created_at: string | null
+          email: string | null
+          embedding: string | null
+          gender: string | null
+          id: number | null
+          is_active: boolean | null
+          last_processed: string | null
+          latitude: number | null
+          location: unknown | null
+          longitude: number | null
+          photo_urls: string[] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       geography_columns: {
         Row: {
           coord_dimension: number | null
