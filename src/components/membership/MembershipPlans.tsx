@@ -54,10 +54,14 @@ const MembershipPlans = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-4 text-gray-900">Choose Your Plan</h1>
-        <p className="text-gray-600 mb-6">Find your perfect match with the right features for you</p>
+    <div className="max-w-7xl mx-auto">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          Choose Your Plan
+        </h1>
+        <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          Find your perfect match with the right features for you. Join millions of users finding love worldwide.
+        </p>
         
         {isOnMembershipPage && (
           <BillingCycleToggle 
@@ -83,7 +87,7 @@ const MembershipPlans = () => {
         )}
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {plans.map((plan) => {
           const isCurrentPlan = getCurrentPlanId() === plan.id;
           const isProcessing = processingPayment === plan.name;

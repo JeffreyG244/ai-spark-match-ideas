@@ -1804,15 +1804,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_subscriptions_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "membership_plans"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_verifications: {
         Row: {

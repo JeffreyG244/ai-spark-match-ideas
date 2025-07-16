@@ -5,14 +5,14 @@ import { useSwipeActions } from '@/hooks/useSwipeActions';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Heart, X, ArrowLeft, Settings, User } from 'lucide-react';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Heart, X } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import NavigationTabs from '@/components/navigation/NavigationTabs';
 import SwipeIndicators from '@/components/discover/SwipeIndicators';
 import ProfessionalProfileCard from '@/components/discover/ProfessionalProfileCard';
+import Logo from '@/components/ui/logo';
 
 interface UserProfile {
   id: string;
@@ -42,6 +42,43 @@ const Discover = () => {
   useEffect(() => {
     fetchProfiles();
   }, [user]);
+
+  const generateFallbackImage = (gender: string, userId: string) => {
+    // Create a deterministic index based on user ID
+    const userIdSum = userId.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    const imageIndex = userIdSum % 10;
+    
+    const maleImages = [
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1552058544-f2b08422138a?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&h=600&fit=crop&auto=format&q=80'
+    ];
+    
+    const femaleImages = [
+      'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1521119989659-a83eee488004?w=400&h=600&fit=crop&auto=format&q=80',
+      'https://images.unsplash.com/photo-1557053910-d9eadeed1c58?w=400&h=600&fit=crop&auto=format&q=80'
+    ];
+    
+    const genderLower = gender?.toLowerCase() || '';
+    const isFemale = ['female', 'woman', 'women', 'f'].includes(genderLower);
+    
+    return isFemale ? femaleImages[imageIndex] : maleImages[imageIndex];
+  };
 
   const fetchProfiles = async () => {
     try {
@@ -164,7 +201,9 @@ const Discover = () => {
           user_id: profile.user_id,
           email: profile.email || `${profile.user_id}@example.com`,
           bio: profile.bio || '',
-          photo_urls: profile.photo_urls && Array.isArray(profile.photo_urls) ? profile.photo_urls : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+          photo_urls: profile.photo_urls && Array.isArray(profile.photo_urls) && profile.photo_urls.length > 0 
+            ? profile.photo_urls 
+            : [generateFallbackImage(profile.gender, profile.user_id)],
           firstName: profile.first_name || 'User',
           lastName: profile.last_name || '',
           age: profile.age || 25,
@@ -260,14 +299,10 @@ const Discover = () => {
       <div className="bg-white/80 backdrop-blur-sm border-b border-love-primary/20 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-10 h-10 bg-gradient-to-r from-love-primary to-love-secondary rounded-full flex items-center justify-center">
-                <Heart className="h-5 w-5 text-white" />
-              </div>
-              <span className="font-bold text-xl bg-gradient-to-r from-love-primary to-love-secondary bg-clip-text text-transparent">
-                Discover
-              </span>
-            </div>
+            <Logo size="md" showText={false} />
+            <span className="font-bold text-xl bg-gradient-to-r from-love-primary to-love-secondary bg-clip-text text-transparent">
+              Discover
+            </span>
             <Button
               variant="outline"
               size="sm"

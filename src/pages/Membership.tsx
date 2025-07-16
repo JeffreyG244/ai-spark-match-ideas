@@ -1,10 +1,10 @@
 
 import React, { useEffect } from 'react';
-import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import MembershipPlans from '@/components/membership/MembershipPlans';
+import EnhancedMembershipPlans from '@/components/membership/EnhancedMembershipPlans';
+import Logo from '@/components/ui/logo';
 
 const Membership = () => {
   const { user, signOut, loading } = useAuth();
@@ -37,12 +37,7 @@ const Membership = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                <Heart className="h-6 w-6 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">Luvlang</h2>
-            </div>
+            <Logo size="md" />
             <div className="flex items-center gap-4">
               <Link to="/dashboard">
                 <Button variant="outline">← Back to Dashboard</Button>
@@ -54,7 +49,7 @@ const Membership = () => {
           </Button>
         </div>
 
-        <MembershipPlans />
+        <EnhancedMembershipPlans />
       </div>
     </div>
   );
