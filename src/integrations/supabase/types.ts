@@ -867,6 +867,24 @@ export type Database = {
         }
         Relationships: []
       }
+      old_profiles: {
+        Row: {
+          created_at: string | null
+          id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       password_policy: {
         Row: {
           description: string
@@ -1067,60 +1085,6 @@ export type Database = {
           earned_at?: string | null
           expires_at?: string | null
           id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          bio: string | null
-          birthdate: string | null
-          created_at: string
-          email: string
-          embedding: string | null
-          gender: string | null
-          id: number
-          is_active: boolean | null
-          last_processed: string | null
-          latitude: number | null
-          location: unknown | null
-          longitude: number | null
-          photo_urls: string[] | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          bio?: string | null
-          birthdate?: string | null
-          created_at?: string
-          email: string
-          embedding?: string | null
-          gender?: string | null
-          id?: never
-          is_active?: boolean | null
-          last_processed?: string | null
-          latitude?: number | null
-          location?: unknown | null
-          longitude?: number | null
-          photo_urls?: string[] | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          bio?: string | null
-          birthdate?: string | null
-          created_at?: string
-          email?: string
-          embedding?: string | null
-          gender?: string | null
-          id?: never
-          is_active?: boolean | null
-          last_processed?: string | null
-          latitude?: number | null
-          location?: unknown | null
-          longitude?: number | null
-          photo_urls?: string[] | null
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -1924,21 +1888,40 @@ export type Database = {
     Views: {
       active_users: {
         Row: {
-          bio: string | null
-          birthdate: string | null
-          created_at: string | null
-          email: string | null
-          embedding: string | null
+          age: number | null
+          city: string | null
+          country: string | null
           gender: string | null
-          id: number | null
-          is_active: boolean | null
-          last_processed: string | null
+          interests: string[] | null
           latitude: number | null
-          location: unknown | null
           longitude: number | null
-          photo_urls: string[] | null
-          updated_at: string | null
+          seeking_gender: string | null
+          state: string | null
           user_id: string | null
+        }
+        Insert: {
+          age?: number | null
+          city?: string | null
+          country?: string | null
+          gender?: string | null
+          interests?: string[] | null
+          latitude?: number | null
+          longitude?: number | null
+          seeking_gender?: string | null
+          state?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          age?: number | null
+          city?: string | null
+          country?: string | null
+          gender?: string | null
+          interests?: string[] | null
+          latitude?: number | null
+          longitude?: number | null
+          seeking_gender?: string | null
+          state?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2009,64 +1992,16 @@ export type Database = {
       }
       secure_profiles: {
         Row: {
-          bio: string | null
-          created_at: string | null
-          email: string | null
-          id: number | null
-          updated_at: string | null
-          user_id: string | null
+          id: string | null
+          username: string | null
         }
         Insert: {
-          bio?: string | null
-          created_at?: string | null
-          email?: string | null
-          id?: number | null
-          updated_at?: string | null
-          user_id?: string | null
+          id?: string | null
+          username?: string | null
         }
         Update: {
-          bio?: string | null
-          created_at?: string | null
-          email?: string | null
-          id?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      user_photo_gallery: {
-        Row: {
-          id: number | null
-          photo_urls: string[] | null
-          user_id: string | null
-        }
-        Insert: {
-          id?: number | null
-          photo_urls?: string[] | null
-          user_id?: string | null
-        }
-        Update: {
-          id?: number | null
-          photo_urls?: string[] | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      user_photos: {
-        Row: {
-          id: number | null
-          photo_urls: string[] | null
-          user_id: string | null
-        }
-        Insert: {
-          id?: number | null
-          photo_urls?: string[] | null
-          user_id?: string | null
-        }
-        Update: {
-          id?: number | null
-          photo_urls?: string[] | null
-          user_id?: string | null
+          id?: string | null
+          username?: string | null
         }
         Relationships: []
       }

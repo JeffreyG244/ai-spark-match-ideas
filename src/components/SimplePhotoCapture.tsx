@@ -221,9 +221,9 @@ const SimplePhotoCapture = () => {
         .from('profile-photos')
         .getPublicUrl(filename);
 
-      // Get current profile photos using the correct table name 'profiles'
+      // Get current profile photos using the correct table name 'dating_profiles'
       const { data: currentProfile } = await supabase
-        .from('profiles')
+        .from('dating_profiles')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -236,7 +236,7 @@ const SimplePhotoCapture = () => {
       if (!currentProfile) {
         // Create new profile
         const { error: insertError } = await supabase
-          .from('profiles')
+          .from('dating_profiles')
           .insert([{
             user_id: user.id,
             email: user.email || '',
@@ -249,7 +249,7 @@ const SimplePhotoCapture = () => {
       } else {
         // Update existing profile
         const { error: updateError } = await supabase
-          .from('profiles')
+          .from('dating_profiles')
           .update({
             photo_urls: updatedPhotos
           })
@@ -290,7 +290,7 @@ const SimplePhotoCapture = () => {
       const updatedPhotos = photos.filter(p => p !== photoUrl);
       
       const { error } = await supabase
-        .from('profiles')
+        .from('dating_profiles')
         .update({
           photo_urls: updatedPhotos
         })
@@ -323,7 +323,7 @@ const SimplePhotoCapture = () => {
 
       try {
         const { data } = await supabase
-          .from('profiles')
+          .from('dating_profiles')
           .select('photo_urls')
           .eq('user_id', user.id)
           .maybeSingle();
