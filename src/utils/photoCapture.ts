@@ -52,7 +52,7 @@ export const uploadPhotoToStorage = async (
 
 export const updateUserProfile = async (userId: string, email: string, newPhotoUrl: string) => {
   const { data: currentProfile } = await supabase
-    .from('profiles')
+    .from('dating_profiles')
     .select('photo_urls')
     .eq('user_id', userId)
     .maybeSingle();
@@ -61,7 +61,7 @@ export const updateUserProfile = async (userId: string, email: string, newPhotoU
   const updatedPhotos = [...currentPhotos, newPhotoUrl];
 
   const { error: updateError } = await supabase
-    .from('profiles')
+    .from('dating_profiles')
     .upsert({
       user_id: userId,
       email: email,

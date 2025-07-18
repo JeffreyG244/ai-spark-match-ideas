@@ -52,7 +52,7 @@ export class SecureDataOperations {
       if (!user) throw new Error('User not authenticated');
 
       const { error } = await supabase
-        .from('profiles')
+        .from('dating_profiles')
         .upsert({
           user_id: user.id,
           email: user.email || '',
@@ -158,7 +158,7 @@ export const saveSecureProfile = async (
 
     // Save to database
     const { error } = await supabase
-      .from('profiles')
+      .from('dating_profiles')
       .upsert({
         user_id: userId,
         email: profileData.email,

@@ -62,10 +62,10 @@ const RoleManager: React.FC = () => {
       }
 
       if (roles && roles.length > 0) {
-        // Get user emails from profiles table
+        // Get user emails from dating profiles table
         const userIds = roles.map(role => role.user_id);
         const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
+          .from('dating_profiles')
           .select('user_id, email')
           .in('user_id', userIds);
 
@@ -95,7 +95,7 @@ const RoleManager: React.FC = () => {
 
     try {
       const { data: profile, error: profileError } = await supabase
-        .from('profiles')
+        .from('dating_profiles')
         .select('user_id')
         .eq('email', newUserEmail)
         .single();

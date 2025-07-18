@@ -78,7 +78,7 @@ const generateSeedProfiles = () => {
 export const checkIfSeedingNeeded = async (): Promise<boolean> => {
   try {
     const { data, error } = await supabase
-      .from('profiles')
+      .from('dating_profiles')
       .select('user_id', { count: 'exact' });
 
     if (error) {
@@ -103,7 +103,7 @@ export const seedDiverseUsers = async (): Promise<{ success: boolean; message: s
     
     // Check if seed profiles already exist
     const { data: existingProfiles, error: checkError } = await supabase
-      .from('profiles')
+      .from('dating_profiles')
       .select('email')
       .in('email', profilesData.map(user => user.email));
 
@@ -147,7 +147,7 @@ export const seedDiverseUsers = async (): Promise<{ success: boolean; message: s
       const batch = seedProfiles.slice(i, i + batchSize);
       
       const { error: insertError } = await supabase
-        .from('profiles')
+        .from('dating_profiles')
         .insert(batch);
 
       if (insertError) {

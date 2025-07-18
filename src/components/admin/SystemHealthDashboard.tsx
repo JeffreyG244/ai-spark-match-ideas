@@ -60,9 +60,9 @@ const SystemHealthDashboard = () => {
     try {
       setLoading(true);
 
-      // Get total users (approximation based on profiles)
+      // Get total users (approximation based on dating profiles)
       const { count: profileCount } = await supabase
-        .from('profiles')
+        .from('dating_profiles')
         .select('*', { count: 'exact', head: true });
 
       // Get active dating profiles
@@ -111,7 +111,7 @@ const SystemHealthDashboard = () => {
 
     // Database connectivity
     try {
-      await supabase.from('profiles').select('count', { count: 'exact', head: true });
+      await supabase.from('dating_profiles').select('count', { count: 'exact', head: true });
       checks.push({
         service: 'Database',
         status: 'healthy',

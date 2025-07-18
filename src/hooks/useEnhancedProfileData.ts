@@ -71,10 +71,10 @@ export const useEnhancedProfileData = () => {
         console.error('Error loading dating profile:', datingProfileError);
       }
 
-      // Load from profiles table (secondary)
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
+      // Load from dating profiles table (secondary data - this is the same as primary now)
+      const { data: fallbackProfileData, error: profileError } = await supabase
+        .from('dating_profiles')
+        .select('bio, photo_urls')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -99,19 +99,19 @@ export const useEnhancedProfileData = () => {
         last_name: datingProfile?.last_name || '',
         age: datingProfile?.age?.toString() || '',
         gender: datingProfile?.gender || '',
-        bio: datingProfile?.bio || profileData?.bio || '',
+        bio: datingProfile?.bio || '',
         city: datingProfile?.city || '',
         state: datingProfile?.state || '',
         zipcode: datingProfile?.postal_code || '',
         sexual_orientation: datingProfile?.orientation || '',
         interested_in: datingProfile?.seeking_gender || '',
         interests: datingProfile?.interests?.join(', ') || '',
-        photo_urls: datingProfile?.photo_urls || profileData?.photo_urls || [],
+        photo_urls: datingProfile?.photo_urls || [],
         ...((compatibilityData?.answers as any) || {})
       };
 
       setProfileData(combinedData);
-      setProfileExists(!!datingProfile || !!profileData || !!compatibilityData);
+      setProfileExists(!!datingProfile || !!compatibilityData);
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
@@ -145,39 +145,6 @@ export const useEnhancedProfileData = () => {
 
     setIsSaving(true);
     try {
-      // Save to profiles table
-      const profilePayload = {
-        user_id: user.id,
-        email: user.email || '',
-        bio: profileData.bio || '',
-        photo_urls: profileData.photo_urls || [],
-        updated_at: new Date().toISOString()
-      };
-
-      let profileResult;
-      if (profileExists) {
-        profileResult = await supabase
-          .from('profiles')
-          .update(profilePayload)
-          .eq('user_id', user.id);
-      } else {
-        profileResult = await supabase
-          .from('profiles')
-          .insert([{
-            ...profilePayload,
-            created_at: new Date().toISOString()
-          }]);
-      }
-
-      if (profileResult.error) {
-        console.error('Profile save error:', profileResult.error);
-        toast({
-          title: 'Save Failed',
-          description: 'Failed to save profile. Please try again.',
-          variant: 'destructive'
-        });
-        return { success: false };
-      }
 
       // Save to dating_profiles table (the main profile table used for matching)
       const datingProfilePayload = {

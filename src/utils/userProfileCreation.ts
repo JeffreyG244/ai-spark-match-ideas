@@ -25,7 +25,7 @@ export async function createUserProfile(user: DiverseUser, userId: string, photo
   };
   
   const { error: profileError } = await supabase
-    .from('profiles')
+    .from('dating_profiles')
     .insert({
       user_id: userId,
       email: user.email,
@@ -59,7 +59,7 @@ export async function updateProfilePhotos(user: DiverseUser, userId: string, pho
   });
 
   const { error: updateError } = await supabase
-    .from('profiles')
+    .from('dating_profiles')
     .update({
       photo_urls: securePhotoUrls,
       updated_at: new Date().toISOString()

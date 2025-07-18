@@ -29,7 +29,7 @@ export const useProfileData = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('dating_profiles')
         .select('bio, photo_urls')
         .eq('user_id', user.id)
         .maybeSingle();
@@ -82,12 +82,12 @@ export const useProfileData = () => {
       let result;
       if (profileExists) {
         result = await supabase
-          .from('profiles')
+          .from('dating_profiles')
           .update(profilePayload)
           .eq('user_id', user.id);
       } else {
         result = await supabase
-          .from('profiles')
+          .from('dating_profiles')
           .insert([{
             ...profilePayload,
             created_at: new Date().toISOString()

@@ -885,6 +885,27 @@ export type Database = {
         }
         Relationships: []
       }
+      password_leaks: {
+        Row: {
+          id: number
+          leak_date: string | null
+          password_hash: string
+          source: string | null
+        }
+        Insert: {
+          id?: never
+          leak_date?: string | null
+          password_hash: string
+          source?: string | null
+        }
+        Update: {
+          id?: never
+          leak_date?: string | null
+          password_hash?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
       password_policy: {
         Row: {
           description: string
@@ -2686,6 +2707,10 @@ export type Database = {
       }
       is_admin_or_higher: {
         Args: { check_user_id: string }
+        Returns: boolean
+      }
+      is_password_leaked: {
+        Args: { input_password: string }
         Returns: boolean
       }
       ivfflat_bit_support: {
