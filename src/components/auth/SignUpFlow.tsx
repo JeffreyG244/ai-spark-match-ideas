@@ -154,8 +154,12 @@ const SignUpFlow = () => {
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-xl border-0">
           <CardHeader className="text-center pb-2">
-            <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Heart className="h-8 w-8 text-white" />
+            <div className="mb-6">
+              <img 
+                src="/lovable-uploads/c9f4488e-3013-4e94-8393-ad5ecf13d1a6.png" 
+                alt="Luvlang Logo" 
+                className="h-16 object-contain mx-auto"
+              />
             </div>
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
               Join Our Community
@@ -246,8 +250,12 @@ const SignUpFlow = () => {
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl border-0">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <User className="h-8 w-8 text-white" />
+          <div className="mb-6">
+            <img 
+              src="/lovable-uploads/c9f4488e-3013-4e94-8393-ad5ecf13d1a6.png" 
+              alt="Luvlang Logo" 
+              className="h-16 object-contain mx-auto"
+            />
           </div>
           <CardTitle className="text-2xl font-bold">Complete Your Profile</CardTitle>
           <p className="text-gray-600 text-sm">Tell us about yourself</p>
