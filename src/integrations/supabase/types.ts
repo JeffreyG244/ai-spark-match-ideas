@@ -867,6 +867,39 @@ export type Database = {
         }
         Relationships: []
       }
+      n8n_webhook_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          payload: Json
+          response_body: string | null
+          response_status: number | null
+          success: boolean | null
+          user_id: string | null
+          webhook_url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          payload: Json
+          response_body?: string | null
+          response_status?: number | null
+          success?: boolean | null
+          user_id?: string | null
+          webhook_url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          payload?: Json
+          response_body?: string | null
+          response_status?: number | null
+          success?: boolean | null
+          user_id?: string | null
+          webhook_url?: string
+        }
+        Relationships: []
+      }
       old_profiles: {
         Row: {
           created_at: string | null

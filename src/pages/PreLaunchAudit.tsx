@@ -7,6 +7,7 @@ import SystemIntegrationTest from '@/components/admin/SystemIntegrationTest';
 import PreLaunchSecurityAuditComponent from '@/components/admin/PreLaunchSecurityAudit';
 import ProductionChecklist from '@/components/admin/ProductionChecklist';
 import ProfileManager from '@/components/admin/ProfileManager';
+import N8NSystemCheck from '@/components/admin/N8NSystemCheck';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -31,6 +32,7 @@ const PreLaunchAudit = () => {
           </Link>
         </div>
         <div className="space-y-8">
+          <N8NSystemCheck />
           <ProductionChecklist />
           <ProfileManager />
           <PreLaunchSecurityAuditComponent />
