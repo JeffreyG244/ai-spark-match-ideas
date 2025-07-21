@@ -2742,10 +2742,6 @@ export type Database = {
         Args: { check_user_id: string }
         Returns: boolean
       }
-      is_password_leaked: {
-        Args: { input_password: string }
-        Returns: boolean
-      }
       ivfflat_bit_support: {
         Args: { "": unknown }
         Returns: unknown
@@ -3001,6 +2997,10 @@ export type Database = {
           message: string
           count: number
         }[]
+      }
+      simple_password_check: {
+        Args: { input_password: string }
+        Returns: boolean
       }
       sparsevec_out: {
         Args: { "": unknown }
