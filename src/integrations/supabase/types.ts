@@ -313,21 +313,6 @@ export type Database = {
         }
         Relationships: []
       }
-      compromised_passwords: {
-        Row: {
-          breach_count: number
-          password_hash: string
-        }
-        Insert: {
-          breach_count: number
-          password_hash: string
-        }
-        Update: {
-          breach_count?: number
-          password_hash?: string
-        }
-        Relationships: []
-      }
       content_moderation_queue: {
         Row: {
           admin_notes: string | null
@@ -915,27 +900,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           username?: string
-        }
-        Relationships: []
-      }
-      password_leaks: {
-        Row: {
-          id: number
-          leak_date: string | null
-          password_hash: string
-          source: string | null
-        }
-        Insert: {
-          id?: never
-          leak_date?: string | null
-          password_hash: string
-          source?: string | null
-        }
-        Update: {
-          id?: never
-          leak_date?: string | null
-          password_hash?: string
-          source?: string | null
         }
         Relationships: []
       }
@@ -2295,6 +2259,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      check_password_strength: {
+        Args: { password_input: string }
+        Returns: boolean
+      }
       clean_orphaned_photos: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -2997,10 +2965,6 @@ export type Database = {
           message: string
           count: number
         }[]
-      }
-      simple_password_check: {
-        Args: { input_password: string }
-        Returns: boolean
       }
       sparsevec_out: {
         Args: { "": unknown }
@@ -4139,14 +4103,6 @@ export type Database = {
           errors: string[]
           score: number
         }[]
-      }
-      validate_password_sec: {
-        Args: { password: string }
-        Returns: boolean
-      }
-      validate_password_security: {
-        Args: { password: string }
-        Returns: boolean
       }
       validate_password_strength: {
         Args: { password: string }
