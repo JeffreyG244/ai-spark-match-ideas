@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -7,6 +8,8 @@ import { CheckCircle, User, Brain, Heart, Camera, ArrowRight } from 'lucide-reac
 import { useEnhancedProfileData } from '@/hooks/useEnhancedProfileData';
 import { useCompatibilityAnswers } from '@/hooks/useCompatibilityAnswers';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import BasicProfileQuestions from './BasicProfileQuestions';
 import PersonalityQuestions from './PersonalityQuestions';
 import InterestsSelector from './InterestsSelector';
@@ -20,10 +23,13 @@ interface Photo {
 }
 
 const GuidedProfileFlow = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [personalityAnswers, setPersonalityAnswers] = useState<Record<string, string>>({});
   const [interests, setInterests] = useState<string[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [isCompletingProfile, setIsCompletingProfile] = useState(false);
 
   const {
     profileData,
@@ -118,6 +124,50 @@ const GuidedProfileFlow = () => {
 
   const handlePersonalityAnswer = (questionId: string, answer: string) => {
     setPersonalityAnswers(prev => ({ ...prev, [questionId]: answer }));
+  };
+
+  const handleCompleteProfile = async () => {
+    if (!user || isCompletingProfile) return;
+    
+    setIsCompletingProfile(true);
+    try {
+      // Save all profile data first
+      await saveProfile(false);
+      await saveCompatibilityAnswers();
+      
+      // Trigger the profile webhook for matchmaking
+      const { data, error } = await supabase.functions.invoke('profile-webhook', {
+        body: { 
+          user_id: user.id, 
+          event_type: 'profile_completed' 
+        }
+      });
+
+      if (error) {
+        console.error('Webhook error:', error);
+        toast({
+          title: 'Profile Saved',
+          description: 'Profile saved but matchmaking may be delayed. You can still browse matches!',
+        });
+      } else {
+        toast({
+          title: 'Profile Complete!',
+          description: 'Your profile has been saved and sent for matching analysis.',
+        });
+      }
+
+      // Navigate to discover page
+      navigate('/discover');
+    } catch (error) {
+      console.error('Error completing profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to complete profile. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsCompletingProfile(false);
+    }
   };
 
   if (isLoading) {
@@ -295,7 +345,8 @@ const GuidedProfileFlow = () => {
               {(photos || []).length >= 3 && (
                 <div className="text-center pt-4">
                   <Button
-                    onClick={() => window.location.href = '/discover'}
+                    onClick={handleCompleteProfile}
+                    disabled={isCompletingProfile}
                     className="bg-purple-600 hover:bg-purple-700"
                   >
                     Complete Profile & Start Discovering Matches
@@ -320,7 +371,7 @@ const GuidedProfileFlow = () => {
               Your profile is now ready to start matching with other users.
             </p>
             <Button
-              onClick={() => window.location.href = '/discover'}
+              onClick={() => navigate('/discover')}
               className="bg-green-600 hover:bg-green-700"
             >
               Start Discovering Matches
