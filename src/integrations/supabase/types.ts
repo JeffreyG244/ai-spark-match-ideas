@@ -903,27 +903,6 @@ export type Database = {
         }
         Relationships: []
       }
-      password_policy: {
-        Row: {
-          description: string
-          id: number
-          name: string
-          pattern: string
-        }
-        Insert: {
-          description: string
-          id?: number
-          name: string
-          pattern: string
-        }
-        Update: {
-          description?: string
-          id?: number
-          name?: string
-          pattern?: string
-        }
-        Relationships: []
-      }
       password_rules: {
         Row: {
           created_at: string | null
@@ -2251,16 +2230,8 @@ export type Database = {
         Args: { user1_id: string; user2_id: string }
         Returns: number
       }
-      check_hibp_password: {
-        Args: { password: string }
-        Returns: boolean
-      }
       check_https: {
         Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      check_password_strength: {
-        Args: { password_input: string }
         Returns: boolean
       }
       clean_orphaned_photos: {
@@ -2282,6 +2253,10 @@ export type Database = {
       create_paypal_payment: {
         Args: { p_user_id: string; p_amount: number; p_currency: string }
         Returns: Json
+      }
+      create_user_profile_manually: {
+        Args: { user_id: string; email: string }
+        Returns: undefined
       }
       delete_profile_photo: {
         Args:
@@ -2701,10 +2676,6 @@ export type Database = {
       hnswhandler: {
         Args: { "": unknown }
         Returns: unknown
-      }
-      initialize_password_protection: {
-        Args: Record<PropertyKey, never>
-        Returns: string
       }
       is_admin_or_higher: {
         Args: { check_user_id: string }
@@ -4059,10 +4030,6 @@ export type Database = {
         Args: { "": string }
         Returns: number
       }
-      update_compromised_passwords: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
       updategeometrysrid: {
         Args: {
           catalogn_name: string
@@ -4085,28 +4052,6 @@ export type Database = {
       upsert_user_presence: {
         Args: { p_user_id: string; p_is_online: boolean }
         Returns: undefined
-      }
-      validate_password: {
-        Args: { password: string }
-        Returns: {
-          is_valid: boolean
-          errors: string[]
-          warnings: string[]
-          strength: number
-          strength_label: string
-        }[]
-      }
-      validate_password_enhanced: {
-        Args: { password: string }
-        Returns: {
-          is_valid: boolean
-          errors: string[]
-          score: number
-        }[]
-      }
-      validate_password_strength: {
-        Args: { password: string }
-        Returns: boolean
       }
       validate_role_assignment: {
         Args:

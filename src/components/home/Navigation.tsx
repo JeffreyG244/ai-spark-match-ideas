@@ -15,7 +15,7 @@ const Navigation = () => {
         <img 
           src="/lovable-uploads/c9f4488e-3013-4e94-8393-ad5ecf13d1a6.png" 
           alt="Luvlang Logo" 
-          className="h-8 object-contain"
+          className="h-12 object-contain"
         />
       </div>
       <div className="flex gap-3">
