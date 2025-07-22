@@ -30,7 +30,7 @@ export const useProfileData = () => {
     try {
       const { data, error } = await supabase
         .from('dating_profiles')
-        .select('bio, photo_urls')
+        .select('bio, values, life_goals, green_flags, photo_urls')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -43,9 +43,9 @@ export const useProfileData = () => {
         setProfileExists(true);
         setProfileData({
           bio: data.bio || '',
-          values: '',
-          lifeGoals: '',
-          greenFlags: ''
+          values: data.values || '',
+          lifeGoals: data.life_goals || '',
+          greenFlags: data.green_flags || ''
         });
       }
     } catch (error) {
@@ -75,6 +75,9 @@ export const useProfileData = () => {
         user_id: user.id,
         email: user.email || '',
         bio: profileData.bio,
+        values: profileData.values,
+        life_goals: profileData.lifeGoals,
+        green_flags: profileData.greenFlags,
         photo_urls: [],
         updated_at: new Date().toISOString()
       };

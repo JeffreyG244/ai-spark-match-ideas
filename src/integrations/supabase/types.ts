@@ -501,10 +501,12 @@ export type Database = {
           email: string | null
           first_name: string | null
           gender: string | null
+          green_flags: string | null
           id: string
           interests: string[] | null
           last_name: string | null
           latitude: number | null
+          life_goals: string | null
           location: string | null
           longitude: number | null
           orientation: string | null
@@ -515,6 +517,7 @@ export type Database = {
           state: string | null
           updated_at: string | null
           user_id: string | null
+          values: string | null
           visible: boolean | null
         }
         Insert: {
@@ -526,10 +529,12 @@ export type Database = {
           email?: string | null
           first_name?: string | null
           gender?: string | null
+          green_flags?: string | null
           id?: string
           interests?: string[] | null
           last_name?: string | null
           latitude?: number | null
+          life_goals?: string | null
           location?: string | null
           longitude?: number | null
           orientation?: string | null
@@ -540,6 +545,7 @@ export type Database = {
           state?: string | null
           updated_at?: string | null
           user_id?: string | null
+          values?: string | null
           visible?: boolean | null
         }
         Update: {
@@ -551,10 +557,12 @@ export type Database = {
           email?: string | null
           first_name?: string | null
           gender?: string | null
+          green_flags?: string | null
           id?: string
           interests?: string[] | null
           last_name?: string | null
           latitude?: number | null
+          life_goals?: string | null
           location?: string | null
           longitude?: number | null
           orientation?: string | null
@@ -565,6 +573,7 @@ export type Database = {
           state?: string | null
           updated_at?: string | null
           user_id?: string | null
+          values?: string | null
           visible?: boolean | null
         }
         Relationships: []
