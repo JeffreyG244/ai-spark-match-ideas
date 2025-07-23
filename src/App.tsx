@@ -25,6 +25,7 @@ import Safety from "./pages/Safety";
 import Analytics from "./pages/Analytics";
 import SuccessStories from "./pages/SuccessStories";
 import Moderation from "./pages/Moderation";
+import TestIntegration from "./pages/TestIntegration";
 
 // Legal pages
 import TermsOfService from "./pages/legal/TermsOfService";
@@ -81,6 +82,7 @@ function App() {
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/success-stories" element={<SuccessStories />} />
                 <Route path="/moderation" element={<Moderation />} />
+                <Route path="/test-integration" element={<TestIntegration />} />
                 <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/legal/terms-of-service" element={<TermsOfService />} />
                 <Route path="/legal/community-guidelines" element={<CommunityGuidelines />} />
