@@ -17,6 +17,15 @@ async function getN8NWebhookUrl(): Promise<string> {
   return webhookUrl;
 }
 
+async function getN8NApiToken(): Promise<string> {
+  const apiToken = Deno.env.get('N8N_API_TOKEN');
+  if (!apiToken) {
+    console.error('N8N_API_TOKEN not configured in environment');
+    throw new Error('N8N API token not configured');
+  }
+  return apiToken;
+}
+
 interface ProfileData {
   user_id: string;
   name: string;
@@ -86,17 +95,19 @@ const handler = async (req: Request): Promise<Response> => {
       }
     };
 
-    // Get secure N8N webhook URL
+    // Get secure N8N webhook URL and API token
     const N8N_WEBHOOK_URL = await getN8NWebhookUrl();
+    const N8N_API_TOKEN = await getN8NApiToken();
     
     console.log('Sending to N8N webhook (secure)');
     console.log('Payload:', JSON.stringify(webhookData, null, 2));
 
-    // Send to N8N webhook with enhanced security
+    // Send to N8N webhook with enhanced security and authentication
     const webhookResponse = await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${N8N_API_TOKEN}`,
         'user-agent': 'curl/8.7.1',
         'accept': '*/*',
         'content-length': JSON.stringify(webhookData).length.toString()
