@@ -21,8 +21,8 @@ const features = [
   },
   {
     icon: MessageCircle,
-    title: "MindMeld First",
-    description: "Text-based connections before photos - meaningful conversations first"
+    title: "Professional Network",
+    description: "Connect with ambitious professionals who understand your career demands and aspirations"
   }
 ];
 
