@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import EnhancedMembershipPlans from '@/components/membership/EnhancedMembershipPlans';
+import ProfessionalMembershipPlans from '@/components/membership/ProfessionalMembershipPlans';
 import Logo from '@/components/ui/logo';
 
 const Membership = () => {
@@ -49,7 +49,7 @@ const Membership = () => {
           </Button>
         </div>
 
-        <EnhancedMembershipPlans />
+        <ProfessionalMembershipPlans />
       </div>
     </div>
   );
