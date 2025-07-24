@@ -16,7 +16,7 @@ const HeroSection = ({ showButtons }: HeroSectionProps) => {
         Find Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-love-primary to-love-secondary">Soul Match</span>
       </h1>
       <p className="text-xl text-love-text-light mb-8 max-w-3xl mx-auto">
-        AI-powered deep connections for serious professionals. No swiping, no games - just authentic, meaningful relationships built on compatibility.
+        AI-powered deep connections for serious professionals. No gaslighting, no games - just authentic, meaningful relationships built on compatibility.
       </p>
       <div className="flex gap-4 justify-center">
         {showButtons && (

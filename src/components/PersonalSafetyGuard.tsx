@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Shield, Users, AlertTriangle, CheckCircle, Eye, Lock } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
-const SoulSyncAI = () => {
+const PersonalSafetyGuard = () => {
   const [safetyActive, setSafetyActive] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
 
@@ -141,4 +140,4 @@ const SoulSyncAI = () => {
   );
 };
 
-export default SoulSyncAI;
+export default PersonalSafetyGuard;
