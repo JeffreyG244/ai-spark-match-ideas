@@ -18,7 +18,7 @@ export const EnhancedSecurityProvider = ({ children }: { children: React.ReactNo
   const [isSecure, setIsSecure] = useState(false);
   const [verificationLevel, setVerificationLevel] = useState<'none' | 'email' | 'phone' | 'photo'>('none');
   const [lastActivity, setLastActivity] = useState<Date | null>(null);
-  const [sessionTimeout] = useState(30 * 60 * 1000); // 30 minutes
+  const [sessionTimeout] = useState(8 * 60 * 60 * 1000); // 8 hours (enhanced security)
 
   useEffect(() => {
     if (user) {
