@@ -2239,6 +2239,13 @@ export type Database = {
         Args: { user1_id: string; user2_id: string }
         Returns: number
       }
+      call_n8n_webhook: {
+        Args:
+          | Record<PropertyKey, never>
+          | { p_workflow_id: string; p_payload?: Json; p_headers?: Json }
+          | { webhook_url: string }
+        Returns: Json
+      }
       check_https: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -2722,6 +2729,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      match_profile_filter: {
+        Args: { current_user_id: string }
+        Returns: {
+          matching_profile_id: string
+        }[]
+      }
       match_suggestions_user_id_to_uuid: {
         Args: { user_id: number }
         Returns: string
@@ -2945,6 +2958,10 @@ export type Database = {
           message: string
           count: number
         }[]
+      }
+      send_n8n_webhook: {
+        Args: { payload: Json; webhook_url?: string }
+        Returns: Json
       }
       sparsevec_out: {
         Args: { "": unknown }
