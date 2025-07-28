@@ -2,9 +2,11 @@
 import { useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { SecurityAuditService } from '@/services/security/SecurityAuditService';
+import { EnhancedSecurityService } from '@/utils/enhancedSecurityService';
+import { SECURITY_CONFIG } from '@/utils/securityConfig';
 import { toast } from '@/hooks/use-toast';
 
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const SESSION_TIMEOUT = SECURITY_CONFIG.SESSION_TIMEOUT; // 8 hours (enhanced)
 const WARNING_TIME = 5 * 60 * 1000; // 5 minutes before timeout
 
 const SessionManager = () => {
@@ -66,6 +68,19 @@ const SessionManager = () => {
   const handleUserActivity = useCallback(() => {
     if (user) {
       resetSessionTimer();
+      
+      // Monitor for suspicious activity
+      const suspiciousActivity = EnhancedSecurityService.detectSuspiciousActivity();
+      if (suspiciousActivity.isSuspicious) {
+        SecurityAuditService.logSecurityEvent(
+          'suspicious_activity',
+          `Suspicious activity detected: ${suspiciousActivity.reasons.join(', ')}`,
+          'high'
+        );
+      }
+      
+      // Update last activity timestamp
+      localStorage.setItem('last_activity', Date.now().toString());
     }
   }, [user, resetSessionTimer]);
 

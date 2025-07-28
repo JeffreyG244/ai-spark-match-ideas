@@ -39,14 +39,24 @@ export const SECURITY_CONFIG = {
   PRODUCTION_DOMAINS: ['yourdomain.com', 'app.yourdomain.com'],
   DEVELOPMENT_INDICATORS: ['localhost', '127.0.0.1', '.local', '.dev'],
   
-  // Content filtering
+  // Content filtering - Enhanced patterns
   SPAM_SCORE_THRESHOLD: 2,
   INAPPROPRIATE_CONTENT_PATTERNS: [
     'contact.*me.*at',
     'instagram|snapchat|whatsapp|telegram',
     'money|bitcoin|crypto|investment',
-    'cashapp|venmo|paypal'
-  ]
+    'cashapp|venmo|paypal',
+    'sugar.*daddy|sugar.*baby',
+    'escort|prostitute',
+    'nude|naked|sex.*chat',
+    'onlyfans|cam.*girl'
+  ],
+  
+  // Enhanced security settings
+  PASSWORD_MIN_SCORE: 5,
+  MAX_FAILED_LOGINS: 3,
+  DEVICE_FINGERPRINT_REQUIRED: true,
+  ENABLE_BREACH_DETECTION: true
 } as const;
 
 export type SecurityConfig = typeof SECURITY_CONFIG;

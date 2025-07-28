@@ -2929,6 +2929,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      sanitize_user_input: {
+        Args: { input_text: string; max_length?: number }
+        Returns: string
+      }
       search_products: {
         Args: { query: string; vector_column: string; table_name: string }
         Returns: {
@@ -2962,6 +2966,10 @@ export type Database = {
       send_n8n_webhook: {
         Args: { payload: Json; webhook_url?: string }
         Returns: Json
+      }
+      setup_default_admin: {
+        Args: { admin_email: string }
+        Returns: undefined
       }
       sparsevec_out: {
         Args: { "": unknown }
@@ -4078,6 +4086,10 @@ export type Database = {
       upsert_user_presence: {
         Args: { p_user_id: string; p_is_online: boolean }
         Returns: undefined
+      }
+      validate_password_strength: {
+        Args: { password: string }
+        Returns: Json
       }
       validate_role_assignment: {
         Args:
