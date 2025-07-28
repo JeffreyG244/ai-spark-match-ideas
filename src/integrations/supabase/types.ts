@@ -2929,6 +2929,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      sanitize_and_validate_input: {
+        Args: { input_text: string; content_type?: string; max_length?: number }
+        Returns: Json
+      }
       sanitize_user_input: {
         Args: { input_text: string; max_length?: number }
         Returns: string
@@ -4088,6 +4092,10 @@ export type Database = {
         Returns: undefined
       }
       validate_password_strength: {
+        Args: { password: string }
+        Returns: Json
+      }
+      validate_password_with_leak_check: {
         Args: { password: string }
         Returns: Json
       }
