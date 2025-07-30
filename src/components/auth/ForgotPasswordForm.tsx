@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuthentication } from '@/hooks/useAuthentication';
 import { toast } from '@/hooks/use-toast';
 
 interface ForgotPasswordFormProps {
@@ -15,74 +15,30 @@ interface ForgotPasswordFormProps {
 
 const ForgotPasswordForm = ({ onBackToAuth }: ForgotPasswordFormProps) => {
   const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [activeTab, setActiveTab] = useState('password');
+  const { resetPassword, loading, error } = useAuthentication();
 
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
+    
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      if (error) {
-        toast({
-          title: 'Error',
-          description: error.message,
-          variant: 'destructive'
-        });
-      } else {
-        setEmailSent(true);
-        toast({
-          title: 'Password Reset Email Sent',
-          description: 'Check your email for instructions to reset your password.',
-        });
-      }
+      await resetPassword(email);
+      setEmailSent(true);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
+      // Error handling is done in the hook
+      console.error('Password reset failed:', error);
     }
   };
 
   const handleEmailRecovery = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
+    
     try {
-      // For email recovery, we'll send a password reset which will show the email
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      if (error) {
-        toast({
-          title: 'Error',
-          description: error.message,
-          variant: 'destructive'
-        });
-      } else {
-        setEmailSent(true);
-        toast({
-          title: 'Account Recovery Email Sent',
-          description: 'If an account exists with this email, you will receive recovery instructions.',
-        });
-      }
+      await resetPassword(email);
+      setEmailSent(true);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred. Please try again.',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
+      console.error('Email recovery failed:', error);
     }
   };
 
@@ -126,6 +82,13 @@ const ForgotPasswordForm = ({ onBackToAuth }: ForgotPasswordFormProps) => {
             <div className="text-sm text-muted-foreground text-center mb-4">
               Enter your email address and we'll send you a link to reset your password.
             </div>
+            
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handlePasswordReset} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
@@ -154,6 +117,13 @@ const ForgotPasswordForm = ({ onBackToAuth }: ForgotPasswordFormProps) => {
             <div className="text-sm text-muted-foreground text-center mb-4">
               If you remember any email you might have used, enter it below and we'll help you recover your account.
             </div>
+
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleEmailRecovery} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="recovery-email">Possible Email Address</Label>

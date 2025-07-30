@@ -228,11 +228,66 @@ export const useAuthentication = () => {
     }
   };
 
+  const resetPassword = async (email: string) => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      const sanitizedEmail = sanitizeAuthInput(email);
+
+      if (!validateEmailFormat(sanitizedEmail)) {
+        setError('Please enter a valid email address');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Sending password reset email to:', sanitizedEmail);
+
+      // Use our custom edge function for password reset
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL || 'https://tzskjzkolyiwhijslqmq.supabase.co'}/functions/v1/send-password-reset`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6c2tqemtvbHlpd2hpanNscW1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2NTY3ODAsImV4cCI6MjA2NDIzMjc4MH0.EvlZrWKZVsUks6VArpizk98kmOc8nVS7vvjUbd4ThMw'}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6c2tqemtvbHlpd2hpanNscW1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg2NTY3ODAsImV4cCI6MjA2NDIzMjc4MH0.EvlZrWKZVsUks6VArpizk98kmOc8nVS7vvjUbd4ThMw',
+        },
+        body: JSON.stringify({ email: sanitizedEmail }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || result.details || 'Failed to send password reset email');
+      }
+
+      console.log('Password reset email sent successfully');
+      toast({
+        title: 'Password reset email sent',
+        description: 'Please check your email for password reset instructions.',
+      });
+
+    } catch (error) {
+      console.error('Password reset error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to send password reset email';
+      
+      if (errorMessage.includes('Email service not configured')) {
+        setError('Email service is not properly configured. Please contact support.');
+      } else if (errorMessage.includes('not configured')) {
+        setError('Password reset service is currently unavailable. Please try again later.');
+      } else {
+        setError('Failed to send password reset email. Please check your email address and try again.');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     loading,
     error,
     signUp,
     signIn,
+    resetPassword,
     resendConfirmationEmail
   };
 };
