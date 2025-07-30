@@ -2570,6 +2570,10 @@ export type Database = {
         Args: { "": string }
         Returns: unknown
       }
+      get_db_version: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_image_dimensions: {
         Args: { "": string }
         Returns: {
@@ -2587,6 +2591,7 @@ export type Database = {
               result_offset?: number
               result_limit?: number
             }
+          | { latitude: number; longitude: number; max_distance: number }
         Returns: {
           id: string
           first_name: string
@@ -2938,12 +2943,13 @@ export type Database = {
         Returns: string
       }
       search_products: {
-        Args: { query: string; vector_column: string; table_name: string }
+        Args:
+          | { query: string; vector_column: string; table_name: string }
+          | { search_term?: string; max_results?: number }
         Returns: {
-          id: string
-          name: string
+          product_id: number
+          product_name: string
           description: string
-          similarity: number
         }[]
       }
       secure_rate_limit_check: {
