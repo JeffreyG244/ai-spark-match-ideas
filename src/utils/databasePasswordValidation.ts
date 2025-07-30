@@ -5,6 +5,8 @@ export interface DatabasePasswordValidationResult {
   isValid: boolean;
   errors: string[];
   score: number;
+  isLeaked?: boolean;
+  strength?: string;
 }
 
 /**

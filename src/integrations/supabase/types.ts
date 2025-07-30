@@ -2934,6 +2934,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      run_security_diagnostics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       sanitize_and_validate_input: {
         Args: { input_text: string; content_type?: string; max_length?: number }
         Returns: Json
