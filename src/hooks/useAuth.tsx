@@ -43,14 +43,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting sign in for:', email);
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options: {
+          captchaToken: undefined // Explicitly disable captcha for now
+        }
       });
 
+      console.log('Sign in response:', { data, error });
+
       if (error) {
+        console.error('Authentication error:', error);
         throw error;
       }
+
+      console.log('Sign in successful');
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
@@ -76,7 +85,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           data: {
             first_name: firstName,
             last_name: lastName
-          }
+          },
+          captchaToken: undefined // Explicitly disable captcha for now
         }
       });
 
