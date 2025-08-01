@@ -44,9 +44,9 @@ export async function createUserProfile(user: DiverseUser, userId: string, photo
   return true;
 }
 
-// Function to get secure photo URL
+// Function to get secure photo URL using Supabase storage
 function getSecurePhotoUrl(filename: string) {
-  return `https://storage.luvlang.org/storage/v1/object/public/profile-photos/${filename}`;
+  return `https://tzskjzkolyiwhijslqmq.supabase.co/storage/v1/object/public/profile-photos/${filename}`;
 }
 
 export async function updateProfilePhotos(user: DiverseUser, userId: string, photoUrls: string[]) {

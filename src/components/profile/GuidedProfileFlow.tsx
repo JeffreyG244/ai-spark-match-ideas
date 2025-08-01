@@ -273,11 +273,12 @@ const GuidedProfileFlow = () => {
               />
               <div className="text-center pt-6">
                 <Button
-                  onClick={() => setCurrentStep(3)}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 text-lg font-semibold"
+                  onClick={() => handleStepComplete(1)}
+                  disabled={!isBasicProfileComplete()}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 text-lg font-semibold disabled:opacity-50"
                   size="lg"
                 >
-                  Continue to Interests
+                  Continue to Personality Questions
                   <ArrowRight className="h-5 w-5 ml-2" />
                 </Button>
               </div>
