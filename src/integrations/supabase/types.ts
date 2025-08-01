@@ -1095,6 +1095,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          age: number | null
+          created_at: string | null
+          gender: string | null
+          name: string | null
+          photo_url: string | null
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string | null
+          gender?: string | null
+          name?: string | null
+          photo_url?: string | null
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          created_at?: string | null
+          gender?: string | null
+          name?: string | null
+          photo_url?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles_backup: {
         Row: {
           bio: string | null
@@ -1829,8 +1856,10 @@ export type Database = {
           age: number | null
           created_at: string | null
           email: string | null
+          gender: Database["public"]["Enums"]["gender_type"] | null
           id: string
           name: string
+          photo_url: string | null
           preferences: Json
           user_id: string
         }
@@ -1838,8 +1867,10 @@ export type Database = {
           age?: number | null
           created_at?: string | null
           email?: string | null
+          gender?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
           name: string
+          photo_url?: string | null
           preferences?: Json
           user_id: string
         }
@@ -1847,8 +1878,10 @@ export type Database = {
           age?: number | null
           created_at?: string | null
           email?: string | null
+          gender?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
           name?: string
+          photo_url?: string | null
           preferences?: Json
           user_id?: string
         }
@@ -4157,6 +4190,7 @@ export type Database = {
       }
     }
     Enums: {
+      gender_type: "male" | "female" | "non-binary" | "other"
       match_status: "pending" | "accepted" | "rejected"
       payment_status:
         | "pending"
@@ -4301,6 +4335,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      gender_type: ["male", "female", "non-binary", "other"],
       match_status: ["pending", "accepted", "rejected"],
       payment_status: [
         "pending",
