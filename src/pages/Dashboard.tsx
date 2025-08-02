@@ -8,6 +8,7 @@ import ProfileSetupSection from '@/components/dashboard/ProfileSetupSection';
 import DashboardGrid from '@/components/dashboard/DashboardGrid';
 import ProfileSetupView from '@/components/dashboard/ProfileSetupView';
 import NavigationTabs from '@/components/navigation/NavigationTabs';
+import AIAnalysisSection from '@/components/dashboard/AIAnalysisSection';
 
 const Dashboard = () => {
   const { user, signOut, loading } = useAuth();
@@ -51,6 +52,9 @@ const Dashboard = () => {
         <DashboardHeader onSignOut={signOut} />
         <WelcomeSection user={user} />
         <ProfileSetupSection onStartProfileSetup={() => setShowProfileSetup(true)} />
+        <div className="my-8">
+          <AIAnalysisSection />
+        </div>
         <DashboardGrid />
 
         {/* Additional Info */}

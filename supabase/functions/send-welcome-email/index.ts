@@ -27,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
     const displayName = lastName ? `${firstName} ${lastName}` : firstName;
 
     const emailResponse = await resend.emails.send({
-      from: "Welcome <onboarding@resend.dev>",
+      from: "LuvLang Support <support@luvlang.org>",
       to: [email],
       subject: "Welcome to our Dating Community! 💕",
       html: `

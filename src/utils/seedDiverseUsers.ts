@@ -125,15 +125,20 @@ export const seedDiverseUsers = async (): Promise<{ success: boolean; message: s
 
     console.log(`Creating ${newProfiles.length} new seed profiles...`);
 
-    // Create seed profiles
+    // Create seed profiles with complete data
     const seedProfiles = newProfiles.map((user, index) => {
       const seedUserId = `seed-${user.firstName.toLowerCase()}-${user.lastName.toLowerCase()}-${Date.now()}-${index}`;
       
       return {
         user_id: seedUserId,
         email: user.email,
+        first_name: user.firstName,
+        last_name: user.lastName,
+        age: user.age,
+        location: user.location,
         bio: user.bio,
         photo_urls: user.photos,
+        visible: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };

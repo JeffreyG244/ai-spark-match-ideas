@@ -102,7 +102,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email using Resend
     const emailResponse = await resend.emails.send({
-      from: "Your Dating App <noreply@yourdomain.com>",
+      from: "LuvLang Support <support@luvlang.org>",
       to: [email],
       subject: "Reset Your Password",
       html: `

@@ -184,6 +184,42 @@ export type Database = {
           },
         ]
       }
+      ai_match_results: {
+        Row: {
+          compatibility_score: number | null
+          created_at: string | null
+          id: string
+          match_recommendations: Json | null
+          personality_analysis: Json | null
+          processed_at: string | null
+          processing_status: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          compatibility_score?: number | null
+          created_at?: string | null
+          id?: string
+          match_recommendations?: Json | null
+          personality_analysis?: Json | null
+          processed_at?: string | null
+          processing_status?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          compatibility_score?: number | null
+          created_at?: string | null
+          id?: string
+          match_recommendations?: Json | null
+          personality_analysis?: Json | null
+          processed_at?: string | null
+          processing_status?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_models: {
         Row: {
           created_at: string | null
