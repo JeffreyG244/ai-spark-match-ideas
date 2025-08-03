@@ -60,6 +60,26 @@ const GuidedProfileFlow = () => {
     loadCompatibilityAnswers();
   }, []);
 
+  // Load saved data into local state when data is loaded
+  useEffect(() => {
+    if (questionAnswers && Object.keys(questionAnswers).length > 0) {
+      setPersonalityAnswers(questionAnswers);
+    }
+    if (profileData?.interests) {
+      if (typeof profileData.interests === 'string') {
+        setInterests(profileData.interests.split(',').map(i => i.trim()).filter(Boolean));
+      }
+    }
+    if (profileData?.photo_urls && Array.isArray(profileData.photo_urls)) {
+      const formattedPhotos = profileData.photo_urls.map((url, index) => ({
+        id: `photo-${index}`,
+        url,
+        isPrimary: index === 0
+      }));
+      setPhotos(formattedPhotos);
+    }
+  }, [questionAnswers, profileData]);
+
   const steps = [
     {
       id: 1,
@@ -103,13 +123,25 @@ const GuidedProfileFlow = () => {
       });
       setCurrentStep(2);
     } else if (stepId === 2 && Object.keys(personalityAnswers || {}).length >= 6) {
+      // Save personality answers through compatibility answers hook
       await saveCompatibilityAnswers();
+      
+      // Also update enhanced profile data with personality answers
+      Object.entries(personalityAnswers).forEach(([key, value]) => {
+        updateProfileField(key as any, value);
+      });
+      await saveProfile(false);
+      
       toast({
         title: 'Personality Questions Completed!',
         description: 'Now let\'s add your interests...',
       });
       setCurrentStep(3);
     } else if (stepId === 3 && (interests || []).length >= 5) {
+      // Save interests to profile
+      updateProfileField('interests', interests.join(', '));
+      await saveProfile(false);
+      
       toast({
         title: 'Interests Added!',
         description: 'Finally, let\'s add some photos...',
@@ -295,17 +327,16 @@ const GuidedProfileFlow = () => {
                 answers={personalityAnswers}
                 onAnswerChange={handlePersonalityAnswer}
               />
-              {Object.keys(personalityAnswers || {}).length >= 6 && (
-                <div className="text-center pt-4">
-                  <Button
-                    onClick={() => handleStepComplete(2)}
-                    className="bg-purple-600 hover:bg-purple-700"
-                  >
-                    Continue to Interests
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              )}
+              <div className="text-center pt-4">
+                <Button
+                  onClick={() => handleStepComplete(2)}
+                  disabled={Object.keys(personalityAnswers || {}).length < 6}
+                  className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Continue to Interests ({Object.keys(personalityAnswers || {}).length}/6)
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
             </div>
           )}
 
