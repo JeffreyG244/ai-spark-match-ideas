@@ -17,13 +17,12 @@ export class DatabaseService {
       if (!user) throw new Error('User not authenticated');
 
       const { error } = await supabase
-        .from('dating_profiles')
-        .upsert({
-          user_id: user.id,
-          email: user.email || '',
+        .from('users')
+        .update({
           bio: profileData.bio,
           updated_at: new Date().toISOString()
-        });
+        })
+        .eq('id', user.id);
 
       if (error) {
         console.error('Profile creation error:', error);

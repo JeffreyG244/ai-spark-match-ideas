@@ -55,9 +55,9 @@ export default function TestIntegration() {
       // Test 2: Profile Data Fetch
       try {
         const { data: profile, error: profileError } = await supabase
-          .from('dating_profiles')
+          .from('users')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('id', user.id)
           .single();
 
         if (profileError || !profile) {
@@ -108,14 +108,14 @@ export default function TestIntegration() {
 
       // Test 5: Database Integration
       try {
-        const { data: compatibility, error: compatError } = await supabase
-          .from('compatibility_answers')
+        const { data: userVerifications, error: compatError } = await supabase
+          .from('user_verifications')
           .select('*')
           .eq('user_id', user.id)
           .single();
 
         if (compatError) {
-          updateResult('Database Integration', 'error', 'Compatibility answers not found');
+          updateResult('Database Integration', 'error', 'User verifications not found - this is normal for new users');
         } else {
           updateResult('Database Integration', 'success', 'Database integration working');
         }
