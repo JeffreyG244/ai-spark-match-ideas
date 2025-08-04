@@ -401,7 +401,7 @@ const EnhancedExecutiveMessaging = () => {
           </button>
           <button
             onClick={() => {
-              toast({ title: 'Voice Recording', description: 'Voice messages coming soon!' });
+              // Voice recording functionality - removed toast notification
               setShowAttachmentMenu(false);
             }}
             className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-white"
@@ -420,7 +420,7 @@ const EnhancedExecutiveMessaging = () => {
         <div className="space-y-1 w-52">
           <button
             onClick={() => {
-              toast({ title: 'Profile Viewed', description: `Viewing ${selectedConversation?.name}'s profile` });
+              // View profile functionality - removed toast notification
               setShowMoreMenu(false);
             }}
             className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-white"
@@ -440,7 +440,7 @@ const EnhancedExecutiveMessaging = () => {
           </button>
           <button
             onClick={() => {
-              toast({ title: 'Conversation Muted', description: 'You will no longer receive notifications' });
+              // Mute notifications functionality - removed toast notification
               setShowMoreMenu(false);
             }}
             className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-white"
@@ -451,7 +451,7 @@ const EnhancedExecutiveMessaging = () => {
           <hr className="border-gray-600/30" />
           <button
             onClick={() => {
-              toast({ title: 'Reported', description: 'User has been reported to our moderation team' });
+              // Report user functionality - removed toast notification
               setShowMoreMenu(false);
             }}
             className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-white"

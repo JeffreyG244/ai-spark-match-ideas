@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
+import { useAlert } from '@/components/providers/AlertProvider';
 import { useNavigate } from 'react-router-dom';
 import Logo from '@/components/ui/logo';
 
@@ -38,6 +39,7 @@ interface UserProfile {
 
 const Discover = () => {
   const { user, signOut } = useAuth();
+  const { showAlert } = useAlert();
   const navigate = useNavigate();
   const { recordSwipe, isLoading: swipeLoading } = useSwipeActions();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -174,23 +176,36 @@ const Discover = () => {
       setProfiles(transformedProfiles);
       
       if (transformedProfiles.length > 0) {
-        toast({
-          title: 'Profiles Loaded',
-          description: `Found ${transformedProfiles.length} compatible matches!`
+        showAlert({
+          type: 'success',
+          title: 'Profiles Loaded! 🎉',
+          message: `Found ${transformedProfiles.length} compatible executive matches waiting for you.`,
+          actionText: 'Start Browsing',
+          autoHide: true,
+          duration: 4000
         });
       } else {
-        toast({
-          title: 'No Matches Found',
-          description: 'Try adjusting your preferences or check back later for new profiles.'
+        showAlert({
+          type: 'warning',
+          title: 'No Matches Yet',
+          message: 'Expanding search criteria to find more compatible executives. Check back soon!',
+          actionText: 'Adjust Preferences',
+          onAction: () => navigate('/settings'),
+          autoHide: true,
+          duration: 6000
         });
       }
     } catch (error) {
       console.error('Error fetching profiles:', error);
       setProfiles([]);
-      toast({
-        title: 'Error',
-        description: 'Failed to load profiles. Please try again.',
-        variant: 'destructive'
+      showAlert({
+        type: 'warning',
+        title: 'Connection Issue',
+        message: 'Unable to load profiles right now. Please check your connection and try again.',
+        actionText: 'Retry',
+        onAction: () => window.location.reload(),
+        autoHide: true,
+        duration: 5000
       });
     } finally {
       setLoading(false);
@@ -206,10 +221,7 @@ const Discover = () => {
       await recordSwipe(currentProfile.user_id, direction);
       
       if (direction === 'like') {
-        toast({
-          title: '💖 Great choice!',
-          description: `You liked ${currentProfile.firstName}. They'll be notified if it's a match!`,
-        });
+        // Removed toast notification - using professional alert system instead
       }
     }
     
