@@ -52,7 +52,7 @@ const ProfessionalMatchingDashboard: React.FC = () => {
     try {
       // Fetch matches for current user
       const { data: matchesData, error: matchesError } = await supabase
-        .from('ai_enhanced_matches')
+        .from('executive_matches')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -63,16 +63,16 @@ const ProfessionalMatchingDashboard: React.FC = () => {
         // Fetch profiles for matched users
         const matchedUserIds = matchesData.map(match => match.matched_user_id);
         const { data: profilesData, error: profilesError } = await supabase
-          .from('dating_profiles')
-          .select('id, user_id, first_name, last_name, bio, interests, profile_image_url')
-          .in('user_id', matchedUserIds);
+          .from('users')
+          .select('id, first_name, last_name, bio, interests, photos')
+          .in('id', matchedUserIds);
 
         if (profilesError) throw profilesError;
 
         // Combine matches with profiles
         const matchesWithProfiles = matchesData.map(match => ({
           ...match,
-          matched_profile: profilesData?.find(profile => profile.user_id === match.matched_user_id)
+          matched_profile: profilesData?.find(profile => profile.id === match.matched_user_id)
         }));
 
         setMatches(matchesWithProfiles);

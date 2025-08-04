@@ -97,10 +97,14 @@ const SignUpFlow = () => {
     setLoading(true);
     try {
       const profileData = {
-        user_id: user.id,
+        id: user.id,
         email: formData.email,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        date_of_birth: new Date(new Date().getFullYear() - formData.age, 0, 1).toISOString().split('T')[0],
+        city: formData.location || 'Unknown',
         bio: formData.bio || `${formData.firstName} from ${formData.location}. Age ${formData.age}.`,
-        photo_urls: [],
+        photos: [],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };

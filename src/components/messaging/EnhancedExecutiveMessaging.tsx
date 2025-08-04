@@ -58,7 +58,7 @@ const EnhancedExecutiveMessaging = () => {
       // Create mock conversations from matches
       const mockConversations: Conversation[] = matches.slice(0, 5).map((match, index) => ({
         id: match.id,
-        name: `${match.match_profile?.firstName || 'Executive'} ${match.match_profile?.lastName || 'Professional'}`,
+        name: `${match.match_profile?.first_name || 'Executive'} ${match.match_profile?.last_name || 'Professional'}`,
         lastMessage: index === 0 ? "Looking forward to our coffee meeting!" :
                     index === 1 ? "Thanks for the connection, would love to discuss..." :
                     index === 2 ? "Your profile caught my attention..." :
@@ -69,7 +69,7 @@ const EnhancedExecutiveMessaging = () => {
                   '1 day ago',
         unreadCount: index === 0 ? 2 : index === 1 ? 1 : 0,
         isOnline: index <= 1,
-        photo: match.match_profile?.photos?.[0] || '/api/placeholder/400/400',
+        photo: match.match_profile?.photo_urls?.[0] || '/api/placeholder/400/400',
         title: 'Senior Executive',
         company: 'Tech Corporation',
         isVerified: true,
