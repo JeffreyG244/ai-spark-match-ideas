@@ -14,27 +14,21 @@ const ProfileSetupSection = ({ onStartProfileSetup }: ProfileSetupSectionProps) 
       title: 'Create Profile',
       description: 'Complete your basic information',
       icon: User,
-      iconColor: 'text-purple-500',
-      borderColor: 'border-purple-200',
-      bgColor: 'bg-purple-50',
+      gradient: 'from-love-primary to-love-secondary',
       step: 1
     },
     {
       title: 'Compatibility Questions',
       description: 'Answer questions to find better matches',
       icon: Brain,
-      iconColor: 'text-blue-500',
-      borderColor: 'border-blue-200',
-      bgColor: 'bg-blue-50',
+      gradient: 'from-love-secondary to-love-accent',
       step: 2
     },
     {
       title: 'Profile Pics',
       description: 'Upload verified photos',
       icon: Camera,
-      iconColor: 'text-green-500',
-      borderColor: 'border-green-200',
-      bgColor: 'bg-green-50',
+      gradient: 'from-love-accent to-love-primary',
       step: 3
     }
   ];
@@ -46,47 +40,50 @@ const ProfileSetupSection = ({ onStartProfileSetup }: ProfileSetupSectionProps) 
   };
 
   return (
-    <div className="mb-12">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Complete Your Profile</h2>
-        <p className="text-gray-600">Follow these steps to get the best matches</p>
+    <div className="mb-16">
+      <div className="text-center mb-12">
+        <h2 className="text-3xl font-bold text-love-text mb-4">Complete Your Profile</h2>
+        <p className="text-love-text-light text-lg">Follow these steps to get the best matches</p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mb-12">
         {profileSetupItems.map((item) => (
           <Card 
             key={item.title} 
-            className={`
-              ${item.borderColor} ${item.bgColor} 
-              hover:shadow-lg hover:scale-105 
-              transition-all duration-200 cursor-pointer 
-              group border-2 hover:border-purple-300
-            `}
+            className="bg-love-card border-love-border/50 hover:border-love-primary/50 
+              hover:shadow-2xl hover:shadow-love-primary/20 hover:scale-[1.03]
+              transition-all duration-300 cursor-pointer group
+              backdrop-blur-sm relative overflow-hidden"
             onClick={() => handleStepClick(item.step)}
           >
-            <CardHeader className="text-center relative">
+            {/* Gradient overlay */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+            
+            <CardHeader className="text-center relative z-10 pt-8">
               {/* Step number badge */}
-              <div className="absolute -top-2 -right-2 w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+              <div className={`absolute -top-3 -right-3 w-10 h-10 bg-gradient-to-br ${item.gradient} text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg`}>
                 {item.step}
               </div>
               
-              <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition-shadow`}>
-                <item.icon className={`h-8 w-8 ${item.iconColor}`} />
+              <div className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${item.gradient} p-[2px] group-hover:scale-110 transition-transform duration-300`}>
+                <div className="w-full h-full bg-love-card rounded-2xl flex items-center justify-center">
+                  <item.icon className="h-8 w-8 text-love-primary group-hover:text-white transition-colors duration-300" />
+                </div>
               </div>
               
-              <CardTitle className="text-xl group-hover:text-purple-700 transition-colors">
+              <CardTitle className="text-xl font-bold text-love-text group-hover:text-love-primary transition-colors duration-300">
                 {item.title}
               </CardTitle>
               
-              <CardDescription className="text-gray-600">
+              <CardDescription className="text-love-text-muted mt-2">
                 {item.description}
               </CardDescription>
             </CardHeader>
             
-            <CardContent className="text-center pb-4">
-              <div className="flex items-center justify-center text-purple-600 group-hover:text-purple-700 transition-colors">
+            <CardContent className="text-center pb-6 relative z-10">
+              <div className={`flex items-center justify-center text-love-text-muted group-hover:text-love-primary transition-colors duration-300`}>
                 <span className="text-sm font-medium mr-2">Get Started</span>
-                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
               </div>
             </CardContent>
           </Card>
@@ -96,7 +93,10 @@ const ProfileSetupSection = ({ onStartProfileSetup }: ProfileSetupSectionProps) 
       <div className="text-center">
         <Button
           onClick={onStartProfileSetup}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg shadow-lg hover:shadow-xl transition-shadow"
+          className="bg-gradient-to-r from-love-primary to-love-secondary hover:from-love-primary/90 hover:to-love-secondary/90 
+            text-white px-12 py-4 text-lg font-semibold rounded-2xl
+            shadow-xl shadow-love-primary/30 hover:shadow-2xl hover:shadow-love-primary/40 
+            hover:scale-105 transition-all duration-300 backdrop-blur-sm"
         >
           Start Profile Setup
         </Button>

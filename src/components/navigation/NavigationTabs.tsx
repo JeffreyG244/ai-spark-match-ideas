@@ -17,24 +17,25 @@ const NavigationTabs = () => {
   ];
 
   return (
-    <div className="w-full bg-gradient-to-r from-love-primary/5 to-love-secondary/5 backdrop-blur-sm border-b border-love-primary/20 mb-6 sticky top-0 z-40">
-      <div className="container mx-auto px-4">
+    <div className="w-full bg-love-surface/95 backdrop-blur-md border-b border-love-border/50 mb-6 sticky top-0 z-50">
+      <div className="container mx-auto px-6">
         <Tabs value={currentPath} className="w-full">
-          <TabsList className="w-full justify-start overflow-x-auto bg-transparent h-16 p-2 gap-2">
+          <TabsList className="w-full justify-start overflow-x-auto bg-transparent h-20 p-3 gap-3">
             {tabs.map(({ value, label, path, icon: Icon }) => (
               <Link key={value} to={path} className="flex-shrink-0">
                 <TabsTrigger
                   value={path}
-                  className="flex items-center gap-2 px-6 py-3 rounded-full 
+                  className="flex items-center gap-3 px-8 py-4 rounded-2xl 
                   data-[state=active]:bg-gradient-to-r data-[state=active]:from-love-primary data-[state=active]:to-love-secondary 
-                  data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-love-primary/25
-                  hover:bg-love-primary/10 hover:text-love-primary hover:scale-105
+                  data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-love-primary/30
+                  data-[state=active]:scale-105 data-[state=active]:border-love-primary/30
+                  hover:bg-love-card hover:text-love-text hover:scale-[1.02] hover:border-love-primary/30
                   transition-all duration-300 ease-out whitespace-nowrap
-                  border border-transparent hover:border-love-primary/20
-                  font-medium text-love-text-muted
-                  animate-fade-in"
+                  border border-love-border/30 bg-love-surface/50
+                  font-semibold text-love-text-muted text-sm
+                  backdrop-blur-sm"
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-5 w-5" />
                   <span>{label}</span>
                 </TabsTrigger>
               </Link>
