@@ -48,18 +48,26 @@ const AIAnalysisSection = () => {
 
   if (!hasAnalysis) {
     return (
-      <Card>
+      <Card className="bg-gradient-to-br from-love-primary/10 to-love-secondary/10 border-love-primary/30 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 text-love-text">
+            <div className="w-10 h-10 bg-gradient-to-br from-love-primary to-love-secondary rounded-xl flex items-center justify-center">
+              <Brain className="h-5 w-5 text-white" />
+            </div>
             AI Analysis
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
+          <p className="text-love-text-light">
             Get personalized compatibility insights and match recommendations based on your profile.
           </p>
-          <Button onClick={triggerAnalysis} disabled={loading}>
+          <Button 
+            onClick={triggerAnalysis} 
+            disabled={loading}
+            className="bg-gradient-to-r from-love-primary to-love-secondary hover:from-love-primary/90 hover:to-love-secondary/90 
+              text-white font-semibold px-6 py-2 rounded-xl shadow-lg shadow-love-primary/30 
+              hover:shadow-xl hover:shadow-love-primary/40 transition-all duration-300"
+          >
             {loading ? 'Starting Analysis...' : 'Start AI Analysis'}
           </Button>
         </CardContent>
