@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Discover from "./pages/Discover";
 import Matches from "./pages/Matches";
+import ProfessionalMatches from "./pages/ProfessionalMatches";
 import DailyMatches from "./pages/DailyMatches";
 import Messages from "./pages/Messages";
 import Membership from "./pages/Membership";
@@ -67,6 +68,7 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/discover" element={<Discover />} />
                 <Route path="/matches" element={<Matches />} />
+                <Route path="/professional-matches" element={<ProfessionalMatches />} />
                 <Route path="/daily-matches" element={<DailyMatches />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/membership" element={<Membership />} />
