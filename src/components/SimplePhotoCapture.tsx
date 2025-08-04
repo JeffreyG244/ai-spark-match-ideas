@@ -221,22 +221,22 @@ const SimplePhotoCapture = () => {
         .from('profile-photos')
         .getPublicUrl(filename);
 
-      // Get current profile photos using the correct table name 'dating_profiles'
+      // Get current profile photos using the correct table name 'users'
       const { data: currentProfile } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .maybeSingle();
 
       // Handle photos array
-      const currentPhotos = currentProfile?.photo_urls || [];
+      const currentPhotos = currentProfile?.photos || [];
       const updatedPhotos = [...currentPhotos, publicUrl];
 
       // Update profile with new photo using correct table and column names
       if (!currentProfile) {
         // Create new profile
         const { error: insertError } = await supabase
-          .from('dating_profiles')
+          .from('users')
           .insert([{
             user_id: user.id,
             email: user.email || '',

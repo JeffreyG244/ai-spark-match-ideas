@@ -30,6 +30,7 @@ import TestIntegration from "./pages/TestIntegration";
 import TestSetup from "./pages/TestSetup";
 import N8NTesting from "./pages/N8NTesting";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
+import ExecutiveLuvlang from "./pages/ExecutiveLuvlang";
 
 // Legal pages
 import TermsOfService from "./pages/legal/TermsOfService";
@@ -91,6 +92,7 @@ function App() {
                 <Route path="/test-setup" element={<TestSetup />} />
                 <Route path="/n8n-testing" element={<N8NTesting />} />
                 <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
+                <Route path="/executive-luvlang" element={<ExecutiveLuvlang />} />
                 <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/legal/terms-of-service" element={<TermsOfService />} />
                 <Route path="/legal/community-guidelines" element={<CommunityGuidelines />} />
