@@ -48,7 +48,7 @@ const ComprehensiveSystemDiagnostic = () => {
       // 2. Database Connection Tests
       try {
         const { data: connectionTest, error: connectionError } = await supabase
-          .from('dating_profiles')
+          .from('users')
           .select('count')
           .limit(1);
 
@@ -73,9 +73,9 @@ const ComprehensiveSystemDiagnostic = () => {
       if (user) {
         try {
           const { data: profile, error: profileError } = await supabase
-            .from('dating_profiles')
+            .from('users')
             .select('*')
-            .eq('user_id', user.id)
+            .eq('id', user.id)
             .single();
 
           diagnosticResults.push({
@@ -100,8 +100,8 @@ const ComprehensiveSystemDiagnostic = () => {
       // 4. Authentication System Tests
       try {
         const { data: authUsers, error: authError } = await supabase
-          .from('dating_profiles')
-          .select('user_id')
+          .from('users')
+          .select('id')
           .limit(5);
 
         diagnosticResults.push({
@@ -140,21 +140,7 @@ const ComprehensiveSystemDiagnostic = () => {
           body: JSON.stringify(testPayload)
         });
 
-        // Try to log the webhook attempt
-        if (user) {
-          try {
-            await supabase.from('n8n_webhook_logs').insert({
-              user_id: user.id,
-              webhook_url: webhookUrl,
-              payload: testPayload,
-              response_status: response.status,
-              response_body: response.ok ? 'Diagnostic test successful' : 'Diagnostic test failed',
-              success: response.ok
-            });
-          } catch (logError) {
-            console.warn('Could not log webhook attempt:', logError);
-          }
-        }
+        console.log('N8N webhook test completed:', response.status);
 
         diagnosticResults.push({
           category: 'N8N Integration',
@@ -177,8 +163,8 @@ const ComprehensiveSystemDiagnostic = () => {
       if (testEmail) {
         try {
           const { data: userData, error: lookupError } = await supabase
-            .from('dating_profiles')
-            .select('user_id, email, first_name, last_name')
+            .from('users')
+            .select('id, email, first_name, last_name')
             .eq('email', testEmail)
             .single();
 

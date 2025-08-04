@@ -193,13 +193,33 @@ const ExecutiveLuvlang = () => {
   const triggerMatching = async () => {
     setIsMatching(true);
     try {
-      // Simulate AI matching process
+      // Call the Supabase edge function which connects to N8N
+      const { data, error } = await supabase.functions.invoke('professional-match-trigger', {
+        body: {
+          userId: user?.id || 'test_user',
+          preferences: 'executive_level',
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      if (error) {
+        console.error('Matching error:', error);
+        toast({
+          title: 'Matching Error',
+          description: 'Failed to trigger professional matching',
+          variant: 'destructive'
+        });
+        setIsMatching(false);
+        return;
+      }
+
+      console.log('N8N Matching response:', data);
       toast({
         title: 'AI Matching Started',
         description: 'Our quantum-powered algorithm is finding your perfect executive matches...',
       });
 
-      // In a real implementation, this would trigger the matching algorithm
+      // Reload matches after a delay to show the new matches
       setTimeout(() => {
         loadMatches();
         setIsMatching(false);

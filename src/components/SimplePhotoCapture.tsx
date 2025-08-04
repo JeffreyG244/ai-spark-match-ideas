@@ -232,32 +232,16 @@ const SimplePhotoCapture = () => {
       const currentPhotos = currentProfile?.photos || [];
       const updatedPhotos = [...currentPhotos, publicUrl];
 
-      // Update profile with new photo using correct table and column names
-      if (!currentProfile) {
-        // Create new profile
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert([{
-            user_id: user.id,
-            email: user.email || '',
-            photo_urls: updatedPhotos
-          }]);
-          
-        if (insertError) {
-          throw new Error(`Profile creation failed: ${insertError.message}`);
-        }
-      } else {
-        // Update existing profile
-        const { error: updateError } = await supabase
-          .from('dating_profiles')
-          .update({
-            photo_urls: updatedPhotos
-          })
-          .eq('user_id', user.id);
+      // Update user photos using correct table and column names
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          photos: updatedPhotos
+        })
+        .eq('id', user.id);
 
-        if (updateError) {
-          throw new Error(`Profile update failed: ${updateError.message}`);
-        }
+      if (updateError) {
+        throw new Error(`Profile update failed: ${updateError.message}`);
       }
 
       // Update local state
@@ -290,11 +274,11 @@ const SimplePhotoCapture = () => {
       const updatedPhotos = photos.filter(p => p !== photoUrl);
       
       const { error } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .update({
-          photo_urls: updatedPhotos
+          photos: updatedPhotos
         })
-        .eq('user_id', user.id);
+        .eq('id', user.id);
 
       if (error) throw new Error(`Remove failed: ${error.message}`);
 
@@ -323,15 +307,15 @@ const SimplePhotoCapture = () => {
 
       try {
         const { data } = await supabase
-          .from('dating_profiles')
-          .select('photo_urls')
-          .eq('user_id', user.id)
+          .from('users')
+          .select('photos')
+          .eq('id', user.id)
           .maybeSingle();
 
-        if (data && data.photo_urls) {
-          setPhotos(data.photo_urls);
-          setPhotoCount(data.photo_urls.length);
-          console.log('📂 Loaded existing photos:', data.photo_urls.length);
+        if (data && data.photos) {
+          setPhotos(data.photos);
+          setPhotoCount(data.photos.length);
+          console.log('📂 Loaded existing photos:', data.photos.length);
         }
       } catch (error) {
         console.error('❌ Error loading photos:', error);
