@@ -33,7 +33,12 @@ import {
   Cookie,
   Flag,
   ChevronDown,
-  ExternalLink
+  ExternalLink,
+  Search,
+  Zap,
+  Palette,
+  Menu,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,6 +46,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import Logo from '@/components/ui/logo';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,80 +56,33 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-interface SettingsSection {
+interface SettingsCategory {
   id: string;
   title: string;
+  description: string;
   icon: React.ReactNode;
+  color: string;
   badge?: string;
+  items: SettingItem[];
 }
 
-const settingsSections: SettingsSection[] = [
-  {
-    id: 'profile',
-    title: 'Profile & Verification',
-    icon: <User className="w-4 h-4" />,
-  },
-  {
-    id: 'notifications',
-    title: 'Notifications',
-    icon: <Bell className="w-4 h-4" />,
-    badge: '3'
-  },
-  {
-    id: 'matching',
-    title: 'Matching & Discovery',
-    icon: <Heart className="w-4 h-4" />,
-  },
-  {
-    id: 'security',
-    title: 'Security & Privacy',
-    icon: <Shield className="w-4 h-4" />,
-  },
-  {
-    id: 'billing',
-    title: 'Billing & Subscription',
-    icon: <CreditCard className="w-4 h-4" />,
-  },
-  {
-    id: 'legal',
-    title: 'Legal & Compliance',
-    icon: <FileText className="w-4 h-4" />,
-  },
-  {
-    id: 'support',
-    title: 'Support & Help',
-    icon: <HelpCircle className="w-4 h-4" />,
-  }
-];
-
-const legalDocuments = [
-  { title: 'Privacy Policy', path: '/legal/privacy', icon: Shield },
-  { title: 'Terms of Service', path: '/legal/terms', icon: FileText },
-  { title: 'Community Guidelines', path: '/legal/community', icon: User },
-  { title: 'Safety Guidelines', path: '/legal/safety', icon: Shield },
-  { title: 'Cookie Policy', path: '/legal/cookies', icon: Cookie },
-  { title: 'GDPR Compliance', path: '/legal/gdpr', icon: Shield },
-  { title: 'CCPA Compliance', path: '/legal/ccpa', icon: Scale },
-  { title: 'Data Retention Policy', path: '/legal/data-retention', icon: Database },
-  { title: 'Content Moderation', path: '/legal/moderation', icon: Eye },
-  { title: 'Age Verification', path: '/legal/age-verification', icon: CheckCircle },
-  { title: 'Identity Verification', path: '/legal/identity-verification', icon: UserCheck },
-  { title: 'Photo Verification', path: '/legal/photo-verification', icon: Camera },
-  { title: 'Message Monitoring', path: '/legal/message-monitoring', icon: MessageSquare },
-  { title: 'Romance Scam Prevention', path: '/legal/scam-prevention', icon: AlertTriangle },
-  { title: 'Blocking & Reporting', path: '/legal/reporting', icon: Flag },
-  { title: 'Account Suspension', path: '/legal/suspension', icon: UserX },
-  { title: 'Intellectual Property', path: '/legal/ip', icon: Copyright },
-  { title: 'Refund Policy', path: '/legal/refunds', icon: RotateCcw },
-  { title: 'Subscription Terms', path: '/legal/subscription', icon: Star },
-  { title: 'Billing Policy', path: '/legal/billing', icon: CreditCard }
-];
+interface SettingItem {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  action: () => void;
+  type: 'button' | 'switch' | 'navigation';
+  value?: boolean;
+}
 
 const Settings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [activeSection, setActiveSection] = useState('profile');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState('profile');
 
   const [settings, setSettings] = useState({
     notifications: {
@@ -143,7 +102,6 @@ const Settings = () => {
     matching: {
       autoMatch: true,
       longDistance: false,
-      ageRange: [28, 45],
       executiveOnly: true
     }
   });
@@ -164,586 +122,393 @@ const Settings = () => {
     });
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
-  };
-
-  const renderProfileSettings = () => (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-2">Profile Settings</h2>
-        <p className="text-gray-400">Manage your profile information and visibility</p>
-      </div>
-
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="text-white">Profile Visibility</CardTitle>
-          <CardDescription className="text-gray-400">
-            Control how your profile appears to other members
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-white font-medium">Profile Visibility</h4>
-              <p className="text-sm text-gray-400">Show your profile to potential matches</p>
-            </div>
-            <Switch 
-              checked={settings.privacy.profileVisibility}
-              onCheckedChange={() => handleToggle('privacy', 'profileVisibility')}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-white font-medium">Online Status</h4>
-              <p className="text-sm text-gray-400">Let others see when you're online</p>
-            </div>
-            <Switch 
-              checked={settings.privacy.onlineStatus}
-              onCheckedChange={() => handleToggle('privacy', 'onlineStatus')}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-white font-medium">Read Receipts</h4>
-              <p className="text-sm text-gray-400">Show when you've read messages</p>
-            </div>
-            <Switch 
-              checked={settings.privacy.readReceipts}
-              onCheckedChange={() => handleToggle('privacy', 'readReceipts')}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="text-white">Profile Management</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/profile')}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <User className="w-4 h-4 mr-3" />
-            Edit Profile Details
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/profile')}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <Eye className="w-4 h-4 mr-3" />
-            Update Photos
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/verification')}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <UserCheck className="w-4 h-4 mr-3" />
-            Identity Verification
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderNotificationSettings = () => (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-2">Notification Preferences</h2>
-        <p className="text-gray-400">Choose how you want to be notified</p>
-      </div>
-
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="text-white">Push Notifications</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Mail className="w-4 h-4 text-blue-400" />
-              <div>
-                <h4 className="text-white font-medium">New Messages</h4>
-                <p className="text-sm text-gray-400">Get notified of new messages instantly</p>
-              </div>
-            </div>
-            <Switch 
-              checked={settings.notifications.messages}
-              onCheckedChange={() => handleToggle('notifications', 'messages')}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Heart className="w-4 h-4 text-pink-400" />
-              <div>
-                <h4 className="text-white font-medium">New Matches</h4>
-                <p className="text-sm text-gray-400">Be alerted when you get a new match</p>
-              </div>
-            </div>
-            <Switch 
-              checked={settings.notifications.matches}
-              onCheckedChange={() => handleToggle('notifications', 'matches')}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Smartphone className="w-4 h-4 text-green-400" />
-              <div>
-                <h4 className="text-white font-medium">Push Notifications</h4>
-                <p className="text-sm text-gray-400">Receive notifications on your device</p>
-              </div>
-            </div>
-            <Switch 
-              checked={settings.notifications.pushNotifications}
-              onCheckedChange={() => handleToggle('notifications', 'pushNotifications')}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="text-white">Email Preferences</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Globe className="w-4 h-4 text-purple-400" />
-              <div>
-                <h4 className="text-white font-medium">Email Digest</h4>
-                <p className="text-sm text-gray-400">Weekly summary of your activity</p>
-              </div>
-            </div>
-            <Switch 
-              checked={settings.notifications.emails}
-              onCheckedChange={() => handleToggle('notifications', 'emails')}
-            />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderMatchingSettings = () => (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-2">Matching Preferences</h2>
-        <p className="text-gray-400">Customize your matching criteria</p>
-      </div>
-
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="text-white">Match Settings</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-white font-medium">Executive Only Matches</h4>
-              <p className="text-sm text-gray-400">Only match with verified executives</p>
-            </div>
-            <Switch 
-              checked={settings.matching.executiveOnly}
-              onCheckedChange={() => handleToggle('matching', 'executiveOnly')}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-white font-medium">Auto-Matching</h4>
-              <p className="text-sm text-gray-400">Automatically find compatible matches</p>
-            </div>
-            <Switch 
-              checked={settings.matching.autoMatch}
-              onCheckedChange={() => handleToggle('matching', 'autoMatch')}
-            />
-          </div>
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="text-white font-medium">Long Distance</h4>
-              <p className="text-sm text-gray-400">Include matches outside your area</p>
-            </div>
-            <Switch 
-              checked={settings.matching.longDistance}
-              onCheckedChange={() => handleToggle('matching', 'longDistance')}
-            />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderSecuritySettings = () => (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-2">Security & Privacy</h2>
-        <p className="text-gray-400">Manage your account security</p>
-      </div>
-
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="text-white">Account Security</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/auth/reset-password')}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <Lock className="w-4 h-4 mr-3" />
-            Change Password
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => toast({ title: "Coming Soon", description: "Two-factor authentication will be available soon." })}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <Shield className="w-4 h-4 mr-3" />
-            Two-Factor Authentication
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => toast({ title: "Security", description: "No suspicious login activity detected." })}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <CheckCircle className="w-4 h-4 mr-3" />
-            Login Activity
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="text-white">Privacy Controls</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button 
-            variant="outline"
-            onClick={() => setActiveSection('legal')}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <Eye className="w-4 h-4 mr-3" />
-            Privacy Settings
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => toast({ title: "Data Export", description: "Your data export will be ready within 24 hours." })}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <Globe className="w-4 h-4 mr-3" />
-            Request Data Export
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderBillingSettings = () => (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-2">Billing & Subscription</h2>
-        <p className="text-gray-400">Manage your membership and billing</p>
-      </div>
-
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="text-white">Current Plan</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-lg border border-yellow-500/30">
-            <Crown className="w-6 h-6 text-yellow-400" />
-            <div>
-              <h4 className="text-white font-medium">C-Suite Premium</h4>
-              <p className="text-sm text-yellow-300">Active until March 15, 2025</p>
-            </div>
-          </div>
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/membership')}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <CreditCard className="w-4 h-4 mr-3" />
-            Update Payment Method
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/membership')}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <SettingsIcon className="w-4 h-4 mr-3" />
-            Manage Subscription
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => setActiveSection('legal')}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <FileText className="w-4 h-4 mr-3" />
-            Billing Terms & Policies
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderSupportSettings = () => (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-2">Support & Account</h2>
-        <p className="text-gray-400">Get help and manage your account</p>
-      </div>
-
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="text-white">Support Options</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button 
-            variant="outline"
-            onClick={() => window.open('https://help.luvlang.com', '_blank')}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <HelpCircle className="w-4 h-4 mr-3" />
-            Help Center
-            <ExternalLink className="w-3 h-3 ml-auto" />
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => window.open('mailto:support@luvlang.com', '_blank')}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <Mail className="w-4 h-4 mr-3" />
-            Contact Support
-            <ExternalLink className="w-3 h-3 ml-auto" />
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => setActiveSection('legal')}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <FileText className="w-4 h-4 mr-3" />
-            Terms & Policies
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-red-500/20">
-        <CardHeader>
-          <CardTitle className="text-white">Account Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button variant="outline" className="w-full justify-start text-red-400 border-red-500/30 hover:bg-red-500/10">
-            <Trash2 className="w-4 h-4 mr-3" />
-            Delete Account
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleSignOut}
-            className="w-full justify-start text-white border-purple-500/30 hover:bg-purple-500/10"
-          >
-            <LogOut className="w-4 h-4 mr-3" />
-            Sign Out
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderLegalSettings = () => (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-2">Legal & Compliance</h2>
-        <p className="text-gray-400">Access legal documents, policies, and compliance information</p>
-      </div>
-
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="text-white">Legal Documents</CardTitle>
-          <CardDescription className="text-gray-400">
-            Review our policies and legal agreements
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {legalDocuments.map((doc, index) => {
-              const IconComponent = doc.icon;
-              return (
-                <Button
-                  key={index}
-                  variant="outline"
-                  onClick={() => navigate(doc.path)}
-                  className="h-auto p-4 justify-start text-white border-purple-500/30 hover:bg-purple-500/10 hover:border-purple-400/50 transition-all"
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                      <IconComponent className="w-4 h-4 text-purple-400" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="font-medium text-sm">{doc.title}</div>
-                    </div>
-                    <ExternalLink className="w-3 h-3 text-gray-400" />
-                  </div>
-                </Button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20">
-        <CardHeader>
-          <CardTitle className="text-white">Compliance & Data Protection</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-400" />
-              <div>
-                <h4 className="text-white font-medium">GDPR Compliant</h4>
-                <p className="text-sm text-gray-400">European data protection standards</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-400" />
-              <div>
-                <h4 className="text-white font-medium">CCPA Compliant</h4>
-                <p className="text-sm text-gray-400">California privacy rights protected</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-            <div className="flex items-center gap-3">
-              <Shield className="w-5 h-5 text-blue-400" />
-              <div>
-                <h4 className="text-white font-medium">SOC 2 Type II</h4>
-                <p className="text-sm text-gray-400">Enterprise security standards</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderActiveSection = () => {
-    switch (activeSection) {
-      case 'profile':
-        return renderProfileSettings();
-      case 'notifications':
-        return renderNotificationSettings();
-      case 'matching':
-        return renderMatchingSettings();
-      case 'security':
-        return renderSecuritySettings();
-      case 'billing':
-        return renderBillingSettings();
-      case 'legal':
-        return renderLegalSettings();
-      case 'support':
-        return renderSupportSettings();
-      default:
-        return renderProfileSettings();
+  const settingsCategories: SettingsCategory[] = [
+    {
+      id: 'profile',
+      title: 'Profile & Identity',
+      description: 'Manage your executive profile and verification',
+      icon: <User className="w-5 h-5" />,
+      color: 'from-blue-500 to-cyan-500',
+      items: [
+        {
+          id: 'edit-profile',
+          title: 'Edit Profile Details',
+          description: 'Update your basic information and bio',
+          icon: <User className="w-4 h-4" />,
+          action: () => navigate('/profile'),
+          type: 'navigation'
+        },
+        {
+          id: 'update-photos',
+          title: 'Manage Photos',
+          description: 'Add, edit, or reorder your profile photos',
+          icon: <Camera className="w-4 h-4" />,
+          action: () => navigate('/profile'),
+          type: 'navigation'
+        },
+        {
+          id: 'verification',
+          title: 'Identity Verification',
+          description: 'Verify your identity and professional status',
+          icon: <UserCheck className="w-4 h-4" />,
+          action: () => navigate('/verification'),
+          type: 'navigation'
+        },
+        {
+          id: 'profile-visibility',
+          title: 'Profile Visibility',
+          description: 'Control who can see your profile',
+          icon: <Eye className="w-4 h-4" />,
+          action: () => handleToggle('privacy', 'profileVisibility'),
+          type: 'switch',
+          value: settings.privacy.profileVisibility
+        }
+      ]
+    },
+    {
+      id: 'notifications',
+      title: 'Notifications & Alerts',
+      description: 'Customize your notification preferences',
+      icon: <Bell className="w-5 h-5" />,
+      color: 'from-yellow-500 to-orange-500',
+      badge: '3',
+      items: [
+        {
+          id: 'message-notifications',
+          title: 'Message Notifications',
+          description: 'Get alerted when you receive new messages',
+          icon: <MessageSquare className="w-4 h-4" />,
+          action: () => handleToggle('notifications', 'messages'),
+          type: 'switch',
+          value: settings.notifications.messages
+        },
+        {
+          id: 'match-notifications',
+          title: 'New Match Alerts',
+          description: 'Be notified of new potential matches',
+          icon: <Heart className="w-4 h-4" />,
+          action: () => handleToggle('notifications', 'matches'),
+          type: 'switch',
+          value: settings.notifications.matches
+        },
+        {
+          id: 'push-notifications',
+          title: 'Push Notifications',
+          description: 'Receive notifications on your device',
+          icon: <Smartphone className="w-4 h-4" />,
+          action: () => handleToggle('notifications', 'pushNotifications'),
+          type: 'switch',
+          value: settings.notifications.pushNotifications
+        },
+        {
+          id: 'email-digest',
+          title: 'Email Digest',
+          description: 'Weekly summary of your activity',
+          icon: <Mail className="w-4 h-4" />,
+          action: () => handleToggle('notifications', 'emails'),
+          type: 'switch',
+          value: settings.notifications.emails
+        }
+      ]
+    },
+    {
+      id: 'matching',
+      title: 'Discovery & Matching',
+      description: 'Fine-tune your matching preferences',
+      icon: <Heart className="w-5 h-5" />,
+      color: 'from-pink-500 to-rose-500',
+      items: [
+        {
+          id: 'executive-only',
+          title: 'Executive Only Matches',
+          description: 'Only match with verified executives',
+          icon: <Crown className="w-4 h-4" />,
+          action: () => handleToggle('matching', 'executiveOnly'),
+          type: 'switch',
+          value: settings.matching.executiveOnly
+        },
+        {
+          id: 'auto-matching',
+          title: 'Auto-Matching',
+          description: 'Automatically find compatible matches',
+          icon: <Zap className="w-4 h-4" />,
+          action: () => handleToggle('matching', 'autoMatch'),
+          type: 'switch',
+          value: settings.matching.autoMatch
+        },
+        {
+          id: 'long-distance',
+          title: 'Long Distance Matches',
+          description: 'Include matches outside your area',
+          icon: <Globe className="w-4 h-4" />,
+          action: () => handleToggle('matching', 'longDistance'),
+          type: 'switch',
+          value: settings.matching.longDistance
+        }
+      ]
+    },
+    {
+      id: 'security',
+      title: 'Security & Privacy',
+      description: 'Protect your account and data',
+      icon: <Shield className="w-5 h-5" />,
+      color: 'from-green-500 to-emerald-500',
+      items: [
+        {
+          id: 'change-password',
+          title: 'Change Password',
+          description: 'Update your account password',
+          icon: <Lock className="w-4 h-4" />,
+          action: () => navigate('/auth/reset-password'),
+          type: 'navigation'
+        },
+        {
+          id: 'two-factor',
+          title: 'Two-Factor Authentication',
+          description: 'Add an extra layer of security',
+          icon: <Shield className="w-4 h-4" />,
+          action: () => toast({ title: "Coming Soon", description: "Two-factor authentication will be available soon." }),
+          type: 'button'
+        },
+        {
+          id: 'login-activity',
+          title: 'Login Activity',
+          description: 'View your recent login history',
+          icon: <CheckCircle className="w-4 h-4" />,
+          action: () => toast({ title: "Security", description: "No suspicious login activity detected." }),
+          type: 'button'
+        },
+        {
+          id: 'data-export',
+          title: 'Export My Data',
+          description: 'Download a copy of your data',
+          icon: <Database className="w-4 h-4" />,
+          action: () => toast({ title: "Data Export", description: "Your data export will be ready within 24 hours." }),
+          type: 'button'
+        }
+      ]
+    },
+    {
+      id: 'billing',
+      title: 'Billing & Subscription',
+      description: 'Manage your membership and payments',
+      icon: <CreditCard className="w-5 h-5" />,
+      color: 'from-purple-500 to-violet-500',
+      items: [
+        {
+          id: 'payment-method',
+          title: 'Payment Method',
+          description: 'Update your billing information',
+          icon: <CreditCard className="w-4 h-4" />,
+          action: () => navigate('/membership'),
+          type: 'navigation'
+        },
+        {
+          id: 'subscription',
+          title: 'Manage Subscription',
+          description: 'Change or cancel your plan',
+          icon: <SettingsIcon className="w-4 h-4" />,
+          action: () => navigate('/membership'),
+          type: 'navigation'
+        },
+        {
+          id: 'billing-history',
+          title: 'Billing History',
+          description: 'View your payment history',
+          icon: <FileText className="w-4 h-4" />,
+          action: () => navigate('/membership'),
+          type: 'navigation'
+        }
+      ]
+    },
+    {
+      id: 'support',
+      title: 'Help & Support',
+      description: 'Get assistance and manage your account',
+      icon: <HelpCircle className="w-5 h-5" />,
+      color: 'from-indigo-500 to-purple-500',
+      items: [
+        {
+          id: 'help-center',
+          title: 'Help Center',
+          description: 'Browse our knowledge base',
+          icon: <HelpCircle className="w-4 h-4" />,
+          action: () => window.open('https://help.luvlang.com', '_blank'),
+          type: 'navigation'
+        },
+        {
+          id: 'contact-support',
+          title: 'Contact Support',
+          description: 'Get personalized help',
+          icon: <Mail className="w-4 h-4" />,
+          action: () => window.open('mailto:support@luvlang.com', '_blank'),
+          type: 'navigation'
+        },
+        {
+          id: 'legal-docs',
+          title: 'Legal Documents',
+          description: 'Review terms and policies',
+          icon: <FileText className="w-4 h-4" />,
+          action: () => navigate('/legal'),
+          type: 'navigation'
+        },
+        {
+          id: 'delete-account',
+          title: 'Delete Account',
+          description: 'Permanently delete your account',
+          icon: <Trash2 className="w-4 h-4" />,
+          action: () => toast({ title: "Account Deletion", description: "Please contact support to delete your account." }),
+          type: 'button'
+        }
+      ]
     }
+  ];
+
+  const filteredCategories = settingsCategories.filter(category =>
+    category.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    category.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    category.items.some(item => 
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  );
+
+  const activeSettings = settingsCategories.find(cat => cat.id === activeCategory);
+
+  const renderSettingItem = (item: SettingItem) => {
+    return (
+      <Card key={item.id} className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50 hover:border-purple-500/30 transition-all duration-300 group cursor-pointer" onClick={item.action}>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                {item.icon}
+              </div>
+              <div className="flex-1">
+                <h4 className="font-medium text-white group-hover:text-purple-300 transition-colors">{item.title}</h4>
+                <p className="text-sm text-slate-400 mt-1">{item.description}</p>
+              </div>
+            </div>
+            {item.type === 'switch' && (
+              <Switch 
+                checked={item.value || false}
+                onCheckedChange={(checked) => item.action()}
+                className="ml-4"
+                onClick={(e) => e.stopPropagation()}
+              />
+            )}
+            {item.type === 'navigation' && (
+              <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-purple-400 transition-colors ml-4" />
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Header */}
-      <header className="bg-black/20 backdrop-blur-xl border-b border-purple-500/20">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900">
+      {/* Modern Header */}
+      <header className="bg-black/40 backdrop-blur-xl border-b border-purple-500/20 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 onClick={() => navigate('/dashboard')}
-                className="text-purple-400 hover:text-purple-300"
+                className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
               >
                 <ArrowLeft className="w-5 h-5 mr-2" />
-                Back to Dashboard
+                Dashboard
               </Button>
               <Separator orientation="vertical" className="h-6 bg-purple-500/20" />
-              <Logo size="sm" className="text-white" />
-              <Separator orientation="vertical" className="h-6 bg-purple-500/20" />
-              <div>
-                <h1 className="text-2xl font-bold text-white">Account Settings</h1>
-                <p className="text-purple-300 text-sm">Manage your executive preferences and privacy</p>
+              <Logo size="sm" />
+              <div className="hidden md:block">
+                <h1 className="text-xl font-bold text-white">Settings</h1>
+                <p className="text-purple-300 text-sm">Customize your executive experience</p>
               </div>
             </div>
+            
             <div className="flex items-center gap-4">
-              {/* Legal Documents Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="text-white border-purple-500/30 hover:bg-purple-500/10">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Legal & Policies
-                    <ChevronDown className="w-4 h-4 ml-2" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-64 bg-slate-900/95 backdrop-blur-xl border-purple-500/30 z-50">
-                  <DropdownMenuLabel className="text-purple-300">Legal Documents</DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-purple-500/20" />
-                  {legalDocuments.slice(0, 10).map((doc, index) => {
-                    const IconComponent = doc.icon;
-                    return (
-                      <DropdownMenuItem 
-                        key={index}
-                        onClick={() => navigate(doc.path)}
-                        className="text-white hover:bg-purple-500/20 cursor-pointer"
-                      >
-                        <IconComponent className="w-4 h-4 mr-2 text-purple-400" />
-                        {doc.title}
-                      </DropdownMenuItem>
-                    );
-                  })}
-                  <DropdownMenuSeparator className="bg-purple-500/20" />
-                  <DropdownMenuItem 
-                    onClick={() => navigate('/legal')}
-                    className="text-purple-300 hover:bg-purple-500/20 cursor-pointer"
-                  >
-                    <ExternalLink className="w-4 h-4 mr-2" />
-                    View All Legal Documents
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Search */}
+              <div className="relative hidden md:block">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="Search settings..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 w-64 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-400 focus:border-purple-500"
+                />
+              </div>
               
+              {/* Premium Badge */}
               <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-xl border border-yellow-500/30 rounded-xl px-3 py-2">
                 <Crown className="w-4 h-4 text-yellow-400" />
-                <span className="text-yellow-400 text-sm font-medium">C-Suite Premium</span>
+                <span className="text-yellow-400 text-sm font-medium hidden sm:inline">C-Suite Premium</span>
               </div>
+              
+              {/* Mobile Menu Toggle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                className="md:hidden text-white hover:bg-purple-500/10"
+              >
+                {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto p-6">
-        <div className="flex gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Sidebar Navigation */}
-          <div className="w-64 flex-shrink-0">
-            <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20 sticky top-6">
-              <CardContent className="p-4">
+          <div className={`lg:col-span-3 ${isSidebarOpen ? 'block' : 'hidden lg:block'}`}>
+            <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20 sticky top-24">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Palette className="w-5 h-5 text-purple-400" />
+                  Categories
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
                 <nav className="space-y-2">
-                  {settingsSections.map((section) => (
+                  {filteredCategories.map((category) => (
                     <button
-                      key={section.id}
-                      onClick={() => setActiveSection(section.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-all ${
-                        activeSection === section.id
-                          ? 'bg-purple-500/20 text-white border border-purple-500/30'
-                          : 'text-gray-400 hover:text-white hover:bg-slate-800/50'
+                      key={category.id}
+                      onClick={() => {
+                        setActiveCategory(category.id);
+                        setIsSidebarOpen(false);
+                      }}
+                      className={`w-full group relative overflow-hidden rounded-xl p-4 text-left transition-all duration-300 ${
+                        activeCategory === category.id
+                          ? 'bg-gradient-to-r ' + category.color + ' text-white shadow-lg'
+                          : 'bg-slate-800/30 hover:bg-slate-800/50 text-slate-300 hover:text-white'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        {section.icon}
-                        <span className="text-sm font-medium">{section.title}</span>
-                      </div>
-                      {section.badge && (
-                        <div className="w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                          {section.badge}
+                      <div className="relative z-10 flex items-center gap-3">
+                        <div className={`p-2 rounded-lg transition-all ${
+                          activeCategory === category.id
+                            ? 'bg-white/20'
+                            : 'bg-gradient-to-r ' + category.color + ' opacity-80'
+                        }`}>
+                          {category.icon}
                         </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-medium text-sm">{category.title}</h3>
+                            {category.badge && (
+                              <div className="w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                                {category.badge}
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-xs opacity-80 mt-1">{category.description}</p>
+                        </div>
+                      </div>
+                      {activeCategory === category.id && (
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-20" />
                       )}
                     </button>
                   ))}
@@ -753,8 +518,54 @@ const Settings = () => {
           </div>
 
           {/* Main Content */}
-          <div className="flex-1">
-            {renderActiveSection()}
+          <div className="lg:col-span-9">
+            {activeSettings && (
+              <div className="space-y-6">
+                {/* Category Header */}
+                <div className="text-center lg:text-left">
+                  <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r ${activeSettings.color} text-white mb-4`}>
+                    {activeSettings.icon}
+                    <h2 className="text-2xl font-bold">{activeSettings.title}</h2>
+                  </div>
+                  <p className="text-slate-400 text-lg max-w-2xl">{activeSettings.description}</p>
+                </div>
+
+                {/* Settings Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {activeSettings.items.map(renderSettingItem)}
+                </div>
+
+                {/* Additional Actions */}
+                <Card className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-xl border-purple-500/20 mt-8">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="text-center sm:text-left">
+                        <h3 className="text-white font-semibold">Need help with settings?</h3>
+                        <p className="text-slate-400 text-sm mt-1">Our concierge team is here to assist you 24/7</p>
+                      </div>
+                      <div className="flex gap-3">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => window.open('mailto:concierge@luvlang.com', '_blank')}
+                          className="border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
+                        >
+                          <Mail className="w-4 h-4 mr-2" />
+                          Contact Concierge
+                        </Button>
+                        <Button 
+                          onClick={signOut}
+                          variant="outline"
+                          className="border-red-500/30 text-red-300 hover:bg-red-500/10"
+                        >
+                          <LogOut className="w-4 h-4 mr-2" />
+                          Sign Out
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </div>
         </div>
       </div>
