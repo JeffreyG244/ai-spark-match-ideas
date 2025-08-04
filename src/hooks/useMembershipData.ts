@@ -43,7 +43,14 @@ export const useMembershipData = () => {
         return;
       }
       
-      setPlans(data);
+      // Transform data to match expected interface
+      const transformedPlans = data.map(plan => ({
+        ...plan,
+        paypal_plan_id: `plan_${plan.id}`,
+        highlight_color: '#6366f1',
+        is_popular: plan.tier_level === 2
+      }));
+      setPlans(transformedPlans);
     } catch (error) {
       logger.error('Unexpected error fetching plans:', error);
       setError('An unexpected error occurred while loading plans');

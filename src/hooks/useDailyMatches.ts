@@ -12,10 +12,10 @@ interface DailyMatch {
   viewed: boolean;
   created_at: string;
   user_profile?: {
-    user_id: string;
+    id: string;
     email: string;
     bio: string | null;
-    photo_urls: string[] | null;
+    photos: string[] | null;
     first_name?: string;
     age?: number;
     gender?: string;
@@ -57,8 +57,8 @@ export const useDailyMatches = () => {
         .from('daily_matches')
         .select('*')
         .eq('user_id', user.id)
-        .eq('suggested_date', new Date().toISOString().split('T')[0])
-        .order('compatibility_score', { ascending: false });
+        .eq('date', new Date().toISOString().split('T')[0])
+        .order('recommendation_score', { ascending: false });
 
       if (matchesError) {
         console.error('Error loading daily matches:', matchesError);
@@ -159,10 +159,10 @@ export const useDailyMatches = () => {
             viewed: false,
             created_at: new Date().toISOString(),
             user_profile: {
-              user_id: profile.id,
+              id: profile.id,
               email: profile.email,
               bio: profile.bio,
-              photo_urls: Array.isArray(profile.photos) && profile.photos.length > 0 
+              photos: Array.isArray(profile.photos) && profile.photos.length > 0 
                 ? profile.photos 
                 : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
               first_name: profile.first_name,
@@ -202,20 +202,20 @@ export const useDailyMatches = () => {
             viewed: false,
             created_at: new Date().toISOString(),
             user_profile: profile ? {
-              user_id: profile.id,
+              id: profile.id,
               email: profile.email || `${profile.id}@example.com`,
               bio: profile.bio || '',
-              photo_urls: profile.photos && Array.isArray(profile.photos) && profile.photos.length > 0 
+              photos: profile.photos && Array.isArray(profile.photos) && profile.photos.length > 0 
                 ? profile.photos 
                 : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
               first_name: profile.first_name || 'User',
               age: profile.age || 25,
               gender: profile.gender || 'Unknown'
             } : {
-              user_id: match.recommended_user_id,
+              id: match.recommended_user_id,
               email: `${match.recommended_user_id}@example.com`,
               bio: '',
-              photo_urls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+              photos: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
               first_name: 'User',
               age: 25,
               gender: 'Unknown'

@@ -128,21 +128,20 @@ export const usePhotoCapture = () => {
   const updateUserProfile = async (photoUrl: string): Promise<void> => {
     try {
       const { data: currentProfile } = await supabase
-        .from('dating_profiles')
-        .select('photo_urls')
-        .eq('user_id', user!.id)
+        .from('users')
+        .select('photos')
+        .eq('id', user!.id)
         .maybeSingle();
 
-      const currentPhotos = currentProfile?.photo_urls || [];
+      const currentPhotos = currentProfile?.photos || [];
       const updatedPhotos = [...currentPhotos, photoUrl];
 
       const { error: updateError } = await supabase
-        .from('dating_profiles')
-        .upsert({
-          user_id: user!.id,
-          email: user!.email || '',
-          photo_urls: updatedPhotos
-        });
+        .from('users')
+        .update({
+          photos: updatedPhotos
+        })
+        .eq('id', user!.id);
 
       if (updateError) {
         logCapture('Profile update failed', updateError);

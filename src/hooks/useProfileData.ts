@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,9 +28,9 @@ export const useProfileData = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('dating_profiles')
-        .select('bio, values, life_goals, green_flags, photo_urls')
-        .eq('user_id', user.id)
+        .from('users')
+        .select('bio, family_goals, lifestyle_preference')
+        .eq('id', user.id)
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
@@ -43,9 +42,9 @@ export const useProfileData = () => {
         setProfileExists(true);
         setProfileData({
           bio: data.bio || '',
-          values: data.values || '',
-          lifeGoals: data.life_goals || '',
-          greenFlags: data.green_flags || ''
+          values: '',
+          lifeGoals: data.family_goals || '',
+          greenFlags: data.lifestyle_preference || ''
         });
       }
     } catch (error) {
@@ -71,34 +70,18 @@ export const useProfileData = () => {
 
     setIsSaving(true);
     try {
-      const profilePayload = {
-        user_id: user.id,
-        email: user.email || '',
-        bio: profileData.bio,
-        values: profileData.values,
-        life_goals: profileData.lifeGoals,
-        green_flags: profileData.greenFlags,
-        photo_urls: [],
-        updated_at: new Date().toISOString()
-      };
+      const { error } = await supabase
+        .from('users')
+        .update({
+          bio: profileData.bio,
+          family_goals: profileData.lifeGoals,
+          lifestyle_preference: profileData.greenFlags,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
 
-      let result;
-      if (profileExists) {
-        result = await supabase
-          .from('dating_profiles')
-          .update(profilePayload)
-          .eq('user_id', user.id);
-      } else {
-        result = await supabase
-          .from('dating_profiles')
-          .insert([{
-            ...profilePayload,
-            created_at: new Date().toISOString()
-          }]);
-      }
-
-      if (result.error) {
-        console.error('Database error:', result.error);
+      if (error) {
+        console.error('Error saving profile:', error);
         toast({
           title: 'Save Failed',
           description: 'Failed to save profile. Please try again.',

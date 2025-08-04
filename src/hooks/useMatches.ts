@@ -11,10 +11,10 @@ interface Match {
   created_at: string;
   status: string;
   match_profile?: {
-    user_id: string;
+    id: string;
     email: string;
     bio: string | null;
-    photo_urls: string[] | null;
+    photos: string[] | null;
     first_name?: string;
     age?: number;
     gender?: string;
@@ -150,15 +150,15 @@ export const useMatches = () => {
         const sampleMatches = bidirectionalMatches.slice(0, 10).map((profile) => ({
           id: `sample-${profile.id}`,
           user_id: user.id,
-          matched_user_id: profile.user_id,
+          matched_user_id: profile.id,
           compatibility: Math.floor(Math.random() * 30) + 70,
           created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
           status: 'accepted',
           match_profile: {
-            user_id: profile.user_id,
-            email: profile.email || `${profile.user_id}@example.com`,
+            id: profile.id,
+            email: profile.email || `${profile.id}@example.com`,
             bio: profile.bio || '',
-            photo_urls: profile.photo_urls && Array.isArray(profile.photo_urls) ? profile.photo_urls : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+            photos: profile.photos && Array.isArray(profile.photos) ? profile.photos : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
             first_name: profile.first_name || 'User',
             age: profile.age || 25,
             gender: profile.gender || 'Unknown'
@@ -175,9 +175,9 @@ export const useMatches = () => {
       });
 
       const { data: profilesData, error: profilesError } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .select('*')
-        .in('user_id', otherUserIds);
+        .in('id', otherUserIds);
 
       if (profilesError) {
         console.error('Error loading profiles:', profilesError);
@@ -186,20 +186,20 @@ export const useMatches = () => {
 
       const processedMatches = matchesData.map(match => {
         const otherUserId = match.user_id === user.id ? match.matched_user_id : match.user_id;
-        const profile = profilesData?.find(p => p.user_id === otherUserId);
+        const profile = profilesData?.find(p => p.id === otherUserId);
         
         return {
-          id: match.uuid_id || `${match.user_id}-${match.matched_user_id}`,
+          id: match.id || `${match.user_id}-${match.matched_user_id}`,
           user_id: match.user_id,
           matched_user_id: match.matched_user_id,
-          compatibility: match.compatibility || 75,
+          compatibility: match.compatibility_score || 75,
           created_at: match.created_at || new Date().toISOString(),
           status: match.status || 'accepted',
           match_profile: profile ? {
-            user_id: profile.user_id,
-            email: profile.email || `${profile.user_id}@example.com`,
+            id: profile.id,
+            email: profile.email || `${profile.id}@example.com`,
             bio: profile.bio || '',
-            photo_urls: profile.photo_urls && Array.isArray(profile.photo_urls) ? profile.photo_urls : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+            photos: profile.photos && Array.isArray(profile.photos) ? profile.photos : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
             first_name: profile.first_name || 'User',
             age: profile.age || 25,
             gender: profile.gender || 'Unknown'

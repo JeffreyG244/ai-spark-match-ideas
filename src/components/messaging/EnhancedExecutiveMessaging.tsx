@@ -69,7 +69,7 @@ const EnhancedExecutiveMessaging = () => {
                   '1 day ago',
         unreadCount: index === 0 ? 2 : index === 1 ? 1 : 0,
         isOnline: index <= 1,
-        photo: match.match_profile?.photo_urls?.[0] || '/api/placeholder/400/400',
+        photo: match.match_profile?.photos?.[0] || '/api/placeholder/400/400',
         title: 'Senior Executive',
         company: 'Tech Corporation',
         isVerified: true,

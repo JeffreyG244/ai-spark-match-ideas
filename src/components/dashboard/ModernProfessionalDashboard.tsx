@@ -97,7 +97,7 @@ const ModernProfessionalDashboard = () => {
         title: 'Executive',
         company: 'Tech Corp',
         compatibilityScore: match.compatibility || 95,
-        photo: match.match_profile?.photo_urls?.[0] || '/api/placeholder/400/400',
+        photo: match.match_profile?.photos?.[0] || '/api/placeholder/400/400',
         industry: 'Technology',
         location: 'San Francisco, CA',
         badges: ['Verified', 'Executive', 'Leader'],

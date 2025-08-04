@@ -134,8 +134,8 @@ const Matches = () => {
 
               const firstName = profile.first_name || profile.email.split('@')[0] || 'User';
               const age = profile.age ? `, ${profile.age}` : '';
-              const photo = profile.photo_urls && profile.photo_urls.length > 0 
-                ? profile.photo_urls[0] 
+              const photo = profile.photos && profile.photos.length > 0 
+                ? profile.photos[0] 
                 : 'https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60';
 
               return (
