@@ -224,13 +224,13 @@ const ComprehensiveProfileBuilder = () => {
       let result;
       if (profileExists) {
         result = await supabase
-          .from('dating_profiles')
+          .from('users')
           .update(profilePayload)
-          .eq('user_id', user.id);
+          .eq('id', user.id);
       } else {
         profilePayload.created_at = new Date().toISOString();
         result = await supabase
-          .from('dating_profiles')
+          .from('users')
           .insert([profilePayload]);
       }
 

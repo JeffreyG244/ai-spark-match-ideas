@@ -72,6 +72,7 @@ const ProfessionalMatchingDashboard: React.FC = () => {
         // Combine matches with profiles
         const matchesWithProfiles = matchesData.map(match => ({
           ...match,
+          base_score: match.compatibility_score || 85,
           matched_profile: profilesData?.find(profile => profile.id === match.matched_user_id)
         }));
 

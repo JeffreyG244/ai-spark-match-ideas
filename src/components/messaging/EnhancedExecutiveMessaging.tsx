@@ -58,7 +58,7 @@ const EnhancedExecutiveMessaging = () => {
       // Create mock conversations from matches
       const mockConversations: Conversation[] = matches.slice(0, 5).map((match, index) => ({
         id: match.id,
-        name: `${match.match_profile?.first_name || 'Executive'} ${match.match_profile?.last_name || 'Professional'}`,
+        name: `${match.match_profile?.first_name || 'Executive'}`,
         lastMessage: index === 0 ? "Looking forward to our coffee meeting!" :
                     index === 1 ? "Thanks for the connection, would love to discuss..." :
                     index === 2 ? "Your profile caught my attention..." :
