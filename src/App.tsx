@@ -17,6 +17,7 @@ const DailyMatches = lazy(() => import("./pages/DailyMatches"));
 const Messages = lazy(() => import("./pages/Messages"));
 const Membership = lazy(() => import("./pages/Membership"));
 const Checkout = lazy(() => import("./pages/Checkout"));
+const Settings = lazy(() => import("./pages/Settings"));
 const Legal = lazy(() => import("./pages/Legal"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const ExecutiveLuvlang = lazy(() => import("./pages/ExecutiveLuvlang"));
@@ -86,6 +87,7 @@ function App() {
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/membership" element={<Membership />} />
                   <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/settings" element={<Settings />} />
                   <Route path="/legal" element={<Legal />} />
                   <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/seed-users" element={<SeedUsers />} />

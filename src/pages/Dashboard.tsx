@@ -8,12 +8,14 @@ import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import ProfileSetupSection from '@/components/dashboard/ProfileSetupSection';
 import DashboardGrid from '@/components/dashboard/DashboardGrid';
 import ProfileSetupView from '@/components/dashboard/ProfileSetupView';
+import NotificationPanel from '@/components/notifications/NotificationPanel';
 
 
 const Dashboard = () => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
   const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -75,13 +77,16 @@ const Dashboard = () => {
                 <span className="text-yellow-400 text-sm font-medium">C-Suite Premium</span>
               </div>
               
-              <button className="relative bg-slate-800/50 backdrop-blur-xl border border-slate-600/30 rounded-xl p-3 hover:bg-slate-700/50 transition-all">
+              <button 
+                onClick={() => setShowNotifications(true)}
+                className="relative bg-slate-800/50 backdrop-blur-xl border border-slate-600/30 rounded-xl p-3 hover:bg-slate-700/50 transition-all"
+              >
                 <Bell className="w-5 h-5 text-white" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
               </button>
               
               <button 
-                onClick={signOut}
+                onClick={() => navigate('/settings')}
                 className="bg-slate-800/50 backdrop-blur-xl border border-slate-600/30 rounded-xl p-3 hover:bg-slate-700/50 transition-all"
               >
                 <Settings className="w-5 h-5 text-white" />
@@ -107,6 +112,12 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Notification Panel */}
+      <NotificationPanel 
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+      />
     </div>
   );
 };
