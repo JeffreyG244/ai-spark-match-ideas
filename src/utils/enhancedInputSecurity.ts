@@ -1,6 +1,6 @@
 
 import DOMPurify from 'dompurify';
-import { logSecurityEventToDB } from './enhancedSecurity';
+import { logSecurityEvent } from './enhancedSecurity';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -85,15 +85,15 @@ export const validateAndSanitizeInput = async (
 
     // Log security violations
     if (violations.length > 0) {
-      await logSecurityEventToDB(
+      await logSecurityEvent(
         'input_validation_violation',
+        violations.some(v => v.includes('dangerous_pattern')) ? 'high' : 'medium',
         {
           content_type: contentType,
           violations,
           input_length: input.length,
           suspicious_content: input.substring(0, 200)
-        },
-        violations.some(v => v.includes('dangerous_pattern')) ? 'high' : 'medium'
+        }
       );
 
       return {
@@ -155,10 +155,10 @@ export const validateAndSanitizeInput = async (
 
   } catch (error) {
     console.error('Input validation error:', error);
-    await logSecurityEventToDB(
+    await logSecurityEvent(
       'input_validation_error',
-      `Validation failed: ${error}`,
-      'medium'
+      'medium',
+      { message: `Validation failed: ${error}` }
     );
 
     return {
