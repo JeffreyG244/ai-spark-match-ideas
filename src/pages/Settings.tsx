@@ -392,7 +392,7 @@ const Settings = () => {
               </div>
               <div className="flex-1">
                 <h4 className="font-semibold text-white group-hover:text-purple-200 transition-colors text-base">{item.title}</h4>
-                <p className="text-slate-300 group-hover:text-slate-200 mt-1 transition-colors">{item.description}</p>
+                <p className="text-white/90 group-hover:text-white mt-1 transition-colors font-medium">{item.description}</p>
               </div>
             </div>
             {item.type === 'switch' && (
@@ -429,10 +429,6 @@ const Settings = () => {
               </Button>
               <Separator orientation="vertical" className="h-6 bg-purple-500/20" />
               <Logo size="sm" />
-              <div className="hidden md:block">
-                <h1 className="text-xl font-bold text-white">Executive Command Center</h1>
-                <p className="text-purple-300 text-sm">Orchestrate your elite networking experience</p>
-              </div>
             </div>
             
             <div className="flex items-center gap-4">
@@ -473,7 +469,7 @@ const Settings = () => {
           <div className={`lg:col-span-3 ${isSidebarOpen ? 'block' : 'hidden lg:block'}`}>
             <Card className="bg-slate-800/60 backdrop-blur-xl border-purple-500/30 sticky top-24 shadow-xl">
               <CardHeader className="pb-4">
-                <CardTitle className="text-white flex items-center gap-2">
+                <CardTitle className="text-white flex items-center gap-2 font-bold">
                   <Palette className="w-5 h-5 text-purple-400" />
                   Categories
                 </CardTitle>
@@ -503,14 +499,14 @@ const Settings = () => {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <h3 className="font-medium text-sm">{category.title}</h3>
+                            <h3 className="font-semibold text-sm text-white">{category.title}</h3>
                             {category.badge && (
-                              <div className="w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                              <div className="w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
                                 {category.badge}
                               </div>
                             )}
                           </div>
-                          <p className="text-xs opacity-80 mt-1">{category.description}</p>
+                          <p className="text-xs opacity-90 mt-1 text-white/80 font-medium">{category.description}</p>
                         </div>
                       </div>
                       {activeCategory === category.id && (
@@ -528,12 +524,12 @@ const Settings = () => {
             {activeSettings && (
               <div className="space-y-6">
                 {/* Category Header */}
-                <div className="text-center lg:text-left">
+                <div className="text-center">
                   <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r ${activeSettings.color} text-white mb-4`}>
                     {activeSettings.icon}
-                    <h2 className="text-2xl font-bold">{activeSettings.title}</h2>
+                    <h2 className="text-2xl font-bold text-white">{activeSettings.title}</h2>
                   </div>
-                  <p className="text-slate-400 text-lg max-w-2xl">{activeSettings.description}</p>
+                  <p className="text-white font-medium text-lg max-w-2xl mx-auto">{activeSettings.description}</p>
                 </div>
 
                 {/* Settings Grid */}
@@ -546,8 +542,8 @@ const Settings = () => {
                   <CardContent className="p-6">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                       <div className="text-center sm:text-left">
-                        <h3 className="text-white font-semibold">Executive Concierge Support</h3>
-                        <p className="text-slate-300 text-sm mt-1">White-glove assistance for our C-Suite members</p>
+                        <h3 className="text-white font-bold">Executive Concierge Support</h3>
+                        <p className="text-white/90 text-sm mt-1 font-medium">White-glove assistance for our C-Suite members</p>
                       </div>
                       <div className="flex gap-3">
                         <Button 
