@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   MessageCircle, Send, Phone, Video, Calendar, Coffee, Plus,
   Search, Filter, MoreVertical, Smile, Paperclip, Star,
-  Shield, Crown, CheckCircle, Clock, MapPin, Briefcase
+  Shield, Crown, CheckCircle, Clock, MapPin, Briefcase,
+  FileText, Image, Mic, X, Check, Archive, Trash2, Flag,
+  Settings, User, UserMinus, Volume2, VolumeX
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,6 +46,11 @@ const EnhancedExecutiveMessaging = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showCoffeeDateDialog, setShowCoffeeDateDialog] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Always load conversations immediately
@@ -274,6 +281,244 @@ const EnhancedExecutiveMessaging = () => {
     });
   };
 
+  // Professional emoji set for executives
+  const professionalEmojis = ['👋', '👍', '💼', '📅', '☕', '🤝', '💡', '🎯', '📊', '✅', '🚀', '💯', '🔥', '⭐', '👏', '🙌'];
+  
+  // Handler functions for buttons
+  const handleEmojiClick = (emoji: string) => {
+    setNewMessage(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const message: Message = {
+        id: Date.now().toString(),
+        senderId: user?.id || 'me',
+        content: `📎 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        type: 'text',
+        status: 'sent'
+      };
+      setMessages(prev => [...prev, message]);
+      setShowAttachmentMenu(false);
+      toast({
+        title: 'File Attached',
+        description: `${file.name} has been attached to your message`
+      });
+    }
+  };
+
+  const handlePhoneCall = () => {
+    toast({
+      title: 'Phone Call Initiated',
+      description: `Calling ${selectedConversation?.name}...`
+    });
+    // In a real app, this would integrate with a calling service
+  };
+
+  const handleVideoCall = () => {
+    toast({
+      title: 'Video Call Initiated',
+      description: `Starting video call with ${selectedConversation?.name}...`
+    });
+    // In a real app, this would integrate with a video service like Zoom/Teams
+  };
+
+  const handleCoffeeDate = () => {
+    setShowCoffeeDateDialog(true);
+  };
+
+  const scheduleCoffeeDate = () => {
+    const message: Message = {
+      id: Date.now().toString(),
+      senderId: user?.id || 'me',
+      content: `☕ Would you like to meet for coffee this Friday at 3 PM? I know a great executive lounge downtown.`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      type: 'meeting',
+      status: 'sent'
+    };
+    setMessages(prev => [...prev, message]);
+    setShowCoffeeDateDialog(false);
+    toast({
+      title: 'Coffee Date Suggested',
+      description: `Meeting proposal sent to ${selectedConversation?.name}`
+    });
+  };
+
+  const handleArchiveConversation = () => {
+    toast({
+      title: 'Conversation Archived',
+      description: `Conversation with ${selectedConversation?.name} has been archived`
+    });
+  };
+
+  const handleBlockUser = () => {
+    toast({
+      title: 'User Blocked',
+      description: `${selectedConversation?.name} has been blocked and removed from your matches`,
+      variant: 'destructive'
+    });
+  };
+
+  // UI Components
+  const EmojiPicker = () => (
+    showEmojiPicker && (
+      <div className="absolute bottom-16 left-0 bg-slate-800/95 backdrop-blur-xl border border-gray-600/30 rounded-xl p-4 shadow-2xl z-50">
+        <div className="grid grid-cols-8 gap-2 w-64">
+          {professionalEmojis.map((emoji, index) => (
+            <button
+              key={index}
+              onClick={() => handleEmojiClick(emoji)}
+              className="w-8 h-8 flex items-center justify-center hover:bg-slate-700/50 rounded-lg transition-all text-lg"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  );
+
+  const AttachmentMenu = () => (
+    showAttachmentMenu && (
+      <div className="absolute bottom-16 left-12 bg-slate-800/95 backdrop-blur-xl border border-gray-600/30 rounded-xl p-2 shadow-2xl z-50">
+        <div className="space-y-1 w-48">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-white"
+          >
+            <FileText className="w-4 h-4 text-blue-400" />
+            <span className="text-sm">Document</span>
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-white"
+          >
+            <Image className="w-4 h-4 text-green-400" />
+            <span className="text-sm">Photo</span>
+          </button>
+          <button
+            onClick={() => {
+              toast({ title: 'Voice Recording', description: 'Voice messages coming soon!' });
+              setShowAttachmentMenu(false);
+            }}
+            className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-white"
+          >
+            <Mic className="w-4 h-4 text-red-400" />
+            <span className="text-sm">Voice Message</span>
+          </button>
+        </div>
+      </div>
+    )
+  );
+
+  const MoreMenu = () => (
+    showMoreMenu && (
+      <div className="absolute top-16 right-0 bg-slate-800/95 backdrop-blur-xl border border-gray-600/30 rounded-xl p-2 shadow-2xl z-50">
+        <div className="space-y-1 w-52">
+          <button
+            onClick={() => {
+              toast({ title: 'Profile Viewed', description: `Viewing ${selectedConversation?.name}'s profile` });
+              setShowMoreMenu(false);
+            }}
+            className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-white"
+          >
+            <User className="w-4 h-4 text-blue-400" />
+            <span className="text-sm">View Profile</span>
+          </button>
+          <button
+            onClick={() => {
+              handleArchiveConversation();
+              setShowMoreMenu(false);
+            }}
+            className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-white"
+          >
+            <Archive className="w-4 h-4 text-yellow-400" />
+            <span className="text-sm">Archive Conversation</span>
+          </button>
+          <button
+            onClick={() => {
+              toast({ title: 'Conversation Muted', description: 'You will no longer receive notifications' });
+              setShowMoreMenu(false);
+            }}
+            className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-white"
+          >
+            <VolumeX className="w-4 h-4 text-gray-400" />
+            <span className="text-sm">Mute Notifications</span>
+          </button>
+          <hr className="border-gray-600/30" />
+          <button
+            onClick={() => {
+              toast({ title: 'Reported', description: 'User has been reported to our moderation team' });
+              setShowMoreMenu(false);
+            }}
+            className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-white"
+          >
+            <Flag className="w-4 h-4 text-orange-400" />
+            <span className="text-sm">Report User</span>
+          </button>
+          <button
+            onClick={() => {
+              handleBlockUser();
+              setShowMoreMenu(false);
+            }}
+            className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-red-400"
+          >
+            <UserMinus className="w-4 h-4" />
+            <span className="text-sm">Block User</span>
+          </button>
+        </div>
+      </div>
+    )
+  );
+
+  const CoffeeDateDialog = () => (
+    showCoffeeDateDialog && (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="bg-slate-800/95 backdrop-blur-xl border border-gray-600/30 rounded-2xl p-6 w-96 shadow-2xl">
+          <h3 className="text-xl font-bold text-white mb-4">☕ Schedule Coffee Date</h3>
+          <p className="text-gray-300 mb-6">
+            Suggest a professional coffee meeting with {selectedConversation?.name}
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Suggested Time</label>
+              <input
+                type="datetime-local"
+                className="w-full bg-slate-700/50 border border-gray-600/30 rounded-lg px-3 py-2 text-white"
+                defaultValue={new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16)}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
+              <input
+                type="text"
+                placeholder="Executive Lounge, Downtown"
+                className="w-full bg-slate-700/50 border border-gray-600/30 rounded-lg px-3 py-2 text-white placeholder-gray-400"
+              />
+            </div>
+          </div>
+          <div className="flex space-x-3 mt-6">
+            <button
+              onClick={() => setShowCoffeeDateDialog(false)}
+              className="flex-1 bg-slate-700/50 hover:bg-slate-600/50 text-white py-2 rounded-lg transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={scheduleCoffeeDate}
+              className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white py-2 rounded-lg transition-all"
+            >
+              Send Invitation
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  );
+
   const ConversationItem = ({ conversation }: { conversation: Conversation }) => (
     <div 
       className={`p-4 cursor-pointer transition-all border-l-4 ${
@@ -452,18 +697,41 @@ const EnhancedExecutiveMessaging = () => {
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handlePhoneCall}
+                    className="bg-slate-700/50 border-slate-600/30 text-white hover:bg-slate-600/50"
+                  >
                     <Phone className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleVideoCall}
+                    className="bg-slate-700/50 border-slate-600/30 text-white hover:bg-slate-600/50"
+                  >
                     <Video className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={handleCoffeeDate}
+                    className="bg-slate-700/50 border-slate-600/30 text-white hover:bg-slate-600/50"
+                  >
                     <Coffee className="w-4 h-4" />
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
+                  <div className="relative">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowMoreMenu(!showMoreMenu)}
+                      className="bg-slate-700/50 border-slate-600/30 text-white hover:bg-slate-600/50"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                    <MoreMenu />
+                  </div>
                 </div>
               </div>
             </CardHeader>
@@ -477,24 +745,50 @@ const EnhancedExecutiveMessaging = () => {
               </div>
 
               {/* Message Input */}
-              <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm">
-                  <Paperclip className="w-4 h-4" />
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Smile className="w-4 h-4" />
-                </Button>
+              <div className="relative flex items-center space-x-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  accept="image/*,.pdf,.doc,.docx,.txt"
+                />
+                
+                <div className="relative">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowAttachmentMenu(!showAttachmentMenu)}
+                    className="bg-slate-700/50 border-slate-600/30 text-white hover:bg-slate-600/50"
+                  >
+                    <Paperclip className="w-4 h-4" />
+                  </Button>
+                  <AttachmentMenu />
+                </div>
+                
+                <div className="relative">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className="bg-slate-700/50 border-slate-600/30 text-white hover:bg-slate-600/50"
+                  >
+                    <Smile className="w-4 h-4" />
+                  </Button>
+                  <EmojiPicker />
+                </div>
+                
                 <Input 
-                  placeholder="Type your message..."
+                  placeholder="Type your professional message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                  className="flex-1"
+                  className="flex-1 bg-slate-700/50 border-slate-600/30 text-white placeholder-gray-400"
                 />
                 <Button 
                   onClick={sendMessage}
                   disabled={!newMessage.trim()}
-                  className="bg-gradient-to-r from-love-primary to-love-secondary hover:from-love-primary/90 hover:to-love-secondary/90 text-white"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
                 </Button>
@@ -511,6 +805,9 @@ const EnhancedExecutiveMessaging = () => {
           </CardContent>
         )}
       </Card>
+      
+      {/* Overlays */}
+      <CoffeeDateDialog />
     </div>
   );
 };
