@@ -14,6 +14,13 @@ const N8NWebhookTester: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [testResults, setTestResults] = useState<any>(null);
   const [customWebhookUrl, setCustomWebhookUrl] = useState('http://localhost:5678/webhook/professional-match-trigger');
+  
+  // Auto-trigger test on component mount for direct testing
+  React.useEffect(() => {
+    if (user) {
+      testWebhookConnectivity();
+    }
+  }, [user]);
 
   const testWebhookConnectivity = async () => {
     if (!user) {
