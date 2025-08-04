@@ -61,14 +61,16 @@ const queryClient = new QueryClient();
 
 import { EnhancedSecurityProvider } from '@/components/profile/EnhancedSecurityProvider';
 import SecureSessionManager from '@/components/security/SecureSessionManager';
+import { AlertProvider } from '@/components/providers/AlertProvider';
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <SecureSessionManager />
-          <EnhancedSecurityProvider>
+          <AlertProvider>
+            <SecureSessionManager />
+            <EnhancedSecurityProvider>
             <Router>
               <div className="min-h-screen bg-gradient-to-br from-background to-muted">
                 <Suspense fallback={
@@ -130,6 +132,7 @@ function App() {
               </div>
             </Router>
           </EnhancedSecurityProvider>
+        </AlertProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

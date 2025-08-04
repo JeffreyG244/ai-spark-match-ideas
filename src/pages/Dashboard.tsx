@@ -9,13 +9,40 @@ import ProfileSetupSection from '@/components/dashboard/ProfileSetupSection';
 import DashboardGrid from '@/components/dashboard/DashboardGrid';
 import ProfileSetupView from '@/components/dashboard/ProfileSetupView';
 import NotificationPanel from '@/components/notifications/NotificationPanel';
+import { useAlert } from '@/components/providers/AlertProvider';
 
 
 const Dashboard = () => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  // Show welcome message on mount
+  useEffect(() => {
+    if (user && !loading) {
+      const showWelcomeAlert = () => {
+        const currentHour = new Date().getHours();
+        const greeting = currentHour < 12 ? 'Good morning' : currentHour < 18 ? 'Good afternoon' : 'Good evening';
+        
+        showAlert({
+          type: 'welcome',
+          title: `${greeting}, ${user.user_metadata?.first_name || 'Executive'}!`,
+          message: "Welcome back to your executive dating command center. You have 3 new matches waiting.",
+          actionText: "View Matches",
+          onAction: () => navigate('/matches'),
+          autoHide: true,
+          duration: 6000,
+          showBadge: true,
+          badgeText: "3 New"
+        });
+      };
+
+      // Small delay to ensure smooth page load
+      setTimeout(showWelcomeAlert, 1000);
+    }
+  }, [user, loading, showAlert, navigate]);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -23,6 +50,43 @@ const Dashboard = () => {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  // Demo alert functions for testing
+  const showNewMatchAlert = () => {
+    showAlert({
+      type: 'match',
+      title: 'New Executive Match! 💼',
+      message: "Sarah Chen, CEO at TechCorp, likes your profile. She's verified and matches your criteria.",
+      actionText: "View Profile",
+      onAction: () => navigate('/matches'),
+      showBadge: true,
+      badgeText: "Hot Match"
+    });
+  };
+
+  const showNewMessageAlert = () => {
+    showAlert({
+      type: 'message',
+      title: 'New Message',
+      message: "Michael Rodriguez sent: \"I'd love to discuss our shared passion for sustainable business over coffee.\"",
+      actionText: "Reply",
+      onAction: () => navigate('/messages'),
+      autoHide: true,
+      duration: 8000
+    });
+  };
+
+  const showPremiumAlert = () => {
+    showAlert({
+      type: 'premium',
+      title: 'Upgrade to C-Suite Premium',
+      message: "Unlock advanced AI matching, priority messaging, and exclusive executive events.",
+      actionText: "Upgrade Now",
+      onAction: () => navigate('/membership'),
+      showBadge: true,
+      badgeText: "50% Off"
+    });
+  };
 
   // Show loading while checking auth
   if (loading) {
@@ -91,6 +155,28 @@ const Dashboard = () => {
               >
                 <Settings className="w-5 h-5 text-white" />
               </button>
+
+              {/* Demo Alert Buttons - Remove in production */}
+              <div className="hidden md:flex items-center gap-2">
+                <button 
+                  onClick={showNewMatchAlert}
+                  className="text-xs px-3 py-1 bg-pink-500/20 text-pink-300 rounded-lg hover:bg-pink-500/30 transition-all"
+                >
+                  Demo Match
+                </button>
+                <button 
+                  onClick={showNewMessageAlert}
+                  className="text-xs px-3 py-1 bg-blue-500/20 text-blue-300 rounded-lg hover:bg-blue-500/30 transition-all"
+                >
+                  Demo Message
+                </button>
+                <button 
+                  onClick={showPremiumAlert}
+                  className="text-xs px-3 py-1 bg-yellow-500/20 text-yellow-300 rounded-lg hover:bg-yellow-500/30 transition-all"
+                >
+                  Demo Premium
+                </button>
+              </div>
             </div>
           </div>
         </div>
