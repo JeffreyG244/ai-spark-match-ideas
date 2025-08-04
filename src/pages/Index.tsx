@@ -30,7 +30,7 @@ const Index = () => {
             </div>
             
             <div className="flex gap-3">
-              <Button onClick={() => navigate("/auth")} variant="outline" className="border-white/20 text-white hover:bg-white/10">
+              <Button onClick={() => navigate("/auth")} variant="outline" className="border-white/30 text-white bg-white/10 hover:bg-white/20 hover:text-white">
                 Sign In
               </Button>
               <Button onClick={() => navigate("/auth")} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
@@ -54,7 +54,7 @@ const Index = () => {
             <Button size="lg" onClick={() => navigate("/auth")} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg px-8 py-4 text-lg">
               Start Your Journey
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate("/executive-luvlang")} className="border-white/20 text-white hover:bg-white/10 px-8 py-4 text-lg">
+            <Button size="lg" variant="outline" onClick={() => navigate("/executive-luvlang")} className="border-white/30 text-white bg-white/10 hover:bg-white/20 hover:text-white px-8 py-4 text-lg">
               View Demo
             </Button>
           </div>

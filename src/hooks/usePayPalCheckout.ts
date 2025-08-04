@@ -99,7 +99,7 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
 
       // Add a close button to the modal
       const closeButton = document.createElement('button');
-      closeButton.innerHTML = '×';
+      closeButton.textContent = '×';
       closeButton.style.position = 'absolute';
       closeButton.style.top = '10px';
       closeButton.style.right = '15px';
@@ -145,12 +145,26 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
 
       // Add payment options info
       const paymentInfo = document.createElement('div');
-      paymentInfo.innerHTML = `
-        <div style="display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; flex-wrap: wrap;">
-          <img src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" alt="PayPal" style="height: 20px;">
-          <img src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/cc-badges-ppmcvdam.png" alt="Credit Cards" style="height: 20px;">
-        </div>
-      `;
+      const paymentContainer = document.createElement('div');
+      paymentContainer.style.display = 'flex';
+      paymentContainer.style.justifyContent = 'center';
+      paymentContainer.style.gap = '5px';
+      paymentContainer.style.marginBottom = '15px';
+      paymentContainer.style.flexWrap = 'wrap';
+      
+      const paypalImg = document.createElement('img');
+      paypalImg.src = 'https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png';
+      paypalImg.alt = 'PayPal';
+      paypalImg.style.height = '20px';
+      
+      const cardImg = document.createElement('img');
+      cardImg.src = 'https://www.paypalobjects.com/webstatic/en_US/i/buttons/cc-badges-ppmcvdam.png';
+      cardImg.alt = 'Credit Cards';
+      cardImg.style.height = '20px';
+      
+      paymentContainer.appendChild(paypalImg);
+      paymentContainer.appendChild(cardImg);
+      paymentInfo.appendChild(paymentContainer);
       paypalContainer.appendChild(paymentInfo);
 
       // Create the PayPal hosted button
