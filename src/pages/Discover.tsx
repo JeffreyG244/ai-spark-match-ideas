@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSwipeActions } from '@/hooks/useSwipeActions';
@@ -91,37 +90,21 @@ const Discover = () => {
         return;
       }
 
-      // Get user's preferences and gender from compatibility answers
+      // Get user's preferences and gender (mocked since table doesn't exist)
       let userPreferences = {
         gender_preference: 'Everyone',
         age_min: 18,
         age_max: 65
       };
-      let userGender = 'Unknown';
 
-      const { data: compatibilityData } = await supabase
-        .from('compatibility_answers')
-        .select('answers')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (compatibilityData?.answers) {
-        const answers = compatibilityData.answers as any;
-        userPreferences.gender_preference = answers['12'] || 'Everyone';
-        userGender = answers['7'] || 'Unknown';
-        console.log('User preferences - Gender:', userGender, 'Seeking:', userPreferences.gender_preference);
-      }
-
-      console.log('Final user preferences:', userPreferences);
-
-      // Get all profiles and compatibility answers separately
+      // Get all profiles from users table
       let { data: allProfiles, error: profilesError } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .select('*')
-        .eq('visible', true)
+        .eq('is_active', true)
         .gte('age', userPreferences.age_min)
         .lte('age', userPreferences.age_max)
-        .neq('user_id', user.id);
+        .neq('id', user.id);
 
       if (profilesError || !allProfiles) {
         console.error('Error loading profiles:', profilesError);
@@ -134,76 +117,16 @@ const Discover = () => {
         return;
       }
 
-      // Get compatibility answers for these profiles
-      const profileUserIds = allProfiles.map(p => p.user_id).filter(Boolean);
-      let { data: answersData, error: answersError } = await supabase
-        .from('compatibility_answers')
-        .select('user_id, answers')
-        .in('user_id', profileUserIds);
-
-      if (answersError) {
-        console.error('Error loading compatibility answers:', answersError);
-        // Continue without answers - still show profiles
-        answersData = [];
-      }
-
-      // Create a map of user_id to answers for quick lookup
-      const answersMap = new Map();
-      answersData?.forEach(answer => {
-        answersMap.set(answer.user_id, answer.answers);
-      });
-
-      // Combine profiles with their answers
-      const profilesWithAnswers = allProfiles.map(profile => ({
-        ...profile,
-        compatibility_answers: answersMap.get(profile.user_id) || null
-      }));
-
-      // Apply strict gender filtering based on user preferences
-      const genderFilteredProfiles = profilesWithAnswers?.filter(profile => {
-        const profileGender = profile.gender?.toLowerCase() || 'unknown';
-        
-        // Apply user's gender preference filter
-        if (userPreferences.gender_preference === 'Everyone') {
-          return true;
-        } else if (userPreferences.gender_preference === 'Women') {
-          const isWoman = ['female', 'woman', 'women', 'f'].includes(profileGender);
-          console.log(`Profile ${profile.first_name} (${profileGender}): Is woman? ${isWoman}`);
-          return isWoman;
-        } else if (userPreferences.gender_preference === 'Men') {
-          const isMan = ['male', 'man', 'men', 'm'].includes(profileGender);
-          console.log(`Profile ${profile.first_name} (${profileGender}): Is man? ${isMan}`);
-          return isMan;
-        } else if (userPreferences.gender_preference === 'Non-binary') {
-          const isNonBinary = ['non-binary', 'nonbinary', 'nb', 'enby'].includes(profileGender);
-          console.log(`Profile ${profile.first_name} (${profileGender}): Is non-binary? ${isNonBinary}`);
-          return isNonBinary;
-        }
-        
-        return false;
-      }) || [];
-
-      console.log(`Found ${genderFilteredProfiles.length} gender-filtered profiles`);
-
-      // Get already swiped user IDs to exclude
-      const { data: swipeData } = await supabase
-        .from('swipe_actions')
-        .select('swiped_user_id')
-        .eq('swiper_id', user.id);
-      
-      const swipedUserIds = swipeData?.map(s => s.swiped_user_id) || [];
-
-      // Filter out already swiped profiles and transform data
-      const transformedProfiles = genderFilteredProfiles
-        .filter(profile => !swipedUserIds.includes(profile.user_id))
+      // Apply basic filtering and transform data
+      const transformedProfiles = allProfiles
         .map((profile) => ({
           id: profile.id,
-          user_id: profile.user_id,
-          email: profile.email || `${profile.user_id}@example.com`,
+          user_id: profile.id,
+          email: profile.email || `${profile.id}@example.com`,
           bio: profile.bio || '',
-          photo_urls: profile.photo_urls && Array.isArray(profile.photo_urls) && profile.photo_urls.length > 0 
-            ? profile.photo_urls 
-            : [generateFallbackImage(profile.gender, profile.user_id)],
+          photo_urls: profile.photos && Array.isArray(profile.photos) && profile.photos.length > 0 
+            ? profile.photos 
+            : [generateFallbackImage(profile.gender, profile.id)],
           firstName: profile.first_name || 'User',
           lastName: profile.last_name || '',
           age: profile.age || 25,

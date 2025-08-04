@@ -54,26 +54,49 @@ const Analytics = () => {
       }
 
       if (data) {
-        setAnalytics(data);
+        // Transform database data to match UserAnalytics interface
+        const transformedData = {
+          ...data,
+          total_matches: data.matches_made || 0,
+          total_conversations: 0,
+          photos_liked: 0,
+          success_rate: 0
+        };
+        setAnalytics(transformedData);
       } else {
-        // Create initial analytics record
+        // Create initial analytics record with all required fields
         const { data: newAnalytics, error: insertError } = await supabase
           .from('user_analytics')
           .insert({
             user_id: user.id,
-            total_matches: 0,
-            total_conversations: 0,
             profile_views: 0,
-            photos_liked: 0,
             messages_sent: 0,
             messages_received: 0,
-            success_rate: 0
+            meetings_scheduled: 0,
+            meetings_completed: 0,
+            matches_made: 0,
+            response_rate: 85.0,
+            trending_score: 0,
+            market_rank_percentile: 50,
+            demand_level: 'moderate',
+            conversation_quality_avg: 0,
+            meeting_success_rate: 0,
+            average_response_time: 30
           })
           .select()
           .single();
 
         if (insertError) throw insertError;
-        setAnalytics(newAnalytics);
+        
+        // Transform for interface compatibility
+        const transformedNewData = {
+          ...newAnalytics,
+          total_matches: newAnalytics.matches_made || 0,
+          total_conversations: 0,
+          photos_liked: 0,
+          success_rate: 0
+        };
+        setAnalytics(transformedNewData);
       }
     } catch (error) {
       console.error('Error fetching analytics:', error);
