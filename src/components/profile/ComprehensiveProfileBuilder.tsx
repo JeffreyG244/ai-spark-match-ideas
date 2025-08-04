@@ -46,9 +46,9 @@ const ComprehensiveProfileBuilder = () => {
 
     try {
       const { data, error } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .maybeSingle();
 
       if (error) {

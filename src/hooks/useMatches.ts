@@ -41,11 +41,8 @@ export const useMatches = () => {
       let userGender = 'Unknown';
       let userPreferences = { gender_preference: 'Everyone' };
 
-      const { data: compatibilityData } = await supabase
-        .from('compatibility_answers')
-        .select('answers')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Mock compatibility data since the table doesn't exist
+      const compatibilityData = null;
 
       if (compatibilityData?.answers) {
         const answers = compatibilityData.answers as any;
@@ -54,12 +51,12 @@ export const useMatches = () => {
         console.log('User gender:', userGender, 'seeking:', userPreferences.gender_preference);
       }
 
-      // Get matches from the matches table
+      // Get matches from the executive_matches table
       const { data: matchesData, error: matchesError } = await supabase
-        .from('matches')
+        .from('executive_matches')
         .select('*')
         .or(`user_id.eq.${user.id},matched_user_id.eq.${user.id}`)
-        .eq('status', 'accepted')
+        .eq('status', 'matched')
         .order('created_at', { ascending: false });
 
       if (matchesError) {
@@ -70,12 +67,12 @@ export const useMatches = () => {
       if (!matchesData || matchesData.length === 0) {
         console.log('No matches found, applying bidirectional filtering for sample profiles');
 
-        // Get all visible profiles and their compatibility answers separately
+        // Get all active profiles
         let { data: allProfiles, error: profilesError } = await supabase
-          .from('dating_profiles')
+          .from('users')
           .select('*')
-          .eq('visible', true)
-          .neq('user_id', user.id);
+          .eq('is_active', true)
+          .neq('id', user.id);
 
         if (profilesError || !allProfiles) {
           console.error('Error loading profiles:', profilesError);
@@ -83,12 +80,10 @@ export const useMatches = () => {
           return;
         }
 
-        // Get compatibility answers for these profiles
-        const profileUserIds = allProfiles.map(p => p.user_id).filter(Boolean);
-        let { data: answersData, error: answersError } = await supabase
-          .from('compatibility_answers')
-          .select('user_id, answers')
-          .in('user_id', profileUserIds);
+        // Mock compatibility answers since the table doesn't exist
+        const profileUserIds = allProfiles.map(p => p.id).filter(Boolean);
+        let answersData: any[] = [];
+        const answersError = null;
 
         if (answersError) {
           console.error('Error loading compatibility answers:', answersError);

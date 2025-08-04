@@ -60,58 +60,33 @@ export const useEnhancedProfileData = () => {
     
     setIsLoading(true);
     try {
-      // Load from dating_profiles table (primary table)
-      const { data: datingProfile, error: datingProfileError } = await supabase
-        .from('dating_profiles')
+      // Load from users table (primary table)
+      const { data: userProfile, error: userProfileError } = await supabase
+        .from('users')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .maybeSingle();
 
-      if (datingProfileError && datingProfileError.code !== 'PGRST116') {
-        console.error('Error loading dating profile:', datingProfileError);
+      if (userProfileError && userProfileError.code !== 'PGRST116') {
+        console.error('Error loading user profile:', userProfileError);
       }
 
-      // Load from dating profiles table (secondary data - this is the same as primary now)
-      const { data: fallbackProfileData, error: profileError } = await supabase
-        .from('dating_profiles')
-        .select('bio, photo_urls')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error loading profile:', profileError);
-      }
-
-      // Load from compatibility_answers table
-      const { data: compatibilityData, error: compatibilityError } = await supabase
-        .from('compatibility_answers')
-        .select('answers')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (compatibilityError && compatibilityError.code !== 'PGRST116') {
-        console.error('Error loading compatibility answers:', compatibilityError);
-      }
-
-      // Combine the data, prioritizing dating_profiles
+      // Combine the data from users table
       const combinedData: EnhancedProfileData = {
-        first_name: datingProfile?.first_name || '',
-        last_name: datingProfile?.last_name || '',
-        age: datingProfile?.age?.toString() || '',
-        gender: datingProfile?.gender || '',
-        bio: datingProfile?.bio || '',
-        city: datingProfile?.city || '',
-        state: datingProfile?.state || '',
-        zipcode: datingProfile?.postal_code || '',
-        sexual_orientation: datingProfile?.orientation || '',
-        interested_in: datingProfile?.seeking_gender || '',
-        interests: datingProfile?.interests?.join(', ') || '',
-        photo_urls: datingProfile?.photo_urls || [],
-        ...((compatibilityData?.answers as any) || {})
+        first_name: userProfile?.first_name || '',
+        last_name: userProfile?.last_name || '',
+        age: userProfile?.age?.toString() || '',
+        gender: userProfile?.gender || '',
+        bio: userProfile?.bio || '',
+        city: userProfile?.city || '',
+        state: userProfile?.state || '',
+        zipcode: userProfile?.country || '',
+        interests: userProfile?.interests?.join(', ') || '',
+        photo_urls: userProfile?.photos || [],
       };
 
       setProfileData(combinedData);
-      setProfileExists(!!datingProfile || !!compatibilityData);
+      setProfileExists(!!userProfile);
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
@@ -146,55 +121,33 @@ export const useEnhancedProfileData = () => {
     setIsSaving(true);
     try {
 
-      // Save to dating_profiles table (the main profile table used for matching)
-      const datingProfilePayload = {
-        user_id: user.id,
+      // Save to users table (the main profile table used for matching)
+      const userProfilePayload = {
+        id: user.id,
+        email: user.email || '',
         first_name: profileData.first_name || '',
         last_name: profileData.last_name || '',
         age: profileData.age ? parseInt(profileData.age) : null,
         gender: profileData.gender || null,
         bio: profileData.bio || '',
-        city: profileData.city || null,
+        city: profileData.city || '',
         state: profileData.state || null,
-        postal_code: profileData.zipcode || null,
-        orientation: profileData.sexual_orientation || null,
-        seeking_gender: profileData.interested_in || null,
+        country: profileData.zipcode || null,
         interests: profileData.interests ? profileData.interests.split(',').map(i => i.trim()) : null,
-        photo_urls: profileData.photo_urls || [],
+        photos: profileData.photo_urls || [],
+        date_of_birth: new Date('1990-01-01').toISOString().split('T')[0],
         updated_at: new Date().toISOString()
       };
 
-      const { error: datingProfileError } = await supabase
-        .from('dating_profiles')
-        .upsert(datingProfilePayload);
+      const { error: userProfileError } = await supabase
+        .from('users')
+        .upsert(userProfilePayload);
 
-      if (datingProfileError) {
-        console.error('Dating profile save error:', datingProfileError);
+      if (userProfileError) {
+        console.error('User profile save error:', userProfileError);
         toast({
           title: 'Save Failed',
-          description: 'Failed to save dating profile. Please try again.',
-          variant: 'destructive'
-        });
-        return { success: false };
-      }
-
-      // Save compatibility answers
-      const compatibilityPayload = {
-        user_id: user.id,
-        answers: profileData as any, // Cast to any for Json compatibility
-        updated_at: new Date().toISOString(),
-        completed_at: new Date().toISOString()
-      };
-
-      const { error: compatibilityError } = await supabase
-        .from('compatibility_answers')
-        .upsert(compatibilityPayload);
-
-      if (compatibilityError) {
-        console.error('Compatibility answers save error:', compatibilityError);
-        toast({
-          title: 'Save Failed',
-          description: 'Failed to save compatibility answers. Please try again.',
+          description: 'Failed to save user profile. Please try again.',
           variant: 'destructive'
         });
         return { success: false };

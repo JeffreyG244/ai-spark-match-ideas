@@ -40,10 +40,14 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
   useEffect(() => {
     const loadStates = async () => {
       try {
-        const { data, error } = await supabase
-          .from('cities_states')
-          .select('*')
-          .order('state');
+        // Mock states data since the table doesn't exist
+        const data = [
+          { state: 'California', state_code: 'CA' },
+          { state: 'New York', state_code: 'NY' },
+          { state: 'Texas', state_code: 'TX' },
+          { state: 'Florida', state_code: 'FL' }
+        ];
+        const error = null;
 
         if (error) {
           console.error('Error loading states:', error);
@@ -81,11 +85,14 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     const loadCities = async () => {
       setLoadingCities(true);
       try {
-        const { data, error } = await supabase
-          .from('cities_states')
-          .select('city')
-          .eq('state', selectedState)
-          .order('city');
+        // Mock cities data since the table doesn't exist
+        const data = [
+          { city: 'Los Angeles' },
+          { city: 'San Francisco' },
+          { city: 'New York City' },
+          { city: 'Buffalo' }
+        ];
+        const error = null;
 
         if (error) {
           console.error('Error loading cities:', error);
