@@ -46,41 +46,104 @@ const EnhancedExecutiveMessaging = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user && matches.length > 0) {
-      loadConversations();
-    }
-  }, [user, matches]);
+    // Always load conversations immediately
+    loadConversations();
+  }, [user]);
 
   const loadConversations = async () => {
     try {
       setLoading(true);
       
-      // Create mock conversations from matches
-      const mockConversations: Conversation[] = matches.slice(0, 5).map((match, index) => ({
-        id: match.id,
-        name: `${match.match_profile?.first_name || 'Executive'}`,
-        lastMessage: index === 0 ? "Looking forward to our coffee meeting!" :
-                    index === 1 ? "Thanks for the connection, would love to discuss..." :
-                    index === 2 ? "Your profile caught my attention..." :
-                    "Great to match with you!",
-        timestamp: index === 0 ? '2 min ago' :
-                  index === 1 ? '1 hour ago' :
-                  index === 2 ? '3 hours ago' :
-                  '1 day ago',
-        unreadCount: index === 0 ? 2 : index === 1 ? 1 : 0,
-        isOnline: index <= 1,
-        photo: match.match_profile?.photos?.[0] || '/api/placeholder/400/400',
+      // Create professional executive conversations (mix of real matches and demo data)
+      const executiveProfiles = [
+        {
+          id: '1',
+          name: 'Alexandra Sterling',
+          title: 'Chief Technology Officer',
+          company: 'Meta',
+          photo: 'https://images.unsplash.com/photo-1494790108755-2616c2b10db8?w=400&h=400&fit=crop&crop=face&auto=format&q=80',
+          lastMessage: "Looking forward to our coffee meeting this Friday!",
+          timestamp: '2 min ago',
+          unreadCount: 2,
+          isOnline: true,
+          isVerified: true,
+          isPremium: true
+        },
+        {
+          id: '2',
+          name: 'Marcus Chen',
+          title: 'Managing Director',
+          company: 'Goldman Sachs',
+          photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face&auto=format&q=80',
+          lastMessage: "Thanks for the connection, would love to discuss synergies...",
+          timestamp: '1 hour ago',
+          unreadCount: 1,
+          isOnline: true,
+          isVerified: true,
+          isPremium: true
+        },
+        {
+          id: '3',
+          name: 'Sofia Rodriguez',
+          title: 'VP of Marketing',
+          company: 'Netflix',
+          photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=400&fit=crop&crop=face&auto=format&q=80',
+          lastMessage: "Your profile caught my attention. Great work on the sustainability initiative!",
+          timestamp: '3 hours ago',
+          unreadCount: 0,
+          isOnline: false,
+          isVerified: true,
+          isPremium: true
+        },
+        {
+          id: '4',
+          name: 'David Park',
+          title: 'Senior VP Sales',
+          company: 'Salesforce',
+          photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face&auto=format&q=80',
+          lastMessage: "Great to match with you! Would love to explore collaboration opportunities.",
+          timestamp: '1 day ago',
+          unreadCount: 0,
+          isOnline: false,
+          isVerified: true,
+          isPremium: false
+        },
+        {
+          id: '5',
+          name: 'Jennifer Walsh',
+          title: 'Chief Financial Officer',
+          company: 'JPMorgan',
+          photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face&auto=format&q=80',
+          lastMessage: "Impressive background! Let's schedule a call to discuss potential partnerships.",
+          timestamp: '2 days ago',
+          unreadCount: 0,
+          isOnline: false,
+          isVerified: true,
+          isPremium: false
+        }
+      ];
+
+      // Add any real matches if they exist
+      const realMatches = matches.slice(0, 3).map((match, index) => ({
+        id: `real_${match.id}`,
+        name: match.match_profile?.first_name || 'Executive Professional',
         title: 'Senior Executive',
-        company: 'Tech Corporation',
+        company: 'Fortune 500',
+        photo: match.match_profile?.photos?.[0] || 'https://images.unsplash.com/photo-1494790108755-2616c2b10db8?w=400&h=400&fit=crop&crop=face&auto=format&q=80',
+        lastMessage: "Great to match with you!",
+        timestamp: `${index + 3} days ago`,
+        unreadCount: 0,
+        isOnline: false,
         isVerified: true,
-        isPremium: index <= 2
+        isPremium: true
       }));
+
+      const allConversations = [...executiveProfiles, ...realMatches];
+      setConversations(allConversations);
       
-      setConversations(mockConversations);
-      
-      if (mockConversations.length > 0) {
-        setSelectedConversation(mockConversations[0]);
-        loadMessages(mockConversations[0].id);
+      if (allConversations.length > 0) {
+        setSelectedConversation(allConversations[0]);
+        loadMessages(allConversations[0].id);
       }
       
     } catch (error) {
@@ -96,51 +159,98 @@ const EnhancedExecutiveMessaging = () => {
   };
 
   const loadMessages = (conversationId: string) => {
-    // Mock messages for demonstration
-    const mockMessages: Message[] = [
+    // Professional executive messages based on conversation
+    const conversationMessages: Record<string, Message[]> = {
+      '1': [
+        {
+          id: '1',
+          senderId: 'other',
+          content: "Hello! I noticed we have a lot in common professionally. Your leadership experience in digital transformation really caught my attention.",
+          timestamp: '10:30 AM',
+          type: 'text',
+          status: 'read'
+        },
+        {
+          id: '2',
+          senderId: user?.id || 'me',
+          content: "Thank you! I'd be happy to connect. Your background in enterprise solutions at Meta is impressive - I've been following your work on AR/VR integration.",
+          timestamp: '10:45 AM',
+          type: 'text',
+          status: 'read'
+        },
+        {
+          id: '3',
+          senderId: 'other',
+          content: "Thank you! I've been passionate about the intersection of technology and business strategy. Perhaps we could schedule a coffee meeting to discuss potential synergies?",
+          timestamp: '11:00 AM',
+          type: 'text',
+          status: 'read'
+        },
+        {
+          id: '4',
+          senderId: user?.id || 'me',
+          content: "That sounds perfect. I'm free this Friday afternoon if that works for you. I know a great place downtown - The Executive Lounge at the Marriott.",
+          timestamp: '11:15 AM',
+          type: 'text',
+          status: 'delivered'
+        },
+        {
+          id: '5',
+          senderId: 'other',
+          content: "Perfect! Looking forward to our coffee meeting this Friday at 3 PM at The Executive Lounge. I'll bring some insights on our upcoming Q4 initiatives.",
+          timestamp: '2 min ago',
+          type: 'meeting',
+          status: 'sent'
+        }
+      ],
+      '2': [
+        {
+          id: '1',
+          senderId: 'other',
+          content: "Great to connect! I see we're both in the finance sector. Your experience with global markets alignment would be valuable for our upcoming expansion.",
+          timestamp: '9:15 AM',
+          type: 'text',
+          status: 'read'
+        },
+        {
+          id: '2',
+          senderId: user?.id || 'me',
+          content: "Absolutely! Goldman Sachs has always been at the forefront of financial innovation. I'd love to hear about your expansion plans.",
+          timestamp: '9:30 AM',
+          type: 'text',
+          status: 'read'
+        },
+        {
+          id: '3',
+          senderId: 'other',
+          content: "Thanks for the connection, would love to discuss synergies between our organizations. Are you available for a brief call this week?",
+          timestamp: '1 hour ago',
+          type: 'text',
+          status: 'sent'
+        }
+      ]
+    };
+
+    const defaultMessages: Message[] = [
       {
         id: '1',
         senderId: 'other',
-        content: "Hello! I noticed we have a lot in common professionally. Would love to connect and discuss potential collaborations.",
-        timestamp: '10:30 AM',
+        content: "Great to match with you! Your professional background is impressive.",
+        timestamp: '2:00 PM',
         type: 'text',
         status: 'read'
       },
       {
         id: '2',
         senderId: user?.id || 'me',
-        content: "Absolutely! I'd be happy to connect. Your background in enterprise solutions is impressive.",
-        timestamp: '10:45 AM',
-        type: 'text',
-        status: 'read'
-      },
-      {
-        id: '3',
-        senderId: 'other',
-        content: "Thank you! I've been following your work in the industry. Perhaps we could schedule a coffee meeting to discuss further?",
-        timestamp: '11:00 AM',
-        type: 'text',
-        status: 'read'
-      },
-      {
-        id: '4',
-        senderId: user?.id || 'me',
-        content: "That sounds perfect. I'm free this Friday afternoon if that works for you.",
-        timestamp: '11:15 AM',
+        content: "Thank you! Looking forward to connecting and exploring potential collaborations.",
+        timestamp: '2:15 PM',
         type: 'text',
         status: 'delivered'
-      },
-      {
-        id: '5',
-        senderId: 'other',
-        content: "Perfect! Looking forward to our coffee meeting this Friday at 3 PM.",
-        timestamp: '2 min ago',
-        type: 'meeting',
-        status: 'sent'
       }
     ];
     
-    setMessages(mockMessages);
+    setMessages(conversationMessages[conversationId] || defaultMessages);
   };
 
   const sendMessage = () => {
@@ -264,8 +374,8 @@ const EnhancedExecutiveMessaging = () => {
     return (
       <div className="h-96 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-love-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading conversations...</p>
+          <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-purple-300">Loading executive conversations...</p>
         </div>
       </div>
     );
@@ -294,9 +404,9 @@ const EnhancedExecutiveMessaging = () => {
           <div className="max-h-96 overflow-y-auto">
             {conversations.length === 0 ? (
               <div className="text-center py-8 px-4">
-                <MessageCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="font-semibold text-foreground mb-2">No Conversations</h3>
-                <p className="text-sm text-muted-foreground">Start matching to begin conversations</p>
+                <MessageCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="font-semibold text-white mb-2">No Conversations</h3>
+                <p className="text-sm text-gray-300">Start discovering to begin executive conversations</p>
               </div>
             ) : (
               conversations.map((conversation) => (
