@@ -54,25 +54,81 @@ export const performSecurityAudit = async (): Promise<{
 };
 
 // Mock security functions for compatibility
-export const validatePasswordSecurity = (password: string): { isValid: boolean; errors: string[] } => {
+export const validatePasswordSecurity = (password: string): { 
+  isValid: boolean; 
+  errors: string[];
+  score: number;
+  securityScore: number;
+  suggestions: string[];
+} => {
   const errors: string[] = [];
+  const suggestions: string[] = [];
+  let score = 0;
   
-  if (password.length < 8) errors.push('Password must be at least 8 characters');
-  if (!/[A-Z]/.test(password)) errors.push('Password must contain uppercase letter');
-  if (!/[a-z]/.test(password)) errors.push('Password must contain lowercase letter');
-  if (!/[0-9]/.test(password)) errors.push('Password must contain number');
-  if (!/[^A-Za-z0-9]/.test(password)) errors.push('Password must contain special character');
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters');
+    suggestions.push('Use at least 8 characters');
+  } else {
+    score += 20;
+  }
   
-  return { isValid: errors.length === 0, errors };
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain uppercase letter');
+    suggestions.push('Add uppercase letters');
+  } else {
+    score += 20;
+  }
+  
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain lowercase letter');
+    suggestions.push('Add lowercase letters');
+  } else {
+    score += 20;
+  }
+  
+  if (!/[0-9]/.test(password)) {
+    errors.push('Password must contain number');
+    suggestions.push('Add numbers');
+  } else {
+    score += 20;
+  }
+  
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    errors.push('Password must contain special character');
+    suggestions.push('Add special characters');
+  } else {
+    score += 20;
+  }
+  
+  return { 
+    isValid: errors.length === 0, 
+    errors,
+    score,
+    securityScore: score,
+    suggestions
+  };
 };
 
-export const sanitizeUserInput = (input: string): string => {
-  return input.replace(/[<>]/g, '').trim();
+export const sanitizeUserInput = (input: string): { 
+  isValid: boolean; 
+  errors: string[]; 
+  sanitizedValue: string; 
+} => {
+  const sanitized = input.replace(/[<>]/g, '').trim();
+  return {
+    isValid: true,
+    errors: [],
+    sanitizedValue: sanitized
+  };
 };
 
-export const checkEnhancedRateLimit = async (action: string, maxRequests = 10): Promise<boolean> => {
+export const checkEnhancedRateLimit = async (action: string, maxRequests = 10): Promise<{
+  allowed: boolean;
+  retryAfter?: number;
+  remainingRequests?: number;
+}> => {
   console.log('Rate limit check (mocked):', { action, maxRequests });
-  return true;
+  return { allowed: true, remainingRequests: maxRequests };
 };
 
 export const validateAdminAction = async (action: string): Promise<boolean> => {

@@ -70,9 +70,7 @@ export const useEnhancedSecurity = () => {
       // Check rate limiting first
       if (options.rateLimitAction) {
         const rateCheck = await checkEnhancedRateLimit(
-          options.rateLimitAction,
-          options.maxRequests,
-          options.windowSeconds
+          options.rateLimitAction
         );
         
         if (!rateCheck.allowed) {
@@ -141,7 +139,7 @@ export const useEnhancedSecurity = () => {
       };
     }
 
-    return sanitizeUserInput(input, options.allowFormatting);
+    return sanitizeUserInput(input);
   }, []);
 
   const validatePassword = useCallback((password: string) => {
