@@ -52,9 +52,9 @@ const UserCreationTest = () => {
           // Test 2: Check if profile was created
           addResult('🔍 Checking if dating profile was created...');
           const { data: profile, error: profileError } = await supabase
-            .from('dating_profiles')
+            .from('users')
             .select('*')
-            .eq('user_id', user.id)
+            .eq('id', user.id)
             .single();
           
           if (profileError) {
@@ -169,7 +169,7 @@ const UserCreationTest = () => {
       
       addResult('📝 Creating test profile...');
       const { data: profile, error: profileError } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .upsert(testProfile)
         .select()
         .single();

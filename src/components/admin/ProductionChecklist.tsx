@@ -69,20 +69,20 @@ const ProductionChecklist = () => {
     try {
       // Check data integrity
       const { data: profileCount, error: profileError } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .select('*', { count: 'exact', head: true });
 
       const { data: nullUserIds, error: nullError } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .select('*', { count: 'exact', head: true })
-        .is('user_id', null);
+        .is('id', null);
 
       const orphanCount = (nullUserIds as any)?.count || 0;
       results.push({
         id: 'data_integrity',
         title: 'Data Integrity Check',
         status: orphanCount > 0 ? 'warning' : 'complete',
-        description: `Found ${orphanCount} profiles with null user_id references`,
+        description: `Found ${orphanCount} profiles with null id references`,
         category: 'database',
         critical: orphanCount > 10,
         details: `Total profiles: ${(profileCount as any)?.count || 0}, Orphaned: ${orphanCount}`
@@ -255,7 +255,7 @@ const ProductionChecklist = () => {
 
     // Supabase Connection
     try {
-      const { data, error } = await supabase.from('dating_profiles').select('count').limit(1);
+      const { data, error } = await supabase.from('users').select('count').limit(1);
       results.push({
         id: 'supabase_connection',
         title: 'Supabase Database Connection',

@@ -31,9 +31,9 @@ const DataDeletion = () => {
     try {
       // Delete user profile data using correct table name
       const { error: profileError } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .delete()
-        .eq('user_id', user.id);
+        .eq('id', user.id);
 
       if (profileError) throw profileError;
 

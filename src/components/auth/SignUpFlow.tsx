@@ -106,7 +106,7 @@ const SignUpFlow = () => {
       };
 
       const { data, error } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .upsert(profileData)
         .select();
 

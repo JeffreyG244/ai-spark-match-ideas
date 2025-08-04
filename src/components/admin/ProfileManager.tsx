@@ -24,8 +24,8 @@ const ProfileManager: React.FC = () => {
   const fetchProfileStats = async () => {
     try {
       const { data: profiles, error } = await supabase
-        .from('dating_profiles')
-        .select('visible, gender, photo_urls');
+        .from('users')
+        .select('is_active, gender, photos');
 
       if (error) {
         console.error('Error fetching profile stats:', error);
@@ -35,11 +35,11 @@ const ProfileManager: React.FC = () => {
       if (profiles) {
         const stats: ProfileStats = {
           total: profiles.length,
-          visible: profiles.filter(p => p.visible).length,
+          visible: profiles.filter(p => p.is_active).length,
           male: profiles.filter(p => p.gender?.toLowerCase().includes('male')).length,
           female: profiles.filter(p => p.gender?.toLowerCase().includes('female')).length,
-          withPhotos: profiles.filter(p => p.photo_urls && p.photo_urls.length > 0).length,
-          withoutPhotos: profiles.filter(p => !p.photo_urls || p.photo_urls.length === 0).length,
+          withPhotos: profiles.filter(p => p.photos && p.photos.length > 0).length,
+          withoutPhotos: profiles.filter(p => !p.photos || p.photos.length === 0).length,
         };
         setStats(stats);
       }
@@ -147,20 +147,20 @@ const ProfileManager: React.FC = () => {
     try {
       // Update profiles to ensure proper gender matching
       const { error } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .update({ 
-          visible: true,
-          seeking_gender: 'Female' // Default for males
+          is_active: true,
+          looking_for: 'Female' // Default for males
         })
         .eq('gender', 'Male');
 
       if (error) throw error;
 
       const { error: error2 } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .update({ 
-          visible: true,
-          seeking_gender: 'Male' // Default for females
+          is_active: true,
+          looking_for: 'Male' // Default for females
         })
         .eq('gender', 'Female');
 
@@ -186,19 +186,18 @@ const ProfileManager: React.FC = () => {
   const handleAddMissingFields = async () => {
     setIsLoading(true);
     try {
-      // Add missing seeking_gender and orientation fields
+      // Add missing looking_for fields
       const { data: profiles, error: fetchError } = await supabase
-        .from('dating_profiles')
-        .select('id, gender, seeking_gender, orientation');
+        .from('users')
+        .select('id, gender, looking_for');
 
       if (fetchError) throw fetchError;
 
       const updates = profiles?.map(profile => ({
         id: profile.id,
-        seeking_gender: profile.seeking_gender || 
+        looking_for: profile.looking_for || 
           (profile.gender === 'Male' ? 'Female' : 
-           profile.gender === 'Female' ? 'Male' : 'Everyone'),
-        orientation: profile.orientation || 'Straight'
+           profile.gender === 'Female' ? 'Male' : 'Everyone')
       }));
 
       if (updates && updates.length > 0) {
@@ -207,10 +206,9 @@ const ProfileManager: React.FC = () => {
           const batch = updates.slice(i, i + 10);
           for (const update of batch) {
             await supabase
-              .from('dating_profiles')
+              .from('users')
               .update({
-                seeking_gender: update.seeking_gender,
-                orientation: update.orientation
+                looking_for: update.looking_for
               })
               .eq('id', update.id);
           }
@@ -384,7 +382,7 @@ const ProfileManager: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600 mb-4">
-              Add seeking_gender and orientation to existing profiles.
+              Add looking_for preferences to existing profiles.
             </p>
             <Button 
               onClick={handleAddMissingFields}
@@ -408,11 +406,10 @@ const ProfileManager: React.FC = () => {
             <p><strong>✅ Matching Logic:</strong> Gender filtering and compatibility scoring in place</p>
             <p><strong>⚠️ N8N Integration:</strong> Ensure your n8n workflow points to the correct database tables:</p>
             <ul className="list-disc list-inside ml-4 space-y-1">
-              <li><code>dating_profiles</code> (not profiles)</li>
-              <li><code>compatibility_answers</code></li>
-              <li><code>matches</code> and <code>ai_enhanced_matches</code></li>
+              <li><code>users</code> (main profiles table)</li>
+              <li><code>executive_matches</code></li>
               <li><code>daily_matches</code></li>
-              <li><code>swipe_actions</code></li>
+              <li><code>conversations</code> and <code>conversation_messages</code></li>
             </ul>
           </div>
         </CardContent>

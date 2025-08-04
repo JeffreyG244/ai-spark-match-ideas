@@ -41,7 +41,7 @@ const SystemIntegrationTest = () => {
 
   const testSupabaseConnection = async () => {
     try {
-      const { data, error } = await supabase.from('dating_profiles').select('count', { count: 'exact', head: true });
+      const { data, error } = await supabase.from('users').select('count', { count: 'exact', head: true });
       if (error) throw error;
       
       updateResult('Supabase Connection', 'success', `Connected successfully. Found ${data?.length || 0} profiles`, data);
@@ -53,8 +53,8 @@ const SystemIntegrationTest = () => {
   const testDatabaseProfiles = async () => {
     try {
       const { data: profiles, error } = await supabase
-        .from('dating_profiles')
-        .select('id, user_id, first_name, email, photo_urls, city, state')
+        .from('users')
+        .select('id, first_name, email, photos, city, state')
         .limit(5);
       
       if (error) throw error;
@@ -68,7 +68,7 @@ const SystemIntegrationTest = () => {
       const missingFields = [];
       const firstProfile = profiles[0];
       if (!firstProfile.email) missingFields.push('email');
-      if (!firstProfile.photo_urls) missingFields.push('photo_urls');
+      if (!firstProfile.photos) missingFields.push('photos');
       if (!firstProfile.city) missingFields.push('city');
       if (!firstProfile.state) missingFields.push('state');
 
@@ -98,18 +98,8 @@ const SystemIntegrationTest = () => {
   };
 
   const testCompatibilityAnswers = async () => {
-    try {
-      const { data: answers, error } = await supabase
-        .from('compatibility_answers')
-        .select('id, user_id, answers')
-        .limit(5);
-      
-      if (error) throw error;
-      
-      updateResult('Compatibility Answers', 'success', `Found ${answers?.length || 0} compatibility answer sets`, answers);
-    } catch (error: any) {
-      updateResult('Compatibility Answers', 'error', error.message, error);
-    }
+    // Skip compatibility_answers check (table doesn't exist)
+    updateResult('Compatibility Answers', 'error', 'Compatibility answers table not configured (optional)', null);
   };
 
   const testN8NWebhook = async () => {
