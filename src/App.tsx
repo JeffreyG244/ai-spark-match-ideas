@@ -29,6 +29,7 @@ import Moderation from "./pages/Moderation";
 import TestIntegration from "./pages/TestIntegration";
 import TestSetup from "./pages/TestSetup";
 import N8NTesting from "./pages/N8NTesting";
+import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 
 // Legal pages
 import TermsOfService from "./pages/legal/TermsOfService";
@@ -89,6 +90,7 @@ function App() {
                 <Route path="/test-integration" element={<TestIntegration />} />
                 <Route path="/test-setup" element={<TestSetup />} />
                 <Route path="/n8n-testing" element={<N8NTesting />} />
+                <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
                 <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/legal/terms-of-service" element={<TermsOfService />} />
                 <Route path="/legal/community-guidelines" element={<CommunityGuidelines />} />

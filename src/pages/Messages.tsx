@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import MessagingInterface from '@/components/messaging/MessagingInterface';
+import EnhancedExecutiveMessaging from '@/components/messaging/EnhancedExecutiveMessaging';
 
 const Messages: React.FC = () => {
   return (
@@ -31,7 +31,7 @@ const Messages: React.FC = () => {
             </p>
           </CardHeader>
           <CardContent>
-            <MessagingInterface />
+            <EnhancedExecutiveMessaging />
           </CardContent>
         </Card>
       </div>
