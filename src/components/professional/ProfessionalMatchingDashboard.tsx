@@ -248,13 +248,13 @@ const ProfessionalMatchingDashboard: React.FC = () => {
           </CardContent>
         </Card>
         
-        <Card className="border-purple-100 bg-gradient-to-br from-purple-50 to-white">
+        <Card className="border-love-accent/20 bg-love-surface">
           <CardContent className="p-4">
             <div className="flex items-center">
-              <Calendar className="h-8 w-8 text-purple-600" />
+              <Calendar className="h-8 w-8 text-love-accent" />
               <div className="ml-3">
-                <p className="text-sm text-gray-600">This Week</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-sm text-love-text-light">This Week</p>
+                <p className="text-2xl font-bold text-love-text">
                   {matches.filter(m => {
                     if (!m.created_at) return false;
                     const matchDate = new Date(m.created_at);
@@ -305,7 +305,7 @@ const ProfessionalMatchingDashboard: React.FC = () => {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                      <div className="w-12 h-12 bg-gradient-to-br from-love-primary to-love-secondary rounded-full flex items-center justify-center text-white font-medium">
                         {match.matched_profile?.first_name?.[0] || 'M'}
                       </div>
                       <div>

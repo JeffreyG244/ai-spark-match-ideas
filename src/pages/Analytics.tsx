@@ -126,16 +126,16 @@ const Analytics = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8">
+      <div className="min-h-screen bg-love-background py-8">
         <div className="container mx-auto px-4 max-w-4xl">
-          <div className="text-center">Loading your analytics...</div>
+          <div className="text-center text-love-text">Loading your analytics...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8">
+    <div className="min-h-screen bg-love-background py-8">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Your Dating Analytics</h1>

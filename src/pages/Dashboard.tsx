@@ -25,8 +25,8 @@ const Dashboard = () => {
   // Show loading while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-love-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-love-primary"></div>
       </div>
     );
   }
@@ -46,7 +46,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+    <div className="min-h-screen bg-love-background">
       <NavigationTabs />
       <div className="container mx-auto p-6">
         <DashboardHeader onSignOut={signOut} />
@@ -59,7 +59,7 @@ const Dashboard = () => {
 
         {/* Additional Info */}
         <div className="text-center mt-12 max-w-2xl mx-auto">
-          <p className="text-gray-600">
+          <p className="text-love-text-light">
             Your journey to finding meaningful connections starts here. Each feature is designed 
             to help you build authentic relationships based on deep compatibility.
           </p>

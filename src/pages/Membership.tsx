@@ -20,8 +20,8 @@ const Membership = () => {
   // Show loading while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-love-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-love-primary"></div>
       </div>
     );
   }
@@ -32,7 +32,7 @@ const Membership = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+    <div className="min-h-screen bg-love-background">
       <div className="container mx-auto p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">

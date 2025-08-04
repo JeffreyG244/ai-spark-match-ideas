@@ -32,18 +32,18 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 346 77% 49.8%;
 
-    /* Modern dating app colors - Professional Purple/Pink Theme */
+    /* Modern dating app colors - Professional Dark Theme */
     --love-primary: 280 100% 70%;
     --love-secondary: 320 100% 75%;
     --love-accent: 260 100% 65%;
-    --love-background: 280 20% 97%;
-    --love-surface: 280 15% 98%;
-    --love-text: 280 25% 25%;
-    --love-text-light: 280 15% 50%;
+    --love-background: 280 25% 8%;
+    --love-surface: 280 20% 12%;
+    --love-text: 280 15% 95%;
+    --love-text-light: 280 10% 75%;
     
-    /* Enhanced gradients for professional look */
-    --love-gradient-bg: linear-gradient(135deg, hsl(280 30% 95%), hsl(320 25% 97%));
-    --love-gradient-card: linear-gradient(135deg, hsl(280 15% 98%), hsl(320 10% 99%));
+    /* Enhanced gradients for professional dark look */
+    --love-gradient-bg: linear-gradient(135deg, hsl(280 25% 8%), hsl(320 20% 10%));
+    --love-gradient-card: linear-gradient(135deg, hsl(280 20% 12%), hsl(320 15% 14%));
     --love-gradient-primary: linear-gradient(135deg, hsl(280 100% 70%), hsl(320 100% 75%));
     
     /* Interactive states */
