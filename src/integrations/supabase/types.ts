@@ -58,6 +58,42 @@ export type Database = {
           },
         ]
       }
+      ai_match_results: {
+        Row: {
+          compatibility_score: number | null
+          created_at: string
+          id: string
+          match_recommendations: Json | null
+          personality_analysis: Json | null
+          processed_at: string | null
+          processing_status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          compatibility_score?: number | null
+          created_at?: string
+          id?: string
+          match_recommendations?: Json | null
+          personality_analysis?: Json | null
+          processed_at?: string | null
+          processing_status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          compatibility_score?: number | null
+          created_at?: string
+          id?: string
+          match_recommendations?: Json | null
+          personality_analysis?: Json | null
+          processed_at?: string | null
+          processing_status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversation_messages: {
         Row: {
           ai_suggested: boolean | null
