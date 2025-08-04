@@ -25,12 +25,17 @@ export async function createUserProfile(user: DiverseUser, userId: string, photo
   };
   
   const { error: profileError } = await supabase
-    .from('dating_profiles')
+    .from('users')
     .insert({
-      user_id: userId,
+      id: userId,
       email: user.email,
+      first_name: user.firstName,
+      last_name: user.lastName,
+      age: user.age,
       bio: user.bio,
-      photo_urls: photoUrls,
+      photos: photoUrls,
+      city: user.location.split(',')[0].trim(),
+      date_of_birth: new Date(Date.now() - (user.age * 365 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     });
@@ -59,12 +64,12 @@ export async function updateProfilePhotos(user: DiverseUser, userId: string, pho
   });
 
   const { error: updateError } = await supabase
-    .from('dating_profiles')
+    .from('users')
     .update({
-      photo_urls: securePhotoUrls,
+      photos: securePhotoUrls,
       updated_at: new Date().toISOString()
     })
-    .eq('user_id', userId);
+    .eq('id', userId);
 
   if (updateError) {
     console.error('Photo update error:', updateError);

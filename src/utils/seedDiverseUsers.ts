@@ -78,8 +78,8 @@ const generateSeedProfiles = () => {
 export const checkIfSeedingNeeded = async (): Promise<boolean> => {
   try {
     const { data, error } = await supabase
-      .from('dating_profiles')
-      .select('user_id', { count: 'exact' });
+      .from('users')
+      .select('id', { count: 'exact' });
 
     if (error) {
       console.error('Error checking profiles count:', error);
@@ -103,7 +103,7 @@ export const seedDiverseUsers = async (): Promise<{ success: boolean; message: s
     
     // Check if seed profiles already exist
     const { data: existingProfiles, error: checkError } = await supabase
-      .from('dating_profiles')
+      .from('users')
       .select('email')
       .in('email', profilesData.map(user => user.email));
 
@@ -130,15 +130,15 @@ export const seedDiverseUsers = async (): Promise<{ success: boolean; message: s
       const seedUserId = `seed-${user.firstName.toLowerCase()}-${user.lastName.toLowerCase()}-${Date.now()}-${index}`;
       
       return {
-        user_id: seedUserId,
+        id: seedUserId,
         email: user.email,
         first_name: user.firstName,
         last_name: user.lastName,
         age: user.age,
-        location: user.location,
+        city: user.location.split(',')[0].trim(),
         bio: user.bio,
-        photo_urls: user.photos,
-        visible: true,
+        photos: user.photos,
+        date_of_birth: new Date(Date.now() - (user.age * 365 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -152,7 +152,7 @@ export const seedDiverseUsers = async (): Promise<{ success: boolean; message: s
       const batch = seedProfiles.slice(i, i + batchSize);
       
       const { error: insertError } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .insert(batch);
 
       if (insertError) {

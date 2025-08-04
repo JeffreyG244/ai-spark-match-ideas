@@ -243,7 +243,7 @@ export const seedRealisticProfiles = async (): Promise<{ success: boolean; messa
     
     // Check if profiles already exist
     const { data: existingProfiles, error: checkError } = await supabase
-      .from('dating_profiles')
+      .from('users')
       .select('email')
       .in('email', realisticSeedProfiles.map(user => user.email));
 
@@ -265,26 +265,24 @@ export const seedRealisticProfiles = async (): Promise<{ success: boolean; messa
 
     console.log(`Creating ${newProfiles.length} new realistic profiles...`);
 
-    // Create seed profiles for dating_profiles table
+    // Create seed profiles for users table
     const seedProfiles = newProfiles.map((user, index) => {
       const seedUserId = `realistic-${user.first_name.toLowerCase()}-${user.last_name.toLowerCase()}-${Date.now()}-${index}`;
       
       return {
-        user_id: seedUserId,
+        id: seedUserId,
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
         age: user.age,
         gender: user.gender,
-        seeking_gender: user.seeking_gender,
-        orientation: user.orientation,
         city: user.city,
         state: user.state,
         country: user.country,
         bio: user.bio,
         interests: user.interests,
-        photo_urls: user.photo_urls,
-        visible: user.visible,
+        photos: user.photo_urls,
+        date_of_birth: new Date(Date.now() - (user.age * 365 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -298,7 +296,7 @@ export const seedRealisticProfiles = async (): Promise<{ success: boolean; messa
       const batch = seedProfiles.slice(i, i + batchSize);
       
       const { error: insertError } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .insert(batch);
 
       if (insertError) {
@@ -341,7 +339,7 @@ export const clearDuplicateProfiles = async (): Promise<{ success: boolean; mess
     
     // Get all profiles grouped by email to find duplicates
     const { data: profiles, error } = await supabase
-      .from('dating_profiles')
+      .from('users')
       .select('id, email, created_at')
       .order('created_at', { ascending: false });
 
@@ -369,7 +367,7 @@ export const clearDuplicateProfiles = async (): Promise<{ success: boolean; mess
 
     if (duplicateIds.length > 0) {
       const { error: deleteError } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .delete()
         .in('id', duplicateIds);
 
