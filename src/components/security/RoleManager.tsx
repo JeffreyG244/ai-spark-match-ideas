@@ -39,7 +39,8 @@ const RoleManager: React.FC = () => {
 
   const checkAdminStatus = async () => {
     try {
-      const adminStatus = await RoleManagementService.checkUserRole('admin');
+      const { data: { user } } = await supabase.auth.getUser();
+      const adminStatus = await RoleManagementService.checkUserRole(user?.id || '', 'admin');
       setIsAdmin(adminStatus);
     } catch (error) {
       console.error('Error checking admin status:', error);

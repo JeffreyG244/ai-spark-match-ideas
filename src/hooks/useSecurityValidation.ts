@@ -56,7 +56,7 @@ export const useSecurityValidation = () => {
     if (targetUserId && targetUserId !== user.id) {
       try {
         const { RoleManagementService } = await import('@/services/security/RoleManagementService');
-        const adminCheck = await RoleManagementService.checkUserRole('admin');
+        const adminCheck = await RoleManagementService.checkUserRole(user.id, 'admin');
         
         if (!adminCheck) {
           return { allowed: false, reason: 'Insufficient permissions' };

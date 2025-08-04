@@ -64,23 +64,16 @@ export const getPasswordStrengthText = (score: number): { text: string; color: s
  */
 export const getPasswordRules = async (): Promise<Array<{ description: string; pattern: string }>> => {
   try {
-    const { data, error } = await supabase
-      .from('password_rules')
-      .select('description, pattern')
-      .order('rule_id');
-
-    if (error) {
-      console.error('Failed to fetch password rules:', error);
-      return [
-        { description: 'At least 8 characters', pattern: '^.{8,}$' },
-        { description: 'At least one uppercase letter', pattern: '[A-Z]' },
-        { description: 'At least one lowercase letter', pattern: '[a-z]' },
-        { description: 'At least one number', pattern: '[0-9]' },
-        { description: 'At least one special character', pattern: '[^A-Za-z0-9]' }
-      ];
-    }
-
-    return data || [];
+    // Mock password rules since password_rules table doesn't exist
+    console.log('Password rules requested (returning default rules)');
+    
+    return [
+      { description: 'At least 8 characters', pattern: '^.{8,}$' },
+      { description: 'At least one uppercase letter', pattern: '[A-Z]' },
+      { description: 'At least one lowercase letter', pattern: '[a-z]' },
+      { description: 'At least one number', pattern: '[0-9]' },
+      { description: 'At least one special character', pattern: '[^A-Za-z0-9]' }
+    ];
   } catch (error) {
     console.error('Error fetching password rules:', error);
     return [];
