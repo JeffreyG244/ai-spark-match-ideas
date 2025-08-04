@@ -35,10 +35,7 @@ const LoginForm = () => {
     setLoading(true);
     try {
       await signIn(formData.email, formData.password);
-      toast({
-        title: 'Welcome back!',
-        description: 'You have successfully signed in.',
-      });
+      // Toast removed - now using custom alert banner system
     } catch (error) {
       console.error('Login error:', error);
       toast({

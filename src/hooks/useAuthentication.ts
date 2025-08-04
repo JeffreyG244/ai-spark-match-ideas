@@ -176,10 +176,7 @@ export const useAuthentication = () => {
       }
 
       console.log('Login successful');
-      toast({
-        title: 'Welcome back!',
-        description: 'You have been successfully logged in.',
-      });
+      // Toast removed - now using custom alert banner system
 
       navigate('/dashboard');
     } catch (error) {
