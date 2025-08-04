@@ -379,19 +379,19 @@ const Settings = () => {
     return (
       <Card 
         key={item.id} 
-        className="bg-gradient-to-br from-slate-800/80 to-slate-900/60 backdrop-blur-sm border-purple-500/30 hover:border-pink-400/60 transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-purple-500/25 hover:scale-[1.02] hover:-translate-y-1" 
+        className="bg-gradient-to-br from-purple-600/90 to-pink-600/80 backdrop-blur-sm border-purple-400/50 hover:border-pink-300/70 transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-purple-400/30 hover:scale-[1.02] hover:-translate-y-1 shadow-lg" 
         onClick={item.action}
       >
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 flex-1">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
-                <div className="text-white group-hover:text-purple-200 transition-colors">
+              <div className="w-12 h-12 bg-gradient-to-r from-white/30 to-purple-200/40 rounded-xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg backdrop-blur-sm">
+                <div className="text-white group-hover:text-purple-100 transition-colors">
                   {item.icon}
                 </div>
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold text-white group-hover:text-purple-200 transition-colors text-base">{item.title}</h4>
+                <h4 className="font-semibold text-white group-hover:text-purple-100 transition-colors text-base">{item.title}</h4>
                 <p className="text-white/90 group-hover:text-white mt-1 transition-colors font-medium">{item.description}</p>
               </div>
             </div>
