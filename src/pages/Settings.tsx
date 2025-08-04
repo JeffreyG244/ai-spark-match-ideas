@@ -134,7 +134,7 @@ const Settings = () => {
           id: 'edit-profile',
           title: 'Edit Profile Details',
           description: 'Update your basic information and bio',
-          icon: <User className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="4" height="4"/><rect x="4" y="12" width="4" height="4"/><rect x="12" y="4" width="8" height="2"/><rect x="12" y="6" width="6" height="2"/><rect x="12" y="12" width="8" height="2"/><rect x="12" y="14" width="6" height="2"/><rect x="16" y="18" width="4" height="2"/></svg>,
           action: () => navigate('/profile'),
           type: 'navigation'
         },
@@ -142,7 +142,7 @@ const Settings = () => {
           id: 'update-photos',
           title: 'Manage Photos',
           description: 'Add, edit, or reorder your profile photos',
-          icon: <Camera className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="4" width="20" height="16" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="6" y="8" width="4" height="4"/><rect x="14" y="8" width="4" height="4"/><circle cx="8" cy="10" r="1"/><circle cx="16" cy="10" r="1"/><rect x="10" y="14" width="4" height="2"/></svg>,
           action: () => navigate('/profile'),
           type: 'navigation'
         },
@@ -150,7 +150,7 @@ const Settings = () => {
           id: 'verification',
           title: 'Identity Verification',
           description: 'Verify your identity and professional status',
-          icon: <UserCheck className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="6" width="16" height="12" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="6" y="2" width="12" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="8" y="10" width="2" height="2"/><rect x="11" y="10" width="2" height="2"/><rect x="14" y="10" width="2" height="2"/><rect x="8" y="13" width="2" height="2"/><rect x="11" y="13" width="2" height="2"/><rect x="14" y="13" width="2" height="2"/></svg>,
           action: () => navigate('/verification'),
           type: 'navigation'
         },
@@ -158,7 +158,7 @@ const Settings = () => {
           id: 'profile-visibility',
           title: 'Profile Visibility',
           description: 'Control who can see your profile',
-          icon: <Eye className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" strokeWidth="2"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="11" y="11" width="2" height="2"/><rect x="4" y="11" width="2" height="2"/><rect x="18" y="11" width="2" height="2"/><rect x="11" y="4" width="2" height="2"/><rect x="11" y="18" width="2" height="2"/></svg>,
           action: () => handleToggle('privacy', 'profileVisibility'),
           type: 'switch',
           value: settings.privacy.profileVisibility
@@ -177,7 +177,7 @@ const Settings = () => {
           id: 'message-notifications',
           title: 'Message Notifications',
           description: 'Get alerted when you receive new messages',
-          icon: <MessageSquare className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="6" width="18" height="12" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M3 8l9 6 9-6" stroke="currentColor" strokeWidth="2" fill="none"/><rect x="8" y="10" width="2" height="2"/><rect x="11" y="10" width="2" height="2"/><rect x="14" y="10" width="2" height="2"/></svg>,
           action: () => handleToggle('notifications', 'messages'),
           type: 'switch',
           value: settings.notifications.messages
@@ -186,7 +186,7 @@ const Settings = () => {
           id: 'match-notifications',
           title: 'New Match Alerts',
           description: 'Be notified of new potential matches',
-          icon: <Heart className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/><rect x="10" y="8" width="2" height="2"/><rect x="12" y="8" width="2" height="2"/><rect x="11" y="10" width="2" height="2"/></svg>,
           action: () => handleToggle('notifications', 'matches'),
           type: 'switch',
           value: settings.notifications.matches
@@ -195,7 +195,7 @@ const Settings = () => {
           id: 'push-notifications',
           title: 'Push Notifications',
           description: 'Receive notifications on your device',
-          icon: <Smartphone className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="2" width="14" height="20" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="7" y="4" width="10" height="12"/><rect x="9" y="6" width="2" height="2"/><rect x="13" y="6" width="2" height="2"/><rect x="9" y="9" width="6" height="2"/><rect x="9" y="12" width="4" height="2"/><circle cx="12" cy="18" r="1"/></svg>,
           action: () => handleToggle('notifications', 'pushNotifications'),
           type: 'switch',
           value: settings.notifications.pushNotifications
@@ -204,7 +204,7 @@ const Settings = () => {
           id: 'email-digest',
           title: 'Email Digest',
           description: 'Weekly summary of your activity',
-          icon: <Mail className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="4" width="20" height="16" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M2 6l10 8 10-8" stroke="currentColor" strokeWidth="2" fill="none"/><rect x="6" y="9" width="4" height="2"/><rect x="6" y="12" width="6" height="2"/><rect x="6" y="15" width="8" height="2"/><rect x="16" y="9" width="2" height="2"/><rect x="16" y="12" width="2" height="2"/></svg>,
           action: () => handleToggle('notifications', 'emails'),
           type: 'switch',
           value: settings.notifications.emails
@@ -222,7 +222,7 @@ const Settings = () => {
           id: 'executive-only',
           title: 'Executive Only Matches',
           description: 'Only match with verified executives',
-          icon: <Crown className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/><rect x="10" y="6" width="4" height="2"/><rect x="9" y="9" width="6" height="2"/><rect x="10" y="12" width="4" height="2"/></svg>,
           action: () => handleToggle('matching', 'executiveOnly'),
           type: 'switch',
           value: settings.matching.executiveOnly
@@ -231,7 +231,7 @@ const Settings = () => {
           id: 'auto-matching',
           title: 'Auto-Matching',
           description: 'Automatically find compatible matches',
-          icon: <Zap className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="10" width="3" height="4"/><rect x="7" y="8" width="3" height="8"/><rect x="11" y="6" width="3" height="12"/><rect x="15" y="9" width="3" height="6"/><rect x="19" y="11" width="2" height="2"/><circle cx="4.5" cy="12" r="1"/><circle cx="8.5" cy="12" r="1"/><circle cx="12.5" cy="12" r="1"/><circle cx="16.5" cy="12" r="1"/></svg>,
           action: () => handleToggle('matching', 'autoMatch'),
           type: 'switch',
           value: settings.matching.autoMatch
@@ -240,7 +240,7 @@ const Settings = () => {
           id: 'long-distance',
           title: 'Long Distance Matches',
           description: 'Include matches outside your area',
-          icon: <Globe className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="8" y="4" width="8" height="4" rx="1"/><rect x="6" y="10" width="12" height="2"/><rect x="4" y="16" width="16" height="2"/><rect x="10" y="6" width="4" height="2"/><circle cx="12" cy="12" r="2"/></svg>,
           action: () => handleToggle('matching', 'longDistance'),
           type: 'switch',
           value: settings.matching.longDistance
@@ -258,7 +258,7 @@ const Settings = () => {
           id: 'change-password',
           title: 'Change Password',
           description: 'Update your account password',
-          icon: <Lock className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="10" width="12" height="10" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><circle cx="12" cy="6" r="4" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="10" y="14" width="4" height="2"/><rect x="11" y="16" width="2" height="2"/><circle cx="12" cy="15" r="1"/></svg>,
           action: () => navigate('/auth/reset-password'),
           type: 'navigation'
         },
@@ -266,7 +266,7 @@ const Settings = () => {
           id: 'two-factor',
           title: 'Two-Factor Authentication',
           description: 'Add an extra layer of security',
-          icon: <Shield className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="6" width="14" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="9" y="2" width="6" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="8" y="10" width="2" height="2"/><rect x="11" y="10" width="2" height="2"/><rect x="14" y="10" width="2" height="2"/><rect x="8" y="13" width="2" height="2"/><rect x="11" y="13" width="2" height="2"/><rect x="14" y="13" width="2" height="2"/><rect x="11" y="16" width="2" height="2"/></svg>,
           action: () => toast({ title: "Coming Soon", description: "Two-factor authentication will be available soon." }),
           type: 'button'
         },
@@ -274,7 +274,7 @@ const Settings = () => {
           id: 'login-activity',
           title: 'Login Activity',
           description: 'View your recent login history',
-          icon: <CheckCircle className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="6" y="7" width="12" height="2"/><rect x="6" y="10" width="8" height="2"/><rect x="6" y="13" width="10" height="2"/><rect x="6" y="16" width="6" height="2"/><circle cx="18" cy="8" r="2" fill="currentColor"/></svg>,
           action: () => toast({ title: "Security", description: "No suspicious login activity detected." }),
           type: 'button'
         },
@@ -282,7 +282,7 @@ const Settings = () => {
           id: 'data-export',
           title: 'Export My Data',
           description: 'Download a copy of your data',
-          icon: <Database className="w-4 h-4" />,
+          icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="7" y="7" width="10" height="2"/><rect x="7" y="10" width="8" height="2"/><rect x="7" y="13" width="6" height="2"/><rect x="7" y="16" width="4" height="2"/><path d="M12 2v6m0 0l-3-3m3 3l3-3" stroke="currentColor" strokeWidth="2" fill="none"/></svg>,
           action: () => toast({ title: "Data Export", description: "Your data export will be ready within 24 hours." }),
           type: 'button'
         }
