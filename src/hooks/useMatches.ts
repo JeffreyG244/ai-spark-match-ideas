@@ -100,7 +100,7 @@ export const useMatches = () => {
         // Combine profiles with their answers
         const profilesWithAnswers = allProfiles.map(profile => ({
           ...profile,
-          compatibility_answers: answersMap.get(profile.user_id) || null
+          compatibility_answers: answersMap.get(profile.id) || null
         }));
 
         // Apply strict bidirectional filtering
