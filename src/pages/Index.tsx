@@ -8,10 +8,12 @@ const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  if (user) {
-    navigate("/dashboard");
-    return null;
-  }
+  // Fix: Move navigation to useEffect to prevent render-time navigation
+  React.useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
