@@ -56,51 +56,41 @@ const DashboardGrid = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
       {dashboardItems.map((item) => (
         <Card 
           key={item.title} 
-          className={`bg-gradient-to-br ${item.bgGradient} border-love-border/50 hover:border-love-primary/50
-            hover:shadow-2xl hover:shadow-love-primary/20 hover:scale-[1.03]
-            transition-all duration-300 cursor-pointer group backdrop-blur-sm relative overflow-hidden`}
+          className="bg-slate-800/40 backdrop-blur-xl border border-slate-600/30 hover:border-purple-500/50
+            hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.02]
+            transition-all duration-300 cursor-pointer group relative overflow-hidden"
           onClick={() => handleCardClick(item.path)}
         >
-          {/* Enhanced gradient overlay */}
-          <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-          
-          <CardHeader className="text-center relative z-10 pt-8">
-            <div className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br ${item.iconGradient} p-[2px] group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-              <div className="w-full h-full bg-love-card rounded-2xl flex items-center justify-center">
-                <item.icon className="h-8 w-8 text-white group-hover:scale-110 transition-transform duration-300" />
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4">
+              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.iconGradient} flex items-center justify-center
+                shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                <item.icon className="h-8 w-8 text-white" />
               </div>
+              
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-white mb-1">{item.title}</h3>
+                <p className="text-slate-400 text-sm mb-3">{item.description}</p>
+                
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(item.path);
+                  }}
+                  className={`bg-gradient-to-r ${item.gradient} hover:opacity-90 
+                    text-white font-medium py-2 px-6 rounded-xl text-sm
+                    shadow-md hover:shadow-lg transition-all duration-300`}
+                >
+                  {item.buttonText}
+                </Button>
+              </div>
+              
+              <ArrowRight className="h-5 w-5 text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
             </div>
-            
-            <CardTitle className="text-xl font-bold text-love-text group-hover:text-love-primary transition-colors duration-300">
-              {item.title}
-            </CardTitle>
-            
-            <CardDescription className="text-love-text-muted mt-2">
-              {item.description}
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="text-center pb-6 relative z-10">
-            <div className="flex items-center justify-center text-love-text-muted group-hover:text-love-primary transition-colors duration-300 mb-4">
-              <span className="text-sm font-medium mr-2">Get Started</span>
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform duration-300" />
-            </div>
-            
-            <Button
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(item.path);
-              }}
-              className={`w-full bg-gradient-to-r ${item.gradient} hover:scale-105 
-                text-white font-semibold py-2.5 rounded-xl
-                shadow-lg hover:shadow-xl transition-all duration-300`}
-            >
-              {item.buttonText}
-            </Button>
           </CardContent>
         </Card>
       ))}

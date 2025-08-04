@@ -8,7 +8,7 @@ import WelcomeSection from '@/components/dashboard/WelcomeSection';
 import ProfileSetupSection from '@/components/dashboard/ProfileSetupSection';
 import DashboardGrid from '@/components/dashboard/DashboardGrid';
 import ProfileSetupView from '@/components/dashboard/ProfileSetupView';
-import AIAnalysisSection from '@/components/dashboard/AIAnalysisSection';
+
 
 const Dashboard = () => {
   const { user, signOut, loading } = useAuth();
@@ -96,9 +96,6 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto">
           <WelcomeSection user={user} />
           <ProfileSetupSection onStartProfileSetup={() => setShowProfileSetup(true)} />
-          <div className="my-8">
-            <AIAnalysisSection />
-          </div>
           <DashboardGrid />
 
           {/* Additional Info */}

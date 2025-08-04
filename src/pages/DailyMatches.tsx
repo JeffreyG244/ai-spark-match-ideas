@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Sparkles, RefreshCw, Heart } from 'lucide-react';
+import { ArrowLeft, Sparkles, RefreshCw, Heart, Shield, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useDailyMatches } from '@/hooks/useDailyMatches';
@@ -63,23 +63,46 @@ const DailyMatches = () => {
   }
 
   return (
-    <div className="min-h-screen bg-love-background">
-      <NavigationTabs />
-      <div className="container mx-auto p-6">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-love-primary to-love-secondary rounded-xl flex items-center justify-center">
-                <Heart className="h-6 w-6 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col">
+      {/* Header */}
+      <header className="bg-black/20 backdrop-blur-xl border-b border-purple-500/20">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Link to="/dashboard">
+                <button className="bg-slate-800/50 backdrop-blur-xl border border-slate-600/30 rounded-xl p-3 hover:bg-slate-700/50 transition-all">
+                  <ArrowLeft className="w-5 h-5 text-white" />
+                </button>
+              </Link>
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                <Sparkles className="w-7 h-7 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-love-text">Luvlang</h1>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Daily Picks</h1>
+                <p className="text-purple-300 text-sm">Curated executive matches</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 bg-green-500/20 backdrop-blur-xl border border-green-500/30 rounded-xl px-4 py-2">
+                <Shield className="w-5 h-5 text-green-400" />
+                <span className="text-green-400 text-sm font-medium">Executive Verified</span>
+              </div>
+              
+              <button 
+                onClick={signOut}
+                className="bg-slate-800/50 backdrop-blur-xl border border-slate-600/30 rounded-xl p-3 hover:bg-slate-700/50 transition-all"
+              >
+                <Settings className="w-5 h-5 text-white" />
+              </button>
             </div>
           </div>
-          <Button onClick={signOut} variant="outline">
-            Sign Out
-          </Button>
         </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 p-6">
+        <div className="max-w-7xl mx-auto">
 
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -199,7 +222,8 @@ const DailyMatches = () => {
             </div>
           </>
         )}
-      </div>
+        </div>
+      </main>
     </div>
   );
 };
