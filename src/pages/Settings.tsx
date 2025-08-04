@@ -128,7 +128,7 @@ const Settings = () => {
       title: 'Profile & Identity',
       description: 'Manage your executive profile and verification',
       icon: <User className="w-5 h-5" />,
-      color: 'from-blue-500 to-cyan-500',
+      color: 'from-purple-500 to-pink-500',
       items: [
         {
           id: 'edit-profile',
@@ -170,7 +170,7 @@ const Settings = () => {
       title: 'Notifications & Alerts',
       description: 'Customize your notification preferences',
       icon: <Bell className="w-5 h-5" />,
-      color: 'from-yellow-500 to-orange-500',
+      color: 'from-amber-500 to-yellow-500',
       badge: '3',
       items: [
         {
@@ -216,7 +216,7 @@ const Settings = () => {
       title: 'Discovery & Matching',
       description: 'Fine-tune your matching preferences',
       icon: <Heart className="w-5 h-5" />,
-      color: 'from-pink-500 to-rose-500',
+      color: 'from-pink-500 to-purple-500',
       items: [
         {
           id: 'executive-only',
@@ -252,7 +252,7 @@ const Settings = () => {
       title: 'Security & Privacy',
       description: 'Protect your account and data',
       icon: <Shield className="w-5 h-5" />,
-      color: 'from-green-500 to-emerald-500',
+      color: 'from-emerald-500 to-teal-500',
       items: [
         {
           id: 'change-password',
@@ -293,7 +293,7 @@ const Settings = () => {
       title: 'Billing & Subscription',
       description: 'Manage your membership and payments',
       icon: <CreditCard className="w-5 h-5" />,
-      color: 'from-purple-500 to-violet-500',
+      color: 'from-violet-500 to-purple-500',
       items: [
         {
           id: 'payment-method',
@@ -326,7 +326,7 @@ const Settings = () => {
       title: 'Help & Support',
       description: 'Get assistance and manage your account',
       icon: <HelpCircle className="w-5 h-5" />,
-      color: 'from-indigo-500 to-purple-500',
+      color: 'from-indigo-500 to-blue-500',
       items: [
         {
           id: 'help-center',
@@ -377,28 +377,34 @@ const Settings = () => {
 
   const renderSettingItem = (item: SettingItem) => {
     return (
-      <Card key={item.id} className="bg-slate-800/50 backdrop-blur-sm border-slate-700/50 hover:border-purple-500/30 transition-all duration-300 group cursor-pointer" onClick={item.action}>
-        <CardContent className="p-4">
+      <Card 
+        key={item.id} 
+        className="bg-gradient-to-br from-slate-800/80 to-slate-900/60 backdrop-blur-sm border-purple-500/30 hover:border-pink-400/60 transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-purple-500/25 hover:scale-[1.02] hover:-translate-y-1" 
+        onClick={item.action}
+      >
+        <CardContent className="p-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                {item.icon}
+            <div className="flex items-center gap-4 flex-1">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg">
+                <div className="text-white group-hover:text-purple-200 transition-colors">
+                  {item.icon}
+                </div>
               </div>
               <div className="flex-1">
-                <h4 className="font-medium text-white group-hover:text-purple-300 transition-colors">{item.title}</h4>
-                <p className="text-sm text-slate-400 mt-1">{item.description}</p>
+                <h4 className="font-semibold text-white group-hover:text-purple-200 transition-colors text-base">{item.title}</h4>
+                <p className="text-slate-300 group-hover:text-slate-200 mt-1 transition-colors">{item.description}</p>
               </div>
             </div>
             {item.type === 'switch' && (
               <Switch 
                 checked={item.value || false}
                 onCheckedChange={(checked) => item.action()}
-                className="ml-4"
+                className="ml-4 data-[state=checked]:bg-purple-500"
                 onClick={(e) => e.stopPropagation()}
               />
             )}
             {item.type === 'navigation' && (
-              <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-purple-400 transition-colors ml-4" />
+              <ExternalLink className="w-5 h-5 text-slate-400 group-hover:text-purple-400 transition-colors ml-4 group-hover:scale-110" />
             )}
           </div>
         </CardContent>
@@ -407,9 +413,9 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-purple-900/30 to-slate-800">
       {/* Modern Header */}
-      <header className="bg-black/40 backdrop-blur-xl border-b border-purple-500/20 sticky top-0 z-50">
+      <header className="bg-black/30 backdrop-blur-xl border-b border-purple-500/30 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -424,8 +430,8 @@ const Settings = () => {
               <Separator orientation="vertical" className="h-6 bg-purple-500/20" />
               <Logo size="sm" />
               <div className="hidden md:block">
-                <h1 className="text-xl font-bold text-white">Settings</h1>
-                <p className="text-purple-300 text-sm">Customize your executive experience</p>
+                <h1 className="text-xl font-bold text-white">Executive Command Center</h1>
+                <p className="text-purple-300 text-sm">Orchestrate your elite networking experience</p>
               </div>
             </div>
             
@@ -437,12 +443,12 @@ const Settings = () => {
                   placeholder="Search settings..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-64 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-400 focus:border-purple-500"
+                  className="pl-10 w-64 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-purple-400 focus:bg-slate-700/70"
                 />
               </div>
               
               {/* Premium Badge */}
-              <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-xl border border-yellow-500/30 rounded-xl px-3 py-2">
+              <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-500/30 to-orange-500/30 backdrop-blur-xl border border-yellow-500/40 rounded-xl px-4 py-2"  >
                 <Crown className="w-4 h-4 text-yellow-400" />
                 <span className="text-yellow-400 text-sm font-medium hidden sm:inline">C-Suite Premium</span>
               </div>
@@ -465,7 +471,7 @@ const Settings = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Sidebar Navigation */}
           <div className={`lg:col-span-3 ${isSidebarOpen ? 'block' : 'hidden lg:block'}`}>
-            <Card className="bg-slate-900/50 backdrop-blur-xl border-purple-500/20 sticky top-24">
+            <Card className="bg-slate-800/60 backdrop-blur-xl border-purple-500/30 sticky top-24 shadow-xl">
               <CardHeader className="pb-4">
                 <CardTitle className="text-white flex items-center gap-2">
                   <Palette className="w-5 h-5 text-purple-400" />
@@ -481,17 +487,17 @@ const Settings = () => {
                         setActiveCategory(category.id);
                         setIsSidebarOpen(false);
                       }}
-                      className={`w-full group relative overflow-hidden rounded-xl p-4 text-left transition-all duration-300 ${
+                      className={`w-full group relative overflow-hidden rounded-xl p-4 text-left transition-all duration-500 hover:scale-[1.02] hover:shadow-lg ${
                         activeCategory === category.id
-                          ? 'bg-gradient-to-r ' + category.color + ' text-white shadow-lg'
-                          : 'bg-slate-800/30 hover:bg-slate-800/50 text-slate-300 hover:text-white'
+                          ? 'bg-gradient-to-r ' + category.color + ' text-white shadow-xl shadow-purple-500/25 scale-[1.02]'
+                          : 'bg-slate-700/40 hover:bg-slate-700/60 text-slate-200 hover:text-white border border-slate-600/50 hover:border-purple-400/50'
                       }`}
                     >
                       <div className="relative z-10 flex items-center gap-3">
-                        <div className={`p-2 rounded-lg transition-all ${
+                        <div className={`p-2 rounded-lg transition-all duration-300 ${
                           activeCategory === category.id
-                            ? 'bg-white/20'
-                            : 'bg-gradient-to-r ' + category.color + ' opacity-80'
+                            ? 'bg-white/20 shadow-lg'
+                            : 'bg-gradient-to-r ' + category.color + ' opacity-90 group-hover:opacity-100 group-hover:scale-110'
                         }`}>
                           {category.icon}
                         </div>
@@ -508,7 +514,7 @@ const Settings = () => {
                         </div>
                       </div>
                       {activeCategory === category.id && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-20" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-30 animate-pulse" />
                       )}
                     </button>
                   ))}
@@ -531,23 +537,23 @@ const Settings = () => {
                 </div>
 
                 {/* Settings Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {activeSettings.items.map(renderSettingItem)}
                 </div>
 
                 {/* Additional Actions */}
-                <Card className="bg-gradient-to-r from-slate-800/50 to-slate-900/50 backdrop-blur-xl border-purple-500/20 mt-8">
+                <Card className="bg-gradient-to-r from-slate-700/60 to-slate-800/60 backdrop-blur-xl border-purple-500/30 mt-8 shadow-xl">
                   <CardContent className="p-6">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                       <div className="text-center sm:text-left">
-                        <h3 className="text-white font-semibold">Need help with settings?</h3>
-                        <p className="text-slate-400 text-sm mt-1">Our concierge team is here to assist you 24/7</p>
+                        <h3 className="text-white font-semibold">Executive Concierge Support</h3>
+                        <p className="text-slate-300 text-sm mt-1">White-glove assistance for our C-Suite members</p>
                       </div>
                       <div className="flex gap-3">
                         <Button 
                           variant="outline" 
                           onClick={() => window.open('mailto:concierge@luvlang.com', '_blank')}
-                          className="border-purple-500/30 text-purple-300 hover:bg-purple-500/10"
+                          className="border-purple-500/50 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400 transition-all duration-300 hover:scale-105"
                         >
                           <Mail className="w-4 h-4 mr-2" />
                           Contact Concierge
@@ -555,7 +561,7 @@ const Settings = () => {
                         <Button 
                           onClick={signOut}
                           variant="outline"
-                          className="border-red-500/30 text-red-300 hover:bg-red-500/10"
+                          className="border-red-500/50 text-red-300 hover:bg-red-500/20 hover:border-red-400 transition-all duration-300 hover:scale-105"
                         >
                           <LogOut className="w-4 h-4 mr-2" />
                           Sign Out
