@@ -84,7 +84,9 @@ export type Database = {
         Row: {
           base_score: number
           behavior_score: number | null
+          created_at: string | null
           embedding_similarity: number | null
+          generated_at: string | null
           id: string
           match_date: string | null
           matched_user_id: string
@@ -95,7 +97,9 @@ export type Database = {
         Insert: {
           base_score: number
           behavior_score?: number | null
+          created_at?: string | null
           embedding_similarity?: number | null
+          generated_at?: string | null
           id?: string
           match_date?: string | null
           matched_user_id: string
@@ -106,7 +110,9 @@ export type Database = {
         Update: {
           base_score?: number
           behavior_score?: number | null
+          created_at?: string | null
           embedding_similarity?: number | null
+          generated_at?: string | null
           id?: string
           match_date?: string | null
           matched_user_id?: string
@@ -671,6 +677,48 @@ export type Database = {
         }
         Relationships: []
       }
+      event_attendees: {
+        Row: {
+          attended_at: string | null
+          event_id: string | null
+          id: string
+          registered_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          attended_at?: string | null
+          event_id?: string | null
+          id?: string
+          registered_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          attended_at?: string | null
+          event_id?: string | null
+          id?: string
+          registered_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_attendees_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "networking_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_attendees_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_preferences: {
         Row: {
           age_range: unknown
@@ -751,6 +799,91 @@ export type Database = {
           uuid_id?: string | null
         }
         Relationships: []
+      }
+      meeting_requests: {
+        Row: {
+          confirmed_date: string | null
+          confirmed_location: string | null
+          confirmed_time: string | null
+          created_at: string | null
+          id: string
+          location_type: string | null
+          match_id: string | null
+          meeting_type: string | null
+          message: string | null
+          proposed_date: string | null
+          proposed_time: string | null
+          recipient_id: string | null
+          requester_id: string | null
+          responded_at: string | null
+          response_message: string | null
+          status: string | null
+          updated_at: string | null
+          venue_suggestion: string | null
+        }
+        Insert: {
+          confirmed_date?: string | null
+          confirmed_location?: string | null
+          confirmed_time?: string | null
+          created_at?: string | null
+          id?: string
+          location_type?: string | null
+          match_id?: string | null
+          meeting_type?: string | null
+          message?: string | null
+          proposed_date?: string | null
+          proposed_time?: string | null
+          recipient_id?: string | null
+          requester_id?: string | null
+          responded_at?: string | null
+          response_message?: string | null
+          status?: string | null
+          updated_at?: string | null
+          venue_suggestion?: string | null
+        }
+        Update: {
+          confirmed_date?: string | null
+          confirmed_location?: string | null
+          confirmed_time?: string | null
+          created_at?: string | null
+          id?: string
+          location_type?: string | null
+          match_id?: string | null
+          meeting_type?: string | null
+          message?: string | null
+          proposed_date?: string | null
+          proposed_time?: string | null
+          recipient_id?: string | null
+          requester_id?: string | null
+          responded_at?: string | null
+          response_message?: string | null
+          status?: string | null
+          updated_at?: string | null
+          venue_suggestion?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_requests_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "ai_enhanced_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_requests_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_requests_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       membership_plans: {
         Row: {
@@ -930,6 +1063,62 @@ export type Database = {
         }
         Relationships: []
       }
+      networking_events: {
+        Row: {
+          cost: number | null
+          created_at: string | null
+          date: string
+          description: string | null
+          end_time: string | null
+          event_name: string
+          event_type: string | null
+          id: string
+          industry: string | null
+          location: string | null
+          max_attendees: number | null
+          organizer_id: string | null
+          start_time: string | null
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string | null
+          date: string
+          description?: string | null
+          end_time?: string | null
+          event_name: string
+          event_type?: string | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          max_attendees?: number | null
+          organizer_id?: string | null
+          start_time?: string | null
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          end_time?: string | null
+          event_name?: string
+          event_type?: string | null
+          id?: string
+          industry?: string | null
+          location?: string | null
+          max_attendees?: number | null
+          organizer_id?: string | null
+          start_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "networking_events_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       old_profiles: {
         Row: {
           created_at: string | null
@@ -1107,6 +1296,265 @@ export type Database = {
         }
         Relationships: []
       }
+      professional_compatibility: {
+        Row: {
+          calculated_at: string | null
+          career_level_compatibility: number | null
+          common_professional_interests: string[] | null
+          company_connection: boolean | null
+          id: string
+          industry_compatibility: number | null
+          industry_overlap: boolean | null
+          match_id: string | null
+          mentorship_potential: string | null
+          networking_opportunities: string[] | null
+          networking_potential: number | null
+          professional_goals_alignment: number | null
+          schedule_compatibility: number | null
+          user1_id: string | null
+          user2_id: string | null
+          work_life_balance_match: number | null
+        }
+        Insert: {
+          calculated_at?: string | null
+          career_level_compatibility?: number | null
+          common_professional_interests?: string[] | null
+          company_connection?: boolean | null
+          id?: string
+          industry_compatibility?: number | null
+          industry_overlap?: boolean | null
+          match_id?: string | null
+          mentorship_potential?: string | null
+          networking_opportunities?: string[] | null
+          networking_potential?: number | null
+          professional_goals_alignment?: number | null
+          schedule_compatibility?: number | null
+          user1_id?: string | null
+          user2_id?: string | null
+          work_life_balance_match?: number | null
+        }
+        Update: {
+          calculated_at?: string | null
+          career_level_compatibility?: number | null
+          common_professional_interests?: string[] | null
+          company_connection?: boolean | null
+          id?: string
+          industry_compatibility?: number | null
+          industry_overlap?: boolean | null
+          match_id?: string | null
+          mentorship_potential?: string | null
+          networking_opportunities?: string[] | null
+          networking_potential?: number | null
+          professional_goals_alignment?: number | null
+          schedule_compatibility?: number | null
+          user1_id?: string | null
+          user2_id?: string | null
+          work_life_balance_match?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_compatibility_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "ai_enhanced_matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_compatibility_user1_id_fkey"
+            columns: ["user1_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "professional_compatibility_user2_id_fkey"
+            columns: ["user2_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_preferences: {
+        Row: {
+          avoid_industries: string[] | null
+          competitor_company_ok: boolean | null
+          id: string
+          looking_for_networking: boolean | null
+          looking_for_romance: boolean | null
+          max_travel_distance: number | null
+          mentorship_offering: boolean | null
+          mentorship_seeking: boolean | null
+          open_to_business_partnerships: boolean | null
+          preferred_career_levels: string[] | null
+          preferred_industries: string[] | null
+          preferred_meeting_times: string[] | null
+          preferred_meeting_types: string[] | null
+          same_company_ok: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avoid_industries?: string[] | null
+          competitor_company_ok?: boolean | null
+          id?: string
+          looking_for_networking?: boolean | null
+          looking_for_romance?: boolean | null
+          max_travel_distance?: number | null
+          mentorship_offering?: boolean | null
+          mentorship_seeking?: boolean | null
+          open_to_business_partnerships?: boolean | null
+          preferred_career_levels?: string[] | null
+          preferred_industries?: string[] | null
+          preferred_meeting_times?: string[] | null
+          preferred_meeting_types?: string[] | null
+          same_company_ok?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avoid_industries?: string[] | null
+          competitor_company_ok?: boolean | null
+          id?: string
+          looking_for_networking?: boolean | null
+          looking_for_romance?: boolean | null
+          max_travel_distance?: number | null
+          mentorship_offering?: boolean | null
+          mentorship_seeking?: boolean | null
+          open_to_business_partnerships?: boolean | null
+          preferred_career_levels?: string[] | null
+          preferred_industries?: string[] | null
+          preferred_meeting_times?: string[] | null
+          preferred_meeting_types?: string[] | null
+          same_company_ok?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_profiles: {
+        Row: {
+          after_hours_available: boolean | null
+          ambition_level: number | null
+          career_goals: string | null
+          career_level: string | null
+          created_at: string | null
+          id: string
+          lunch_break_available: boolean | null
+          management_role: boolean | null
+          mentorship_interest: string | null
+          networking_goals: string[] | null
+          professional_interests: string[] | null
+          remote_work_preference: string | null
+          team_size: number | null
+          travel_frequency: string | null
+          typical_work_hours: string | null
+          updated_at: string | null
+          user_id: string | null
+          work_life_balance_importance: number | null
+          years_experience: number | null
+        }
+        Insert: {
+          after_hours_available?: boolean | null
+          ambition_level?: number | null
+          career_goals?: string | null
+          career_level?: string | null
+          created_at?: string | null
+          id?: string
+          lunch_break_available?: boolean | null
+          management_role?: boolean | null
+          mentorship_interest?: string | null
+          networking_goals?: string[] | null
+          professional_interests?: string[] | null
+          remote_work_preference?: string | null
+          team_size?: number | null
+          travel_frequency?: string | null
+          typical_work_hours?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          work_life_balance_importance?: number | null
+          years_experience?: number | null
+        }
+        Update: {
+          after_hours_available?: boolean | null
+          ambition_level?: number | null
+          career_goals?: string | null
+          career_level?: string | null
+          created_at?: string | null
+          id?: string
+          lunch_break_available?: boolean | null
+          management_role?: boolean | null
+          mentorship_interest?: string | null
+          networking_goals?: string[] | null
+          professional_interests?: string[] | null
+          remote_work_preference?: string | null
+          team_size?: number | null
+          travel_frequency?: string | null
+          typical_work_hours?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          work_life_balance_importance?: number | null
+          years_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      professional_verifications: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          status: string | null
+          user_id: string | null
+          verification_data: Json | null
+          verification_type: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          status?: string | null
+          user_id?: string | null
+          verification_data?: Json | null
+          verification_type: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          status?: string | null
+          user_id?: string | null
+          verification_data?: Json | null
+          verification_type?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "professional_verifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_badges: {
         Row: {
           badge_type: string
@@ -1196,6 +1644,54 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      quick_actions: {
+        Row: {
+          action_data: Json | null
+          action_type: string
+          created_at: string | null
+          follow_up_at: string | null
+          follow_up_completed: boolean | null
+          id: string
+          target_user_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action_data?: Json | null
+          action_type: string
+          created_at?: string | null
+          follow_up_at?: string | null
+          follow_up_completed?: boolean | null
+          id?: string
+          target_user_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action_data?: Json | null
+          action_type?: string
+          created_at?: string | null
+          follow_up_at?: string | null
+          follow_up_completed?: boolean | null
+          id?: string
+          target_user_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quick_actions_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quick_actions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rate_limit_blocks: {
         Row: {
@@ -1713,6 +2209,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_matches: {
+        Row: {
+          created_at: string | null
+          feedback: string | null
+          id: number
+          match_score: number | null
+          matched_profile_id: string | null
+          thumbs_up: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          feedback?: string | null
+          id?: number
+          match_score?: number | null
+          matched_profile_id?: string | null
+          thumbs_up?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          feedback?: string | null
+          id?: number
+          match_score?: number | null
+          matched_profile_id?: string | null
+          thumbs_up?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_presence: {
         Row: {
           is_online: boolean
@@ -1889,37 +2418,82 @@ export type Database = {
       }
       users: {
         Row: {
+          after_work_dates: boolean | null
           age: number | null
+          company: string | null
+          company_email: string | null
           created_at: string | null
+          education_level: string | null
           email: string | null
           gender: Database["public"]["Enums"]["gender_type"] | null
           id: string
+          industry: string | null
+          is_professional_verified: boolean | null
+          job_title: string | null
+          linkedin_url: string | null
+          lunch_meetings: boolean | null
           name: string
+          networking_events: boolean | null
           photo_url: string | null
           preferences: Json
+          salary_range: string | null
+          university: string | null
           user_id: string
+          weekend_availability: boolean | null
+          work_location: string | null
+          work_schedule: string | null
         }
         Insert: {
+          after_work_dates?: boolean | null
           age?: number | null
+          company?: string | null
+          company_email?: string | null
           created_at?: string | null
+          education_level?: string | null
           email?: string | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
+          industry?: string | null
+          is_professional_verified?: boolean | null
+          job_title?: string | null
+          linkedin_url?: string | null
+          lunch_meetings?: boolean | null
           name: string
+          networking_events?: boolean | null
           photo_url?: string | null
           preferences?: Json
+          salary_range?: string | null
+          university?: string | null
           user_id: string
+          weekend_availability?: boolean | null
+          work_location?: string | null
+          work_schedule?: string | null
         }
         Update: {
+          after_work_dates?: boolean | null
           age?: number | null
+          company?: string | null
+          company_email?: string | null
           created_at?: string | null
+          education_level?: string | null
           email?: string | null
           gender?: Database["public"]["Enums"]["gender_type"] | null
           id?: string
+          industry?: string | null
+          is_professional_verified?: boolean | null
+          job_title?: string | null
+          linkedin_url?: string | null
+          lunch_meetings?: boolean | null
           name?: string
+          networking_events?: boolean | null
           photo_url?: string | null
           preferences?: Json
+          salary_range?: string | null
+          university?: string | null
           user_id?: string
+          weekend_availability?: boolean | null
+          work_location?: string | null
+          work_schedule?: string | null
         }
         Relationships: []
       }
@@ -1997,6 +2571,32 @@ export type Database = {
           seeking_gender?: string | null
           state?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      enhanced_active_users: {
+        Row: {
+          after_work_dates: boolean | null
+          age: number | null
+          career_level: string | null
+          city: string | null
+          company: string | null
+          country: string | null
+          gender: string | null
+          industry: string | null
+          interests: string[] | null
+          job_title: string | null
+          latitude: number | null
+          longitude: number | null
+          lunch_break_available: boolean | null
+          lunch_meetings: boolean | null
+          networking_events: boolean | null
+          seeking_gender: string | null
+          state: string | null
+          user_id: string | null
+          work_life_balance_importance: number | null
+          work_schedule: string | null
+          years_experience: number | null
         }
         Relationships: []
       }
