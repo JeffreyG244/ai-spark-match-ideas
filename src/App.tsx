@@ -14,6 +14,7 @@ const Discover = lazy(() => import("./pages/Discover"));
 const Matches = lazy(() => import("./pages/Matches"));
 const ProfessionalMatches = lazy(() => import("./pages/ProfessionalMatches"));
 const ProfessionalProfile = lazy(() => import("./pages/ProfessionalProfile"));
+const ProfessionalInterests = lazy(() => import("./pages/ProfessionalInterests"));
 const DailyMatches = lazy(() => import("./pages/DailyMatches"));
 const Messages = lazy(() => import("./pages/Messages"));
 const Membership = lazy(() => import("./pages/Membership"));
@@ -87,6 +88,7 @@ function App() {
                     <Route path="/matches" element={<Matches />} />
                     <Route path="/professional-matches" element={<ProfessionalMatches />} />
                     <Route path="/professional-profile" element={<ProfessionalProfile />} />
+                    <Route path="/professional-interests" element={<ProfessionalInterests />} />
                     <Route path="/daily-matches" element={<DailyMatches />} />
                     <Route path="/messages" element={<Messages />} />
                     <Route path="/membership" element={<Membership />} />
