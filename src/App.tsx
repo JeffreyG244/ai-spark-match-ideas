@@ -64,6 +64,7 @@ const queryClient = new QueryClient();
 import { EnhancedSecurityProvider } from '@/components/profile/EnhancedSecurityProvider';
 import SecureSessionManager from '@/components/security/SecureSessionManager';
 import { AlertProvider } from '@/components/providers/AlertProvider';
+import AuthGuard from '@/components/auth/AuthGuard';
 
 function App() {
   return (
@@ -80,20 +81,20 @@ function App() {
                       <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
                     </div>
                   }>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/discover" element={<Discover />} />
-                    <Route path="/matches" element={<Matches />} />
-                    <Route path="/professional-matches" element={<ProfessionalMatches />} />
-                    <Route path="/professional-profile" element={<ProfessionalProfile />} />
-                    <Route path="/professional-interests" element={<ProfessionalInterests />} />
-                    <Route path="/daily-matches" element={<DailyMatches />} />
-                    <Route path="/messages" element={<Messages />} />
-                    <Route path="/membership" element={<Membership />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/settings" element={<Settings />} />
+                   <Routes>
+                     <Route path="/" element={<AuthGuard requireAuth={false}><Index /></AuthGuard>} />
+                     <Route path="/auth" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
+                     <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
+                     <Route path="/discover" element={<AuthGuard><Discover /></AuthGuard>} />
+                     <Route path="/matches" element={<AuthGuard><Matches /></AuthGuard>} />
+                     <Route path="/professional-matches" element={<AuthGuard><ProfessionalMatches /></AuthGuard>} />
+                     <Route path="/professional-profile" element={<AuthGuard><ProfessionalProfile /></AuthGuard>} />
+                     <Route path="/professional-interests" element={<AuthGuard><ProfessionalInterests /></AuthGuard>} />
+                     <Route path="/daily-matches" element={<AuthGuard><DailyMatches /></AuthGuard>} />
+                     <Route path="/messages" element={<AuthGuard><Messages /></AuthGuard>} />
+                     <Route path="/membership" element={<AuthGuard><Membership /></AuthGuard>} />
+                     <Route path="/checkout" element={<AuthGuard><Checkout /></AuthGuard>} />
+                     <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
                     <Route path="/legal" element={<Legal />} />
                     <Route path="/how-it-works" element={<HowItWorks />} />
                     <Route path="/seed-users" element={<SeedUsers />} />
