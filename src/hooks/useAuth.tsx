@@ -45,11 +45,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       console.log('Attempting sign in for:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-        options: {
-          captchaToken: undefined // Explicitly disable captcha for now
-        }
+        email: email.trim().toLowerCase(),
+        password
       });
 
       console.log('Sign in response:', { data, error });

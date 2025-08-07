@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       ai_icebreakers: {
         Row: {
+          category: string | null
           confidence_score: number | null
           created_at: string | null
           effectiveness_rating: number | null
@@ -24,9 +25,12 @@ export type Database = {
           icebreaker_type: string | null
           id: string
           match_id: string | null
+          match_score: number | null
+          priority: number | null
           used_by_user: string | null
         }
         Insert: {
+          category?: string | null
           confidence_score?: number | null
           created_at?: string | null
           effectiveness_rating?: number | null
@@ -35,9 +39,12 @@ export type Database = {
           icebreaker_type?: string | null
           id?: string
           match_id?: string | null
+          match_score?: number | null
+          priority?: number | null
           used_by_user?: string | null
         }
         Update: {
+          category?: string | null
           confidence_score?: number | null
           created_at?: string | null
           effectiveness_rating?: number | null
@@ -46,6 +53,8 @@ export type Database = {
           icebreaker_type?: string | null
           id?: string
           match_id?: string | null
+          match_score?: number | null
+          priority?: number | null
           used_by_user?: string | null
         }
         Relationships: [
@@ -217,13 +226,19 @@ export type Database = {
           action: string | null
           action_at: string | null
           ai_confidence: number | null
+          common_interests: string[] | null
+          compatibility_score: number | null
           date: string | null
           id: string
+          match_date: string | null
+          match_factors: Json | null
+          match_type: string | null
           networking_opportunity: boolean | null
           professional_highlight: string | null
           recommendation_reasons: string[] | null
           recommendation_score: number
           recommended_user_id: string | null
+          status: string | null
           trending_reason: string | null
           user_id: string | null
         }
@@ -231,13 +246,19 @@ export type Database = {
           action?: string | null
           action_at?: string | null
           ai_confidence?: number | null
+          common_interests?: string[] | null
+          compatibility_score?: number | null
           date?: string | null
           id?: string
+          match_date?: string | null
+          match_factors?: Json | null
+          match_type?: string | null
           networking_opportunity?: boolean | null
           professional_highlight?: string | null
           recommendation_reasons?: string[] | null
           recommendation_score: number
           recommended_user_id?: string | null
+          status?: string | null
           trending_reason?: string | null
           user_id?: string | null
         }
@@ -245,13 +266,19 @@ export type Database = {
           action?: string | null
           action_at?: string | null
           ai_confidence?: number | null
+          common_interests?: string[] | null
+          compatibility_score?: number | null
           date?: string | null
           id?: string
+          match_date?: string | null
+          match_factors?: Json | null
+          match_type?: string | null
           networking_opportunity?: boolean | null
           professional_highlight?: string | null
           recommendation_reasons?: string[] | null
           recommendation_score?: number
           recommended_user_id?: string | null
+          status?: string | null
           trending_reason?: string | null
           user_id?: string | null
         }
@@ -780,6 +807,21 @@ export type Database = {
           proj4text?: string | null
           srid?: number
           srtext?: string | null
+        }
+        Relationships: []
+      }
+      test: {
+        Row: {
+          id: number
+          name: string | null
+        }
+        Insert: {
+          id?: number
+          name?: string | null
+        }
+        Update: {
+          id?: number
+          name?: string | null
         }
         Relationships: []
       }
