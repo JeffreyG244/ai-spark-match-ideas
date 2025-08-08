@@ -76,7 +76,7 @@ const N8NConfiguration = () => {
             <Input
               id="webhook-url"
               type="url"
-              placeholder="https://your-n8n-instance.com/webhook/your-webhook-id"
+              placeholder="http://localhost:5678/webhook-test/luvlang-match"
               value={webhookUrl}
               onChange={(e) => setWebhookUrl(e.target.value)}
             />

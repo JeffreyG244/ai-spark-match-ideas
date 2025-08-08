@@ -65,16 +65,18 @@ import { EnhancedSecurityProvider } from '@/components/profile/EnhancedSecurityP
 import SecureSessionManager from '@/components/security/SecureSessionManager';
 import { AlertProvider } from '@/components/providers/AlertProvider';
 import AuthGuard from '@/components/auth/AuthGuard';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <SecureSessionManager />
-          <EnhancedSecurityProvider>
-            <AlertProvider>
-              <Router>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AuthProvider>
+            <SecureSessionManager />
+            <EnhancedSecurityProvider>
+              <AlertProvider>
+                <Router>
                 <div className="min-h-screen bg-gradient-to-br from-background to-muted">
                   <Suspense fallback={
                     <div className="min-h-screen flex items-center justify-center">
@@ -135,12 +137,13 @@ function App() {
                   <Toaster />
                   <Sonner />
                 </div>
-              </Router>
-            </AlertProvider>
-          </EnhancedSecurityProvider>
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+                </Router>
+              </AlertProvider>
+            </EnhancedSecurityProvider>
+          </AuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
