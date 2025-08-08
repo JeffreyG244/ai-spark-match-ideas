@@ -54,8 +54,6 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
           return;
         }
 
-        setCitiesStatesData(data || []);
-
         // Remove duplicates
         const uniqueStates = data.reduce((acc: StateOption[], current) => {
           if (!acc.find(state => state.state_code === current.state_code)) {
@@ -119,26 +117,14 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     if (onZipcodeChange) {
       onZipcodeChange(zipcode);
       
-      // Auto-populate city and state if zipcode matches
+      // Auto-populate city and state if zipcode matches (simplified for now)
       if (zipcode.length === 5) {
-        const matchingCity = cities.find(city => 
-          cities_states_data.some(cs => 
-            cs.city === city.city && cs.zipcode === zipcode
-          )
-        );
-        if (matchingCity) {
-          const stateData = cities_states_data.find(cs => cs.city === matchingCity.city);
-          if (stateData) {
-            onStateChange(stateData.state);
-            onCityChange(matchingCity.city);
-          }
-        }
+        // This would typically connect to a zipcode lookup service
+        console.log('Zipcode entered:', zipcode);
       }
     }
   };
 
-  // Store cities_states data for zipcode lookup
-  const [cities_states_data, setCitiesStatesData] = useState<any[]>([]);
 
   return (
     <div className={`grid grid-cols-1 ${showZipcode ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
