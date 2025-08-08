@@ -23,6 +23,7 @@ const Settings = lazy(() => import("./pages/Settings"));
 const Legal = lazy(() => import("./pages/Legal"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const ExecutiveLuvlang = lazy(() => import("./pages/ExecutiveLuvlang"));
+const ExecutiveProfile = lazy(() => import("./pages/ExecutiveProfile"));
 // Load other components normally (admin pages, etc.)
 import PreLaunchAudit from "./pages/PreLaunchAudit";
 import SeedUsers from "./pages/SeedUsers";
@@ -112,8 +113,9 @@ function App() {
                     <Route path="/test-integration" element={<TestIntegration />} />
                     <Route path="/test-setup" element={<TestSetup />} />
                     <Route path="/n8n-testing" element={<N8NTesting />} />
-                    <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
-                    <Route path="/executive-luvlang" element={<ExecutiveLuvlang />} />
+                     <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
+                     <Route path="/executive-luvlang" element={<ExecutiveLuvlang />} />
+                     <Route path="/executive-profile" element={<AuthGuard><ExecutiveProfile /></AuthGuard>} />
                     <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="/legal/terms-of-service" element={<TermsOfService />} />
                     <Route path="/legal/community-guidelines" element={<CommunityGuidelines />} />
