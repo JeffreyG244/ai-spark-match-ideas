@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { X, ChevronLeft, ChevronRight, Camera, Upload } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/components/ui/use-toast';
 
 interface FormData {
   // Section 1: Executive Profile
@@ -66,6 +69,63 @@ const ExecutiveProfileForm = () => {
     loveLanguages: [], conflictResolutionStyle: '', communicationStyle: [], weekendActivities: [], culturalInterests: [],
     intellectualPursuits: [], vacationStyle: [], photos: [], voiceIntroduction: ''
   });
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+  const N8N_WEBHOOK_URL = 'http://localhost:5678/webhook-test/luvlang-match';
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from('executive_dating_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (error) {
+        console.error('Error loading executive profile:', error);
+        return;
+      }
+      if (data) {
+        setFormData(prev => ({
+          ...prev,
+          firstName: data.first_name ?? '',
+          lastName: data.last_name ?? '',
+          age: data.age ? String(data.age) : '',
+          pronouns: data.pronouns ?? '',
+          executiveTitle: data.executive_title ?? '',
+          industry: data.industry ?? '',
+          successLevel: data.success_level ?? '',
+          primaryLocation: data.primary_location ?? '',
+          lifestyleLevel: data.lifestyle_level ?? '',
+          sexualOrientation: data.sexual_orientation ?? [],
+          relationshipStyle: data.relationship_style ?? '',
+          interestedInMeeting: data.interested_in_meeting ?? [],
+          dealBreakers: data.deal_breakers ?? [],
+          ageRangeMin: data.age_range_min ? String(data.age_range_min) : '',
+          ageRangeMax: data.age_range_max ? String(data.age_range_max) : '',
+          distancePreference: data.distance_preference ? String(data.distance_preference) : '',
+          politicalViews: data.political_views ?? '',
+          religiousViews: data.religious_views ?? '',
+          familyPlans: data.family_plans ?? '',
+          livingArrangement: data.living_arrangement ?? '',
+          coreValues: data.core_values ?? [],
+          languagesSpoken: data.languages_spoken ?? [],
+          myersBriggsType: data.myers_briggs_type ?? '',
+          attachmentStyle: data.attachment_style ?? '',
+          loveLanguages: data.love_languages ?? [],
+          conflictResolutionStyle: data.conflict_resolution_style ?? '',
+          communicationStyle: data.communication_style ?? [],
+          weekendActivities: data.weekend_activities ?? [],
+          culturalInterests: data.cultural_interests ?? [],
+          intellectualPursuits: data.intellectual_pursuits ?? [],
+          vacationStyle: data.vacation_style ?? [],
+          photos: data.photos ?? [],
+          voiceIntroduction: data.voice_introduction ?? '',
+        }));
+      }
+    })();
+  }, [user]);
 
   const sections = [
     'Executive Profile',
@@ -106,9 +166,76 @@ const ExecutiveProfileForm = () => {
     return (filledFields / totalFields) * 100;
   };
 
-  const handleComplete = () => {
-    console.log('Executive Profile Data:', JSON.stringify(formData, null, 2));
-    // Here you would typically send to N8N webhook
+const handleComplete = async () => {
+    if (!user) {
+      toast({ title: 'Sign in required', description: 'Please sign in to save your profile.', variant: 'destructive' });
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const payload = {
+        user_id: user.id,
+        first_name: formData.firstName || null,
+        last_name: formData.lastName || null,
+        age: formData.age ? Number(formData.age) : null,
+        pronouns: formData.pronouns || null,
+        executive_title: formData.executiveTitle || null,
+        industry: formData.industry || null,
+        success_level: formData.successLevel || null,
+        primary_location: formData.primaryLocation || null,
+        lifestyle_level: formData.lifestyleLevel || null,
+        sexual_orientation: formData.sexualOrientation,
+        relationship_style: formData.relationshipStyle || null,
+        interested_in_meeting: formData.interestedInMeeting,
+        deal_breakers: formData.dealBreakers,
+        age_range_min: formData.ageRangeMin ? Number(formData.ageRangeMin) : null,
+        age_range_max: formData.ageRangeMax ? Number(formData.ageRangeMax) : null,
+        distance_preference: formData.distancePreference ? Number(formData.distancePreference) : null,
+        political_views: formData.politicalViews || null,
+        religious_views: formData.religiousViews || null,
+        family_plans: formData.familyPlans || null,
+        living_arrangement: formData.livingArrangement || null,
+        core_values: formData.coreValues,
+        languages_spoken: formData.languagesSpoken,
+        myers_briggs_type: formData.myersBriggsType || null,
+        attachment_style: formData.attachmentStyle || null,
+        love_languages: formData.loveLanguages,
+        conflict_resolution_style: formData.conflictResolutionStyle || null,
+        communication_style: formData.communicationStyle,
+        weekend_activities: formData.weekendActivities,
+        cultural_interests: formData.culturalInterests,
+        intellectual_pursuits: formData.intellectualPursuits,
+        vacation_style: formData.vacationStyle,
+        photos: formData.photos,
+        voice_introduction: formData.voiceIntroduction || null,
+        completed: true,
+      };
+
+      const { error } = await supabase
+        .from('executive_dating_profiles')
+        .upsert(payload, { onConflict: 'user_id' });
+      if (error) throw error;
+
+      console.log('Executive Profile Data:', JSON.stringify({ userId: user.id, ...payload }, null, 2));
+
+      // Send to N8N webhook (best-effort)
+      try {
+        await fetch(N8N_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: user.id, profile: payload, sent_at: new Date().toISOString() })
+        });
+      } catch (e) {
+        console.warn('N8N webhook call failed (non-blocking):', e);
+      }
+
+      toast({ title: 'Profile saved', description: 'Your executive profile was saved successfully.' });
+    } catch (e: any) {
+      console.error('Error saving profile:', e);
+      toast({ title: 'Save failed', description: e?.message || 'Unable to save your profile.', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const renderMultiSelectBadges = (field: keyof FormData, options: string[], limit?: number) => (
@@ -666,9 +793,10 @@ const ExecutiveProfileForm = () => {
           {currentSection === sections.length ? (
             <Button
               onClick={handleComplete}
+              disabled={isSaving}
               className="bg-purple-600 hover:bg-purple-700 text-white"
             >
-              Complete Profile
+              {isSaving ? 'Saving…' : 'Complete Profile'}
             </Button>
           ) : (
             <Button

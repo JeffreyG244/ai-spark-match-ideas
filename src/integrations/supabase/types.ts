@@ -344,6 +344,129 @@ export type Database = {
           },
         ]
       }
+      executive_dating_profiles: {
+        Row: {
+          age: number | null
+          age_range_max: number | null
+          age_range_min: number | null
+          attachment_style: string | null
+          communication_style: string[] | null
+          completed: boolean | null
+          conflict_resolution_style: string | null
+          core_values: string[] | null
+          created_at: string
+          cultural_interests: string[] | null
+          deal_breakers: string[] | null
+          distance_preference: number | null
+          executive_title: string | null
+          family_plans: string | null
+          first_name: string | null
+          id: string
+          industry: string | null
+          intellectual_pursuits: string[] | null
+          interested_in_meeting: string[] | null
+          languages_spoken: string[] | null
+          last_name: string | null
+          lifestyle_level: string | null
+          living_arrangement: string | null
+          love_languages: string[] | null
+          myers_briggs_type: string | null
+          photos: string[] | null
+          political_views: string | null
+          primary_location: string | null
+          pronouns: string | null
+          relationship_style: string | null
+          religious_views: string | null
+          sexual_orientation: string[] | null
+          success_level: string | null
+          updated_at: string
+          user_id: string
+          vacation_style: string[] | null
+          voice_introduction: string | null
+          weekend_activities: string[] | null
+        }
+        Insert: {
+          age?: number | null
+          age_range_max?: number | null
+          age_range_min?: number | null
+          attachment_style?: string | null
+          communication_style?: string[] | null
+          completed?: boolean | null
+          conflict_resolution_style?: string | null
+          core_values?: string[] | null
+          created_at?: string
+          cultural_interests?: string[] | null
+          deal_breakers?: string[] | null
+          distance_preference?: number | null
+          executive_title?: string | null
+          family_plans?: string | null
+          first_name?: string | null
+          id?: string
+          industry?: string | null
+          intellectual_pursuits?: string[] | null
+          interested_in_meeting?: string[] | null
+          languages_spoken?: string[] | null
+          last_name?: string | null
+          lifestyle_level?: string | null
+          living_arrangement?: string | null
+          love_languages?: string[] | null
+          myers_briggs_type?: string | null
+          photos?: string[] | null
+          political_views?: string | null
+          primary_location?: string | null
+          pronouns?: string | null
+          relationship_style?: string | null
+          religious_views?: string | null
+          sexual_orientation?: string[] | null
+          success_level?: string | null
+          updated_at?: string
+          user_id: string
+          vacation_style?: string[] | null
+          voice_introduction?: string | null
+          weekend_activities?: string[] | null
+        }
+        Update: {
+          age?: number | null
+          age_range_max?: number | null
+          age_range_min?: number | null
+          attachment_style?: string | null
+          communication_style?: string[] | null
+          completed?: boolean | null
+          conflict_resolution_style?: string | null
+          core_values?: string[] | null
+          created_at?: string
+          cultural_interests?: string[] | null
+          deal_breakers?: string[] | null
+          distance_preference?: number | null
+          executive_title?: string | null
+          family_plans?: string | null
+          first_name?: string | null
+          id?: string
+          industry?: string | null
+          intellectual_pursuits?: string[] | null
+          interested_in_meeting?: string[] | null
+          languages_spoken?: string[] | null
+          last_name?: string | null
+          lifestyle_level?: string | null
+          living_arrangement?: string | null
+          love_languages?: string[] | null
+          myers_briggs_type?: string | null
+          photos?: string[] | null
+          political_views?: string | null
+          primary_location?: string | null
+          pronouns?: string | null
+          relationship_style?: string | null
+          religious_views?: string | null
+          sexual_orientation?: string[] | null
+          success_level?: string | null
+          updated_at?: string
+          user_id?: string
+          vacation_style?: string[] | null
+          voice_introduction?: string | null
+          weekend_activities?: string[] | null
+        }
+        Relationships: []
+      }
       executive_matches: {
         Row: {
           best_conversation_starters: string[] | null
@@ -436,6 +559,65 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interest_categories: {
+        Row: {
+          color_gradient: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: number
+          name: string
+        }
+        Insert: {
+          color_gradient?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: number
+          name: string
+        }
+        Update: {
+          color_gradient?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
+      interests: {
+        Row: {
+          category_id: number | null
+          created_at: string | null
+          id: number
+          is_premium: boolean | null
+          name: string
+        }
+        Insert: {
+          category_id?: number | null
+          created_at?: string | null
+          id?: number
+          is_premium?: boolean | null
+          name: string
+        }
+        Update: {
+          category_id?: number | null
+          created_at?: string | null
+          id?: number
+          is_premium?: boolean | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interests_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "interest_categories"
             referencedColumns: ["id"]
           },
         ]
@@ -896,6 +1078,35 @@ export type Database = {
           },
         ]
       }
+      user_interests: {
+        Row: {
+          id: number
+          interest_id: number | null
+          selected_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: number
+          interest_id?: number | null
+          selected_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: number
+          interest_id?: number | null
+          selected_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_interests_interest_id_fkey"
+            columns: ["interest_id"]
+            isOneToOne: false
+            referencedRelation: "interests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_subscriptions: {
         Row: {
           created_at: string | null
@@ -1293,6 +1504,26 @@ export type Database = {
         }
         Relationships: []
       }
+      user_interests_view: {
+        Row: {
+          category_name: string | null
+          color_gradient: string | null
+          interest_id: number | null
+          interest_name: string | null
+          is_premium: boolean | null
+          selected_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_interests_interest_id_fkey"
+            columns: ["interest_id"]
+            isOneToOne: false
+            referencedRelation: "interests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       _postgis_deprecate: {
@@ -1447,10 +1678,6 @@ export type Database = {
       analyze_and_match: {
         Args: Record<PropertyKey, never> | { user_id: string }
         Returns: Json
-      }
-      binary_quantize: {
-        Args: { "": string } | { "": unknown }
-        Returns: unknown
       }
       box: {
         Args: { "": unknown } | { "": unknown }
@@ -1864,12 +2091,11 @@ export type Database = {
         }[]
       }
       get_profile_by_user_id: {
-        Args: { user_id: number } | { user_id_input: unknown }
-        Returns: {
-          id: string
-          username: string
-          avatar_url: string
-        }[]
+        Args:
+          | { input_user_id: string }
+          | { user_id: number }
+          | { user_id_input: unknown }
+        Returns: Json
       }
       get_profile_user_id_as_uuid: {
         Args: { user_id: number }
@@ -1912,22 +2138,6 @@ export type Database = {
         Args: { "": unknown }
         Returns: unknown
       }
-      halfvec_avg: {
-        Args: { "": number[] }
-        Returns: unknown
-      }
-      halfvec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      halfvec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      halfvec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
       handle_paypal_webhook: {
         Args: { p_webhook_event: Json }
         Returns: undefined
@@ -1936,37 +2146,9 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
-      hnsw_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_sparsevec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnswhandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
       is_admin_or_higher: {
         Args: { check_user_id: string }
         Returns: boolean
-      }
-      ivfflat_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflat_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflathandler: {
-        Args: { "": unknown }
-        Returns: unknown
       }
       json: {
         Args: { "": unknown }
@@ -1975,14 +2157,6 @@ export type Database = {
       jsonb: {
         Args: { "": unknown }
         Returns: Json
-      }
-      l2_norm: {
-        Args: { "": unknown } | { "": unknown }
-        Returns: number
-      }
-      l2_normalize: {
-        Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: unknown
       }
       longtransactionsenabled: {
         Args: Record<PropertyKey, never>
@@ -2238,18 +2412,6 @@ export type Database = {
       setup_default_admin: {
         Args: { admin_email: string }
         Returns: undefined
-      }
-      sparsevec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      sparsevec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      sparsevec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
       }
       spheroid_in: {
         Args: { "": unknown }
@@ -3362,30 +3524,6 @@ export type Database = {
       validate_password_with_leak_check: {
         Args: { password: string }
         Returns: Json
-      }
-      vector_avg: {
-        Args: { "": number[] }
-        Returns: string
-      }
-      vector_dims: {
-        Args: { "": string } | { "": unknown }
-        Returns: number
-      }
-      vector_norm: {
-        Args: { "": string }
-        Returns: number
-      }
-      vector_out: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      vector_send: {
-        Args: { "": string }
-        Returns: string
-      }
-      vector_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
       }
       view_nearby_matches: {
         Args: { p_profile_id: number }
