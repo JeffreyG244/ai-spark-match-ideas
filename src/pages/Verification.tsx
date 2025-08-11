@@ -70,7 +70,13 @@ const Verification = () => {
   };
 
   const handleFileUpload = async (file: File, documentType: string) => {
-    await uploadDocument(file, documentType);
+    const success = await uploadDocument(file, documentType);
+    if (success) {
+      toast({
+        title: "Upload Successful",
+        description: `Your ${documentType} has been uploaded and is being reviewed.`,
+      });
+    }
   };
 
   const handleSocialMediaSubmit = async () => {
