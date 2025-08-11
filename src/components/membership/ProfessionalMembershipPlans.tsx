@@ -10,7 +10,7 @@ import EmptyPlansState from './EmptyPlansState';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star, Loader2, Crown, Heart, Zap, Shield, Video, Users, Globe, Sparkles } from 'lucide-react';
+import { Check, Star, Loader2, Crown, Heart, Zap, Shield, Video, Users, Globe, Sparkles, Briefcase, Diamond, Gift } from 'lucide-react';
 
 interface MembershipPlan {
   id: number;
@@ -139,32 +139,38 @@ const ProfessionalMembershipPlans = () => {
   const getPlanTheme = (planName: string) => {
     switch (planName) {
       case 'Free':
+      case 'Basic':
         return {
           border: 'border-emerald-200',
           badge: 'bg-emerald-500',
           icon: 'text-emerald-600',
           iconBg: 'bg-emerald-50',
           button: 'bg-emerald-600 hover:bg-emerald-700',
-          gradient: 'from-emerald-50 to-emerald-100'
+          gradient: 'from-emerald-50 to-emerald-100',
+          planIcon: Gift
         };
       case 'Plus':
+      case 'Premium':
         return {
           border: 'border-purple-300',
           badge: 'bg-purple-500',
           icon: 'text-purple-600',
           iconBg: 'bg-purple-50',
           button: 'bg-purple-600 hover:bg-purple-700',
-          gradient: 'from-purple-50 to-purple-100'
+          gradient: 'from-purple-50 to-purple-100',
+          planIcon: Sparkles
         };
-      case 'Premium':
+      case 'Executive':
         return {
           border: 'border-amber-300',
           badge: 'bg-amber-500',
           icon: 'text-amber-600',
           iconBg: 'bg-amber-50',
           button: 'bg-amber-600 hover:bg-amber-700',
-          gradient: 'from-amber-50 to-amber-100'
+          gradient: 'from-amber-50 to-amber-100',
+          planIcon: Briefcase
         };
+      case 'C-suite':
       case 'VIP':
         return {
           border: 'border-violet-300',
@@ -172,7 +178,8 @@ const ProfessionalMembershipPlans = () => {
           icon: 'text-violet-600',
           iconBg: 'bg-violet-50',
           button: 'bg-violet-600 hover:bg-violet-700',
-          gradient: 'from-violet-50 to-violet-100'
+          gradient: 'from-violet-50 to-violet-100',
+          planIcon: Diamond
         };
       default:
         return {
@@ -181,8 +188,19 @@ const ProfessionalMembershipPlans = () => {
           icon: 'text-gray-600',
           iconBg: 'bg-gray-50',
           button: 'bg-gray-600 hover:bg-gray-700',
-          gradient: 'from-gray-50 to-gray-100'
+          gradient: 'from-gray-50 to-gray-100',
+          planIcon: Star
         };
+    }
+  };
+
+  const getDisplayName = (planName: string) => {
+    switch (planName) {
+      case 'Free': return 'Basic';
+      case 'Plus': return 'Premium';
+      case 'Premium': return 'Executive';
+      case 'VIP': return 'C-suite';
+      default: return planName;
     }
   };
 
@@ -241,7 +259,7 @@ const ProfessionalMembershipPlans = () => {
                   </div>
                 )}
 
-                {plan.name === 'Premium' && !plan.is_popular && (
+                {(plan.name === 'Plus' || plan.name === 'Premium') && !plan.is_popular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
                     <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-medium shadow-md`}>
                       <Crown className="w-3 h-3 mr-1" />
@@ -253,8 +271,8 @@ const ProfessionalMembershipPlans = () => {
                 {plan.name === 'VIP' && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
                     <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-medium shadow-md`}>
-                      <Crown className="w-3 h-3 mr-1" />
-                      VIP Elite
+                      <Diamond className="w-3 h-3 mr-1" />
+                      Elite Access
                     </Badge>
                   </div>
                 )}
@@ -262,8 +280,11 @@ const ProfessionalMembershipPlans = () => {
 
               {/* Header */}
               <CardHeader className="text-center pt-6 pb-4">
+                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${theme.iconBg}`}>
+                  <theme.planIcon className={`w-8 h-8 ${theme.icon}`} />
+                </div>
                 <CardTitle className={`text-xl font-bold ${theme.icon}`}>
-                  {plan.name}
+                  {getDisplayName(plan.name)}
                 </CardTitle>
                 <CardDescription className="text-2xl font-bold text-foreground">
                   {getPrice(plan)}
@@ -278,27 +299,31 @@ const ProfessionalMembershipPlans = () => {
               {/* Features */}
               <CardContent className="pt-0">
                 <div className="space-y-3 mb-6">
-                  {features.slice(0, 6).map(([key, value]) => {
+                  {features.map(([key, value]) => {
                     const feature = formatFeature(key, value);
                     if (!feature) return null;
                     
                     const IconComponent = feature.icon;
                     
                     return (
-                      <div key={key} className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${theme.iconBg}`}>
+                      <div key={key} className="flex items-start gap-3">
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${theme.iconBg} mt-0.5`}>
                           <IconComponent className={`w-3 h-3 ${theme.icon}`} />
                         </div>
-                        <span className="text-sm text-muted-foreground">{feature.text}</span>
+                        <span className="text-sm text-foreground font-medium leading-relaxed">{feature.text}</span>
                       </div>
                     );
                   })}
                   
-                  {features.length > 6 && (
-                    <div className="text-xs text-muted-foreground mt-2">
-                      +{features.length - 6} more features
-                    </div>
-                  )}
+                  {/* Add promotional text based on plan */}
+                  <div className="mt-4 pt-4 border-t border-muted">
+                    <p className="text-xs text-muted-foreground italic text-center">
+                      {getDisplayName(plan.name) === 'Basic' && "Perfect for getting started"}
+                      {getDisplayName(plan.name) === 'Premium' && "Most popular choice for professionals"}
+                      {getDisplayName(plan.name) === 'Executive' && "Advanced features for serious daters"}
+                      {getDisplayName(plan.name) === 'C-suite' && "Elite experience with premium perks"}
+                    </p>
+                  </div>
                 </div>
 
                 {/* CTA Button */}
@@ -322,7 +347,7 @@ const ProfessionalMembershipPlans = () => {
                   ) : !user ? (
                     'Sign In to Upgrade'
                   ) : (
-                    `Get ${plan.name}`
+                    `Get ${getDisplayName(plan.name)}`
                   )}
                 </Button>
               </CardContent>
