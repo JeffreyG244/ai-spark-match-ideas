@@ -6,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Hardcoded webhook URL - no environment variables
-const N8N_WEBHOOK_URL = 'https://luvlang.org/webhook-test/luvlang-match';
+// REPLACE THIS WITH YOUR ACTUAL N8N WEBHOOK URL
+const N8N_WEBHOOK_URL = 'https://luvlang.org/webhook-test/luvlang-match'; // ← CHANGE THIS TO YOUR REAL N8N URL
 
 interface ProfileData {
   user_id: string;
