@@ -253,30 +253,28 @@ const ProfessionalMembershipPlans = () => {
         };
       case 'Executive':
         return {
-          border: 'border-gray-400',
-          badge: 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600',
-          icon: 'text-gray-700',
-          iconBg: 'bg-gradient-to-br from-gray-200 via-gray-300 to-gray-400',
-          button: 'bg-gradient-to-r from-gray-500 via-gray-600 to-gray-700 hover:from-gray-600 hover:via-gray-700 hover:to-gray-800',
-          gradient: 'from-gray-200 to-gray-300',
-          cardBg: 'bg-gradient-to-br from-slate-100 via-gray-50 to-slate-200',
+          border: 'border-[hsl(var(--silver-3))]',
+          badge: 'bg-gradient-to-r from-[hsl(var(--silver-1))] via-[hsl(var(--silver-2))] to-[hsl(var(--silver-3))]',
+          icon: 'text-[hsl(var(--silver-3))]',
+          iconBg: 'bg-gradient-to-br from-[hsl(var(--silver-1))] to-[hsl(var(--silver-2))]',
+          button: 'bg-gradient-to-r from-[hsl(var(--silver-2))] via-[hsl(var(--silver-3))] to-[hsl(var(--silver-2))] hover:from-[hsl(var(--silver-3))] hover:via-[hsl(var(--silver-3))] hover:to-[hsl(var(--silver-3))]',
+          gradient: 'from-[hsl(var(--silver-1))] to-[hsl(var(--silver-2))]',
+          cardBg: 'bg-gradient-to-br from-[hsl(var(--silver-1))] via-white to-[hsl(var(--silver-2))]',
           planIcon: Briefcase,
-          shadow: 'shadow-2xl shadow-gray-500/40',
-          shimmer: 'bg-gradient-to-r from-transparent via-white/30 to-transparent'
+          shadow: 'shadow-2xl'
         };
       case 'C-suite':
       case 'VIP':
         return {
-          border: 'border-yellow-500',
-          badge: 'bg-gradient-to-r from-yellow-500 via-yellow-600 to-amber-700',
-          icon: 'text-yellow-700',
-          iconBg: 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500',
-          button: 'bg-gradient-to-r from-yellow-600 via-amber-600 to-yellow-700 hover:from-yellow-700 hover:via-amber-700 hover:to-yellow-800',
-          gradient: 'from-yellow-200 to-yellow-300',
-          cardBg: 'bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-100',
+          border: 'border-[hsl(var(--gold-2))]',
+          badge: 'bg-gradient-to-r from-[hsl(var(--gold-1))] via-[hsl(var(--gold-2))] to-[hsl(var(--gold-3))]',
+          icon: 'text-[hsl(var(--gold-3))]',
+          iconBg: 'bg-gradient-to-br from-[hsl(var(--gold-1))] to-[hsl(var(--gold-2))]',
+          button: 'bg-gradient-to-r from-[hsl(var(--gold-2))] via-[hsl(var(--gold-3))] to-[hsl(var(--gold-2))] hover:from-[hsl(var(--gold-3))] hover:via-[hsl(var(--gold-3))] hover:to-[hsl(var(--gold-3))]',
+          gradient: 'from-[hsl(var(--gold-1))] to-[hsl(var(--gold-2))]',
+          cardBg: 'bg-gradient-to-br from-white via-[hsl(var(--gold-1))] to-[hsl(var(--gold-1))]',
           planIcon: Diamond,
-          shadow: 'shadow-2xl shadow-yellow-600/40',
-          shimmer: 'bg-gradient-to-r from-transparent via-yellow-200/50 to-transparent'
+          shadow: 'shadow-2xl'
         };
       default:
         return {
@@ -352,9 +350,9 @@ const ProfessionalMembershipPlans = () => {
               <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.badge}`} />
               
               {/* Top Badge */}
-              <div className="relative pt-6">
+              <div className="relative pt-10">
                 {plan.is_popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10">
                     <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-bold shadow-lg rounded-full`}>
                       <Star className="w-3 h-3 mr-1" />
                       Most Popular
@@ -363,7 +361,7 @@ const ProfessionalMembershipPlans = () => {
                 )}
 
                 {(plan.name === 'Plus' || plan.name === 'Premium' || plan.name === 'Standard') && !plan.is_popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10">
                     <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-bold shadow-lg rounded-full`}>
                       <Crown className="w-3 h-3 mr-1" />
                       Best Value
@@ -372,7 +370,7 @@ const ProfessionalMembershipPlans = () => {
                 )}
 
                 {(plan.name === 'VIP' || plan.name === 'C-suite') && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10">
                     <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-bold shadow-lg rounded-full`}>
                       <Diamond className="w-3 h-3 mr-1" />
                       Elite Access
@@ -381,7 +379,7 @@ const ProfessionalMembershipPlans = () => {
                 )}
 
                 {plan.name === 'Executive' && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10">
                     <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-bold shadow-lg rounded-full`}>
                       <Briefcase className="w-3 h-3 mr-1" />
                       Professional
@@ -420,7 +418,7 @@ const ProfessionalMembershipPlans = () => {
                 <div className="space-y-2 mb-6">
                   <h4 className={`font-semibold text-sm ${theme.icon} mb-3 text-center`}>What's Included:</h4>
                   <div className="max-h-48 overflow-y-auto scrollbar-thin">
-                    {hardcodedFeatures.slice(0, 8).map((feature, index) => {
+                    {hardcodedFeatures.map((feature, index) => {
                       const IconComponent = feature.icon;
                       
                       return (
@@ -432,11 +430,6 @@ const ProfessionalMembershipPlans = () => {
                         </div>
                       );
                     })}
-                    {hardcodedFeatures.length > 8 && (
-                      <div className="text-xs text-muted-foreground text-center mt-2 font-medium">
-                        +{hardcodedFeatures.length - 8} more features
-                      </div>
-                    )}
                   </div>
                 </div>
 
