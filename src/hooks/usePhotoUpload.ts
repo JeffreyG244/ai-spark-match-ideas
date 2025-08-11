@@ -61,6 +61,18 @@ export const usePhotoUpload = (photos: Photo[], onPhotosChange: (photos: Photo[]
         const randomId = Math.random().toString(36).substring(2);
         const filename = `${user.id}/${timestamp}_${randomId}_${file.name}`;
 
+        // Check if bucket exists and create if needed
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const bucketExists = buckets?.some(bucket => bucket.name === 'profile-photos');
+        
+        if (!bucketExists) {
+          console.log('Creating profile-photos bucket...');
+          await supabase.storage.createBucket('profile-photos', {
+            public: true,
+            fileSizeLimit: 10 * 1024 * 1024 // 10MB
+          });
+        }
+
         const { error: uploadError } = await supabase.storage
           .from('profile-photos')
           .upload(filename, file, {

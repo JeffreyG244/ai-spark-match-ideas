@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
+import VoiceIntroductionCapture from './VoiceIntroductionCapture';
 
 interface FormData {
   // Section 1: Executive Profile
@@ -706,14 +707,12 @@ const handleComplete = async () => {
         </div>
       </div>
 
-      <div>
-        <Label htmlFor="voiceIntroduction">Voice Introduction (Coming Soon)</Label>
-        <div className="mt-2 p-8 border-2 border-dashed border-purple-300 rounded-lg bg-purple-50 text-center">
-          <Upload className="h-12 w-12 text-purple-400 mx-auto mb-4" />
-          <p className="text-purple-600 font-medium">Voice Introduction Feature</p>
-          <p className="text-sm text-purple-500 mt-2">Record a 30-second introduction about yourself</p>
-        </div>
-      </div>
+      <VoiceIntroductionCapture
+        onVoiceIntroductionChange={(audioUrl) => 
+          setFormData(prev => ({ ...prev, voiceIntroduction: audioUrl }))
+        }
+        currentVoiceIntroduction={formData.voiceIntroduction}
+      />
     </div>
   );
 

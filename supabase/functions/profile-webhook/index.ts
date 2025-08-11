@@ -152,13 +152,28 @@ const handler = async (req: Request): Promise<Response> => {
       };
     }
 
+    // Try to parse webhook response for additional data
+    let responseData = null;
+    if (webhookResult.success && webhookResult.response) {
+      try {
+        responseData = JSON.parse(webhookResult.response);
+      } catch (e) {
+        console.log('Webhook response is not JSON:', webhookResult.response);
+        responseData = { raw_response: webhookResult.response };
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: 'Profile data processed successfully',
         webhook_result: webhookResult,
+        webhook_data: responseData,
         payload_sent: webhookData,
-        user_data_found: !!userData.first_name
+        user_data_found: !!userData.first_name,
+        ai_analysis: responseData?.ai_analysis || null,
+        compatibility_insights: responseData?.compatibility_insights || null,
+        match_recommendations: responseData?.match_recommendations || null
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
