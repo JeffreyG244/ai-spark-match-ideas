@@ -2,7 +2,7 @@
 import React from 'react';
 import { Heart, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import GuidedProfileFlow from '@/components/profile/GuidedProfileFlow';
+import ExecutiveProfileForm from '@/components/profile/ExecutiveProfileForm';
 
 interface ProfileSetupViewProps {
   onBack: () => void;
@@ -41,7 +41,7 @@ const ProfileSetupView = ({ onBack, onSignOut }: ProfileSetupViewProps) => {
           </Button>
         </div>
 
-        <GuidedProfileFlow />
+        <ExecutiveProfileForm />
       </div>
     </div>
   );

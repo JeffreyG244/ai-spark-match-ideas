@@ -72,7 +72,7 @@ const ExecutiveProfileForm = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const N8N_WEBHOOK_URL = 'http://localhost:5678/webhook-test/luvlang-match';
+  const N8N_WEBHOOK_URL = 'https://luvlang.org/webhook-test/luvlang-match';
 
   useEffect(() => {
     if (!user) return;
