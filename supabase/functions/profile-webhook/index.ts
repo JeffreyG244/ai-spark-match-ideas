@@ -55,9 +55,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get profile data from dating_profiles
+    // Get profile data from executive_dating_profiles
     const { data: profile, error: profileError } = await supabaseClient
-      .from('dating_profiles')
+      .from('executive_dating_profiles')
       .select('*')
       .eq('user_id', user_id)
       .single();
@@ -88,9 +88,11 @@ const handler = async (req: Request): Promise<Response> => {
         profile: profile,
         compatibility: compatibility?.answers || {},
         preferences: {
-          age_range: [profile.age - 5, profile.age + 5],
-          location: `${profile.city}, ${profile.state}`,
-          interests: profile.interests
+          age_range: [profile.age_range_min || (profile.age - 5), profile.age_range_max || (profile.age + 5)],
+          location: profile.primary_location,
+          interests: profile.cultural_interests || profile.weekend_activities || [],
+          sexual_orientation: profile.sexual_orientation,
+          deal_breakers: profile.deal_breakers
         }
       }
     };
