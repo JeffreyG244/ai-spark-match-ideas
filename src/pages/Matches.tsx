@@ -67,7 +67,7 @@ const Matches = () => {
                 <ArrowLeft className="w-5 h-5 text-white" />
               </button>
               <div className="flex items-center space-x-3">
-                <Logo size="sm" showText={false} />
+                <Logo size="md" showText={false} />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white">Your Matches</h1>
@@ -121,7 +121,7 @@ const Matches = () => {
 
         {matches.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-24 h-24 mx-auto mb-6">
+            <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center">
               <Logo size="lg" showText={false} />
             </div>
             <h3 className="text-2xl font-bold text-white mb-4">No Executive Matches Yet</h3>

@@ -13,15 +13,15 @@ const Logo: React.FC<LogoProps> = ({
   showText = true 
 }) => {
   const sizeClasses = {
-    sm: 'h-8',
-    md: 'h-10', 
-    lg: 'h-12'
+    sm: 'h-12',
+    md: 'h-16', 
+    lg: 'h-20'
   };
 
   const textSizeClasses = {
-    sm: 'text-lg',
-    md: 'text-2xl',
-    lg: 'text-3xl'
+    sm: 'text-2xl',
+    md: 'text-3xl',
+    lg: 'text-4xl'
   };
 
   return (
