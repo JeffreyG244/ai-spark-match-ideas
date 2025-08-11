@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Heart, Crown, Briefcase, Coffee, Shield, Sparkles, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import Logo from '@/components/ui/logo';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -22,11 +23,8 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                <Heart className="w-7 h-7 text-white" />
-              </div>
+              <Logo size="lg" showText={true} />
               <div>
-                <h1 className="text-3xl font-bold text-white">Luvlang</h1>
                 <p className="text-purple-300 text-sm">Executive Dating Platform</p>
               </div>
             </div>

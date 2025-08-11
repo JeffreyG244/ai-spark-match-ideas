@@ -21,6 +21,7 @@ interface MembershipPlan {
   features: any;
   highlight_color: string | null;
   is_popular: boolean;
+  tier_level?: number;
 }
 
 const ProfessionalMembershipPlans = () => {
@@ -339,28 +340,34 @@ const ProfessionalMembershipPlans = () => {
           const hardcodedFeatures = getHardcodedFeatures(plan.name);
           const theme = getPlanTheme(plan.name);
           
+          // Check if it's the C-Suite plan (case-insensitive)  
+          const isCsuite = plan.name.toLowerCase().includes('c-suite') || plan.name.toLowerCase() === 'c-suite';
+          const isExecutive = plan.name.toLowerCase() === 'executive';
+          
           return (
             <Card 
               key={plan.id}
               className={`relative transition-all duration-500 hover:scale-105 animate-enter ${
-                (plan.name === 'C-suite' || plan.name === 'VIP') 
+                isCsuite
                   ? 'bg-gradient-to-br from-yellow-200 via-yellow-100 to-amber-200 border-4 border-yellow-400' 
-                  : plan.name === 'Executive' 
+                  : isExecutive
                     ? 'bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 border-2 border-slate-400'
                     : theme.cardBg
               } ${
-                (plan.name === 'C-suite' || plan.name === 'VIP') 
+                isCsuite
                   ? 'shadow-2xl shadow-yellow-500/50' 
-                  : plan.name === 'Executive'
+                  : isExecutive
                     ? 'shadow-2xl shadow-slate-500/30'
                     : theme.shadow
-              } ${theme.border} ${
+              } ${
+                isCsuite ? 'border-yellow-400' : isExecutive ? 'border-slate-400' : theme.border
+              } ${
                 isCurrentPlan ? 'ring-2 ring-green-500/50' : ''
               } overflow-hidden rounded-xl`}
             >
               {/* Decorative gradient overlay */}
               <div className={`absolute top-0 left-0 right-0 h-1 ${
-                (plan.name === 'C-suite' || plan.name === 'VIP') 
+                isCsuite
                   ? 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-600' 
                   : `bg-gradient-to-r ${theme.badge}`
               }`} />
@@ -407,12 +414,12 @@ const ProfessionalMembershipPlans = () => {
               {/* Header */}
               <CardHeader className="text-center pt-2 pb-4">
                 <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                  (plan.name === 'C-suite' || plan.name === 'VIP') 
+                  isCsuite
                     ? 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500' 
                     : theme.iconBg
                 } shadow-lg`}>
                   <theme.planIcon className={`w-8 h-8 ${
-                    (plan.name === 'C-suite' || plan.name === 'VIP') ? 'text-yellow-700' : theme.icon
+                    isCsuite ? 'text-yellow-700' : theme.icon
                   }`} />
                 </div>
                 <CardTitle className={`text-xl font-bold ${theme.icon} mb-2`}>
