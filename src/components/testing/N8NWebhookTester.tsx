@@ -49,20 +49,49 @@ const N8NWebhookTester: React.FC = () => {
 
       console.log('Profile webhook response:', profileWebhookResponse);
 
-      // Test 2: Direct webhook call to your N8N endpoint
-      console.log('Step 2: Testing direct N8N webhook...');
+      // Test 2: Direct webhook call to your N8N endpoint with full profile data
+      console.log('Step 2: Testing direct N8N webhook with full profile data...');
+      
+      const fullWebhookPayload = {
+        user_id: user.id,
+        name: `${user.user_metadata?.first_name || 'Test'} ${user.user_metadata?.last_name || 'User'}`,
+        match_score: 0.95,
+        timestamp: new Date().toISOString(),
+        event_type: 'webhook_test',
+        data: {
+          profile: {
+            user_id: user.id,
+            first_name: user.user_metadata?.first_name || 'Test',
+            last_name: user.user_metadata?.last_name || 'User',
+            age: 30,
+            primary_location: 'San Francisco, CA',
+            age_range_min: 25,
+            age_range_max: 35,
+            cultural_interests: ['Technology', 'Business'],
+            weekend_activities: ['Networking', 'Reading'],
+            sexual_orientation: ['Heterosexual'],
+            deal_breakers: []
+          },
+          compatibility: {},
+          preferences: {
+            age_range: [25, 35],
+            location: 'San Francisco, CA',
+            interests: ['Technology', 'Business', 'Networking'],
+            sexual_orientation: ['Heterosexual'],
+            deal_breakers: []
+          }
+        }
+      };
+
+      console.log('Sending webhook payload:', fullWebhookPayload);
+      
       const directWebhookResponse = await fetch(customWebhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        mode: 'no-cors', // Handle CORS for local testing
-        body: JSON.stringify({
-          user_id: user.id,
-          test_trigger: true,
-          timestamp: new Date().toISOString(),
-          source: 'n8n_webhook_tester'
-        })
+        mode: 'no-cors',
+        body: JSON.stringify(fullWebhookPayload)
       });
 
       // Test 3: Check recent N8N webhook logs
