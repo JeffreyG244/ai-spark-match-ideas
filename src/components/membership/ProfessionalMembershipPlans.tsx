@@ -342,12 +342,28 @@ const ProfessionalMembershipPlans = () => {
           return (
             <Card 
               key={plan.id}
-              className={`relative transition-all duration-500 hover:scale-105 animate-enter ${theme.cardBg} ${theme.border} ${theme.shadow} ${
+              className={`relative transition-all duration-500 hover:scale-105 animate-enter ${
+                (plan.name === 'C-suite' || plan.name === 'VIP') 
+                  ? 'bg-gradient-to-br from-yellow-200 via-yellow-100 to-amber-200 border-4 border-yellow-400' 
+                  : plan.name === 'Executive' 
+                    ? 'bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 border-2 border-slate-400'
+                    : theme.cardBg
+              } ${
+                (plan.name === 'C-suite' || plan.name === 'VIP') 
+                  ? 'shadow-2xl shadow-yellow-500/50' 
+                  : plan.name === 'Executive'
+                    ? 'shadow-2xl shadow-slate-500/30'
+                    : theme.shadow
+              } ${theme.border} ${
                 isCurrentPlan ? 'ring-2 ring-green-500/50' : ''
               } overflow-hidden rounded-xl`}
             >
               {/* Decorative gradient overlay */}
-              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.badge}`} />
+              <div className={`absolute top-0 left-0 right-0 h-1 ${
+                (plan.name === 'C-suite' || plan.name === 'VIP') 
+                  ? 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-600' 
+                  : `bg-gradient-to-r ${theme.badge}`
+              }`} />
               
               {/* Top Badge */}
               <div className="relative pt-10">
@@ -390,8 +406,14 @@ const ProfessionalMembershipPlans = () => {
 
               {/* Header */}
               <CardHeader className="text-center pt-2 pb-4">
-                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${theme.iconBg} shadow-lg`}>
-                  <theme.planIcon className={`w-8 h-8 ${theme.icon}`} />
+                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                  (plan.name === 'C-suite' || plan.name === 'VIP') 
+                    ? 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500' 
+                    : theme.iconBg
+                } shadow-lg`}>
+                  <theme.planIcon className={`w-8 h-8 ${
+                    (plan.name === 'C-suite' || plan.name === 'VIP') ? 'text-yellow-700' : theme.icon
+                  }`} />
                 </div>
                 <CardTitle className={`text-xl font-bold ${theme.icon} mb-2`}>
                   {getDisplayName(plan.name)}

@@ -16,6 +16,18 @@ const HOSTED_BUTTON_IDS = {
   premium: {
     monthly: 'R9JUL65GYT282', // Premium Plan monthly button
     annual: 'R9JUL65GYT282'   // Using same button for now - create separate annual button if needed
+  },
+  executive: {
+    monthly: 'VXK6T685HD2K6', // Executive Plan monthly button (using plus for now)
+    annual: 'VXK6T685HD2K6'   // Executive Plan annual button
+  },
+  'c-suite': {
+    monthly: 'R9JUL65GYT282', // C-Suite Plan monthly button (using premium for now)
+    annual: 'R9JUL65GYT282'   // C-Suite Plan annual button
+  },
+  vip: {
+    monthly: 'R9JUL65GYT282', // VIP Plan monthly button (using premium for now)
+    annual: 'R9JUL65GYT282'   // VIP Plan annual button
   }
 };
 
@@ -81,17 +93,22 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
         currentPath: location.pathname
       });
       
-      const planType = plan.name.toLowerCase() as 'plus' | 'premium';
+      const planType = plan.name.toLowerCase();
       
-      if (!['plus', 'premium'].includes(planType)) {
-        throw new Error('Invalid plan type selected');
+      // Map plan names to PayPal button configs
+      const planKey = planType === 'standard' ? 'premium' : 
+                     planType === 'basic' ? 'plus' : 
+                     planType;
+      
+      if (!HOSTED_BUTTON_IDS[planKey as keyof typeof HOSTED_BUTTON_IDS]) {
+        throw new Error(`Plan type "${planType}" is not configured for PayPal checkout`);
       }
 
       // Simple setup - no complex SDK loading needed
       await loadPayPalScript();
       
       // Get the hosted button ID for the selected plan and billing cycle
-      const hostedButtonId = HOSTED_BUTTON_IDS[planType][billingCycle];
+      const hostedButtonId = HOSTED_BUTTON_IDS[planKey as keyof typeof HOSTED_BUTTON_IDS][billingCycle];
       
       logger.log('Using PayPal button ID:', hostedButtonId);
 
