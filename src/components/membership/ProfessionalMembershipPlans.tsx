@@ -139,7 +139,6 @@ const ProfessionalMembershipPlans = () => {
   const getPlanTheme = (planName: string) => {
     switch (planName) {
       case 'Free':
-      case 'Basic':
         return {
           border: 'border-emerald-200',
           badge: 'bg-emerald-500',
@@ -149,36 +148,47 @@ const ProfessionalMembershipPlans = () => {
           gradient: 'from-emerald-50 to-emerald-100',
           planIcon: Gift
         };
+      case 'Basic':
+        return {
+          border: 'border-red-800',
+          badge: 'bg-red-800',
+          icon: 'text-red-800',
+          iconBg: 'bg-red-50',
+          button: 'bg-red-800 hover:bg-red-900',
+          gradient: 'from-red-50 to-red-100',
+          planIcon: Heart
+        };
       case 'Plus':
       case 'Premium':
+      case 'Standard':
         return {
-          border: 'border-purple-300',
-          badge: 'bg-purple-500',
-          icon: 'text-purple-600',
+          border: 'border-purple-800',
+          badge: 'bg-purple-800',
+          icon: 'text-purple-800',
           iconBg: 'bg-purple-50',
-          button: 'bg-purple-600 hover:bg-purple-700',
+          button: 'bg-purple-800 hover:bg-purple-900',
           gradient: 'from-purple-50 to-purple-100',
           planIcon: Sparkles
         };
       case 'Executive':
         return {
-          border: 'border-amber-300',
-          badge: 'bg-amber-500',
-          icon: 'text-amber-600',
-          iconBg: 'bg-amber-50',
-          button: 'bg-amber-600 hover:bg-amber-700',
-          gradient: 'from-amber-50 to-amber-100',
+          border: 'border-gray-400',
+          badge: 'bg-gradient-to-r from-gray-400 to-gray-500',
+          icon: 'text-gray-600',
+          iconBg: 'bg-gradient-to-br from-gray-100 to-gray-200',
+          button: 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700',
+          gradient: 'from-gray-100 to-gray-200',
           planIcon: Briefcase
         };
       case 'C-suite':
       case 'VIP':
         return {
-          border: 'border-violet-300',
-          badge: 'bg-violet-500',
-          icon: 'text-violet-600',
-          iconBg: 'bg-violet-50',
-          button: 'bg-violet-600 hover:bg-violet-700',
-          gradient: 'from-violet-50 to-violet-100',
+          border: 'border-yellow-400',
+          badge: 'bg-gradient-to-r from-yellow-400 to-yellow-600',
+          icon: 'text-yellow-600',
+          iconBg: 'bg-gradient-to-br from-yellow-50 to-yellow-100',
+          button: 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700',
+          gradient: 'from-yellow-50 to-yellow-100',
           planIcon: Diamond
         };
       default:
