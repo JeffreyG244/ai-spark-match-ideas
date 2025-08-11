@@ -18,11 +18,12 @@ const N8NWebhookTester: React.FC = () => {
   // Auto-trigger test on component mount for direct testing
   React.useEffect(() => {
     if (user) {
-      testWebhookConnectivity();
+      // Immediate test trigger
+      triggerDirectWebhook();
     }
   }, [user]);
 
-  const testWebhookConnectivity = async () => {
+  const triggerDirectWebhook = async () => {
     if (!user) {
       toast({
         title: 'Error',
@@ -219,7 +220,7 @@ const N8NWebhookTester: React.FC = () => {
           {/* Test Buttons */}
           <div className="flex gap-4">
             <Button
-              onClick={testWebhookConnectivity}
+              onClick={triggerDirectWebhook}
               disabled={loading}
               className="bg-blue-600 hover:bg-blue-700"
             >
