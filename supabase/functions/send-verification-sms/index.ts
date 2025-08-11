@@ -56,13 +56,48 @@ Deno.serve(async (req) => {
       throw new Error('Failed to save verification code')
     }
 
-    // In a real implementation, you would send SMS here using Twilio, AWS SNS, etc.
-    // For demo purposes, we'll just log the code
-    console.log(`SMS Verification Code for ${phoneNumber}: ${verificationCode}`)
+    // Send SMS using Twilio
+    const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
+    const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN')
+    const twilioPhoneNumber = Deno.env.get('TWILIO_PHONE_NUMBER')
 
-    // For demo purposes, return the code in development
+    if (!twilioAccountSid || !twilioAuthToken || !twilioPhoneNumber) {
+      console.error('Missing Twilio configuration')
+      throw new Error('SMS service not configured')
+    }
+
+    // Send SMS via Twilio
+    const twilioResponse = await fetch(
+      `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${btoa(`${twilioAccountSid}:${twilioAuthToken}`)}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          To: phoneNumber,
+          From: twilioPhoneNumber,
+          Body: `Your Luvlang verification code is: ${verificationCode}. This code expires in 10 minutes.`
+        })
+      }
+    )
+
+    if (!twilioResponse.ok) {
+      const twilioError = await twilioResponse.text()
+      console.error('Twilio error:', twilioError)
+      throw new Error('Failed to send SMS')
+    }
+
+    console.log(`SMS sent successfully to ${phoneNumber}`)
+
+    // For development, also log the code
     const isDevelopment = Deno.env.get('SUPABASE_URL')?.includes('localhost') || 
                          Deno.env.get('ENVIRONMENT') === 'development'
+    
+    if (isDevelopment) {
+      console.log(`Development - Verification Code: ${verificationCode}`)
+    }
 
     return new Response(
       JSON.stringify({ 
