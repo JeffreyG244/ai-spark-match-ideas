@@ -24,8 +24,19 @@ const Index = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Logo size="lg" showText={true} />
-              <div>
-                <p className="text-purple-300 text-sm">Executive Dating Platform</p>
+              <div className="hidden md:flex items-center space-x-6 ml-8">
+                <Button variant="ghost" onClick={() => navigate("/how-it-works")} className="text-white hover:bg-white/10">
+                  How It Works
+                </Button>
+                <Button variant="ghost" onClick={() => navigate("/safety")} className="text-white hover:bg-white/10">
+                  Safety
+                </Button>
+                <Button variant="ghost" onClick={() => navigate("/legal")} className="text-white hover:bg-white/10">
+                  Legal
+                </Button>
+                <Button variant="ghost" onClick={() => navigate("/success-stories")} className="text-white hover:bg-white/10">
+                  Success Stories
+                </Button>
               </div>
             </div>
             

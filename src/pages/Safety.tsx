@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import { Shield, AlertTriangle, Users, Phone, MapPin, Heart, BookOpen } from 'lu
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import Logo from '@/components/ui/logo';
 
 const Safety = () => {
   const { user } = useAuth();
@@ -84,8 +86,45 @@ const Safety = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50">
+      {/* Navigation Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <Link to="/">
+                <Logo size="md" />
+              </Link>
+              <nav className="hidden md:flex items-center space-x-6">
+                <Link to="/" className="text-gray-600 hover:text-purple-600 transition-colors">
+                  Home
+                </Link>
+                <Link to="/how-it-works" className="text-gray-600 hover:text-purple-600 transition-colors">
+                  How It Works
+                </Link>
+                <Link to="/legal" className="text-gray-600 hover:text-purple-600 transition-colors">
+                  Legal
+                </Link>
+                <Link to="/success-stories" className="text-gray-600 hover:text-purple-600 transition-colors">
+                  Success Stories
+                </Link>
+              </nav>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Link to="/auth">
+                <Button variant="outline">Sign In</Button>
+              </Link>
+              <Link to="/membership">
+                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
+                  Get Started
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="container mx-auto px-4 max-w-4xl py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Safety Center</h1>
           <p className="text-lg text-gray-600">Your safety is our top priority</p>

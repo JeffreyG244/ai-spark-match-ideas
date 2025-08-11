@@ -39,12 +39,30 @@ interface ExecutiveProfile {
 }
 
 const ModernProfessionalDashboard = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { matches } = useMatches();
   const { dailyMatches } = useDailyMatches();
   const { profileData } = useProfileData();
   const { membershipLevel, loading: badgeLoading } = useMembershipBadge();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        title: "Error signing out",
+        description: "There was a problem signing out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   
   const [stats, setStats] = useState<DashboardStats>({
     totalMatches: 0,
@@ -246,24 +264,21 @@ const ModernProfessionalDashboard = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
+              <MembershipBadge 
+                membershipLevel={membershipLevel} 
+                size="md"
+                className="bg-opacity-20 backdrop-blur-xl"
+              />
               <div className="w-12 h-12 bg-gradient-to-r from-love-primary to-love-secondary rounded-xl flex items-center justify-center shadow-lg">
                 <Heart className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Executive Dashboard</h1>
-                <p className="text-sm text-muted-foreground">Welcome back, {user?.user_metadata?.first_name}</p>
+                <h1 className="text-2xl font-bold text-foreground">Luvlang</h1>
+                <p className="text-sm text-muted-foreground">Executive Dashboard - Welcome back, {user?.user_metadata?.first_name}</p>
               </div>
             </div>
             
             <div className="flex items-center space-x-4">
-              {!badgeLoading && (
-                <MembershipBadge 
-                  membershipLevel={membershipLevel} 
-                  size="md"
-                  className="bg-opacity-20 backdrop-blur-xl"
-                />
-              )}
-              
               <Button variant="outline" size="icon" className="relative">
                 <Bell className="w-5 h-5" />
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
@@ -271,6 +286,10 @@ const ModernProfessionalDashboard = () => {
               
               <Button variant="outline" size="icon">
                 <Settings className="w-5 h-5" />
+              </Button>
+              
+              <Button onClick={handleSignOut} variant="outline">
+                Sign Out
               </Button>
             </div>
           </div>
