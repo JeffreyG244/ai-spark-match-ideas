@@ -15,6 +15,8 @@ import { useProfileData } from '@/hooks/useProfileData';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import MembershipBadge from '@/components/profile/MembershipBadge';
+import { useMembershipBadge } from '@/hooks/useMembershipBadge';
 
 interface DashboardStats {
   totalMatches: number;
@@ -42,6 +44,7 @@ const ModernProfessionalDashboard = () => {
   const { matches } = useMatches();
   const { dailyMatches } = useDailyMatches();
   const { profileData } = useProfileData();
+  const { membershipLevel, loading: badgeLoading } = useMembershipBadge();
   
   const [stats, setStats] = useState<DashboardStats>({
     totalMatches: 0,
@@ -253,15 +256,13 @@ const ModernProfessionalDashboard = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-2">
-                <Shield className="w-5 h-5 text-emerald-600" />
-                <span className="text-emerald-600 text-sm font-medium">Executive Verified</span>
-              </div>
-              
-              <div className="flex items-center space-x-2 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-xl px-4 py-2">
-                <Crown className="w-5 h-5 text-yellow-600" />
-                <span className="text-yellow-600 text-sm font-medium">C-Suite Premium</span>
-              </div>
+              {!badgeLoading && (
+                <MembershipBadge 
+                  membershipLevel={membershipLevel} 
+                  size="md"
+                  className="bg-opacity-20 backdrop-blur-xl"
+                />
+              )}
               
               <Button variant="outline" size="icon" className="relative">
                 <Bell className="w-5 h-5" />

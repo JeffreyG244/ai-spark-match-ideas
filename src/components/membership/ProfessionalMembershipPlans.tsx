@@ -103,6 +103,7 @@ const ProfessionalMembershipPlans = () => {
           { text: 'Monthly dating strategy session', icon: Users },
           { text: 'Industry networking access', icon: Briefcase }
         ];
+      case 'C-Suite':
       case 'C-suite':
       case 'VIP':
         return [
