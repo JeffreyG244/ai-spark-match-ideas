@@ -33,14 +33,9 @@ const Messages: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-green-500/20 backdrop-blur-xl border border-green-500/30 rounded-xl px-4 py-2">
-                <Shield className="w-5 h-5 text-green-400" />
-                <span className="text-green-400 text-sm font-medium">Executive Verified</span>
-              </div>
-              
-              <div className="flex items-center space-x-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-xl border border-yellow-500/30 rounded-xl px-4 py-2">
-                <Crown className="w-5 h-5 text-yellow-400" />
-                <span className="text-yellow-400 text-sm font-medium">C-Suite Premium</span>
+              <div className="flex items-center space-x-2 bg-blue-500/20 backdrop-blur-xl border border-blue-500/30 rounded-xl px-4 py-2">
+                <Shield className="w-5 h-5 text-blue-400" />
+                <span className="text-blue-400 text-sm font-medium">Executive</span>
               </div>
               
               <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl font-semibold hover:scale-105 transition-all">
