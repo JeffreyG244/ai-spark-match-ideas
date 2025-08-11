@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart } from 'lucide-react';
+import logoImage from '@/assets/luvlang-professional-logo.png';
 
 interface LogoProps {
   className?: string;
@@ -27,7 +27,7 @@ const Logo: React.FC<LogoProps> = ({
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <img 
-        src="/lovable-uploads/f5d073a5-8ed2-4f0a-be2f-30f2bc9622da.png"
+        src={logoImage}
         alt="Luvlang Logo"
         className={`${sizeClasses[size]} object-contain`}
       />
