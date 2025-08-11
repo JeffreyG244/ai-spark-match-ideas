@@ -98,20 +98,17 @@ const ProfessionalMatchingDashboard: React.FC = () => {
     
     setTriggering(true);
     try {
-      // Call the N8N webhook to trigger professional matching
-      const response = await fetch('http://localhost:5678/webhook/professional-match-trigger', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: user.id,
-          trigger_type: 'manual_professional_match'
-        })
+      // Call the Supabase edge function for professional matching
+      const { data, error } = await supabase.functions.invoke('professional-match-trigger', {
+        body: {
+          userId: user.id,
+          preferences: {},
+          timestamp: new Date().toISOString()
+        }
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (error) {
+        throw error;
       }
 
       toast({
