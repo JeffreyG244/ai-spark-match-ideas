@@ -264,18 +264,20 @@ const ModernProfessionalDashboard = () => {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-love-primary to-love-secondary rounded-xl flex items-center justify-center shadow-lg">
+                  <Heart className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Luvlang</h1>
+                  <p className="text-sm text-muted-foreground">Executive Dashboard</p>
+                </div>
+              </div>
               <MembershipBadge 
                 membershipLevel={membershipLevel} 
                 size="md"
                 className="bg-opacity-20 backdrop-blur-xl"
               />
-              <div className="w-12 h-12 bg-gradient-to-r from-love-primary to-love-secondary rounded-xl flex items-center justify-center shadow-lg">
-                <Heart className="w-7 h-7 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">Luvlang</h1>
-                <p className="text-sm text-muted-foreground">Executive Dashboard - Welcome back, {user?.user_metadata?.first_name}</p>
-              </div>
             </div>
             
             <div className="flex items-center space-x-4">

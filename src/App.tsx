@@ -39,6 +39,7 @@ import TestIntegration from "./pages/TestIntegration";
 import TestSetup from "./pages/TestSetup";
 import N8NTesting from "./pages/N8NTesting";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
+import SystemAudit from "./pages/SystemAudit";
 
 // Legal pages
 import TermsOfService from "./pages/legal/TermsOfService";
@@ -103,8 +104,9 @@ function App() {
                     <Route path="/seed-users" element={<SeedUsers />} />
                     <Route path="/seed-dating-profiles" element={<SeedDatingProfiles />} />
                     <Route path="/seed-enhanced-profiles" element={<SeedEnhancedProfiles />} />
-                    <Route path="/pre-launch-audit" element={<PreLaunchAudit />} />
-                    <Route path="/admin" element={<PreLaunchAudit />} />
+                     <Route path="/pre-launch-audit" element={<PreLaunchAudit />} />
+                     <Route path="/system-audit" element={<SystemAudit />} />
+                     <Route path="/admin" element={<PreLaunchAudit />} />
                     <Route path="/verification" element={<Verification />} />
                     <Route path="/safety" element={<Safety />} />
                     <Route path="/analytics" element={<Analytics />} />
