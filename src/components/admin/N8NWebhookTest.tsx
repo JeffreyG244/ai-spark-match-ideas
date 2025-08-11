@@ -76,7 +76,7 @@ const N8NWebhookTest = () => {
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="border-purple-300 text-purple-600">
             <Webhook className="h-3 w-3 mr-1" />
-            Webhook URL: localhost:5678/webhook-test/luvlang-match
+            Webhook URL: https://luvlang.org/webhook-test/luvlang-match
           </Badge>
         </div>
 

@@ -100,15 +100,10 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
           return;
         }
 
-        // Remove duplicates
-        const uniqueStates = data.reduce((acc: StateOption[], current) => {
-          if (!acc.find(state => state.state_code === current.state_code)) {
-            acc.push(current);
-          }
-          return acc;
-        }, []);
+        // Already unique data - no duplicates to remove
+        setStates(data);
 
-        setStates(uniqueStates);
+        
       } catch (error) {
         console.error('Error loading states:', error);
       } finally {

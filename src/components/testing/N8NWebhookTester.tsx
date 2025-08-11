@@ -13,7 +13,7 @@ const N8NWebhookTester: React.FC = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [testResults, setTestResults] = useState<any>(null);
-  const [customWebhookUrl, setCustomWebhookUrl] = useState('http://localhost:5678/webhook-test/luvlang-match');
+  const [customWebhookUrl, setCustomWebhookUrl] = useState('https://luvlang.org/webhook-test/luvlang-match');
   
   // Auto-trigger test on component mount for direct testing
   React.useEffect(() => {
@@ -179,7 +179,7 @@ const N8NWebhookTester: React.FC = () => {
               id="webhook-url"
               value={customWebhookUrl}
               onChange={(e) => setCustomWebhookUrl(e.target.value)}
-              placeholder="http://localhost:5678/webhook-test/luvlang-match"
+              placeholder="https://luvlang.org/webhook-test/luvlang-match"
               className="font-mono text-sm"
             />
             <p className="text-xs text-gray-500">
