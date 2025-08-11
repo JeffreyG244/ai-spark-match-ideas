@@ -253,28 +253,28 @@ const ProfessionalMembershipPlans = () => {
         };
       case 'Executive':
         return {
-          border: 'border-[hsl(var(--silver-3))]',
-          badge: 'bg-gradient-to-r from-[hsl(var(--silver-1))] via-[hsl(var(--silver-2))] to-[hsl(var(--silver-3))]',
+          border: 'border-2 border-[hsl(var(--silver-2))]',
+          badge: 'bg-gradient-to-r from-[hsl(var(--silver-1))] via-[hsl(var(--silver-2))] to-[hsl(var(--silver-3))] text-white',
           icon: 'text-[hsl(var(--silver-3))]',
-          iconBg: 'bg-gradient-to-br from-[hsl(var(--silver-1))] to-[hsl(var(--silver-2))]',
+          iconBg: 'bg-gradient-to-br from-[hsl(var(--silver-1))] via-[hsl(var(--silver-2))] to-[hsl(var(--silver-3))]',
           button: 'bg-gradient-to-r from-[hsl(var(--silver-2))] via-[hsl(var(--silver-3))] to-[hsl(var(--silver-2))] hover:from-[hsl(var(--silver-3))] hover:via-[hsl(var(--silver-3))] hover:to-[hsl(var(--silver-3))]',
           gradient: 'from-[hsl(var(--silver-1))] to-[hsl(var(--silver-2))]',
-          cardBg: 'bg-gradient-to-br from-[hsl(var(--silver-1))] via-white to-[hsl(var(--silver-2))]',
+          cardBg: 'bg-gradient-to-br from-[hsl(var(--silver-1))/20 via-[hsl(var(--silver-1))/10 to-[hsl(var(--silver-2))/20',
           planIcon: Briefcase,
-          shadow: 'shadow-2xl'
+          shadow: 'shadow-2xl shadow-[hsl(var(--silver-2))]/30'
         };
       case 'C-suite':
       case 'VIP':
         return {
-          border: 'border-[hsl(var(--gold-2))]',
-          badge: 'bg-gradient-to-r from-[hsl(var(--gold-1))] via-[hsl(var(--gold-2))] to-[hsl(var(--gold-3))]',
-          icon: 'text-[hsl(var(--gold-1))]',
-          iconBg: 'bg-gradient-to-br from-[hsl(var(--gold-1))] to-[hsl(var(--gold-2))]',
+          border: 'border-4 border-[hsl(var(--gold-2))]',
+          badge: 'bg-gradient-to-r from-[hsl(var(--gold-1))] via-[hsl(var(--gold-2))] to-[hsl(var(--gold-3))] text-black',
+          icon: 'text-[hsl(var(--gold-3))]',
+          iconBg: 'bg-gradient-to-br from-[hsl(var(--gold-1))] via-[hsl(var(--gold-2))] to-[hsl(var(--gold-3))]',
           button: 'bg-gradient-to-r from-[hsl(var(--gold-2))] via-[hsl(var(--gold-3))] to-[hsl(var(--gold-2))] hover:from-[hsl(var(--gold-3))] hover:via-[hsl(var(--gold-3))] hover:to-[hsl(var(--gold-3))]',
           gradient: 'from-[hsl(var(--gold-1))] to-[hsl(var(--gold-2))]',
-          cardBg: 'bg-gradient-to-br from-[hsl(var(--gold-1))] via-white to-[hsl(var(--gold-2))]',
+          cardBg: 'bg-gradient-to-br from-[hsl(var(--gold-1))/20 via-[hsl(var(--gold-1))/10 to-[hsl(var(--gold-2))/20',
           planIcon: Star,
-          shadow: 'shadow-2xl'
+          shadow: 'shadow-2xl shadow-[hsl(var(--gold-2))]/40'
         };
       default:
         return {
@@ -371,8 +371,8 @@ const ProfessionalMembershipPlans = () => {
 
                 {(plan.name === 'VIP' || plan.name === 'C-suite') && (
                   <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10">
-                    <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-bold shadow-lg rounded-full`}>
-                      <Star className="w-3 h-3 mr-1 text-[hsl(var(--gold-1))]" />
+                    <Badge className={`${theme.badge} border-0 px-3 py-1 text-xs font-bold shadow-lg rounded-full`}>
+                      <Star className="w-3 h-3 mr-1 text-[hsl(var(--star-bright))]" />
                       Elite Access
                     </Badge>
                   </div>
