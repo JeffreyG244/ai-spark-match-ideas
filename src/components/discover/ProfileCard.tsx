@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
+import MembershipBadge from '@/components/profile/MembershipBadge';
 
 interface UserProfile {
   id: string;
@@ -16,6 +17,7 @@ interface UserProfile {
   photos: string[];
   firstName: string;
   lastName: string;
+  membership_type?: 'basic' | 'premium' | 'executive' | 'c_suite';
 }
 
 interface ProfileCardProps {
@@ -68,9 +70,15 @@ const ProfileCard = ({ user, swipeDirection, onDragEnd, cardIndex }: ProfileCard
           </div>
           <CardTitle className="flex items-center justify-between">
             <span className="text-xl">{user.firstName} {user.lastName}</span>
-            <Badge className="bg-purple-100 text-purple-800">
-              {Math.floor(Math.random() * 20) + 20} years
-            </Badge>
+            <div className="flex items-center gap-2">
+              <MembershipBadge 
+                membershipLevel={user.membership_type || 'basic'} 
+                size="sm"
+              />
+              <Badge className="bg-purple-100 text-purple-800">
+                {Math.floor(Math.random() * 20) + 20} years
+              </Badge>
+            </div>
           </CardTitle>
           <div className="flex items-center text-gray-500 text-sm">
             <MapPin className="h-4 w-4 mr-1" />

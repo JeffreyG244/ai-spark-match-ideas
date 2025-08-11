@@ -8,6 +8,7 @@ import { useMessages } from '@/hooks/useMessages';
 import { usePresence } from '@/hooks/usePresence';
 import { useAuth } from '@/hooks/useAuth';
 import { sanitizeForDisplay, LIMITS } from '@/utils/security';
+import MembershipBadge from '@/components/profile/MembershipBadge';
 
 interface ChatWindowProps {
   conversationId: string | null;
@@ -71,7 +72,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({ conversationId, otherUserId }) 
             />
           </div>
           <div>
-            <div>User {otherUserId?.slice(0, 8)}</div>
+            <div className="flex items-center gap-2 mb-1">
+              <span>User {otherUserId?.slice(0, 8)}</span>
+              <MembershipBadge 
+                membershipLevel={(['basic', 'premium', 'executive', 'c_suite'] as const)[Math.floor(Math.random() * 4)]} 
+                size="sm"
+              />
+            </div>
             <div className="text-xs font-normal text-gray-500">
               {isUserOnline(otherUserId!) ? 'Online' : 'Offline'}
             </div>

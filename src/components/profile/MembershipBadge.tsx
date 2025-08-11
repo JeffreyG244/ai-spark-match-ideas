@@ -17,35 +17,35 @@ const MembershipBadge: React.FC<MembershipBadgeProps> = ({
     switch (membershipLevel) {
       case 'basic':
         return {
-          text: 'Professional Verified',
+          text: 'Basic',
           icon: Shield,
           className: 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-800 border-emerald-300 hover:from-emerald-100 hover:to-teal-100 shadow-lg shadow-emerald-500/20',
           iconColor: 'text-emerald-600'
         };
       case 'premium':
         return {
-          text: 'Executive Verified',
+          text: 'Standard',
           icon: Crown,
           className: 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-800 border-purple-300 hover:from-purple-100 hover:to-indigo-100 shadow-lg shadow-purple-500/20',
           iconColor: 'text-purple-600'
         };
       case 'executive':
         return {
-          text: 'Senior Executive',
+          text: 'Executive',
           icon: Briefcase,
           className: 'bg-gradient-to-r from-slate-50 to-gray-50 text-slate-800 border-slate-400 hover:from-slate-100 hover:to-gray-100 shadow-lg shadow-slate-500/20',
           iconColor: 'text-slate-600'
         };
       case 'c_suite':
         return {
-          text: 'C-Suite Elite',
+          text: 'C-Suite',
           icon: Star,
           className: 'bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-800 border-amber-400 hover:from-amber-100 hover:to-yellow-100 shadow-lg shadow-amber-500/20',
           iconColor: 'text-amber-600'
         };
       default:
         return {
-          text: 'Verified Member',
+          text: 'Basic',
           icon: Shield,
           className: 'bg-gradient-to-r from-gray-50 to-slate-50 text-gray-800 border-gray-300 shadow-lg shadow-gray-500/20',
           iconColor: 'text-gray-600'

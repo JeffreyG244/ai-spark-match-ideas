@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { MessageCircle, Circle } from 'lucide-react';
 import { useConversations } from '@/hooks/useConversations';
 import { usePresence } from '@/hooks/usePresence';
+import MembershipBadge from '@/components/profile/MembershipBadge';
 
 interface ConversationsListProps {
   onSelectConversation: (conversationId: string, otherUserId: string) => void;
@@ -75,8 +76,14 @@ const ConversationsList: React.FC<ConversationsListProps> = ({
                   />
                 </div>
                 <div className="flex-1 text-left">
-                  <div className="font-medium">
-                    User {conversation.other_participant?.slice(0, 8)}
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium">
+                      User {conversation.other_participant?.slice(0, 8)}
+                    </span>
+                    <MembershipBadge 
+                      membershipLevel={(['basic', 'premium', 'executive', 'c_suite'] as const)[Math.floor(Math.random() * 4)]} 
+                      size="sm"
+                    />
                   </div>
                   <div className="text-xs text-gray-500">
                     {isUserOnline(conversation.other_participant!) ? 'Online' : 'Offline'}
