@@ -13,6 +13,8 @@ import { toast } from '@/hooks/use-toast';
 import { useAlert } from '@/components/providers/AlertProvider';
 import { useNavigate } from 'react-router-dom';
 import Logo from '@/components/ui/logo';
+import MembershipBadge from '@/components/profile/MembershipBadge';
+import { useMembershipBadge } from '@/hooks/useMembershipBadge';
 
 interface UserProfile {
   id: string;
@@ -42,6 +44,7 @@ const Discover = () => {
   const { showAlert } = useAlert();
   const navigate = useNavigate();
   const { recordSwipe, isLoading: swipeLoading } = useSwipeActions();
+  const { membershipLevel } = useMembershipBadge();
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState<'like' | 'pass' | null>(null);
@@ -368,10 +371,10 @@ const Discover = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-blue-500/20 backdrop-blur-xl border border-blue-500/30 rounded-xl px-4 py-2">
-                <Shield className="w-5 h-5 text-blue-400" />
-                <span className="text-blue-400 text-sm font-medium">Executive</span>
-              </div>
+            <MembershipBadge 
+              membershipLevel={membershipLevel} 
+              size="md"
+            />
               
               <button className="bg-slate-800/50 backdrop-blur-xl border border-slate-600/30 rounded-xl p-3 hover:bg-slate-700/50 transition-all">
                 <Filter className="w-5 h-5 text-white" />
