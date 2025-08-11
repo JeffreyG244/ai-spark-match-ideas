@@ -41,78 +41,81 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get profile data from executive_dating_profiles
-    const { data: profile, error: profileError } = await supabaseClient
+    // Get user data from users table
+    const { data: user, error: userError } = await supabaseClient
+      .from('users')
+      .select('*')
+      .eq('id', user_id)
+      .maybeSingle();
+
+    if (userError) {
+      console.error('User fetch error:', userError);
+      return new Response(
+        JSON.stringify({ error: 'Database error', details: userError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get profile data from executive_dating_profiles if it exists
+    const { data: profile } = await supabaseClient
       .from('executive_dating_profiles')
       .select('*')
       .eq('user_id', user_id)
       .maybeSingle();
 
-    if (profileError) {
-      console.error('Profile fetch error:', profileError);
-      return new Response(
-        JSON.stringify({ error: 'Database error', details: profileError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (!profile) {
-      // Create a minimal profile for webhook testing
-      const minimalProfile = {
-        user_id: user_id,
-        first_name: 'Test',
-        last_name: 'User',
-        age: 30,
-        primary_location: 'San Francisco, CA',
-        age_range_min: 25,
-        age_range_max: 35,
-        cultural_interests: ['Technology', 'Business'],
-        weekend_activities: ['Networking', 'Reading'],
-        sexual_orientation: ['Heterosexual'],
-        deal_breakers: []
-      };
-      
-      console.log('No profile found, using minimal profile for testing');
-    }
-
-    // Get compatibility answers
-    const { data: compatibility } = await supabaseClient
-      .from('compatibility_answers')
-      .select('*')
-      .eq('user_id', user_id)
-      .maybeSingle();
-
-    // Use actual profile or minimal profile for testing
-    const profileData = profile || {
-      user_id: user_id,
+    // Use user data or create test data
+    const userData = user || {
+      id: user_id,
       first_name: 'Test',
       last_name: 'User',
       age: 30,
-      primary_location: 'San Francisco, CA',
-      age_range_min: 25,
-      age_range_max: 35,
-      cultural_interests: ['Technology', 'Business'],
-      weekend_activities: ['Networking', 'Reading'],
-      sexual_orientation: ['Heterosexual'],
-      deal_breakers: []
+      city: 'San Francisco',
+      state: 'CA',
+      interests: ['Technology', 'Business'],
+      bio: 'Test user for webhook testing'
+    };
+
+    console.log('User data found:', userData.first_name, userData.last_name);
+
+    // Combine user data with profile data
+    const combinedData = {
+      user_id: user_id,
+      first_name: userData.first_name,
+      last_name: userData.last_name,
+      age: userData.age || profile?.age || 30,
+      primary_location: profile?.primary_location || `${userData.city || 'San Francisco'}, ${userData.state || 'CA'}`,
+      age_range_min: profile?.age_range_min || (userData.age_min || 25),
+      age_range_max: profile?.age_range_max || (userData.age_max || 35),
+      cultural_interests: profile?.cultural_interests || userData.cultural_interests || userData.interests || ['Technology', 'Business'],
+      weekend_activities: profile?.weekend_activities || ['Networking', 'Reading'],
+      sexual_orientation: profile?.sexual_orientation || ['Heterosexual'],
+      deal_breakers: profile?.deal_breakers || userData.deal_breakers || [],
+      bio: userData.bio || 'Professional seeking meaningful connections',
+      industry: userData.industry,
+      job_title: userData.job_title
     };
 
     // Prepare data for N8N webhook
     const webhookData: ProfileData = {
       user_id: user_id,
-      name: `${profileData.first_name} ${profileData.last_name}`,
+      name: `${combinedData.first_name} ${combinedData.last_name}`,
       match_score: 0.95,
       timestamp: new Date().toISOString(),
       event_type: event_type,
       data: {
-        profile: profileData,
-        compatibility: compatibility?.answers || {},
+        profile: combinedData,
+        compatibility: {}, // Empty for now since table doesn't exist
         preferences: {
-          age_range: [profileData.age_range_min || (profileData.age - 5), profileData.age_range_max || (profileData.age + 5)],
-          location: profileData.primary_location,
-          interests: profileData.cultural_interests || profileData.weekend_activities || [],
-          sexual_orientation: profileData.sexual_orientation,
-          deal_breakers: profileData.deal_breakers
+          age_range: [combinedData.age_range_min, combinedData.age_range_max],
+          location: combinedData.primary_location,
+          interests: combinedData.cultural_interests,
+          sexual_orientation: combinedData.sexual_orientation,
+          deal_breakers: combinedData.deal_breakers
+        },
+        user_metadata: {
+          industry: combinedData.industry,
+          job_title: combinedData.job_title,
+          bio: combinedData.bio
         }
       }
     };

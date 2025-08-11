@@ -39,75 +39,85 @@ const N8NWebhookTester: React.FC = () => {
     try {
       console.log('Testing N8N webhook connectivity...');
       
-      // Test 1: Trigger profile webhook (existing Supabase function)
-      console.log('Step 1: Testing profile webhook...');
+      // Step 1: Test the Supabase profile-webhook function
+      console.log('Step 1: Testing Supabase profile-webhook function...');
       const profileWebhookResponse = await supabase.functions.invoke('profile-webhook', {
         body: { 
           user_id: user.id,
-          event_type: 'webhook_test'
+          event_type: 'integration_test'
         }
       });
 
       console.log('Profile webhook response:', profileWebhookResponse);
 
-      // Test 2: Direct webhook call to your N8N endpoint with full profile data
-      console.log('Step 2: Testing direct N8N webhook with full profile data...');
+      // Step 2: Test direct webhook call to N8N
+      console.log('Step 2: Testing direct N8N webhook...');
       
-      const fullWebhookPayload = {
+      const webhookPayload = {
         user_id: user.id,
-        name: `${user.user_metadata?.first_name || 'Test'} ${user.user_metadata?.last_name || 'User'}`,
+        name: `${user.user_metadata?.first_name || 'Jeffrey'} ${user.user_metadata?.last_name || 'Graves'}`,
         match_score: 0.95,
         timestamp: new Date().toISOString(),
-        event_type: 'webhook_test',
+        event_type: 'integration_test',
         data: {
           profile: {
             user_id: user.id,
-            first_name: user.user_metadata?.first_name || 'Test',
-            last_name: user.user_metadata?.last_name || 'User',
-            age: 30,
-            primary_location: 'San Francisco, CA',
+            first_name: user.user_metadata?.first_name || 'Jeffrey',
+            last_name: user.user_metadata?.last_name || 'Graves',
+            age: 35,
+            primary_location: 'Test City, CA',
             age_range_min: 25,
-            age_range_max: 35,
-            cultural_interests: ['Technology', 'Business'],
-            weekend_activities: ['Networking', 'Reading'],
+            age_range_max: 45,
+            cultural_interests: ['Technology', 'Business', 'Innovation'],
+            weekend_activities: ['Networking', 'Professional Development'],
             sexual_orientation: ['Heterosexual'],
-            deal_breakers: []
+            deal_breakers: [],
+            bio: 'Test bio for profile creation',
+            industry: 'Technology',
+            job_title: 'Professional'
           },
           compatibility: {},
           preferences: {
-            age_range: [25, 35],
-            location: 'San Francisco, CA',
-            interests: ['Technology', 'Business', 'Networking'],
+            age_range: [25, 45],
+            location: 'Test City, CA',
+            interests: ['Technology', 'Business', 'Innovation'],
             sexual_orientation: ['Heterosexual'],
             deal_breakers: []
+          },
+          user_metadata: {
+            industry: 'Technology',
+            job_title: 'Professional',
+            bio: 'Test bio for profile creation'
           }
         }
       };
 
-      console.log('Sending webhook payload:', fullWebhookPayload);
+      console.log('Sending comprehensive webhook payload:', webhookPayload);
       
-      const directWebhookResponse = await fetch(customWebhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        mode: 'no-cors',
-        body: JSON.stringify(fullWebhookPayload)
-      });
-
-      // Test 3: Check recent N8N webhook logs
-      console.log('Step 3: Checking webhook logs...');
-      // Mock webhook logs since the table doesn't exist
-      const webhookLogs = [
-        {
-          id: '1',
-          webhook_url: 'test',
-          payload: { test: 'data' },
-          response_status: 200,
-          created_at: new Date().toISOString()
-        }
-      ];
-      const logsError = null;
+      // Try direct webhook call with better error handling
+      let directWebhookResult = null;
+      try {
+        const response = await fetch(customWebhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookPayload)
+        });
+        
+        directWebhookResult = {
+          success: response.ok,
+          status: response.status,
+          statusText: response.statusText,
+          note: response.ok ? 'Direct webhook successful' : `Failed with status ${response.status}`
+        };
+      } catch (error) {
+        directWebhookResult = {
+          success: false,
+          error: error.message,
+          note: 'CORS or network error - webhook may still have been delivered'
+        };
+      }
 
       const results = {
         profileWebhook: {
@@ -115,29 +125,25 @@ const N8NWebhookTester: React.FC = () => {
           data: profileWebhookResponse.data,
           error: profileWebhookResponse.error
         },
-        directWebhook: {
-          attempted: true,
-          note: 'Direct webhook sent (CORS prevented response reading)'
-        },
-        webhookLogs: {
-          success: !logsError,
-          logs: webhookLogs || [],
-          error: logsError
-        },
-        timestamp: new Date().toISOString()
+        directWebhook: directWebhookResult,
+        summary: {
+          supabase_function: !profileWebhookResponse.error ? 'SUCCESS' : 'FAILED',
+          direct_webhook: directWebhookResult?.success ? 'SUCCESS' : 'FAILED_OR_CORS',
+          timestamp: new Date().toISOString()
+        }
       };
 
       setTestResults(results);
 
       if (!profileWebhookResponse.error) {
         toast({
-          title: 'Webhook Test Initiated',
-          description: 'Profile webhook triggered successfully. Check your N8N workflow for activity.',
+          title: 'Webhook Tests Completed',
+          description: 'Check results below and your N8N workflow for incoming data.',
         });
       } else {
         toast({
-          title: 'Webhook Test Failed',
-          description: profileWebhookResponse.error.message || 'Unknown error occurred',
+          title: 'Webhook Test Issues Detected',
+          description: 'Some tests failed - check results for details.',
           variant: 'destructive'
         });
       }
