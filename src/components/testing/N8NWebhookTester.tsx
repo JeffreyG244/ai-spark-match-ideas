@@ -37,127 +37,34 @@ const N8NWebhookTester: React.FC = () => {
     setTestResults(null);
 
     try {
-      console.log('Testing N8N webhook connectivity...');
-      
-      // Step 1: Test the Supabase profile-webhook function
-      console.log('Step 1: Testing Supabase profile-webhook function...');
-      const profileWebhookResponse = await supabase.functions.invoke('profile-webhook', {
+      // Send test directly to N8N webhook
+      const { data, error } = await supabase.functions.invoke('profile-webhook', {
         body: { 
-          user_id: user.id,
-          event_type: 'integration_test'
+          user_id: user.id, 
+          event_type: 'manual_test'
         }
       });
 
-      console.log('Profile webhook response:', profileWebhookResponse);
-
-      // Step 2: Test direct webhook call to N8N
-      console.log('Step 2: Testing direct N8N webhook...');
-      
-      const webhookPayload = {
-        user_id: user.id,
-        name: `${user.user_metadata?.first_name || 'Jeffrey'} ${user.user_metadata?.last_name || 'Graves'}`,
-        match_score: 0.95,
-        timestamp: new Date().toISOString(),
-        event_type: 'integration_test',
-        data: {
-          profile: {
-            user_id: user.id,
-            first_name: user.user_metadata?.first_name || 'Jeffrey',
-            last_name: user.user_metadata?.last_name || 'Graves',
-            age: 35,
-            primary_location: 'Test City, CA',
-            age_range_min: 25,
-            age_range_max: 45,
-            cultural_interests: ['Technology', 'Business', 'Innovation'],
-            weekend_activities: ['Networking', 'Professional Development'],
-            sexual_orientation: ['Heterosexual'],
-            deal_breakers: [],
-            bio: 'Test bio for profile creation',
-            industry: 'Technology',
-            job_title: 'Professional'
-          },
-          compatibility: {},
-          preferences: {
-            age_range: [25, 45],
-            location: 'Test City, CA',
-            interests: ['Technology', 'Business', 'Innovation'],
-            sexual_orientation: ['Heterosexual'],
-            deal_breakers: []
-          },
-          user_metadata: {
-            industry: 'Technology',
-            job_title: 'Professional',
-            bio: 'Test bio for profile creation'
-          }
-        }
-      };
-
-      console.log('Sending comprehensive webhook payload:', webhookPayload);
-      
-      // Try direct webhook call with better error handling
-      let directWebhookResult = null;
-      try {
-        const response = await fetch(customWebhookUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(webhookPayload)
-        });
-        
-        directWebhookResult = {
-          success: response.ok,
-          status: response.status,
-          statusText: response.statusText,
-          note: response.ok ? 'Direct webhook successful' : `Failed with status ${response.status}`
-        };
-      } catch (error) {
-        directWebhookResult = {
-          success: false,
-          error: error.message,
-          note: 'CORS or network error - webhook may still have been delivered'
-        };
-      }
-
-      const results = {
-        profileWebhook: {
-          success: !profileWebhookResponse.error,
-          data: profileWebhookResponse.data,
-          error: profileWebhookResponse.error
-        },
-        directWebhook: directWebhookResult,
-        summary: {
-          supabase_function: !profileWebhookResponse.error ? 'SUCCESS' : 'FAILED',
-          direct_webhook: directWebhookResult?.success ? 'SUCCESS' : 'FAILED_OR_CORS',
-          timestamp: new Date().toISOString()
-        }
-      };
-
-      setTestResults(results);
-
-      if (!profileWebhookResponse.error) {
+      if (error) {
+        setTestResults({ error: error.message });
         toast({
-          title: 'Webhook Tests Completed',
-          description: 'Check results below and your N8N workflow for incoming data.',
+          title: "Test Failed",
+          description: error.message,
+          variant: "destructive",
         });
       } else {
+        setTestResults(data);
         toast({
-          title: 'Webhook Test Issues Detected',
-          description: 'Some tests failed - check results for details.',
-          variant: 'destructive'
+          title: "Test Sent Successfully",
+          description: "Check your N8N workflow for the webhook data",
         });
       }
-
     } catch (error: any) {
-      console.error('Webhook test error:', error);
-      setTestResults({
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
+      setTestResults({ error: error.message });
       toast({
-        title: 'Test Error',
-        description: 'Failed to complete webhook test. Check console for details.',
-        variant: 'destructive'
+        title: "Test Error",
+        description: error.message,
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
