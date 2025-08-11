@@ -268,12 +268,12 @@ const ProfessionalMembershipPlans = () => {
         return {
           border: 'border-[hsl(var(--gold-2))]',
           badge: 'bg-gradient-to-r from-[hsl(var(--gold-1))] via-[hsl(var(--gold-2))] to-[hsl(var(--gold-3))]',
-          icon: 'text-[hsl(var(--gold-3))]',
+          icon: 'text-[hsl(var(--gold-1))]',
           iconBg: 'bg-gradient-to-br from-[hsl(var(--gold-1))] to-[hsl(var(--gold-2))]',
           button: 'bg-gradient-to-r from-[hsl(var(--gold-2))] via-[hsl(var(--gold-3))] to-[hsl(var(--gold-2))] hover:from-[hsl(var(--gold-3))] hover:via-[hsl(var(--gold-3))] hover:to-[hsl(var(--gold-3))]',
           gradient: 'from-[hsl(var(--gold-1))] to-[hsl(var(--gold-2))]',
-          cardBg: 'bg-gradient-to-br from-white via-[hsl(var(--gold-1))] to-[hsl(var(--gold-1))]',
-          planIcon: Diamond,
+          cardBg: 'bg-gradient-to-br from-[hsl(var(--gold-1))] via-white to-[hsl(var(--gold-2))]',
+          planIcon: Star,
           shadow: 'shadow-2xl'
         };
       default:
@@ -372,7 +372,7 @@ const ProfessionalMembershipPlans = () => {
                 {(plan.name === 'VIP' || plan.name === 'C-suite') && (
                   <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10">
                     <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-bold shadow-lg rounded-full`}>
-                      <Diamond className="w-3 h-3 mr-1" />
+                      <Star className="w-3 h-3 mr-1 text-[hsl(var(--gold-1))]" />
                       Elite Access
                     </Badge>
                   </div>
@@ -404,7 +404,7 @@ const ProfessionalMembershipPlans = () => {
                   {getDisplayName(plan.name) === 'Basic' && "Essential features for dating"}
                   {getDisplayName(plan.name) === 'Standard' && "Most popular choice"}
                   {getDisplayName(plan.name) === 'Executive' && "Advanced professional features"}
-                  {getDisplayName(plan.name) === 'C-suite' && "Elite Professional Features"}
+                  {getDisplayName(plan.name) === 'C-suite' && "Engineered for elite executives — exceed every expectation"}
                 </p>
                 {billingCycle === 'annual' && plan.monthly_price > 0 && plan.annual_price && (
                   <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200 text-xs mt-2">
