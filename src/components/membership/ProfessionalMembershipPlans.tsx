@@ -351,16 +351,16 @@ const ProfessionalMembershipPlans = () => {
                 isCsuite
                   ? 'bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-2 border-yellow-300' 
                   : isExecutive
-                    ? 'bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 border-2 border-slate-300'
+                    ? 'bg-gradient-to-br from-blue-50 via-indigo-50 to-slate-100 border-2 border-blue-300'
                     : theme.cardBg
               } ${
                 isCsuite
                   ? 'shadow-xl shadow-yellow-400/20' 
                   : isExecutive
-                    ? 'shadow-xl shadow-slate-400/20'
+                    ? 'shadow-xl shadow-blue-400/20'
                     : theme.shadow
               } ${
-                isCsuite ? 'border-yellow-300' : isExecutive ? 'border-slate-300' : theme.border
+                isCsuite ? 'border-yellow-300' : isExecutive ? 'border-blue-300' : theme.border
               } ${
                 isCurrentPlan ? 'ring-2 ring-green-500/50' : ''
               } overflow-hidden rounded-xl`}
@@ -369,7 +369,9 @@ const ProfessionalMembershipPlans = () => {
               <div className={`absolute top-0 left-0 right-0 h-1 ${
                 isCsuite
                   ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400' 
-                  : `bg-gradient-to-r ${theme.badge}`
+                  : isExecutive
+                    ? 'bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500'
+                    : `bg-gradient-to-r ${theme.badge}`
               }`} />
               
               {/* Top Badge */}
