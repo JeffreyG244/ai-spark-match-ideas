@@ -37,6 +37,8 @@ const N8NWebhookTester: React.FC = () => {
     setTestResults(null);
 
     try {
+      console.log('🚀 Sending test to N8N webhook...');
+      
       // Send test directly to N8N webhook
       const { data, error } = await supabase.functions.invoke('profile-webhook', {
         body: { 
@@ -45,19 +47,36 @@ const N8NWebhookTester: React.FC = () => {
         }
       });
 
+      console.log('📦 Supabase function response:', data);
+
       if (error) {
-        setTestResults({ error: error.message });
+        console.error('❌ Supabase function error:', error);
+        setTestResults({ 
+          error: error.message,
+          step: 'supabase_function_call'
+        });
         toast({
           title: "Test Failed",
           description: error.message,
           variant: "destructive",
         });
       } else {
+        console.log('✅ Function executed successfully');
         setTestResults(data);
-        toast({
-          title: "Test Sent Successfully",
-          description: "Check your N8N workflow for the webhook data",
-        });
+        
+        // Check if webhook was successful
+        if (data?.webhook_result?.success) {
+          toast({
+            title: "✅ Test Successful",
+            description: "Data sent to N8N successfully! Check your workflow.",
+          });
+        } else {
+          toast({
+            title: "⚠️ Webhook Issue",
+            description: data?.webhook_result?.note || "N8N webhook returned an error",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error: any) {
       setTestResults({ error: error.message });
