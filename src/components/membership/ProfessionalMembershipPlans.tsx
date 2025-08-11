@@ -344,7 +344,7 @@ const ProfessionalMembershipPlans = () => {
           return (
             <Card 
               key={plan.id}
-              className={`relative transition-all duration-500 hover:scale-102 ${theme.cardBg} ${theme.border} ${theme.shadow} ${
+              className={`relative transition-all duration-500 hover:scale-105 animate-enter ${theme.cardBg} ${theme.border} ${theme.shadow} ${
                 isCurrentPlan ? 'ring-2 ring-green-500/50' : ''
               } overflow-hidden rounded-xl`}
             >
@@ -406,7 +406,7 @@ const ProfessionalMembershipPlans = () => {
                   {getDisplayName(plan.name) === 'Basic' && "Essential features for dating"}
                   {getDisplayName(plan.name) === 'Standard' && "Most popular choice"}
                   {getDisplayName(plan.name) === 'Executive' && "Advanced professional features"}
-                  {getDisplayName(plan.name) === 'C-suite' && "Elite professional features"}
+                  {getDisplayName(plan.name) === 'C-suite' && "Elite Professional Features"}
                 </p>
                 {billingCycle === 'annual' && plan.monthly_price > 0 && plan.annual_price && (
                   <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200 text-xs mt-2">
