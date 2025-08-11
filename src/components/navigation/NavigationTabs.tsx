@@ -11,7 +11,6 @@ const NavigationTabs = () => {
     { value: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: User },
     { value: 'discover', label: 'Discover', path: '/discover', icon: Users },
     { value: 'daily-matches', label: 'Daily Matches', path: '/daily-matches', icon: Calendar },
-    { value: 'professional-matches', label: 'Professional Matches', path: '/professional-matches', icon: Users },
     { value: 'matches', label: 'Matches', path: '/matches', icon: Heart },
     { value: 'messages', label: 'Messages', path: '/messages', icon: MessageCircle },
     { value: 'membership', label: 'Membership', path: '/membership', icon: Crown },

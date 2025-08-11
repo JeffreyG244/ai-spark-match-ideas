@@ -85,9 +85,9 @@ const DailyMatches = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-blue-500/20 backdrop-blur-xl border border-blue-500/30 rounded-xl px-4 py-2">
-                <Shield className="w-5 h-5 text-blue-400" />
-                <span className="text-blue-400 text-sm font-medium">Executive</span>
+              <div className="flex items-center space-x-2 bg-emerald-500/20 backdrop-blur-xl border border-emerald-500/30 rounded-xl px-4 py-2">
+                <Shield className="w-5 h-5 text-emerald-400" />
+                <span className="text-emerald-400 text-sm font-medium">Basic</span>
               </div>
               
               <button 
