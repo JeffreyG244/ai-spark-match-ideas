@@ -121,8 +121,8 @@ const Matches = () => {
 
         {matches.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-32 h-32 mx-auto mb-6 flex items-center justify-center">
-              <Logo size="lg" showText={false} />
+            <div className="w-48 h-48 mx-auto mb-6 flex items-center justify-center bg-black/20 rounded-3xl">
+              <Logo size="lg" showText={true} />
             </div>
             <h3 className="text-2xl font-bold text-white mb-4">No Executive Matches Yet</h3>
             <p className="text-gray-400 mb-8">
