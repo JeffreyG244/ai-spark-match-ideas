@@ -253,28 +253,28 @@ const ProfessionalMembershipPlans = () => {
         };
       case 'Executive':
         return {
-          border: 'border-2 border-[hsl(var(--silver-2))]',
-          badge: 'bg-gradient-to-r from-[hsl(var(--silver-1))] via-[hsl(var(--silver-2))] to-[hsl(var(--silver-3))] text-white',
-          icon: 'text-[hsl(var(--silver-3))]',
-          iconBg: 'bg-gradient-to-br from-[hsl(var(--silver-1))] via-[hsl(var(--silver-2))] to-[hsl(var(--silver-3))]',
-          button: 'bg-gradient-to-r from-[hsl(var(--silver-2))] via-[hsl(var(--silver-3))] to-[hsl(var(--silver-2))] hover:from-[hsl(var(--silver-3))] hover:via-[hsl(var(--silver-3))] hover:to-[hsl(var(--silver-3))]',
-          gradient: 'from-[hsl(var(--silver-1))] to-[hsl(var(--silver-2))]',
-          cardBg: 'bg-gradient-to-br from-[hsl(var(--silver-1))/20 via-[hsl(var(--silver-1))/10 to-[hsl(var(--silver-2))/20',
+          border: 'border-2 border-slate-400',
+          badge: 'bg-gradient-to-r from-slate-400 via-slate-500 to-slate-600 text-white',
+          icon: 'text-slate-600',
+          iconBg: 'bg-gradient-to-br from-slate-300 via-slate-400 to-slate-500',
+          button: 'bg-gradient-to-r from-slate-500 via-slate-600 to-slate-700 hover:from-slate-600 hover:via-slate-700 hover:to-slate-800 text-white',
+          gradient: 'from-slate-200 to-slate-300',
+          cardBg: 'bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200',
           planIcon: Briefcase,
-          shadow: 'shadow-2xl shadow-[hsl(var(--silver-2))]/30'
+          shadow: 'shadow-2xl shadow-slate-500/30'
         };
       case 'C-suite':
       case 'VIP':
         return {
-          border: 'border-4 border-[hsl(var(--gold-2))]',
-          badge: 'bg-gradient-to-r from-[hsl(var(--gold-1))] via-[hsl(var(--gold-2))] to-[hsl(var(--gold-3))] text-black',
-          icon: 'text-[hsl(var(--gold-3))]',
-          iconBg: 'bg-gradient-to-br from-[hsl(var(--gold-1))] via-[hsl(var(--gold-2))] to-[hsl(var(--gold-3))]',
-          button: 'bg-gradient-to-r from-[hsl(var(--gold-2))] via-[hsl(var(--gold-3))] to-[hsl(var(--gold-2))] hover:from-[hsl(var(--gold-3))] hover:via-[hsl(var(--gold-3))] hover:to-[hsl(var(--gold-3))]',
-          gradient: 'from-[hsl(var(--gold-1))] to-[hsl(var(--gold-2))]',
-          cardBg: 'bg-gradient-to-br from-[hsl(var(--gold-1))/20 via-[hsl(var(--gold-1))/10 to-[hsl(var(--gold-2))/20',
+          border: 'border-4 border-yellow-500',
+          badge: 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-600 text-black',
+          icon: 'text-yellow-600',
+          iconBg: 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500',
+          button: 'bg-gradient-to-r from-yellow-500 via-amber-600 to-yellow-600 hover:from-yellow-600 hover:via-amber-700 hover:to-yellow-700 text-white',
+          gradient: 'from-yellow-200 to-yellow-300',
+          cardBg: 'bg-gradient-to-br from-yellow-100 via-yellow-50 to-amber-100',
           planIcon: Star,
-          shadow: 'shadow-2xl shadow-[hsl(var(--gold-2))]/40'
+          shadow: 'shadow-2xl shadow-yellow-500/50'
         };
       default:
         return {
@@ -372,7 +372,7 @@ const ProfessionalMembershipPlans = () => {
                 {(plan.name === 'VIP' || plan.name === 'C-suite') && (
                   <div className="absolute top-0 left-1/2 transform -translate-x-1/2 z-10">
                     <Badge className={`${theme.badge} border-0 px-3 py-1 text-xs font-bold shadow-lg rounded-full`}>
-                      <Star className="w-3 h-3 mr-1 text-[hsl(var(--star-bright))]" />
+                      <Star className="w-3 h-3 mr-1 text-yellow-300" />
                       Elite Access
                     </Badge>
                   </div>
@@ -404,7 +404,7 @@ const ProfessionalMembershipPlans = () => {
                   {getDisplayName(plan.name) === 'Basic' && "Essential features for dating"}
                   {getDisplayName(plan.name) === 'Standard' && "Most popular choice"}
                   {getDisplayName(plan.name) === 'Executive' && "Advanced professional features"}
-                  {getDisplayName(plan.name) === 'C-suite' && "Engineered for elite executives — exceed every expectation"}
+                  {getDisplayName(plan.name) === 'C-suite' && "Elite executive features to exceed all expectations"}
                 </p>
                 {billingCycle === 'annual' && plan.monthly_price > 0 && plan.annual_price && (
                   <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200 text-xs mt-2">
@@ -417,7 +417,7 @@ const ProfessionalMembershipPlans = () => {
               <CardContent className="pt-0 pb-6">
                 <div className="space-y-2 mb-6">
                   <h4 className={`font-semibold text-sm ${theme.icon} mb-3 text-center`}>What's Included:</h4>
-                  <div className="max-h-48 overflow-y-auto scrollbar-thin">
+                  <div className="max-h-56 overflow-y-auto scrollbar-thin space-y-2">
                     {hardcodedFeatures.map((feature, index) => {
                       const IconComponent = feature.icon;
                       
