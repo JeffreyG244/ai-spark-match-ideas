@@ -266,13 +266,13 @@ const ProfessionalMembershipPlans = () => {
       case 'C-suite':
       case 'VIP':
         return {
-          border: 'border-4 border-yellow-500',
+          border: 'border-4 border-yellow-400',
           badge: 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-600 text-black',
-          icon: 'text-yellow-600',
+          icon: 'text-yellow-700',
           iconBg: 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500',
           button: 'bg-gradient-to-r from-yellow-500 via-amber-600 to-yellow-600 hover:from-yellow-600 hover:via-amber-700 hover:to-yellow-700 text-white',
           gradient: 'from-yellow-200 to-yellow-300',
-          cardBg: 'bg-gradient-to-br from-yellow-100 via-yellow-50 to-amber-100',
+          cardBg: 'bg-gradient-to-br from-yellow-200 via-yellow-100 to-amber-200 border-yellow-400',
           planIcon: Star,
           shadow: 'shadow-2xl shadow-yellow-500/50'
         };
