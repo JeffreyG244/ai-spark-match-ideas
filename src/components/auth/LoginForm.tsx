@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Heart } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import Logo from '@/components/ui/logo';
 
 const LoginForm = () => {
   const { signIn } = useAuth();
@@ -111,12 +111,8 @@ const LoginForm = () => {
       <div className="min-h-screen bg-love-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-xl border-0">
           <CardHeader className="text-center">
-          <div className="mb-6">
-            <img 
-              src="/lovable-uploads/c9f4488e-3013-4e94-8393-ad5ecf13d1a6.png" 
-              alt="Luvlang Logo" 
-              className="h-16 object-contain mx-auto"
-            />
+          <div className="flex items-center justify-center mb-6">
+            <Logo size="lg" />
           </div>
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
               Reset Your Password
@@ -170,12 +166,8 @@ const LoginForm = () => {
     <div className="min-h-screen bg-love-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl border-0">
         <CardHeader className="text-center">
-          <div className="mb-6">
-            <img 
-              src="/lovable-uploads/c9f4488e-3013-4e94-8393-ad5ecf13d1a6.png" 
-              alt="Luvlang Logo" 
-              className="h-16 object-contain mx-auto"
-            />
+          <div className="flex items-center justify-center mb-6">
+            <Logo size="lg" />
           </div>
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
             Welcome Back

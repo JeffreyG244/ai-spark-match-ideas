@@ -13,9 +13,9 @@ const Logo: React.FC<LogoProps> = ({
   showText = true 
 }) => {
   const sizeClasses = {
-    sm: 'w-8 h-8',
-    md: 'w-10 h-10', 
-    lg: 'w-12 h-12'
+    sm: 'h-8',
+    md: 'h-10', 
+    lg: 'h-12'
   };
 
   const textSizeClasses = {
@@ -24,19 +24,15 @@ const Logo: React.FC<LogoProps> = ({
     lg: 'text-3xl'
   };
 
-  const iconSizes = {
-    sm: 'h-4 w-4',
-    md: 'h-5 w-5',
-    lg: 'h-6 w-6'
-  };
-
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      <div className={`${sizeClasses[size]} bg-gradient-to-br from-love-primary/80 to-love-secondary/80 rounded-2xl flex items-center justify-center shadow-sm border border-love-primary/20`}>
-        <Heart className={`${iconSizes[size]} text-white fill-white`} />
-      </div>
+      <img 
+        src="/lovable-uploads/f5d073a5-8ed2-4f0a-be2f-30f2bc9622da.png"
+        alt="Luvlang Logo"
+        className={`${sizeClasses[size]} object-contain`}
+      />
       {showText && (
-        <h2 className={`${textSizeClasses[size]} font-semibold bg-gradient-to-r from-love-primary to-love-secondary bg-clip-text text-transparent tracking-tight`}>
+        <h2 className={`${textSizeClasses[size]} font-semibold text-gray-900 dark:text-white tracking-tight`}>
           Luvlang
         </h2>
       )}
