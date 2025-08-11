@@ -349,18 +349,18 @@ const ProfessionalMembershipPlans = () => {
               key={plan.id}
               className={`relative transition-all duration-500 hover:scale-105 animate-enter ${
                 isCsuite
-                  ? 'bg-gradient-to-br from-yellow-200 via-yellow-100 to-amber-200 border-4 border-yellow-400' 
+                  ? 'bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-2 border-yellow-300' 
                   : isExecutive
-                    ? 'bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200 border-2 border-slate-400'
+                    ? 'bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 border-2 border-slate-300'
                     : theme.cardBg
               } ${
                 isCsuite
-                  ? 'shadow-2xl shadow-yellow-500/50' 
+                  ? 'shadow-xl shadow-yellow-400/20' 
                   : isExecutive
-                    ? 'shadow-2xl shadow-slate-500/30'
+                    ? 'shadow-xl shadow-slate-400/20'
                     : theme.shadow
               } ${
-                isCsuite ? 'border-yellow-400' : isExecutive ? 'border-slate-400' : theme.border
+                isCsuite ? 'border-yellow-300' : isExecutive ? 'border-slate-300' : theme.border
               } ${
                 isCurrentPlan ? 'ring-2 ring-green-500/50' : ''
               } overflow-hidden rounded-xl`}
@@ -368,7 +368,7 @@ const ProfessionalMembershipPlans = () => {
               {/* Decorative gradient overlay */}
               <div className={`absolute top-0 left-0 right-0 h-1 ${
                 isCsuite
-                  ? 'bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-600' 
+                  ? 'bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400' 
                   : `bg-gradient-to-r ${theme.badge}`
               }`} />
               
@@ -415,11 +415,11 @@ const ProfessionalMembershipPlans = () => {
               <CardHeader className="text-center pt-2 pb-4">
                 <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
                   isCsuite
-                    ? 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500' 
+                    ? 'bg-gradient-to-br from-yellow-400 via-amber-400 to-yellow-500' 
                     : theme.iconBg
                 } shadow-lg`}>
                   <theme.planIcon className={`w-8 h-8 ${
-                    isCsuite ? 'text-yellow-700' : theme.icon
+                    isCsuite ? 'text-white' : theme.icon
                   }`} />
                 </div>
                 <CardTitle className={`text-xl font-bold ${theme.icon} mb-2`}>
