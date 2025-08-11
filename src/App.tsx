@@ -40,6 +40,7 @@ import TestSetup from "./pages/TestSetup";
 import N8NTesting from "./pages/N8NTesting";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import SystemAudit from "./pages/SystemAudit";
+import SupabaseAuditReport from "./pages/SupabaseAuditReport";
 
 // Legal pages
 import TermsOfService from "./pages/legal/TermsOfService";
@@ -106,6 +107,7 @@ function App() {
                     <Route path="/seed-enhanced-profiles" element={<SeedEnhancedProfiles />} />
                      <Route path="/pre-launch-audit" element={<PreLaunchAudit />} />
                      <Route path="/system-audit" element={<SystemAudit />} />
+                     <Route path="/supabase-audit" element={<SupabaseAuditReport />} />
                      <Route path="/admin" element={<PreLaunchAudit />} />
                     <Route path="/verification" element={<Verification />} />
                     <Route path="/safety" element={<Safety />} />
