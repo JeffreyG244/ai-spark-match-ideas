@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Heart, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Logo from '@/components/ui/logo';
 import ExecutiveProfileForm from '@/components/profile/ExecutiveProfileForm';
 
 interface ProfileSetupViewProps {
@@ -15,11 +16,8 @@ const ProfileSetupView = ({ onBack, onSignOut }: ProfileSetupViewProps) => {
       <div className="container mx-auto p-6">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 bg-gradient-to-br from-love-primary to-love-secondary rounded-2xl flex items-center justify-center shadow-lg">
-                <Heart className="h-6 w-6 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-love-text">Luvlang</h2>
+            <div className="mb-2">
+              <Logo size="md" />
             </div>
             <div className="flex items-center gap-4">
               <Button 
