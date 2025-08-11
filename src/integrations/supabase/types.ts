@@ -823,6 +823,45 @@ export type Database = {
           },
         ]
       }
+      phone_verifications: {
+        Row: {
+          attempts: number | null
+          code_expires_at: string | null
+          created_at: string | null
+          id: string
+          max_attempts: number | null
+          phone_number: string
+          updated_at: string | null
+          user_id: string
+          verification_code: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          code_expires_at?: string | null
+          created_at?: string | null
+          id?: string
+          max_attempts?: number | null
+          phone_number: string
+          updated_at?: string | null
+          user_id: string
+          verification_code?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          code_expires_at?: string | null
+          created_at?: string | null
+          id?: string
+          max_attempts?: number | null
+          phone_number?: string
+          updated_at?: string | null
+          user_id?: string
+          verification_code?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       professional_profiles: {
         Row: {
           after_hours_available: boolean | null
@@ -992,6 +1031,39 @@ export type Database = {
           id?: string
           severity?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      social_media_verifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          platform: string
+          profile_url: string
+          updated_at: string | null
+          user_id: string
+          verification_status: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          platform: string
+          profile_url: string
+          updated_at?: string | null
+          user_id: string
+          verification_status?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          platform?: string
+          profile_url?: string
+          updated_at?: string | null
+          user_id?: string
+          verification_status?: string | null
+          verified_at?: string | null
         }
         Relationships: []
       }
@@ -1204,10 +1276,13 @@ export type Database = {
           income_verified_at: string | null
           linkedin_verified: boolean | null
           linkedin_verified_at: string | null
+          phone_number: string | null
           phone_verified: boolean | null
           phone_verified_at: string | null
           photo_verified: boolean | null
           photo_verified_at: string | null
+          social_media_verified: boolean | null
+          social_media_verified_at: string | null
           updated_at: string | null
           user_id: string | null
           verification_documents: Json | null
@@ -1230,10 +1305,13 @@ export type Database = {
           income_verified_at?: string | null
           linkedin_verified?: boolean | null
           linkedin_verified_at?: string | null
+          phone_number?: string | null
           phone_verified?: boolean | null
           phone_verified_at?: string | null
           photo_verified?: boolean | null
           photo_verified_at?: string | null
+          social_media_verified?: boolean | null
+          social_media_verified_at?: string | null
           updated_at?: string | null
           user_id?: string | null
           verification_documents?: Json | null
@@ -1256,10 +1334,13 @@ export type Database = {
           income_verified_at?: string | null
           linkedin_verified?: boolean | null
           linkedin_verified_at?: string | null
+          phone_number?: string | null
           phone_verified?: boolean | null
           phone_verified_at?: string | null
           photo_verified?: boolean | null
           photo_verified_at?: string | null
+          social_media_verified?: boolean | null
+          social_media_verified_at?: string | null
           updated_at?: string | null
           user_id?: string | null
           verification_documents?: Json | null
@@ -1502,6 +1583,45 @@ export type Database = {
           weekend_availability?: boolean | null
           work_location?: string | null
           work_schedule?: string | null
+        }
+        Relationships: []
+      }
+      verification_documents: {
+        Row: {
+          created_at: string | null
+          document_type: string
+          file_name: string | null
+          file_size: number | null
+          file_url: string
+          id: string
+          updated_at: string | null
+          user_id: string
+          verification_notes: string | null
+          verification_status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_type: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          updated_at?: string | null
+          user_id: string
+          verification_notes?: string | null
+          verification_status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document_type?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+          verification_notes?: string | null
+          verification_status?: string | null
         }
         Relationships: []
       }
