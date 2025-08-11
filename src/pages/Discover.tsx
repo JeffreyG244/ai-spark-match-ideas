@@ -358,8 +358,8 @@ const Discover = () => {
               >
                 <ArrowLeft className="w-5 h-5 text-white" />
               </button>
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                <Heart className="w-7 h-7 text-white" />
+              <div className="flex items-center space-x-3">
+                <Logo size="sm" showText={false} />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white">Discover</h1>
@@ -368,14 +368,9 @@ const Discover = () => {
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-green-500/20 backdrop-blur-xl border border-green-500/30 rounded-xl px-4 py-2">
-                <Shield className="w-5 h-5 text-green-400" />
-                <span className="text-green-400 text-sm font-medium">Executive Verified</span>
-              </div>
-              
-              <div className="flex items-center space-x-2 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-xl border border-yellow-500/30 rounded-xl px-4 py-2">
-                <Crown className="w-5 h-5 text-yellow-400" />
-                <span className="text-yellow-400 text-sm font-medium">C-Suite Premium</span>
+              <div className="flex items-center space-x-2 bg-blue-500/20 backdrop-blur-xl border border-blue-500/30 rounded-xl px-4 py-2">
+                <Shield className="w-5 h-5 text-blue-400" />
+                <span className="text-blue-400 text-sm font-medium">Executive</span>
               </div>
               
               <button className="bg-slate-800/50 backdrop-blur-xl border border-slate-600/30 rounded-xl p-3 hover:bg-slate-700/50 transition-all">
