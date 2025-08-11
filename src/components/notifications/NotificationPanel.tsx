@@ -115,7 +115,10 @@ const NotificationPanel = ({ isOpen, onClose }: NotificationPanelProps) => {
   const handleNotificationClick = (notification: Notification) => {
     markAsRead(notification.id);
     if (notification.actionUrl) {
-      window.location.href = notification.actionUrl;
+      // Use navigate instead of window.location.href for better routing
+      if (notification.actionUrl.startsWith('/')) {
+        window.location.href = notification.actionUrl;
+      }
     }
   };
 
