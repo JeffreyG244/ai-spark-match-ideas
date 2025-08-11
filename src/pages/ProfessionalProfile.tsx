@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { LocationSelector } from '@/components/ui/location-selector';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -392,31 +393,14 @@ export default function ProfessionalProfile() {
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="city" className="required">City</Label>
-                  <Input
-                    id="city"
-                    value={formData.city}
-                    onChange={(e) => handleInputChange('city', e.target.value)}
-                    placeholder="e.g., San Francisco"
-                  />
-                </div>
-                <div>
-                  <Label className="required">State</Label>
-                  <Select value={formData.state} onValueChange={(value) => handleInputChange('state', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select state" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="california">California</SelectItem>
-                      <SelectItem value="new-york">New York</SelectItem>
-                      <SelectItem value="texas">Texas</SelectItem>
-                      <SelectItem value="florida">Florida</SelectItem>
-                      {/* Add more states as needed */}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <LocationSelector
+                selectedState={formData.state}
+                selectedCity={formData.city}
+                onStateChange={(state) => handleInputChange('state', state)}
+                onCityChange={(city) => handleInputChange('city', city)}
+              />
+              
+              <div className="mt-4">
                 <div>
                   <Label>Remote Work</Label>
                   <Select value={formData.remoteWork} onValueChange={(value) => handleInputChange('remoteWork', value)}>
