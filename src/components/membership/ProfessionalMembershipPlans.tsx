@@ -253,28 +253,30 @@ const ProfessionalMembershipPlans = () => {
         };
       case 'Executive':
         return {
-          border: 'border-gray-500',
-          badge: 'bg-gradient-to-r from-gray-500 to-gray-600',
+          border: 'border-gray-400',
+          badge: 'bg-gradient-to-r from-gray-400 via-gray-500 to-gray-600',
           icon: 'text-gray-700',
-          iconBg: 'bg-gradient-to-br from-gray-200 to-gray-300',
-          button: 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800',
+          iconBg: 'bg-gradient-to-br from-gray-200 via-gray-300 to-gray-400',
+          button: 'bg-gradient-to-r from-gray-500 via-gray-600 to-gray-700 hover:from-gray-600 hover:via-gray-700 hover:to-gray-800',
           gradient: 'from-gray-200 to-gray-300',
-          cardBg: 'bg-gradient-to-br from-gray-100 via-white to-gray-200',
+          cardBg: 'bg-gradient-to-br from-slate-100 via-gray-50 to-slate-200',
           planIcon: Briefcase,
-          shadow: 'shadow-xl shadow-gray-500/30'
+          shadow: 'shadow-2xl shadow-gray-500/40',
+          shimmer: 'bg-gradient-to-r from-transparent via-white/30 to-transparent'
         };
       case 'C-suite':
       case 'VIP':
         return {
-          border: 'border-yellow-600',
-          badge: 'bg-gradient-to-r from-yellow-600 to-yellow-700',
+          border: 'border-yellow-500',
+          badge: 'bg-gradient-to-r from-yellow-500 via-yellow-600 to-amber-700',
           icon: 'text-yellow-700',
-          iconBg: 'bg-gradient-to-br from-yellow-200 to-yellow-300',
-          button: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800',
+          iconBg: 'bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500',
+          button: 'bg-gradient-to-r from-yellow-600 via-amber-600 to-yellow-700 hover:from-yellow-700 hover:via-amber-700 hover:to-yellow-800',
           gradient: 'from-yellow-200 to-yellow-300',
-          cardBg: 'bg-gradient-to-br from-yellow-100 via-white to-yellow-200',
+          cardBg: 'bg-gradient-to-br from-yellow-50 via-amber-50 to-yellow-100',
           planIcon: Diamond,
-          shadow: 'shadow-xl shadow-yellow-600/30'
+          shadow: 'shadow-2xl shadow-yellow-600/40',
+          shimmer: 'bg-gradient-to-r from-transparent via-yellow-200/50 to-transparent'
         };
       default:
         return {
@@ -332,7 +334,7 @@ const ProfessionalMembershipPlans = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
         {plans.map((plan) => {
           const isCurrentPlan = getCurrentPlanId() === plan.id;
           const isProcessing = processingPayment === plan.name;
@@ -342,46 +344,46 @@ const ProfessionalMembershipPlans = () => {
           return (
             <Card 
               key={plan.id}
-              className={`relative h-full transition-all duration-500 hover:scale-105 ${theme.cardBg} ${theme.border} ${theme.shadow} ${
+              className={`relative transition-all duration-500 hover:scale-102 ${theme.cardBg} ${theme.border} ${theme.shadow} ${
                 isCurrentPlan ? 'ring-2 ring-green-500/50' : ''
-              } overflow-hidden`}
+              } overflow-hidden rounded-xl`}
             >
               {/* Decorative gradient overlay */}
               <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.badge}`} />
               
               {/* Top Badge */}
-              <div className="relative">
+              <div className="relative pt-6">
                 {plan.is_popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                    <Badge className={`${theme.badge} text-white border-0 px-4 py-2 text-sm font-bold shadow-lg`}>
-                      <Star className="w-4 h-4 mr-2" />
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                    <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-bold shadow-lg rounded-full`}>
+                      <Star className="w-3 h-3 mr-1" />
                       Most Popular
                     </Badge>
                   </div>
                 )}
 
                 {(plan.name === 'Plus' || plan.name === 'Premium' || plan.name === 'Standard') && !plan.is_popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                    <Badge className={`${theme.badge} text-white border-0 px-4 py-2 text-sm font-bold shadow-lg`}>
-                      <Crown className="w-4 h-4 mr-2" />
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                    <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-bold shadow-lg rounded-full`}>
+                      <Crown className="w-3 h-3 mr-1" />
                       Best Value
                     </Badge>
                   </div>
                 )}
 
                 {(plan.name === 'VIP' || plan.name === 'C-suite') && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                    <Badge className={`${theme.badge} text-white border-0 px-4 py-2 text-sm font-bold shadow-lg`}>
-                      <Diamond className="w-4 h-4 mr-2" />
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                    <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-bold shadow-lg rounded-full`}>
+                      <Diamond className="w-3 h-3 mr-1" />
                       Elite Access
                     </Badge>
                   </div>
                 )}
 
                 {plan.name === 'Executive' && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                    <Badge className={`${theme.badge} text-white border-0 px-4 py-2 text-sm font-bold shadow-lg`}>
-                      <Briefcase className="w-4 h-4 mr-2" />
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                    <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-bold shadow-lg rounded-full`}>
+                      <Briefcase className="w-3 h-3 mr-1" />
                       Professional
                     </Badge>
                   </div>
@@ -389,63 +391,70 @@ const ProfessionalMembershipPlans = () => {
               </div>
 
               {/* Header */}
-              <CardHeader className="text-center pt-8 pb-6">
-                <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center ${theme.iconBg} shadow-lg`}>
-                  <theme.planIcon className={`w-10 h-10 ${theme.icon}`} />
+              <CardHeader className="text-center pt-2 pb-4">
+                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${theme.iconBg} shadow-lg`}>
+                  <theme.planIcon className={`w-8 h-8 ${theme.icon}`} />
                 </div>
-                <CardTitle className={`text-2xl font-bold ${theme.icon} mb-3`}>
+                <CardTitle className={`text-xl font-bold ${theme.icon} mb-2`}>
                   {getDisplayName(plan.name)}
                 </CardTitle>
-                <CardDescription className="text-3xl font-bold text-foreground mb-2">
+                <CardDescription className="text-2xl font-bold text-foreground mb-1">
                   {getPrice(plan)}
                 </CardDescription>
-                <p className="text-sm text-muted-foreground font-medium">
+                <p className="text-xs text-muted-foreground font-medium">
                   {getDisplayName(plan.name) === 'Free' && "Perfect for getting started"}
                   {getDisplayName(plan.name) === 'Basic' && "Essential features for dating"}
                   {getDisplayName(plan.name) === 'Standard' && "Most popular choice"}
                   {getDisplayName(plan.name) === 'Executive' && "Advanced professional features"}
-                  {getDisplayName(plan.name) === 'C-suite' && "Elite executive experience"}
+                  {getDisplayName(plan.name) === 'C-suite' && "Elite professional features"}
                 </p>
                 {billingCycle === 'annual' && plan.monthly_price > 0 && plan.annual_price && (
-                  <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200 text-sm mt-2">
+                  <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200 text-xs mt-2">
                     Save ${((plan.monthly_price * 12) - plan.annual_price).toFixed(0)}/year
                   </Badge>
                 )}
               </CardHeader>
 
               {/* Features */}
-              <CardContent className="pt-0 pb-8">
-                <div className="space-y-4 mb-8">
-                  <h4 className={`font-bold text-lg ${theme.icon} mb-4 text-center`}>What's Included:</h4>
-                  {hardcodedFeatures.map((feature, index) => {
-                    const IconComponent = feature.icon;
-                    
-                    return (
-                      <div key={index} className="flex items-center gap-4 p-2 rounded-lg hover:bg-white/50 transition-colors">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${theme.iconBg} shadow-sm`}>
-                          <IconComponent className={`w-4 h-4 ${theme.icon}`} />
+              <CardContent className="pt-0 pb-6">
+                <div className="space-y-2 mb-6">
+                  <h4 className={`font-semibold text-sm ${theme.icon} mb-3 text-center`}>What's Included:</h4>
+                  <div className="max-h-48 overflow-y-auto scrollbar-thin">
+                    {hardcodedFeatures.slice(0, 8).map((feature, index) => {
+                      const IconComponent = feature.icon;
+                      
+                      return (
+                        <div key={index} className="flex items-center gap-3 p-1 rounded-lg hover:bg-white/30 transition-colors">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center ${theme.iconBg} shadow-sm flex-shrink-0`}>
+                            <IconComponent className={`w-3 h-3 ${theme.icon}`} />
+                          </div>
+                          <span className="text-xs text-foreground font-medium leading-tight">{feature.text}</span>
                         </div>
-                        <span className="text-sm text-foreground font-semibold flex-1">{feature.text}</span>
+                      );
+                    })}
+                    {hardcodedFeatures.length > 8 && (
+                      <div className="text-xs text-muted-foreground text-center mt-2 font-medium">
+                        +{hardcodedFeatures.length - 8} more features
                       </div>
-                    );
-                  })}
+                    )}
+                  </div>
                 </div>
 
                 {/* CTA Button */}
                 <Button
                   onClick={() => handlePlanClick(plan)}
-                  size="lg"
-                  className={`w-full font-bold text-lg py-6 transition-all duration-300 transform hover:scale-105 ${
+                  size="sm"
+                  className={`w-full font-bold text-sm py-4 transition-all duration-300 ${
                     isCurrentPlan 
                       ? 'bg-muted text-muted-foreground cursor-default' 
-                      : `${theme.button} text-white shadow-lg`
+                      : `${theme.button} text-white shadow-lg hover:shadow-xl`
                   }`}
                   variant={isCurrentPlan ? "outline" : "default"}
                   disabled={isCurrentPlan || isProcessing}
                 >
                   {isProcessing ? (
                     <>
-                      <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       Processing...
                     </>
                   ) : isCurrentPlan ? (
@@ -453,7 +462,7 @@ const ProfessionalMembershipPlans = () => {
                   ) : !user ? (
                     'Sign In to Upgrade'
                   ) : (
-                    `Get ${getDisplayName(plan.name)} Now`
+                    `Get ${getDisplayName(plan.name)}`
                   )}
                 </Button>
               </CardContent>
