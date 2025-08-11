@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import Logo from '@/components/ui/logo';
 
 interface UserAnalytics {
   total_matches: number;
@@ -143,8 +144,8 @@ const Analytics = () => {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                <BarChart3 className="w-7 h-7 text-white" />
+              <div className="flex items-center space-x-3">
+                <Logo size="md" showText={true} />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white">Analytics</h1>

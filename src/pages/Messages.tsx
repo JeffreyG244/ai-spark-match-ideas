@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import EnhancedExecutiveMessaging from '@/components/messaging/EnhancedExecutiveMessaging';
+import Logo from '@/components/ui/logo';
 
 const Messages: React.FC = () => {
   const navigate = useNavigate();
@@ -23,8 +24,8 @@ const Messages: React.FC = () => {
               >
                 <ArrowLeft className="w-5 h-5 text-white" />
               </button>
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
-                <MessageCircle className="w-7 h-7 text-white" />
+              <div className="flex items-center space-x-3">
+                <Logo size="md" showText={true} />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white">Executive Messages</h1>

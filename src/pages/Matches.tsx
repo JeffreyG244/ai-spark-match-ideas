@@ -67,7 +67,7 @@ const Matches = () => {
                 <ArrowLeft className="w-5 h-5 text-white" />
               </button>
               <div className="flex items-center space-x-3">
-                <Logo size="md" showText={false} />
+                <Logo size="md" showText={true} />
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white">Your Matches</h1>
