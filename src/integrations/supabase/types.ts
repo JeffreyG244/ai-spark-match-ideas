@@ -1289,6 +1289,9 @@ export type Database = {
           luxury_preferences: string[] | null
           market_rank_percentile: number | null
           max_distance: number | null
+          membership_verification:
+            | Database["public"]["Enums"]["membership_verification_level"]
+            | null
           music_taste: string[] | null
           networking_events: boolean | null
           perfect_date: string | null
@@ -1361,6 +1364,9 @@ export type Database = {
           luxury_preferences?: string[] | null
           market_rank_percentile?: number | null
           max_distance?: number | null
+          membership_verification?:
+            | Database["public"]["Enums"]["membership_verification_level"]
+            | null
           music_taste?: string[] | null
           networking_events?: boolean | null
           perfect_date?: string | null
@@ -1433,6 +1439,9 @@ export type Database = {
           luxury_preferences?: string[] | null
           market_rank_percentile?: number | null
           max_distance?: number | null
+          membership_verification?:
+            | Database["public"]["Enums"]["membership_verification_level"]
+            | null
           music_taste?: string[] | null
           networking_events?: boolean | null
           perfect_date?: string | null
@@ -1733,6 +1742,10 @@ export type Database = {
           | { p_workflow_id: string; p_payload?: Json; p_headers?: Json }
           | { webhook_url: string }
         Returns: Json
+      }
+      can_send_message: {
+        Args: { sender_id: string; recipient_id: string }
+        Returns: boolean
       }
       check_https: {
         Args: Record<PropertyKey, never>
@@ -2125,6 +2138,10 @@ export type Database = {
           match_image: string
           score: number
         }[]
+      }
+      get_user_membership_level: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["membership_verification_level"]
       }
       gettransactionid: {
         Args: Record<PropertyKey, never>
@@ -3536,6 +3553,11 @@ export type Database = {
     }
     Enums: {
       gender_type: "male" | "female" | "non-binary" | "other"
+      membership_verification_level:
+        | "basic"
+        | "premium"
+        | "executive"
+        | "c_suite"
       payment_status:
         | "pending"
         | "completed"
@@ -3679,6 +3701,12 @@ export const Constants = {
   public: {
     Enums: {
       gender_type: ["male", "female", "non-binary", "other"],
+      membership_verification_level: [
+        "basic",
+        "premium",
+        "executive",
+        "c_suite",
+      ],
       payment_status: [
         "pending",
         "completed",
