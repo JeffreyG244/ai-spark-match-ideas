@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -7,10 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Use the direct webhook URL for testing
-function getN8NWebhookUrl(): string {
-  return 'https://luvlang.org/webhook-test/luvlang-match';
-}
+// Hardcoded webhook URL - no environment variables
+const N8N_WEBHOOK_URL = 'https://luvlang.org/webhook-test/luvlang-match';
 
 interface ProfileData {
   user_id: string;
@@ -22,6 +19,8 @@ interface ProfileData {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('Profile webhook function started');
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -33,8 +32,10 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const { user_id, event_type = 'profile_updated' } = await req.json();
+    console.log('Received request for user:', user_id, 'event:', event_type);
     
     if (!user_id) {
+      console.error('No user_id provided');
       return new Response(
         JSON.stringify({ error: 'user_id is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -42,6 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Get user data from users table
+    console.log('Fetching user data...');
     const { data: user, error: userError } = await supabaseClient
       .from('users')
       .select('*')
@@ -55,13 +57,6 @@ const handler = async (req: Request): Promise<Response> => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Get profile data from executive_dating_profiles if it exists
-    const { data: profile } = await supabaseClient
-      .from('executive_dating_profiles')
-      .select('*')
-      .eq('user_id', user_id)
-      .maybeSingle();
 
     // Use user data or create test data
     const userData = user || {
@@ -77,56 +72,45 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('User data found:', userData.first_name, userData.last_name);
 
-    // Combine user data with profile data
-    const combinedData = {
-      user_id: user_id,
-      first_name: userData.first_name,
-      last_name: userData.last_name,
-      age: userData.age || profile?.age || 30,
-      primary_location: profile?.primary_location || `${userData.city || 'San Francisco'}, ${userData.state || 'CA'}`,
-      age_range_min: profile?.age_range_min || (userData.age_min || 25),
-      age_range_max: profile?.age_range_max || (userData.age_max || 35),
-      cultural_interests: profile?.cultural_interests || userData.cultural_interests || userData.interests || ['Technology', 'Business'],
-      weekend_activities: profile?.weekend_activities || ['Networking', 'Reading'],
-      sexual_orientation: profile?.sexual_orientation || ['Heterosexual'],
-      deal_breakers: profile?.deal_breakers || userData.deal_breakers || [],
-      bio: userData.bio || 'Professional seeking meaningful connections',
-      industry: userData.industry,
-      job_title: userData.job_title
-    };
-
-    // Prepare data for N8N webhook
+    // Prepare comprehensive webhook payload
     const webhookData: ProfileData = {
       user_id: user_id,
-      name: `${combinedData.first_name} ${combinedData.last_name}`,
+      name: `${userData.first_name} ${userData.last_name}`,
       match_score: 0.95,
       timestamp: new Date().toISOString(),
       event_type: event_type,
       data: {
-        profile: combinedData,
-        compatibility: {}, // Empty for now since table doesn't exist
+        profile: {
+          user_id: user_id,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          age: userData.age || 30,
+          city: userData.city || 'Test City',
+          state: userData.state || 'CA',
+          bio: userData.bio || 'Professional seeking meaningful connections',
+          industry: userData.industry,
+          job_title: userData.job_title,
+          interests: userData.interests || ['Technology', 'Business']
+        },
+        compatibility: {},
         preferences: {
-          age_range: [combinedData.age_range_min, combinedData.age_range_max],
-          location: combinedData.primary_location,
-          interests: combinedData.cultural_interests,
-          sexual_orientation: combinedData.sexual_orientation,
-          deal_breakers: combinedData.deal_breakers
+          age_range: [userData.age_min || 25, userData.age_max || 45],
+          location: `${userData.city || 'Test City'}, ${userData.state || 'CA'}`,
+          interests: userData.interests || ['Technology', 'Business'],
+          deal_breakers: userData.deal_breakers || []
         },
         user_metadata: {
-          industry: combinedData.industry,
-          job_title: combinedData.job_title,
-          bio: combinedData.bio
+          email: userData.email,
+          created_at: userData.created_at,
+          subscription_tier: userData.subscription_tier || 'free'
         }
       }
     };
 
-    // Get N8N webhook URL
-    const N8N_WEBHOOK_URL = getN8NWebhookUrl();
-    
     console.log('Sending to N8N webhook:', N8N_WEBHOOK_URL);
     console.log('Payload:', JSON.stringify(webhookData, null, 2));
 
-    // Send to N8N webhook
+    // Send to N8N webhook - simple and direct
     const webhookResponse = await fetch(N8N_WEBHOOK_URL, {
       method: 'POST',
       headers: {
@@ -135,12 +119,16 @@ const handler = async (req: Request): Promise<Response> => {
       body: JSON.stringify(webhookData)
     });
 
+    console.log('Webhook response status:', webhookResponse.status);
+
     if (!webhookResponse.ok) {
-      console.error('N8N webhook failed:', webhookResponse.status, await webhookResponse.text());
+      const errorText = await webhookResponse.text();
+      console.error('N8N webhook failed:', webhookResponse.status, errorText);
       return new Response(
         JSON.stringify({ 
           error: 'Webhook failed', 
-          status: webhookResponse.status 
+          status: webhookResponse.status,
+          response: errorText
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -152,8 +140,9 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Profile data sent to N8N workflow',
-        webhook_response: webhookResult
+        message: 'Profile data sent to N8N workflow successfully',
+        webhook_response: webhookResult,
+        payload_sent: webhookData
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -163,7 +152,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        details: error.message 
+        details: error.message,
+        stack: error.stack
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
