@@ -1989,6 +1989,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      generate_compatible_matches: {
+        Args: { target_user_id: string; match_limit?: number }
+        Returns: {
+          user_id: string
+          recommended_user_id: string
+          compatibility_score: number
+          match_factors: Json
+        }[]
+      }
       generate_daily_matches: {
         Args: { target_user_id: string; match_count?: number }
         Returns: undefined
@@ -2295,6 +2304,13 @@ export type Database = {
           score: number
         }[]
       }
+      get_user_gender_preference: {
+        Args: { user_uuid: string }
+        Returns: {
+          gender: string
+          looking_for: string
+        }[]
+      }
       get_user_membership_level: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["membership_verification_level"]
@@ -2325,6 +2341,10 @@ export type Database = {
       }
       is_admin_or_higher: {
         Args: { check_user_id: string }
+        Returns: boolean
+      }
+      is_gender_compatible: {
+        Args: { user1_id: string; user2_id: string }
         Returns: boolean
       }
       json: {
