@@ -50,6 +50,81 @@ const ProfessionalMembershipPlans = () => {
     handlePlanSelect(plan, billingCycle);
   };
 
+  const getHardcodedFeatures = (planName: string) => {
+    switch (planName) {
+      case 'Free':
+        return [
+          { text: '3 daily swipes', icon: Heart },
+          { text: 'Basic profile viewing', icon: Users },
+          { text: 'Message matches only', icon: Users },
+          { text: 'Standard matching algorithm', icon: Sparkles },
+          { text: 'Basic profile setup', icon: Shield }
+        ];
+      case 'Basic':
+        return [
+          { text: '25 daily swipes', icon: Heart },
+          { text: 'Unlimited messaging', icon: Users },
+          { text: '5 super likes per day', icon: Sparkles },
+          { text: 'See who likes you', icon: Heart },
+          { text: 'Advanced filters', icon: Shield },
+          { text: 'Read receipts', icon: Check },
+          { text: 'Profile boost (1x/month)', icon: Zap },
+          { text: 'Priority customer support', icon: Crown }
+        ];
+      case 'Plus':
+      case 'Premium':
+      case 'Standard':
+        return [
+          { text: 'Unlimited daily swipes', icon: Heart },
+          { text: 'Unlimited messaging', icon: Users },
+          { text: 'Unlimited super likes', icon: Sparkles },
+          { text: 'Profile boost (5x/month)', icon: Zap },
+          { text: 'Rewind last swipe', icon: Zap },
+          { text: 'Browse incognito mode', icon: Shield },
+          { text: 'AI-powered matching', icon: Sparkles },
+          { text: 'Video chat enabled', icon: Video },
+          { text: 'Travel mode access', icon: Globe },
+          { text: 'Profile verification badge', icon: Shield },
+          { text: 'Premium customer support', icon: Crown }
+        ];
+      case 'Executive':
+        return [
+          { text: 'Everything in Standard', icon: Sparkles },
+          { text: 'Unlimited profile boosts', icon: Zap },
+          { text: 'Priority in matching queue', icon: Crown },
+          { text: 'Executive networking events', icon: Star },
+          { text: 'Personal dating coach', icon: Users },
+          { text: 'Advanced compatibility analysis', icon: Sparkles },
+          { text: 'Executive-only matches', icon: Diamond },
+          { text: 'Concierge dating service', icon: Crown },
+          { text: 'Professional photo review', icon: Video },
+          { text: 'VIP customer support', icon: Crown },
+          { text: 'Monthly dating strategy session', icon: Users },
+          { text: 'Industry networking access', icon: Briefcase }
+        ];
+      case 'C-suite':
+      case 'VIP':
+        return [
+          { text: 'Everything in Executive', icon: Diamond },
+          { text: 'Personal matchmaker assigned', icon: Crown },
+          { text: 'C-level exclusive events', icon: Star },
+          { text: 'Private dining experiences', icon: Star },
+          { text: 'Executive retreat access', icon: Globe },
+          { text: 'Background verification', icon: Shield },
+          { text: 'Luxury travel dating', icon: Globe },
+          { text: 'Personal brand consulting', icon: Briefcase },
+          { text: '24/7 concierge support', icon: Crown },
+          { text: 'White-glove onboarding', icon: Crown },
+          { text: 'Executive coaching', icon: Users },
+          { text: 'Private jet meetups', icon: Star },
+          { text: 'Elite member directory', icon: Diamond },
+          { text: 'Relationship psychology sessions', icon: Heart }
+        ];
+      default:
+        return [];
+    }
+  };
+
   const formatFeature = (key: string, value: any) => {
     const iconMap: Record<string, any> = {
       swipes: Heart,
@@ -140,56 +215,66 @@ const ProfessionalMembershipPlans = () => {
     switch (planName) {
       case 'Free':
         return {
-          border: 'border-emerald-200',
-          badge: 'bg-emerald-500',
-          icon: 'text-emerald-600',
-          iconBg: 'bg-emerald-50',
-          button: 'bg-emerald-600 hover:bg-emerald-700',
+          border: 'border-emerald-600',
+          badge: 'bg-gradient-to-r from-emerald-600 to-emerald-700',
+          icon: 'text-emerald-700',
+          iconBg: 'bg-gradient-to-br from-emerald-100 to-emerald-200',
+          button: 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800',
           gradient: 'from-emerald-50 to-emerald-100',
-          planIcon: Gift
+          cardBg: 'bg-gradient-to-br from-emerald-50 via-white to-emerald-100',
+          planIcon: Gift,
+          shadow: 'shadow-xl shadow-emerald-500/20'
         };
       case 'Basic':
         return {
           border: 'border-red-800',
-          badge: 'bg-red-800',
+          badge: 'bg-gradient-to-r from-red-800 to-red-900',
           icon: 'text-red-800',
-          iconBg: 'bg-red-50',
-          button: 'bg-red-800 hover:bg-red-900',
+          iconBg: 'bg-gradient-to-br from-red-100 to-red-200',
+          button: 'bg-gradient-to-r from-red-800 to-red-900 hover:from-red-900 hover:to-red-950',
           gradient: 'from-red-50 to-red-100',
-          planIcon: Heart
+          cardBg: 'bg-gradient-to-br from-red-50 via-white to-red-100',
+          planIcon: Heart,
+          shadow: 'shadow-xl shadow-red-800/20'
         };
       case 'Plus':
       case 'Premium':
       case 'Standard':
         return {
           border: 'border-purple-800',
-          badge: 'bg-purple-800',
+          badge: 'bg-gradient-to-r from-purple-800 to-purple-900',
           icon: 'text-purple-800',
-          iconBg: 'bg-purple-50',
-          button: 'bg-purple-800 hover:bg-purple-900',
+          iconBg: 'bg-gradient-to-br from-purple-100 to-purple-200',
+          button: 'bg-gradient-to-r from-purple-800 to-purple-900 hover:from-purple-900 hover:to-purple-950',
           gradient: 'from-purple-50 to-purple-100',
-          planIcon: Sparkles
+          cardBg: 'bg-gradient-to-br from-purple-50 via-white to-purple-100',
+          planIcon: Sparkles,
+          shadow: 'shadow-xl shadow-purple-800/20'
         };
       case 'Executive':
         return {
-          border: 'border-gray-400',
-          badge: 'bg-gradient-to-r from-gray-400 to-gray-500',
-          icon: 'text-gray-600',
-          iconBg: 'bg-gradient-to-br from-gray-100 to-gray-200',
-          button: 'bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700',
-          gradient: 'from-gray-100 to-gray-200',
-          planIcon: Briefcase
+          border: 'border-gray-500',
+          badge: 'bg-gradient-to-r from-gray-500 to-gray-600',
+          icon: 'text-gray-700',
+          iconBg: 'bg-gradient-to-br from-gray-200 to-gray-300',
+          button: 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800',
+          gradient: 'from-gray-200 to-gray-300',
+          cardBg: 'bg-gradient-to-br from-gray-100 via-white to-gray-200',
+          planIcon: Briefcase,
+          shadow: 'shadow-xl shadow-gray-500/30'
         };
       case 'C-suite':
       case 'VIP':
         return {
-          border: 'border-yellow-400',
-          badge: 'bg-gradient-to-r from-yellow-400 to-yellow-600',
-          icon: 'text-yellow-600',
-          iconBg: 'bg-gradient-to-br from-yellow-50 to-yellow-100',
-          button: 'bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700',
-          gradient: 'from-yellow-50 to-yellow-100',
-          planIcon: Diamond
+          border: 'border-yellow-600',
+          badge: 'bg-gradient-to-r from-yellow-600 to-yellow-700',
+          icon: 'text-yellow-700',
+          iconBg: 'bg-gradient-to-br from-yellow-200 to-yellow-300',
+          button: 'bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-700 hover:to-yellow-800',
+          gradient: 'from-yellow-200 to-yellow-300',
+          cardBg: 'bg-gradient-to-br from-yellow-100 via-white to-yellow-200',
+          planIcon: Diamond,
+          shadow: 'shadow-xl shadow-yellow-600/30'
         };
       default:
         return {
@@ -199,16 +284,19 @@ const ProfessionalMembershipPlans = () => {
           iconBg: 'bg-gray-50',
           button: 'bg-gray-600 hover:bg-gray-700',
           gradient: 'from-gray-50 to-gray-100',
-          planIcon: Star
+          cardBg: 'bg-white',
+          planIcon: Star,
+          shadow: 'shadow-xl'
         };
     }
   };
 
   const getDisplayName = (planName: string) => {
     switch (planName) {
-      case 'Free': return 'Basic';
-      case 'Plus': return 'Premium';
-      case 'Premium': return 'Executive';
+      case 'Free': return 'Free';
+      case 'Basic': return 'Basic';
+      case 'Plus': return 'Standard';
+      case 'Premium': return 'Standard';
       case 'VIP': return 'C-suite';
       default: return planName;
     }
@@ -244,112 +332,120 @@ const ProfessionalMembershipPlans = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {plans.map((plan) => {
           const isCurrentPlan = getCurrentPlanId() === plan.id;
           const isProcessing = processingPayment === plan.name;
-          const features = Object.entries(plan.features || {});
+          const hardcodedFeatures = getHardcodedFeatures(plan.name);
           const theme = getPlanTheme(plan.name);
           
           return (
             <Card 
               key={plan.id}
-              className={`relative h-fit transition-all duration-300 hover:shadow-lg ${theme.border} ${
+              className={`relative h-full transition-all duration-500 hover:scale-105 ${theme.cardBg} ${theme.border} ${theme.shadow} ${
                 isCurrentPlan ? 'ring-2 ring-green-500/50' : ''
-              }`}
+              } overflow-hidden`}
             >
+              {/* Decorative gradient overlay */}
+              <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${theme.badge}`} />
+              
               {/* Top Badge */}
               <div className="relative">
                 {plan.is_popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                    <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-medium shadow-md`}>
-                      <Star className="w-3 h-3 mr-1" />
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                    <Badge className={`${theme.badge} text-white border-0 px-4 py-2 text-sm font-bold shadow-lg`}>
+                      <Star className="w-4 h-4 mr-2" />
                       Most Popular
                     </Badge>
                   </div>
                 )}
 
-                {(plan.name === 'Plus' || plan.name === 'Premium') && !plan.is_popular && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                    <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-medium shadow-md`}>
-                      <Crown className="w-3 h-3 mr-1" />
+                {(plan.name === 'Plus' || plan.name === 'Premium' || plan.name === 'Standard') && !plan.is_popular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                    <Badge className={`${theme.badge} text-white border-0 px-4 py-2 text-sm font-bold shadow-lg`}>
+                      <Crown className="w-4 h-4 mr-2" />
                       Best Value
                     </Badge>
                   </div>
                 )}
 
-                {plan.name === 'VIP' && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                    <Badge className={`${theme.badge} text-white border-0 px-3 py-1 text-xs font-medium shadow-md`}>
-                      <Diamond className="w-3 h-3 mr-1" />
+                {(plan.name === 'VIP' || plan.name === 'C-suite') && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                    <Badge className={`${theme.badge} text-white border-0 px-4 py-2 text-sm font-bold shadow-lg`}>
+                      <Diamond className="w-4 h-4 mr-2" />
                       Elite Access
+                    </Badge>
+                  </div>
+                )}
+
+                {plan.name === 'Executive' && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                    <Badge className={`${theme.badge} text-white border-0 px-4 py-2 text-sm font-bold shadow-lg`}>
+                      <Briefcase className="w-4 h-4 mr-2" />
+                      Professional
                     </Badge>
                   </div>
                 )}
               </div>
 
               {/* Header */}
-              <CardHeader className="text-center pt-6 pb-4">
-                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${theme.iconBg}`}>
-                  <theme.planIcon className={`w-8 h-8 ${theme.icon}`} />
+              <CardHeader className="text-center pt-8 pb-6">
+                <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center ${theme.iconBg} shadow-lg`}>
+                  <theme.planIcon className={`w-10 h-10 ${theme.icon}`} />
                 </div>
-                <CardTitle className={`text-xl font-bold ${theme.icon}`}>
+                <CardTitle className={`text-2xl font-bold ${theme.icon} mb-3`}>
                   {getDisplayName(plan.name)}
                 </CardTitle>
-                <CardDescription className="text-2xl font-bold text-foreground">
+                <CardDescription className="text-3xl font-bold text-foreground mb-2">
                   {getPrice(plan)}
                 </CardDescription>
+                <p className="text-sm text-muted-foreground font-medium">
+                  {getDisplayName(plan.name) === 'Free' && "Perfect for getting started"}
+                  {getDisplayName(plan.name) === 'Basic' && "Essential features for dating"}
+                  {getDisplayName(plan.name) === 'Standard' && "Most popular choice"}
+                  {getDisplayName(plan.name) === 'Executive' && "Advanced professional features"}
+                  {getDisplayName(plan.name) === 'C-suite' && "Elite executive experience"}
+                </p>
                 {billingCycle === 'annual' && plan.monthly_price > 0 && plan.annual_price && (
-                  <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200 text-xs">
+                  <Badge variant="secondary" className="text-green-700 bg-green-50 border-green-200 text-sm mt-2">
                     Save ${((plan.monthly_price * 12) - plan.annual_price).toFixed(0)}/year
                   </Badge>
                 )}
               </CardHeader>
 
               {/* Features */}
-              <CardContent className="pt-0">
-                <div className="space-y-3 mb-6">
-                  {features.map(([key, value]) => {
-                    const feature = formatFeature(key, value);
-                    if (!feature) return null;
-                    
+              <CardContent className="pt-0 pb-8">
+                <div className="space-y-4 mb-8">
+                  <h4 className={`font-bold text-lg ${theme.icon} mb-4 text-center`}>What's Included:</h4>
+                  {hardcodedFeatures.map((feature, index) => {
                     const IconComponent = feature.icon;
                     
                     return (
-                      <div key={key} className="flex items-start gap-3">
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center ${theme.iconBg} mt-0.5`}>
-                          <IconComponent className={`w-3 h-3 ${theme.icon}`} />
+                      <div key={index} className="flex items-center gap-4 p-2 rounded-lg hover:bg-white/50 transition-colors">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${theme.iconBg} shadow-sm`}>
+                          <IconComponent className={`w-4 h-4 ${theme.icon}`} />
                         </div>
-                        <span className="text-sm text-foreground font-medium leading-relaxed">{feature.text}</span>
+                        <span className="text-sm text-foreground font-semibold flex-1">{feature.text}</span>
                       </div>
                     );
                   })}
-                  
-                  {/* Add promotional text based on plan */}
-                  <div className="mt-4 pt-4 border-t border-muted">
-                    <p className="text-xs text-muted-foreground italic text-center">
-                      {getDisplayName(plan.name) === 'Basic' && "Perfect for getting started"}
-                      {getDisplayName(plan.name) === 'Premium' && "Most popular choice for professionals"}
-                      {getDisplayName(plan.name) === 'Executive' && "Advanced features for serious daters"}
-                      {getDisplayName(plan.name) === 'C-suite' && "Elite experience with premium perks"}
-                    </p>
-                  </div>
                 </div>
 
                 {/* CTA Button */}
                 <Button
                   onClick={() => handlePlanClick(plan)}
-                  className={`w-full font-medium transition-all duration-200 ${
+                  size="lg"
+                  className={`w-full font-bold text-lg py-6 transition-all duration-300 transform hover:scale-105 ${
                     isCurrentPlan 
                       ? 'bg-muted text-muted-foreground cursor-default' 
-                      : theme.button
+                      : `${theme.button} text-white shadow-lg`
                   }`}
                   variant={isCurrentPlan ? "outline" : "default"}
                   disabled={isCurrentPlan || isProcessing}
                 >
                   {isProcessing ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-5 h-5 mr-3 animate-spin" />
                       Processing...
                     </>
                   ) : isCurrentPlan ? (
@@ -357,7 +453,7 @@ const ProfessionalMembershipPlans = () => {
                   ) : !user ? (
                     'Sign In to Upgrade'
                   ) : (
-                    `Get ${getDisplayName(plan.name)}`
+                    `Get ${getDisplayName(plan.name)} Now`
                   )}
                 </Button>
               </CardContent>
