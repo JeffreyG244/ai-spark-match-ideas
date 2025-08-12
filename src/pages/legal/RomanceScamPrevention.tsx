@@ -186,7 +186,7 @@ const RomanceScamPrevention = () => {
                 <li>Use the "Report" button on their profile</li>
                 <li>Block the user immediately</li>
                 <li>Save screenshots of suspicious messages</li>
-                <li>Email detailed report to: scams@luvlang.com</li>
+                <li>Email detailed report to: support@luvlang.org</li>
                 <li>Contact support for urgent situations</li>
               </ul>
 
@@ -205,7 +205,7 @@ const RomanceScamPrevention = () => {
                 <ul className="space-y-1 text-gray-700">
                   <li><strong>FBI IC3:</strong> ic3.gov (Internet Crime Complaint Center)</li>
                   <li><strong>FTC:</strong> reportfraud.ftc.gov</li>
-                  <li><strong>Luvlang Emergency:</strong> emergency@luvlang.com</li>
+                  <li><strong>Luvlang Emergency:</strong> support@luvlang.org</li>
                   <li><strong>Phone:</strong> 1-800-LUVLANG (1-800-588-5264)</li>
                 </ul>
               </div>

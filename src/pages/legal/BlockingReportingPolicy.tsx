@@ -106,7 +106,7 @@ const BlockingReportingPolicy = () => {
                 <h3 className="font-bold text-red-900 mb-2">Immediate Danger</h3>
                 <p className="text-red-900">
                   If you or someone else is in immediate danger, please contact your local emergency services (such as 911 in the US) immediately.
-                  For situations involving threats, harassment, or illegal activity that require urgent attention, please email <strong>urgent@luvlang.com</strong>
+                  For situations involving threats, harassment, or illegal activity that require urgent attention, please email <strong>support@luvlang.org</strong>
                   in addition to using the in-app reporting tools.
                 </p>
               </div>
@@ -115,14 +115,14 @@ const BlockingReportingPolicy = () => {
 
               <p className="mb-4 text-gray-700">
                 If you believe your account was wrongfully suspended or terminated, or if you believe a report against you was made in error,
-                you can appeal the decision by contacting <strong>appeals@luvlang.com</strong> with the subject line "Account Appeal."
+                you can appeal the decision by contacting <strong>support@luvlang.org</strong> with the subject line "Account Appeal."
                 Please include your username and any relevant details about your situation.
               </p>
 
               <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">6. Contact</h2>
               <p className="text-gray-700">
                 For questions about our Blocking & Reporting Policy:<br />
-                Email: safety@luvlang.com<br />
+                Email: support@luvlang.org<br />
                 Response time: Within 2 business days
               </p>
             </div>

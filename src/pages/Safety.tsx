@@ -390,7 +390,7 @@ const Safety = () => {
                   <div className="p-4 border rounded-lg">
                     <h3 className="font-semibold mb-2">Support Email</h3>
                     <p className="text-sm text-gray-600 mb-2">Non-urgent safety and support questions</p>
-                    <p className="font-mono">safety@luvlang.com</p>
+                    <p className="font-mono">support@luvlang.org</p>
                   </div>
                   
                   <div className="p-4 border rounded-lg">

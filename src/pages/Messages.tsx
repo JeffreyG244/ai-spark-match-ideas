@@ -28,16 +28,12 @@ const Messages: React.FC = () => {
                 <Logo size="md" showText={true} />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white">Executive Messages</h1>
-                <p className="text-purple-300 text-sm">Professional conversations & connections</p>
+                <h1 className="text-3xl font-bold text-white">Messages</h1>
+                <p className="text-purple-300 text-sm">Your conversations & connections</p>
               </div>
             </div>
             
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 bg-blue-500/20 backdrop-blur-xl border border-blue-500/30 rounded-xl px-4 py-2">
-                <Shield className="w-5 h-5 text-blue-400" />
-                <span className="text-blue-400 text-sm font-medium">Executive</span>
-              </div>
               
               <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-xl font-semibold hover:scale-105 transition-all">
                 <Plus className="w-5 h-5 inline mr-2" />

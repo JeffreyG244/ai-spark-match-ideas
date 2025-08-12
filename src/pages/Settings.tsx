@@ -49,6 +49,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import Logo from '@/components/ui/logo';
 import { Input } from '@/components/ui/input';
+import { useMembershipBadge } from '@/hooks/useMembershipBadge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,6 +84,7 @@ const Settings = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { membershipLevel } = useMembershipBadge();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState('profile');
@@ -346,7 +348,7 @@ const Settings = () => {
           title: 'Contact Support',
           description: 'Get personalized help',
           icon: <Mail className="w-4 h-4" />,
-          action: () => window.open('mailto:support@luvlang.com', '_blank'),
+          action: () => window.open('mailto:support@luvlang.org', '_blank'),
           type: 'navigation'
         },
         {
@@ -552,35 +554,41 @@ const Settings = () => {
                   {activeSettings.items.map(renderSettingItem)}
                 </div>
 
-                {/* Additional Actions */}
-                <Card className="bg-gradient-to-r from-slate-700/60 to-slate-800/60 backdrop-blur-xl border-purple-500/30 mt-8 shadow-xl">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <div className="text-center sm:text-left">
-                        <h3 className="text-white font-bold">Executive Concierge Support</h3>
-                        <p className="text-white/90 text-sm mt-1 font-medium">White-glove assistance for our C-Suite members</p>
+                {/* C-Suite Concierge Support - Only for C-Suite members */}
+                {membershipLevel === 'c_suite' && (
+                  <Card className="bg-gradient-to-r from-slate-700/60 to-slate-800/60 backdrop-blur-xl border-purple-500/30 mt-8 shadow-xl">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="text-center sm:text-left">
+                          <h3 className="text-white font-bold">Executive Concierge Support</h3>
+                          <p className="text-white/90 text-sm mt-1 font-medium">White-glove assistance for our C-Suite members</p>
+                        </div>
+                        <div className="flex gap-3">
+                          <Button 
+                            variant="outline" 
+                            onClick={() => window.open('mailto:support@luvlang.org', '_blank')}
+                            className="border-purple-500/50 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400 transition-all duration-300 hover:scale-105"
+                          >
+                            <Mail className="w-4 h-4 mr-2" />
+                            Contact Concierge
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex gap-3">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => window.open('mailto:concierge@luvlang.com', '_blank')}
-                          className="border-purple-500/50 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400 transition-all duration-300 hover:scale-105"
-                        >
-                          <Mail className="w-4 h-4 mr-2" />
-                          Contact Concierge
-                        </Button>
-                        <Button 
-                          onClick={signOut}
-                          variant="outline"
-                          className="border-red-500/50 text-red-300 hover:bg-red-500/20 hover:border-red-400 transition-all duration-300 hover:scale-105"
-                        >
-                          <LogOut className="w-4 h-4 mr-2" />
-                          Sign Out
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Sign Out Section */}
+                <div className="flex justify-center mt-8">
+                  <Button 
+                    onClick={signOut}
+                    variant="outline"
+                    className="border-red-500/50 text-red-300 hover:bg-red-500/20 hover:border-red-400 transition-all duration-300 hover:scale-105"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
               </div>
             )}
           </div>

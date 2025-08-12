@@ -84,7 +84,7 @@ const GDPR = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">5. Exercising Your Rights</h2>
               <p className="mb-4 text-gray-700">To exercise your GDPR rights:</p>
               <ul className="list-disc list-inside mb-6 text-gray-700 space-y-2">
-                <li>Email: gdpr@luvlang.com</li>
+                <li>Email: support@luvlang.org</li>
                 <li>Use in-app privacy controls</li>
                 <li>Submit requests through your account settings</li>
                 <li>Response time: Within 30 days</li>
@@ -95,7 +95,7 @@ const GDPR = () => {
               <p className="text-gray-700">
                 Contact our Data Protection Officer:
                 <br />
-                Email: dpo@luvlang.com
+                Email: support@luvlang.org
                 <br />
                 Address: [DPO Address]
               </p>

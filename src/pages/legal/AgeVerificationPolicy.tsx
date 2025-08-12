@@ -100,7 +100,7 @@ const AgeVerificationPolicy = () => {
 
               <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">7. Contact</h2>
               <p className="text-gray-700">
-                Verification support: verification@luvlang.com
+                Support: support@luvlang.org
                 <br />
                 Phone: 1-800-LUVLANG (1-800-588-5264)
               </p>

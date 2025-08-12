@@ -14,10 +14,10 @@ const LegalFooter = () => {
           </p>
           <div className="flex gap-4 justify-center">
             <a 
-              href="mailto:legal@luvlang.com" 
+              href="mailto:support@luvlang.org" 
               className="text-purple-600 hover:text-purple-800 font-medium"
             >
-              legal@luvlang.com
+              support@luvlang.org
             </a>
             <span className="text-gray-400">|</span>
             <Link 

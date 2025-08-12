@@ -72,7 +72,7 @@ const SafetyGuidelines = () => {
               </p>
               <div className="flex gap-4">
                 <span className="font-semibold text-red-800">Emergency: 911</span>
-                <span className="font-semibold text-red-800">Safety Team: safety@luvlang.com</span>
+                <span className="font-semibold text-red-800">Safety Team: support@luvlang.org</span>
               </div>
             </div>
           </div>
@@ -146,7 +146,7 @@ const SafetyGuidelines = () => {
               <div className="mt-4 p-4 bg-white rounded-lg border border-purple-200">
                 <p className="font-semibold mb-2">How to Report:</p>
                 <p>Use the report button on any profile or message, or contact:</p>
-                <p className="font-medium">safety@luvlang.com</p>
+                <p className="font-medium">support@luvlang.org</p>
               </div>
             </div>
           </CardContent>

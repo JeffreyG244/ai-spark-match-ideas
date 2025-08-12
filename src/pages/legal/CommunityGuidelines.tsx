@@ -165,7 +165,7 @@ const CommunityGuidelines = () => {
                   <ul className="list-disc list-inside space-y-1">
                     <li>Use the report button immediately</li>
                     <li>Block the user if necessary</li>
-                    <li>Contact support at safety@luvlang.com</li>
+                    <li>Contact support at support@luvlang.org</li>
                     <li>Save evidence if safe to do so</li>
                   </ul>
                 </div>
@@ -193,7 +193,7 @@ const CommunityGuidelines = () => {
                   <h4 className="font-semibold text-gray-800 mb-2">Appeals Process:</h4>
                   <p className="text-gray-700">
                     If you believe your account was suspended in error, you can appeal by contacting 
-                    appeals@luvlang.com within 30 days of the action.
+                    support@luvlang.org within 30 days of the action.
                   </p>
                 </div>
               </div>

@@ -91,15 +91,13 @@ const ContentModerationPolicy = () => {
 
               <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">5. Appeals Process</h2>
               <p className="mb-4 text-gray-700">
-                Users may appeal moderation decisions within 30 days by contacting support@luvlang.com 
+                Users may appeal moderation decisions within 30 days by contacting support@luvlang.org 
                 with their case details. Appeals are reviewed by senior moderation staff within 72 hours.
               </p>
 
               <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">6. Contact</h2>
               <p className="text-gray-700">
-                Report content violations: report@luvlang.com
-                <br />
-                Moderation appeals: appeals@luvlang.com
+                All inquiries: support@luvlang.org
               </p>
             </div>
           </CardContent>

@@ -186,9 +186,7 @@ const DataRetention = () => {
               <p className="text-gray-700">
                 Questions about data retention:
                 <br />
-                Email: retention@luvlang.com
-                <br />
-                Privacy team: privacy@luvlang.com
+                Email: support@luvlang.org
               </p>
             </div>
           </CardContent>

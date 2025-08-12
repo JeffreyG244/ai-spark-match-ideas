@@ -129,9 +129,7 @@ const IdentityVerificationPolicy = () => {
 
               <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">9. Contact</h2>
               <p className="text-gray-700">
-                Verification support: verify@luvlang.com
-                <br />
-                Technical issues: support@luvlang.com
+                Support: support@luvlang.org
               </p>
             </div>
           </CardContent>
