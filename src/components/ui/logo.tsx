@@ -1,5 +1,5 @@
 import React from 'react';
-import logoImage from '@/assets/luvlang-spaced-logo.png';
+const logoImage = '/lovable-uploads/5c07b7a7-1ceb-456a-a4b3-381d70437f98.png';
 
 interface LogoProps {
   className?: string;
