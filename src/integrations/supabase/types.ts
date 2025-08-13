@@ -2306,10 +2306,7 @@ export type Database = {
       }
       get_user_gender_preference: {
         Args: { user_uuid: string }
-        Returns: {
-          gender: string
-          looking_for: string
-        }[]
+        Returns: string
       }
       get_user_membership_level: {
         Args: { user_id: string }
@@ -2344,7 +2341,9 @@ export type Database = {
         Returns: boolean
       }
       is_gender_compatible: {
-        Args: { user1_id: string; user2_id: string }
+        Args:
+          | { user1_id: string; user2_id: string }
+          | { user_id: string; target_gender: string }
         Returns: boolean
       }
       json: {
