@@ -131,7 +131,7 @@ const Settings = () => {
     {
       id: 'profile',
       title: 'Profile & Identity',
-      description: 'Manage your executive profile and verification',
+      description: 'Manage your profile and verification',
       icon: <User className="w-5 h-5" />,
       color: 'from-purple-500 to-pink-500',
       items: [
@@ -351,6 +351,14 @@ const Settings = () => {
           action: () => window.open('mailto:support@luvlang.org', '_blank'),
           type: 'navigation'
         },
+        ...(membershipLevel === 'c_suite' ? [{
+          id: 'concierge-support',
+          title: 'Concierge Support',
+          description: 'Exclusive C-Suite concierge assistance',
+          icon: <Crown className="w-4 h-4" />,
+          action: () => window.open('mailto:support@luvlang.org?subject=C-Suite Concierge Request', '_blank'),
+          type: 'navigation' as const
+        }] : []),
         {
           id: 'legal-docs',
           title: 'Legal Documents',
@@ -460,10 +468,39 @@ const Settings = () => {
                 />
               </div>
               
-              {/* Premium Badge */}
-              <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-500/30 to-orange-500/30 backdrop-blur-xl border border-yellow-500/40 rounded-xl px-4 py-2"  >
-                <Crown className="w-4 h-4 text-yellow-400" />
-                <span className="text-yellow-400 text-sm font-medium hidden sm:inline">C-Suite Premium</span>
+              {/* Membership Badge */}
+              <div className={`flex items-center gap-2 backdrop-blur-xl border rounded-xl px-4 py-2 ${
+                membershipLevel === 'c_suite' 
+                  ? 'bg-gradient-to-r from-yellow-500/30 to-orange-500/30 border-yellow-500/40' 
+                  : membershipLevel === 'executive'
+                  ? 'bg-gradient-to-r from-purple-500/30 to-indigo-500/30 border-purple-500/40'
+                  : membershipLevel === 'premium'
+                  ? 'bg-gradient-to-r from-blue-500/30 to-cyan-500/30 border-blue-500/40'
+                  : 'bg-gradient-to-r from-slate-600/30 to-slate-700/30 border-slate-500/40'
+              }`}>
+                <Crown className={`w-4 h-4 ${
+                  membershipLevel === 'c_suite' 
+                    ? 'text-yellow-400' 
+                    : membershipLevel === 'executive'
+                    ? 'text-purple-400'
+                    : membershipLevel === 'premium'
+                    ? 'text-blue-400'
+                    : 'text-slate-400'
+                }`} />
+                <span className={`text-sm font-medium hidden sm:inline ${
+                  membershipLevel === 'c_suite' 
+                    ? 'text-yellow-400' 
+                    : membershipLevel === 'executive'
+                    ? 'text-purple-400'
+                    : membershipLevel === 'premium'
+                    ? 'text-blue-400'
+                    : 'text-slate-400'
+                }`}>
+                  {membershipLevel === 'c_suite' ? 'C-Suite' 
+                   : membershipLevel === 'executive' ? 'Executive'
+                   : membershipLevel === 'premium' ? 'Premium'
+                   : 'Basic'} Member
+                </span>
               </div>
               
               {/* Mobile Menu Toggle */}
