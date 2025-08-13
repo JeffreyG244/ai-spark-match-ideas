@@ -1,6 +1,6 @@
 import React from 'react';
 import { Crown, Briefcase, TrendingUp, Palette, Dumbbell, Plane, Lightbulb, ArrowRight } from 'lucide-react';
-import logoImage from '@/assets/luvlang-spaced-logo.png';
+import logoImage from '@/assets/luvlang-heart-logo.png';
 
 interface ProfileSetupSectionProps {
   onStartProfileSetup: () => void;
