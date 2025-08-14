@@ -35,9 +35,6 @@ import Safety from "./pages/Safety";
 import Analytics from "./pages/Analytics";
 import SuccessStories from "./pages/SuccessStories";
 import Moderation from "./pages/Moderation";
-import TestIntegration from "./pages/TestIntegration";
-import TestSetup from "./pages/TestSetup";
-import N8NTesting from "./pages/N8NTesting";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
 import SystemAudit from "./pages/SystemAudit";
 import SupabaseAuditReport from "./pages/SupabaseAuditReport";
@@ -114,9 +111,6 @@ function App() {
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/success-stories" element={<SuccessStories />} />
                     <Route path="/moderation" element={<Moderation />} />
-                    <Route path="/test-integration" element={<TestIntegration />} />
-                    <Route path="/test-setup" element={<TestSetup />} />
-                    <Route path="/n8n-testing" element={<N8NTesting />} />
                      <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
                      <Route path="/executive-luvlang" element={<ExecutiveLuvlang />} />
                      

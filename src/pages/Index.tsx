@@ -65,9 +65,6 @@ const Index = () => {
             <Button size="lg" onClick={() => navigate("/auth")} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg px-8 py-4 text-lg">
               Start Your Journey
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate("/executive-luvlang")} className="border-white/30 text-white bg-white/10 hover:bg-white/20 hover:text-white px-8 py-4 text-lg">
-              View Demo
-            </Button>
           </div>
         </div>
 
