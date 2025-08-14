@@ -1007,6 +1007,69 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          age: number | null
+          auth_user_id: string | null
+          bio: string | null
+          company: string | null
+          created_at: string | null
+          education: string | null
+          first_name: string | null
+          gender: string | null
+          id: string
+          interests: string[] | null
+          is_active: boolean | null
+          job_title: string | null
+          last_name: string | null
+          location: string | null
+          membership_type: string | null
+          profile_complete: boolean | null
+          sexual_orientation: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          age?: number | null
+          auth_user_id?: string | null
+          bio?: string | null
+          company?: string | null
+          created_at?: string | null
+          education?: string | null
+          first_name?: string | null
+          gender?: string | null
+          id?: string
+          interests?: string[] | null
+          is_active?: boolean | null
+          job_title?: string | null
+          last_name?: string | null
+          location?: string | null
+          membership_type?: string | null
+          profile_complete?: boolean | null
+          sexual_orientation?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          age?: number | null
+          auth_user_id?: string | null
+          bio?: string | null
+          company?: string | null
+          created_at?: string | null
+          education?: string | null
+          first_name?: string | null
+          gender?: string | null
+          id?: string
+          interests?: string[] | null
+          is_active?: boolean | null
+          job_title?: string | null
+          last_name?: string | null
+          location?: string | null
+          membership_type?: string | null
+          profile_complete?: boolean | null
+          sexual_orientation?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       security_logs: {
         Row: {
           created_at: string | null
