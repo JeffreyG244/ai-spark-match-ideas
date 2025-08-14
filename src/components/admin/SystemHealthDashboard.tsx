@@ -18,9 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import SecurityMonitor from '../security/SecurityMonitor';
-import MessagingTest from '../messaging/MessagingTest';
 import DataSeeder from './DataSeeder';
-import N8NWebhookTest from './N8NWebhookTest';
 
 interface SystemStats {
   totalUsers: number;
@@ -323,14 +321,8 @@ const SystemHealthDashboard = () => {
       {/* Security Monitor */}
       <SecurityMonitor />
 
-      {/* Messaging Test */}
-      <MessagingTest />
-
       {/* Data Seeder */}
       <DataSeeder />
-
-      {/* N8N Webhook Test */}
-      <N8NWebhookTest />
 
       {/* System Info */}
       <Card>

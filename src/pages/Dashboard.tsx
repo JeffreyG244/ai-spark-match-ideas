@@ -55,42 +55,6 @@ const Dashboard = () => {
     }
   }, [user, loading, navigate]);
 
-  // Demo alert functions for testing
-  const showNewMatchAlert = () => {
-    showAlert({
-      type: 'match',
-      title: 'New Executive Match! 💼',
-      message: "Sarah Chen, CEO at TechCorp, likes your profile. She's verified and matches your criteria.",
-      actionText: "View Profile",
-      onAction: () => navigate('/matches'),
-      showBadge: true,
-      badgeText: "Hot Match"
-    });
-  };
-
-  const showNewMessageAlert = () => {
-    showAlert({
-      type: 'message',
-      title: 'New Message',
-      message: "Michael Rodriguez sent: \"I'd love to discuss our shared passion for sustainable business over coffee.\"",
-      actionText: "Reply",
-      onAction: () => navigate('/messages'),
-      autoHide: true,
-      duration: 8000
-    });
-  };
-
-  const showPremiumAlert = () => {
-    showAlert({
-      type: 'premium',
-      title: 'Upgrade to C-Suite Premium',
-      message: "Unlock advanced AI matching, priority messaging, and exclusive executive events.",
-      actionText: "Upgrade Now",
-      onAction: () => navigate('/membership'),
-      showBadge: true,
-      badgeText: "50% Off"
-    });
-  };
 
   // Show loading while checking auth
   if (loading) {
@@ -156,27 +120,6 @@ const Dashboard = () => {
                 <Settings className="w-5 h-5 text-white" />
               </button>
 
-              {/* Demo Alert Buttons - Remove in production */}
-              <div className="hidden md:flex items-center gap-2">
-                <button 
-                  onClick={showNewMatchAlert}
-                  className="text-xs px-3 py-1 bg-pink-500/20 text-pink-300 rounded-lg hover:bg-pink-500/30 transition-all"
-                >
-                  Demo Match
-                </button>
-                <button 
-                  onClick={showNewMessageAlert}
-                  className="text-xs px-3 py-1 bg-blue-500/20 text-blue-300 rounded-lg hover:bg-blue-500/30 transition-all"
-                >
-                  Demo Message
-                </button>
-                <button 
-                  onClick={showPremiumAlert}
-                  className="text-xs px-3 py-1 bg-yellow-500/20 text-yellow-300 rounded-lg hover:bg-yellow-500/30 transition-all"
-                >
-                  Demo Premium
-                </button>
-              </div>
             </div>
           </div>
         </div>
