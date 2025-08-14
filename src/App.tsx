@@ -22,7 +22,7 @@ const Checkout = lazy(() => import("./pages/Checkout"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Legal = lazy(() => import("./pages/Legal"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
-const ExecutiveLuvlang = lazy(() => import("./pages/ExecutiveLuvlang"));
+
 
 // Load other components normally (admin pages, etc.)
 import PreLaunchAudit from "./pages/PreLaunchAudit";
@@ -112,7 +112,7 @@ function App() {
                     <Route path="/success-stories" element={<SuccessStories />} />
                     <Route path="/moderation" element={<Moderation />} />
                      <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
-                     <Route path="/executive-luvlang" element={<ExecutiveLuvlang />} />
+                     
                      
                     <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
                     <Route path="/legal/terms-of-service" element={<TermsOfService />} />
