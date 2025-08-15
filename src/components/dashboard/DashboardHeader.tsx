@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { Heart, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import Logo from '@/components/ui/logo';
 
 interface DashboardHeaderProps {
   onSignOut: () => void;
@@ -12,12 +13,7 @@ const DashboardHeader = ({ onSignOut }: DashboardHeaderProps) => {
   return (
     <div className="flex justify-between items-center mb-8">
       <div>
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-            <Heart className="h-6 w-6 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">Luvlang</h2>
-        </div>
+        <Logo size="md" className="mb-2" />
         <div className="flex items-center gap-4">
           <Link to="/">
             <Button variant="outline">

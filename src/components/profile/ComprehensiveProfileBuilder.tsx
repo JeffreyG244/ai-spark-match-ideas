@@ -46,9 +46,9 @@ const ComprehensiveProfileBuilder = () => {
 
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .maybeSingle();
 
       if (error) {
@@ -224,13 +224,13 @@ const ComprehensiveProfileBuilder = () => {
       let result;
       if (profileExists) {
         result = await supabase
-          .from('profiles')
+          .from('users')
           .update(profilePayload)
-          .eq('user_id', user.id);
+          .eq('id', user.id);
       } else {
         profilePayload.created_at = new Date().toISOString();
         result = await supabase
-          .from('profiles')
+          .from('users')
           .insert([profilePayload]);
       }
 

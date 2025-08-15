@@ -4,10 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Heart } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import Logo from '@/components/ui/logo';
 
 const LoginForm = () => {
   const { signIn } = useAuth();
@@ -35,10 +35,7 @@ const LoginForm = () => {
     setLoading(true);
     try {
       await signIn(formData.email, formData.password);
-      toast({
-        title: 'Welcome back!',
-        description: 'You have successfully signed in.',
-      });
+      // Toast removed - now using custom alert banner system
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -111,12 +108,12 @@ const LoginForm = () => {
 
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-love-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-xl border-0">
           <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Heart className="h-8 w-8 text-white" />
-            </div>
+          <div className="flex items-center justify-center mb-6">
+            <Logo size="lg" />
+          </div>
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
               Reset Your Password
             </CardTitle>
@@ -166,11 +163,11 @@ const LoginForm = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-love-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl border-0">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Heart className="h-8 w-8 text-white" />
+          <div className="flex items-center justify-center mb-6">
+            <Logo size="lg" />
           </div>
           <CardTitle className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
             Welcome Back

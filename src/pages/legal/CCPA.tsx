@@ -92,7 +92,7 @@ const CCPA = () => {
                 <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
                   <h3 className="font-semibold text-gray-800 mb-2">How to Submit Requests</h3>
                   <ul className="list-disc list-inside text-gray-700 space-y-1">
-                    <li>Email: ccpa@luvlang.com</li>
+                    <li>Email: support@luvlang.org</li>
                     <li>Phone: 1-800-LUVLANG</li>
                     <li>Online form in your account settings</li>
                     <li>Response time: Within 45 days</li>
@@ -119,7 +119,7 @@ const CCPA = () => {
               <p className="text-gray-700">
                 For CCPA-related questions:
                 <br />
-                Email: ccpa@luvlang.com
+                Email: support@luvlang.org
                 <br />
                 Phone: 1-800-LUVLANG (1-800-588-5264)
                 <br />

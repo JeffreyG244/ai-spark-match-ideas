@@ -46,10 +46,10 @@ export class RateLimitService {
 
       const { data: allowed, error } = await supabase
         .rpc('secure_rate_limit_check', {
-          p_user_id: user.id,
-          p_action: endpoint,
-          p_max_requests: 60,
-          p_window_seconds: 60
+          user_id_param: user.id,
+          action_type: endpoint,
+          max_requests: 60,
+          window_minutes: 1
         });
 
       if (error) {
@@ -57,7 +57,7 @@ export class RateLimitService {
         return { allowed: false };
       }
 
-      return { allowed: allowed || false };
+      return { allowed: Boolean(allowed) };
     } catch (error) {
       console.error('Rate limiting error:', error);
       return { allowed: false };

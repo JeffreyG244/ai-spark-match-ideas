@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -7,6 +8,8 @@ import { CheckCircle, User, Brain, Heart, Camera, ArrowRight } from 'lucide-reac
 import { useEnhancedProfileData } from '@/hooks/useEnhancedProfileData';
 import { useCompatibilityAnswers } from '@/hooks/useCompatibilityAnswers';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import BasicProfileQuestions from './BasicProfileQuestions';
 import PersonalityQuestions from './PersonalityQuestions';
 import InterestsSelector from './InterestsSelector';
@@ -20,10 +23,13 @@ interface Photo {
 }
 
 const GuidedProfileFlow = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [personalityAnswers, setPersonalityAnswers] = useState<Record<string, string>>({});
   const [interests, setInterests] = useState<string[]>([]);
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [isCompletingProfile, setIsCompletingProfile] = useState(false);
 
   const {
     profileData,
@@ -53,6 +59,26 @@ const GuidedProfileFlow = () => {
     loadProfile();
     loadCompatibilityAnswers();
   }, []);
+
+  // Load saved data into local state when data is loaded
+  useEffect(() => {
+    if (questionAnswers && Object.keys(questionAnswers).length > 0) {
+      setPersonalityAnswers(questionAnswers);
+    }
+    if (profileData?.interests) {
+      if (typeof profileData.interests === 'string') {
+        setInterests(profileData.interests.split(',').map(i => i.trim()).filter(Boolean));
+      }
+    }
+    if (profileData?.photo_urls && Array.isArray(profileData.photo_urls)) {
+      const formattedPhotos = profileData.photo_urls.map((url, index) => ({
+        id: `photo-${index}`,
+        url,
+        isPrimary: index === 0
+      }));
+      setPhotos(formattedPhotos);
+    }
+  }, [questionAnswers, profileData]);
 
   const steps = [
     {
@@ -97,13 +123,25 @@ const GuidedProfileFlow = () => {
       });
       setCurrentStep(2);
     } else if (stepId === 2 && Object.keys(personalityAnswers || {}).length >= 6) {
+      // Save personality answers through compatibility answers hook
       await saveCompatibilityAnswers();
+      
+      // Also update enhanced profile data with personality answers
+      Object.entries(personalityAnswers).forEach(([key, value]) => {
+        updateProfileField(key as any, value);
+      });
+      await saveProfile(false);
+      
       toast({
         title: 'Personality Questions Completed!',
         description: 'Now let\'s add your interests...',
       });
       setCurrentStep(3);
     } else if (stepId === 3 && (interests || []).length >= 5) {
+      // Save interests to profile
+      updateProfileField('interests', interests.join(', '));
+      await saveProfile(false);
+      
       toast({
         title: 'Interests Added!',
         description: 'Finally, let\'s add some photos...',
@@ -118,6 +156,50 @@ const GuidedProfileFlow = () => {
 
   const handlePersonalityAnswer = (questionId: string, answer: string) => {
     setPersonalityAnswers(prev => ({ ...prev, [questionId]: answer }));
+  };
+
+  const handleCompleteProfile = async () => {
+    if (!user || isCompletingProfile) return;
+    
+    setIsCompletingProfile(true);
+    try {
+      // Save all profile data first
+      await saveProfile(false);
+      await saveCompatibilityAnswers();
+      
+      // Trigger the profile webhook for matchmaking
+      const { data, error } = await supabase.functions.invoke('profile-webhook', {
+        body: { 
+          user_id: user.id, 
+          event_type: 'profile_completed' 
+        }
+      });
+
+      if (error) {
+        console.error('Webhook error:', error);
+        toast({
+          title: 'Profile Saved',
+          description: 'Profile saved but matchmaking may be delayed. You can still browse matches!',
+        });
+      } else {
+        toast({
+          title: 'Profile Complete!',
+          description: 'Your profile has been saved and sent for matching analysis.',
+        });
+      }
+
+      // Navigate to discover page
+      navigate('/discover');
+    } catch (error) {
+      console.error('Error completing profile:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to complete profile. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsCompletingProfile(false);
+    }
   };
 
   if (isLoading) {
@@ -223,11 +305,12 @@ const GuidedProfileFlow = () => {
               />
               <div className="text-center pt-6">
                 <Button
-                  onClick={() => setCurrentStep(3)}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 text-lg font-semibold"
+                  onClick={() => handleStepComplete(1)}
+                  disabled={!isBasicProfileComplete()}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-3 text-lg font-semibold disabled:opacity-50"
                   size="lg"
                 >
-                  Continue to Interests
+                  Continue to Personality Questions
                   <ArrowRight className="h-5 w-5 ml-2" />
                 </Button>
               </div>
@@ -244,17 +327,16 @@ const GuidedProfileFlow = () => {
                 answers={personalityAnswers}
                 onAnswerChange={handlePersonalityAnswer}
               />
-              {Object.keys(personalityAnswers || {}).length >= 6 && (
-                <div className="text-center pt-4">
-                  <Button
-                    onClick={() => handleStepComplete(2)}
-                    className="bg-purple-600 hover:bg-purple-700"
-                  >
-                    Continue to Interests
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              )}
+              <div className="text-center pt-4">
+                <Button
+                  onClick={() => handleStepComplete(2)}
+                  disabled={Object.keys(personalityAnswers || {}).length < 6}
+                  className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Continue to Interests ({Object.keys(personalityAnswers || {}).length}/6)
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
             </div>
           )}
 
@@ -295,7 +377,8 @@ const GuidedProfileFlow = () => {
               {(photos || []).length >= 3 && (
                 <div className="text-center pt-4">
                   <Button
-                    onClick={() => window.location.href = '/discover'}
+                    onClick={handleCompleteProfile}
+                    disabled={isCompletingProfile}
                     className="bg-purple-600 hover:bg-purple-700"
                   >
                     Complete Profile & Start Discovering Matches
@@ -320,7 +403,7 @@ const GuidedProfileFlow = () => {
               Your profile is now ready to start matching with other users.
             </p>
             <Button
-              onClick={() => window.location.href = '/discover'}
+              onClick={() => navigate('/discover')}
               className="bg-green-600 hover:bg-green-700"
             >
               Start Discovering Matches

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -7,15 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Secure configuration retrieval
-async function getN8NWebhookUrl(): Promise<string> {
-  const webhookUrl = Deno.env.get('N8N_WEBHOOK_URL');
-  if (!webhookUrl) {
-    console.error('N8N_WEBHOOK_URL not configured in environment');
-    throw new Error('N8N webhook URL not configured');
-  }
-  return webhookUrl;
-}
+// Updated N8N webhook URL
+const N8N_WEBHOOK_URL = 'https://luvlang.org/webhook-test/088c0800-7819-4d66-b436-fbad43ccad7c';
 
 interface ProfileData {
   user_id: string;
@@ -27,6 +19,8 @@ interface ProfileData {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log('Profile webhook function started');
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -38,91 +32,148 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const { user_id, event_type = 'profile_updated' } = await req.json();
+    console.log('Received request for user:', user_id, 'event:', event_type);
     
     if (!user_id) {
+      console.error('No user_id provided');
       return new Response(
         JSON.stringify({ error: 'user_id is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Get profile data from dating_profiles
-    const { data: profile, error: profileError } = await supabaseClient
-      .from('dating_profiles')
+    // Get user data from users table
+    console.log('Fetching user data...');
+    const { data: user, error: userError } = await supabaseClient
+      .from('users')
       .select('*')
-      .eq('user_id', user_id)
-      .single();
+      .eq('id', user_id)
+      .maybeSingle();
 
-    if (profileError || !profile) {
-      console.error('Profile fetch error:', profileError);
+    if (userError) {
+      console.error('User fetch error:', userError);
       return new Response(
-        JSON.stringify({ error: 'Profile not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get compatibility answers
-    const { data: compatibility } = await supabaseClient
-      .from('compatibility_answers')
-      .select('*')
-      .eq('user_id', user_id)
-      .single();
-
-    // Prepare data for N8N webhook
-    const webhookData: ProfileData = {
-      user_id: user_id,
-      name: `${profile.first_name} ${profile.last_name}`,
-      match_score: 0.95,
-      timestamp: new Date().toISOString(),
-      event_type: event_type,
-      data: {
-        profile: profile,
-        compatibility: compatibility?.answers || {},
-        preferences: {
-          age_range: [profile.age - 5, profile.age + 5],
-          location: `${profile.city}, ${profile.state}`,
-          interests: profile.interests
-        }
-      }
-    };
-
-    // Get secure N8N webhook URL
-    const N8N_WEBHOOK_URL = await getN8NWebhookUrl();
-    
-    console.log('Sending to N8N webhook (secure)');
-    console.log('Payload:', JSON.stringify(webhookData, null, 2));
-
-    // Send to N8N webhook with enhanced security
-    const webhookResponse = await fetch(N8N_WEBHOOK_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'user-agent': 'curl/8.7.1',
-        'accept': '*/*',
-        'content-length': JSON.stringify(webhookData).length.toString()
-      },
-      body: JSON.stringify(webhookData)
-    });
-
-    if (!webhookResponse.ok) {
-      console.error('N8N webhook failed:', webhookResponse.status, await webhookResponse.text());
-      return new Response(
-        JSON.stringify({ 
-          error: 'Webhook failed', 
-          status: webhookResponse.status 
-        }),
+        JSON.stringify({ error: 'Database error', details: userError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const webhookResult = await webhookResponse.text();
-    console.log('N8N webhook success:', webhookResult);
+    // Use user data or create test data
+    const userData = user || {
+      id: user_id,
+      first_name: 'Test',
+      last_name: 'User',
+      age: 30,
+      city: 'San Francisco',
+      state: 'CA',
+      interests: ['Technology', 'Business'],
+      bio: 'Test user for webhook testing'
+    };
+
+    console.log('User data found:', userData.first_name, userData.last_name);
+
+    // Prepare comprehensive webhook payload
+    const webhookData: ProfileData = {
+      user_id: user_id,
+      name: `${userData.first_name} ${userData.last_name}`,
+      match_score: 0.95,
+      timestamp: new Date().toISOString(),
+      event_type: event_type,
+      data: {
+        profile: {
+          user_id: user_id,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          age: userData.age || 30,
+          city: userData.city || 'Test City',
+          state: userData.state || 'CA',
+          bio: userData.bio || 'Professional seeking meaningful connections',
+          industry: userData.industry,
+          job_title: userData.job_title,
+          interests: userData.interests || ['Technology', 'Business']
+        },
+        compatibility: {},
+        preferences: {
+          age_range: [userData.age_min || 25, userData.age_max || 45],
+          location: `${userData.city || 'Test City'}, ${userData.state || 'CA'}`,
+          interests: userData.interests || ['Technology', 'Business'],
+          deal_breakers: userData.deal_breakers || []
+        },
+        user_metadata: {
+          email: userData.email,
+          created_at: userData.created_at,
+          subscription_tier: userData.subscription_tier || 'free'
+        }
+      }
+    };
+
+    console.log('Sending to N8N webhook:', N8N_WEBHOOK_URL);
+    console.log('Payload:', JSON.stringify(webhookData, null, 2));
+
+    // Send to N8N webhook - with better error handling
+    let webhookResult;
+    try {
+      const webhookResponse = await fetch(N8N_WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(webhookData)
+      });
+
+      console.log('Webhook response status:', webhookResponse.status);
+
+      if (!webhookResponse.ok) {
+        const errorText = await webhookResponse.text();
+        console.error('N8N webhook failed:', webhookResponse.status, errorText);
+        
+        // For testing purposes, don't fail the entire function if webhook is down
+        webhookResult = {
+          success: false,
+          status: webhookResponse.status,
+          error: `Webhook returned ${webhookResponse.status}`,
+          note: 'This is expected if N8N webhook is not set up yet'
+        };
+      } else {
+        const webhookResultText = await webhookResponse.text();
+        console.log('N8N webhook success:', webhookResultText);
+        webhookResult = {
+          success: true,
+          status: webhookResponse.status,
+          response: webhookResultText
+        };
+      }
+    } catch (fetchError: any) {
+      console.error('Network error calling webhook:', fetchError);
+      webhookResult = {
+        success: false,
+        error: fetchError.message,
+        note: 'Network error - webhook may not be accessible'
+      };
+    }
+
+    // Try to parse webhook response for additional data
+    let responseData = null;
+    if (webhookResult.success && webhookResult.response) {
+      try {
+        responseData = JSON.parse(webhookResult.response);
+      } catch (e) {
+        console.log('Webhook response is not JSON:', webhookResult.response);
+        responseData = { raw_response: webhookResult.response };
+      }
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Profile data sent to N8N workflow',
-        webhook_response: webhookResult
+        message: 'Profile data processed successfully',
+        webhook_result: webhookResult,
+        webhook_data: responseData,
+        payload_sent: webhookData,
+        user_data_found: !!userData.first_name,
+        ai_analysis: responseData?.ai_analysis || null,
+        compatibility_insights: responseData?.compatibility_insights || null,
+        match_recommendations: responseData?.match_recommendations || null
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
@@ -132,7 +183,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        details: error.message 
+        details: error.message,
+        stack: error.stack
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

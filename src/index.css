@@ -32,19 +32,23 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 346 77% 49.8%;
 
-    /* Modern dating app colors - Professional Purple/Pink Theme */
-    --love-primary: 280 100% 70%;
-    --love-secondary: 320 100% 75%;
-    --love-accent: 260 100% 65%;
-    --love-background: 280 20% 97%;
-    --love-surface: 280 15% 98%;
-    --love-text: 280 25% 25%;
-    --love-text-light: 280 15% 50%;
+    /* Sophisticated Professional Theme */
+    --love-primary: 280 85% 60%;
+    --love-secondary: 320 70% 65%;
+    --love-accent: 260 80% 70%;
+    --love-background: 280 20% 12%;
+    --love-surface: 280 15% 16%;
+    --love-text: 280 10% 98%;
+    --love-text-light: 280 8% 78%;
+    --love-text-muted: 280 6% 65%;
+    --love-border: 280 15% 20%;
+    --love-card: 280 18% 14%;
     
-    /* Enhanced gradients for professional look */
-    --love-gradient-bg: linear-gradient(135deg, hsl(280 30% 95%), hsl(320 25% 97%));
-    --love-gradient-card: linear-gradient(135deg, hsl(280 15% 98%), hsl(320 10% 99%));
-    --love-gradient-primary: linear-gradient(135deg, hsl(280 100% 70%), hsl(320 100% 75%));
+    /* Sophisticated gradients */
+    --love-gradient-bg: linear-gradient(135deg, hsl(280 20% 12%), hsl(320 15% 14%));
+    --love-gradient-card: linear-gradient(135deg, hsl(280 18% 14%), hsl(320 16% 16%));
+    --love-gradient-primary: linear-gradient(135deg, hsl(280 85% 60%), hsl(320 70% 65%));
+    --love-gradient-subtle: linear-gradient(135deg, hsl(280 15% 16%), hsl(280 18% 18%));
     
     /* Interactive states */
     --love-like: 142 76% 36%;
@@ -55,8 +59,16 @@
     --gradient-secondary: linear-gradient(135deg, hsl(262 83% 58%), hsl(346 77% 49.8%));
     --gradient-background: linear-gradient(135deg, hsl(0 0% 98%), hsl(346 77% 97%));
 
-    --radius: 0.5rem;
+    /* Metallic tokens */
+    --gold-1: 45 100% 70%;
+    --gold-2: 42 100% 60%;
+    --gold-3: 38 100% 50%;
+    --silver-1: 210 15% 85%;
+    --silver-2: 210 15% 70%;
+    --silver-3: 210 15% 55%;
+    --star-bright: 60 100% 50%;
 
+    --radius: 0.5rem;
     --sidebar-background: 0 0% 98%;
 
     --sidebar-foreground: 240 5.3% 26.1%;

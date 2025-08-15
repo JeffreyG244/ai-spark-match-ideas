@@ -14,10 +14,10 @@ interface SwipeableDailyMatchProps {
     id: string;
     compatibility_score: number;
     user_profile?: {
-      user_id: string;
+      id: string;
       email: string;
-      bio: string | null;
-      photo_urls: string[] | null;
+      bio: string;
+      photos: string[];
       first_name?: string;
       age?: number;
       gender?: string;
@@ -26,55 +26,51 @@ interface SwipeableDailyMatchProps {
   onSwipe: (direction: 'like' | 'pass') => void;
 }
 
-const SwipeableDailyMatch = ({ match, onSwipe }: SwipeableDailyMatchProps) => {
+const SwipeableDailyMatch: React.FC<SwipeableDailyMatchProps> = ({ match, onSwipe }) => {
+  const [swipeDirection, setSwipeDirection] = useState<'like' | 'pass' | null>(null);
   const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const [swipeDirection, setSwipeDirection] = useState<'like' | 'pass' | null>(null);
   const { recordSwipe, isLoading } = useSwipeActions();
 
+  if (!match.user_profile) {
+    return null;
+  }
+
   const profile = match.user_profile;
-  if (!profile) return null;
-
-  const firstName = profile.first_name || profile.email.split('@')[0] || 'User';
-  const age = profile.age || Math.floor(Math.random() * 20) + 25;
-  
-  // Ensure we have a valid photo URL
-  const getPhotoUrl = () => {
-    if (profile.photo_urls && Array.isArray(profile.photo_urls) && profile.photo_urls.length > 0) {
-      return profile.photo_urls[0];
-    }
-    // Gender-appropriate fallback images
-    const fallbackImages = {
-      male: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop',
-      female: 'https://images.unsplash.com/photo-1494790108755-2616c2b10db8?w=400&h=600&fit=crop',
-      default: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'
-    };
-    
-    const gender = profile.gender?.toLowerCase();
-    return fallbackImages[gender as keyof typeof fallbackImages] || fallbackImages.default;
-  };
-
-  const photoUrl = getPhotoUrl();
+  const firstName = profile.first_name || 'User';
+  const age = profile.age || 25;
+  const photo = profile.photos && profile.photos.length > 0 
+    ? profile.photos[0]
+    : 'https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60';
 
   const handleSwipe = async (direction: 'like' | 'pass') => {
     if (isLoading) return;
     
     setSwipeDirection(direction);
     
-    // Record swipe action
-    await recordSwipe(profile.user_id, direction);
-    
-    if (direction === 'like') {
+    try {
+      await recordSwipe(profile.id, direction);
+      
+      if (direction === 'like') {
+        toast({
+          title: '💖 Great choice!',
+          description: `You liked ${firstName}. They'll be notified if it's a match!`,
+        });
+      }
+      
+      setTimeout(() => {
+        onSwipe(direction);
+        setSwipeDirection(null);
+      }, 300);
+    } catch (error) {
+      console.error('Error recording swipe:', error);
       toast({
-        title: '💖 Great choice!',
-        description: `You liked ${firstName}. They'll be notified if it's a match!`,
+        title: 'Error',
+        description: 'Failed to record swipe. Please try again.',
+        variant: 'destructive'
       });
+      setSwipeDirection(null);
     }
-    
-    // Call parent onSwipe after a delay for animation
-    setTimeout(() => {
-      onSwipe(direction);
-    }, 300);
   };
 
   const handleDragEnd = (event: any, info: any) => {
@@ -87,112 +83,117 @@ const SwipeableDailyMatch = ({ match, onSwipe }: SwipeableDailyMatchProps) => {
       handleSwipe('pass');
     }
     
-    setIsDragging(false);
     setDragX(0);
+    setIsDragging(false);
   };
 
   return (
-    <motion.div
-      initial={{ scale: 0.9, opacity: 0, rotateY: 10 }}
-      animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-      exit={{ 
-        scale: 0.8, 
-        opacity: 0,
-        x: swipeDirection === 'like' ? 400 : swipeDirection === 'pass' ? -400 : 0,
-        rotate: swipeDirection === 'like' ? 20 : swipeDirection === 'pass' ? -20 : 0,
-        transition: { duration: 0.4, ease: "easeInOut" }
-      }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      drag="x"
-      dragConstraints={{ left: -100, right: 100 }}
-      dragElastic={0.3}
-      onDragEnd={handleDragEnd}
-      onDrag={(event, info) => {
-        setDragX(info.offset.x);
-        setIsDragging(Math.abs(info.offset.x) > 10);
-      }}
-      onDragStart={() => setIsDragging(true)}
-      whileDrag={{ 
-        rotate: dragX * 0.1, 
-        scale: 1.05,
-        cursor: 'grabbing',
-        zIndex: 10
-      }}
-      className="relative cursor-grab active:cursor-grabbing"
-    >
-      <Card className="border-purple-200 hover:border-purple-300 transition-all duration-300 overflow-hidden">
-        <CardHeader className="pb-3">
+    <div className="relative w-full max-w-sm mx-auto">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ 
+          scale: 0.8, 
+          opacity: 0,
+          x: swipeDirection === 'like' ? 400 : swipeDirection === 'pass' ? -400 : 0,
+          rotate: swipeDirection === 'like' ? 20 : swipeDirection === 'pass' ? -20 : 0,
+          transition: { duration: 0.4, ease: "easeInOut" }
+        }}
+        drag="x"
+        dragConstraints={{ left: -100, right: 100 }}
+        dragElastic={0.3}
+        onDragEnd={handleDragEnd}
+        onDrag={(event, info) => {
+          setDragX(info.offset.x);
+          setIsDragging(Math.abs(info.offset.x) > 10);
+        }}
+        onDragStart={() => setIsDragging(true)}
+        whileDrag={{ 
+          rotate: dragX * 0.1, 
+          scale: 1.05,
+          cursor: 'grabbing',
+          zIndex: 10
+        }}
+        className="cursor-grab active:cursor-grabbing"
+      >
+        <Card className="border-purple-200 overflow-hidden shadow-xl bg-gradient-to-br from-white to-purple-50">
           <div className="relative">
-            <div className="w-full h-64 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg overflow-hidden">
+            {/* Profile Image */}
+            <div className="aspect-[3/4] overflow-hidden">
               <img 
-                src={photoUrl}
+                src={photo}
                 alt={firstName}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const target = e.currentTarget;
-                  target.src = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop";
+                  target.src = "https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60";
                 }}
-                loading="lazy"
               />
             </div>
-            <div className="absolute top-2 right-2">
-              <Badge className="bg-white/90 text-purple-800 backdrop-blur-sm">
-                <Star className="h-3 w-3 mr-1 fill-current" />
-                Daily Pick
-              </Badge>
+            
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            
+            {/* Profile Info Overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h3 className="text-2xl font-bold">{firstName}, {age}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <MapPin className="h-4 w-4 opacity-80" />
+                    <span className="text-sm opacity-90">San Francisco, CA</span>
+                  </div>
+                </div>
+                <Badge className="bg-green-500/20 text-green-100 border-green-400/30">
+                  <Star className="h-3 w-3 mr-1 fill-current" />
+                  New
+                </Badge>
+              </div>
+              
+              {/* Compatibility Score */}
+              <div className="mb-4">
+                <CompatibilityScore score={match.compatibility_score} />
+              </div>
+              
+              {/* Bio Preview */}
+              {profile.bio && (
+                <p className="text-white/90 text-sm line-clamp-2 leading-relaxed">
+                  {profile.bio}
+                </p>
+              )}
             </div>
           </div>
-          
-          <CardTitle className="flex items-center justify-between">
-            <span className="text-xl">{firstName}</span>
-            <Badge className="bg-purple-100 text-purple-800">
-              {age} years
-            </Badge>
-          </CardTitle>
-          
-          <div className="flex items-center text-gray-500 text-sm">
-            <MapPin className="h-4 w-4 mr-1" />
-            <span>{Math.floor(Math.random() * 10) + 1} miles away</span>
-          </div>
-        </CardHeader>
+        </Card>
         
-        <CardContent className="space-y-4">
-          <CompatibilityScore score={match.compatibility_score} />
-          
-          <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
-            {profile.bio || `Hi! I'm ${firstName}, nice to meet you. Looking forward to connecting with someone special.`}
-          </p>
-          
-          {/* Action Buttons */}
-          <div className="flex items-center justify-center gap-6 pt-4">
-            <Button
-              onClick={() => handleSwipe('pass')}
-              disabled={isLoading}
-              size="lg"
-              variant="outline"
-              className="w-14 h-14 rounded-full border-3 border-red-400/60 hover:border-red-500 hover:bg-red-50 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-110"
-            >
-              <X className="h-6 w-6 text-red-500" />
-            </Button>
-            
-            <Button
-              onClick={() => handleSwipe('like')}
-              disabled={isLoading}
-              size="lg"
-              className="w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
-            >
-              <Heart className="h-6 w-6 fill-current" />
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Swipe Indicators */}
-      <SwipeIndicators 
-        dragX={dragX}
-        isVisible={isDragging}
-      />
-    </motion.div>
+        {/* Swipe Indicators */}
+        <SwipeIndicators 
+          dragX={dragX}
+          isVisible={isDragging}
+        />
+      </motion.div>
+      
+      {/* Action Buttons */}
+      <div className="flex justify-center gap-6 mt-6">
+        <Button
+          onClick={() => handleSwipe('pass')}
+          disabled={isLoading}
+          size="lg"
+          variant="outline"
+          className="w-14 h-14 rounded-full border-2 border-red-400/60 hover:border-red-500 hover:bg-red-50 transition-all duration-200"
+        >
+          <X className="h-6 w-6 text-red-500" />
+        </Button>
+        
+        <Button
+          onClick={() => handleSwipe('like')}
+          disabled={isLoading}
+          size="lg"
+          className="w-14 h-14 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white border-0 shadow-lg"
+        >
+          <Heart className="h-6 w-6 fill-current" />
+        </Button>
+      </div>
+    </div>
   );
 };
 

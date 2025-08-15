@@ -1,14 +1,18 @@
 
 import React, { useEffect } from 'react';
-import { Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import MembershipPlans from '@/components/membership/MembershipPlans';
+import ProfessionalMembershipPlans from '@/components/membership/ProfessionalMembershipPlans';
+import { ArrowLeft, Crown, Shield, Settings } from 'lucide-react';
+import Logo from '@/components/ui/logo';
+import MembershipBadge from '@/components/profile/MembershipBadge';
+import { useMembershipBadge } from '@/hooks/useMembershipBadge';
 
 const Membership = () => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const { membershipLevel, loading: badgeLoading } = useMembershipBadge();
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -20,8 +24,8 @@ const Membership = () => {
   // Show loading while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      <div className="min-h-screen bg-love-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-love-primary"></div>
       </div>
     );
   }
@@ -32,30 +36,50 @@ const Membership = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
-      <div className="container mx-auto p-6">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-                <Heart className="h-6 w-6 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">Luvlang</h2>
-            </div>
-            <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col">
+      {/* Header */}
+      <header className="bg-black/20 backdrop-blur-xl border-b border-purple-500/20">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
               <Link to="/dashboard">
-                <Button variant="outline">← Back to Dashboard</Button>
+                <button className="bg-slate-800/50 backdrop-blur-xl border border-slate-600/30 rounded-xl p-3 hover:bg-slate-700/50 transition-all">
+                  <ArrowLeft className="w-5 h-5 text-white" />
+                </button>
               </Link>
+              <Logo size="lg" showText={false} />
+              <div>
+                <h1 className="text-3xl font-bold text-white">Membership</h1>
+                <p className="text-purple-300 text-sm">Unlock premium executive features</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              {!badgeLoading && (
+                <MembershipBadge 
+                  membershipLevel={membershipLevel} 
+                  size="md"
+                  className="bg-opacity-20 backdrop-blur-xl"
+                />
+              )}
+              
+              <button 
+                onClick={signOut}
+                className="bg-slate-800/50 backdrop-blur-xl border border-slate-600/30 rounded-xl p-3 hover:bg-slate-700/50 transition-all"
+              >
+                <Settings className="w-5 h-5 text-white" />
+              </button>
             </div>
           </div>
-          <Button onClick={signOut} variant="outline">
-            Sign Out
-          </Button>
         </div>
+      </header>
 
-        <MembershipPlans />
-      </div>
+      {/* Main Content */}
+      <main className="flex-1 p-6">
+        <div className="max-w-7xl mx-auto">
+          <ProfessionalMembershipPlans />
+        </div>
+      </main>
     </div>
   );
 };

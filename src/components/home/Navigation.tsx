@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import Logo from "@/components/ui/logo";
 
 const Navigation = () => {
   const navigate = useNavigate();
@@ -12,10 +12,7 @@ const Navigation = () => {
   return (
     <nav className="flex justify-between items-center mb-16">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-love-primary to-love-secondary rounded-xl flex items-center justify-center">
-          <Heart className="h-6 w-6 text-white" />
-        </div>
-        <h1 className="text-2xl font-bold text-love-text">Luvlang</h1>
+        <Logo size="md" />
       </div>
       <div className="flex gap-3">
         {!user && (

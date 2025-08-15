@@ -37,6 +37,15 @@ export interface EnhancedProfileData {
   
   // Photos
   photo_urls?: string[];
+  
+  // Name fields
+  first_name?: string;
+  last_name?: string;
+  
+  // Location fields (separate for better handling)
+  city?: string;
+  state?: string;
+  zipcode?: string;
 }
 
 export const useEnhancedProfileData = () => {
@@ -47,44 +56,58 @@ export const useEnhancedProfileData = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   const loadProfile = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('Profile load skipped: No authenticated user');
+      return;
+    }
     
+    console.log('Loading profile for user:', user.id);
     setIsLoading(true);
+    
     try {
-      // Load from profiles table
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
+      // Load from users table (primary table)
+      const { data: userProfile, error: userProfileError } = await supabase
+        .from('users')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .maybeSingle();
 
-      if (profileError && profileError.code !== 'PGRST116') {
-        console.error('Error loading profile:', profileError);
+      if (userProfileError && userProfileError.code !== 'PGRST116') {
+        console.error('Error loading user profile:', userProfileError);
+        toast({
+          title: 'Load Error',
+          description: 'Failed to load your profile data.',
+          variant: 'destructive'
+        });
         return;
       }
 
-      // Load from compatibility_answers table
-      const { data: compatibilityData, error: compatibilityError } = await supabase
-        .from('compatibility_answers')
-        .select('answers')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      console.log('Loaded user profile:', userProfile);
 
-      if (compatibilityError && compatibilityError.code !== 'PGRST116') {
-        console.error('Error loading compatibility answers:', compatibilityError);
-      }
-
-      // Combine the data
+      // Combine the data from users table
       const combinedData: EnhancedProfileData = {
-        bio: profileData?.bio || '',
-        photo_urls: profileData?.photo_urls || [],
-        ...((compatibilityData?.answers as any) || {})
+        first_name: userProfile?.first_name || '',
+        last_name: userProfile?.last_name || '',
+        age: userProfile?.age?.toString() || '',
+        gender: userProfile?.gender || '',
+        bio: userProfile?.bio || '',
+        city: userProfile?.city || '',
+        state: userProfile?.state || '',
+        zipcode: userProfile?.country || '', // Map country field to zipcode for UI
+        interests: userProfile?.interests?.join(', ') || '',
+        photo_urls: userProfile?.photos || [],
       };
 
+      console.log('Combined profile data:', combinedData);
       setProfileData(combinedData);
-      setProfileExists(!!profileData || !!compatibilityData);
+      setProfileExists(!!userProfile);
     } catch (error) {
-      console.error('Error loading profile:', error);
+      console.error('Unexpected error loading profile:', error);
+      toast({
+        title: 'Load Error',
+        description: 'An unexpected error occurred while loading your profile.',
+        variant: 'destructive'
+      });
     } finally {
       setIsLoading(false);
     }
@@ -92,6 +115,7 @@ export const useEnhancedProfileData = () => {
 
   const saveProfile = async (showSuccessToast = true) => {
     if (!user) {
+      console.error('Profile save failed: No authenticated user');
       toast({
         title: 'Authentication Required',
         description: 'Please log in to save your profile.',
@@ -101,11 +125,13 @@ export const useEnhancedProfileData = () => {
     }
 
     if (isSaving) {
+      console.log('Profile save skipped: Already saving');
       return { success: false };
     }
 
     // Validate bio minimum length
     if (profileData.bio && profileData.bio.length < 150) {
+      console.warn('Profile save failed: Bio too short', profileData.bio?.length);
       toast({
         title: 'Bio Too Short',
         description: 'Please write at least 150 characters about yourself.',
@@ -114,64 +140,57 @@ export const useEnhancedProfileData = () => {
       return { success: false };
     }
 
+    console.log('Starting profile save for user:', user.id);
     setIsSaving(true);
+    
     try {
-      // Save to profiles table
-      const profilePayload = {
-        user_id: user.id,
+      // Calculate age from date of birth if age is provided
+      let dateOfBirth = '1990-01-01'; // default fallback
+      if (profileData.age) {
+        const currentYear = new Date().getFullYear();
+        const birthYear = currentYear - parseInt(profileData.age);
+        dateOfBirth = `${birthYear}-01-01`;
+      }
+
+      // Save to users table (the main profile table used for matching)
+      const userProfilePayload = {
+        id: user.id,
         email: user.email || '',
+        first_name: profileData.first_name || '',
+        last_name: profileData.last_name || '',
+        age: profileData.age ? parseInt(profileData.age) : null,
+        gender: profileData.gender || null,
         bio: profileData.bio || '',
-        photo_urls: profileData.photo_urls || [],
+        city: profileData.city || '',
+        state: profileData.state || null,
+        country: profileData.zipcode || null, // Map zipcode UI field to country DB field
+        interests: profileData.interests ? profileData.interests.split(',').map(i => i.trim()) : null,
+        photos: profileData.photo_urls || [],
+        date_of_birth: dateOfBirth,
         updated_at: new Date().toISOString()
       };
 
-      let profileResult;
-      if (profileExists) {
-        profileResult = await supabase
-          .from('profiles')
-          .update(profilePayload)
-          .eq('user_id', user.id);
-      } else {
-        profileResult = await supabase
-          .from('profiles')
-          .insert([{
-            ...profilePayload,
-            created_at: new Date().toISOString()
-          }]);
-      }
+      console.log('Saving user profile payload:', userProfilePayload);
 
-      if (profileResult.error) {
-        console.error('Profile save error:', profileResult.error);
+      const { data: upsertData, error: userProfileError } = await supabase
+        .from('users')
+        .upsert(userProfilePayload, { 
+          onConflict: 'id',
+          ignoreDuplicates: false 
+        })
+        .select();
+
+      if (userProfileError) {
+        console.error('User profile save error:', userProfileError);
         toast({
           title: 'Save Failed',
-          description: 'Failed to save profile. Please try again.',
+          description: `Failed to save profile: ${userProfileError.message}`,
           variant: 'destructive'
         });
         return { success: false };
       }
 
-      // Save compatibility answers
-      const compatibilityPayload = {
-        user_id: user.id,
-        answers: profileData as any, // Cast to any for Json compatibility
-        updated_at: new Date().toISOString(),
-        completed_at: new Date().toISOString()
-      };
-
-      const { error: compatibilityError } = await supabase
-        .from('compatibility_answers')
-        .upsert(compatibilityPayload);
-
-      if (compatibilityError) {
-        console.error('Compatibility answers save error:', compatibilityError);
-        toast({
-          title: 'Save Failed',
-          description: 'Failed to save compatibility answers. Please try again.',
-          variant: 'destructive'
-        });
-        return { success: false };
-      }
-
+      console.log('Profile save successful:', upsertData);
       setProfileExists(true);
       
       if (showSuccessToast) {
@@ -183,7 +202,7 @@ export const useEnhancedProfileData = () => {
       
       return { success: true };
     } catch (error) {
-      console.error('Save error:', error);
+      console.error('Unexpected save error:', error);
       toast({
         title: 'Unexpected Error',
         description: 'An unexpected error occurred. Please try again.',
@@ -204,7 +223,8 @@ export const useEnhancedProfileData = () => {
               profileData.age && 
               profileData.gender && 
               profileData.sexual_orientation &&
-              profileData.location);
+              profileData.city &&
+              profileData.state);
   };
 
   return {

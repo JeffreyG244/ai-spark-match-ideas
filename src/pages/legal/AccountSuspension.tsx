@@ -117,7 +117,7 @@ const AccountSuspension = () => {
                 <h3 className="font-semibold text-blue-800 mb-2">How to Appeal</h3>
                 <ul className="list-disc list-inside text-blue-700 space-y-1">
                   <li>Submit appeal within 30 days of suspension</li>
-                  <li>Email appeals@luvlang.com with case details</li>
+                  <li>Email support@luvlang.org with case details</li>
                   <li>Provide additional context or evidence</li>
                   <li>Explain circumstances or misunderstandings</li>
                   <li>Wait for independent review (5-10 business days)</li>
@@ -195,11 +195,7 @@ const AccountSuspension = () => {
               <p className="text-gray-700">
                 For suspension-related questions:
                 <br />
-                Appeals: appeals@luvlang.com
-                <br />
-                Support: support@luvlang.com
-                <br />
-                Safety team: safety@luvlang.com
+                Support: support@luvlang.org
                 <br />
                 Phone: 1-800-LUVLANG (1-800-588-5264)
               </p>

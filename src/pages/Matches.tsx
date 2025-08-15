@@ -4,17 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Heart, Brain, ArrowLeft, Star, MessageCircle, Calendar } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { 
+  Heart, Brain, ArrowLeft, Star, MessageCircle, Calendar, Shield, Crown, 
+  Verified, Trophy, Briefcase, Bell, Settings, Search, Filter 
+} from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCompatibilityAnswers } from '@/hooks/useCompatibilityAnswers';
 import { useProfileData } from '@/hooks/useProfileData';
 import { useMatches } from '@/hooks/useMatches';
 import CompatibilityScore from '@/components/discover/CompatibilityScore';
-import NavigationTabs from '@/components/navigation/NavigationTabs';
+import Logo from '@/components/ui/logo';
 
 const Matches = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const { questionAnswers, loadCompatibilityAnswers } = useCompatibilityAnswers();
   const { profileData, loadProfile } = useProfileData();
   const { matches, isLoading: matchesLoading, loadMatches } = useMatches();
@@ -36,10 +40,10 @@ const Matches = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your matches...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+          <span className="text-purple-300">Loading your matches...</span>
         </div>
       </div>
     );
@@ -50,82 +54,94 @@ const Matches = () => {
     : 0;
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--love-gradient-bg)' }}>
-      <NavigationTabs />
-      <div className="container mx-auto p-6">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-              <Heart className="h-6 w-6 text-white" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex flex-col">
+      {/* Header */}
+      <header className="bg-black/20 backdrop-blur-xl border-b border-purple-500/20">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="bg-slate-800/50 backdrop-blur-xl border border-slate-600/30 rounded-xl p-3 hover:bg-slate-700/50 transition-all"
+              >
+                <ArrowLeft className="w-5 h-5 text-white" />
+              </button>
+              <div className="flex items-center space-x-3">
+                <Logo size="md" showText={true} />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Your Matches</h1>
+                <p className="text-purple-300 text-sm">Executive professionals who liked you back</p>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">Luvlang</h2>
+            
+            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 bg-emerald-500/20 backdrop-blur-xl border border-emerald-500/30 rounded-xl px-4 py-2">
+              <Shield className="w-5 h-5 text-emerald-400" />
+              <span className="text-emerald-400 text-sm font-medium">Basic</span>
+            </div>
+              
+              <button className="bg-slate-800/50 backdrop-blur-xl border border-slate-600/30 rounded-xl p-3 hover:bg-slate-700/50 transition-all">
+                <Filter className="w-5 h-5 text-white" />
+              </button>
+            </div>
           </div>
-          <Button onClick={signOut} variant="outline">
-            Sign Out
-          </Button>
         </div>
+      </header>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Matches</h1>
-          <p className="text-gray-600">People who liked you back - start a conversation!</p>
-        </div>
-
+      {/* Main Content */}
+      <main className="flex-1 p-6">
         {/* Match Summary */}
-        <Card className="border-purple-200 mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-5 w-5 text-purple-600" />
-              Match Statistics
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {Object.keys(questionAnswers).length}
-                </div>
-                <div className="text-sm text-gray-600">Questions Answered</div>
+        <div className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 backdrop-blur-xl border border-gray-600/30 rounded-2xl p-6 mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <Brain className="h-6 w-6 text-purple-400" />
+            <h3 className="text-xl font-bold text-white">Executive Match Statistics</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                {Object.keys(questionAnswers).length}
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {matches.length}
-                </div>
-                <div className="text-sm text-gray-600">Total Matches</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {avgCompatibility}%
-                </div>
-                <div className="text-sm text-gray-600">Avg Compatibility</div>
-              </div>
+              <div className="text-sm text-gray-400">Questions Answered</div>
             </div>
-          </CardContent>
-        </Card>
+            <div className="text-center">
+              <div className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                {matches.length}
+              </div>
+              <div className="text-sm text-gray-400">Total Matches</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                {avgCompatibility}%
+              </div>
+              <div className="text-sm text-gray-400">Avg Compatibility</div>
+            </div>
+          </div>
+        </div>
 
         {matches.length === 0 ? (
-          <Card className="border-purple-200 text-center py-12">
-            <CardContent>
-              <Heart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">No Matches Yet</h3>
-              <p className="text-gray-600 mb-6">
-                Keep swiping to find people who like you back!
-              </p>
-              <div className="flex gap-4 justify-center">
-                <Link to="/discover">
-                  <Button className="bg-purple-600 hover:bg-purple-700">
-                    Start Swiping
-                  </Button>
-                </Link>
-                <Link to="/daily-matches">
-                  <Button variant="outline">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    View Daily Matches
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="text-center py-20">
+            <div className="w-96 h-96 mx-auto mb-8 flex items-center justify-center">
+              <Logo size="lg" showText={true} />
+            </div>
+            <h3 className="text-2xl font-bold text-white mb-4">No Executive Matches Yet</h3>
+            <p className="text-gray-400 mb-8">
+              Keep discovering to find professionals who appreciate your leadership qualities!
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Link to="/discover">
+                <button className="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl font-semibold hover:scale-105 transition-all">
+                  Start Discovering
+                </button>
+              </Link>
+              <Link to="/daily-matches">
+                <button className="bg-slate-800/50 backdrop-blur-xl border border-slate-600/30 text-white px-8 py-3 rounded-xl font-semibold hover:bg-slate-700/50 transition-all">
+                  <Calendar className="h-4 w-4 mr-2 inline" />
+                  View Daily Matches
+                </button>
+              </Link>
+            </div>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {matches.map((match) => {
@@ -134,55 +150,68 @@ const Matches = () => {
 
               const firstName = profile.first_name || profile.email.split('@')[0] || 'User';
               const age = profile.age ? `, ${profile.age}` : '';
-              const photo = profile.photo_urls && profile.photo_urls.length > 0 
-                ? profile.photo_urls[0] 
+              const photo = profile.photos && profile.photos.length > 0 
+                ? profile.photos[0] 
                 : 'https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60';
 
               return (
-                <Card key={match.id} className="border-purple-200 hover:border-purple-300 transition-all duration-300 hover:shadow-lg">
-                  <CardHeader className="pb-4">
-                    <div className="w-full h-48 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg mb-4 overflow-hidden">
-                      <img 
-                        src={photo}
-                        alt={firstName}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          target.src = "https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60";
-                        }}
-                      />
+                <div key={match.id} className="bg-gradient-to-br from-slate-800/60 to-slate-700/60 backdrop-blur-xl border border-gray-600/30 rounded-2xl overflow-hidden hover:scale-105 transition-all">
+                  <div className="relative">
+                    <img 
+                      src={photo}
+                      alt={firstName}
+                      className="w-full h-48 object-cover"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.src = "https://images.unsplash.com/photo-1494790108755-2616c2b10db8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=60";
+                      }}
+                    />
+                    <div className="absolute top-3 right-3 bg-green-500/90 backdrop-blur-sm rounded-full p-2">
+                      <Verified className="w-4 h-4 text-white" />
                     </div>
-                    <CardTitle className="flex items-center justify-between">
-                      <span className="text-xl">{firstName}{age}</span>
-                      <Badge className="bg-green-100 text-green-800">
-                        <Heart className="h-3 w-3 mr-1 fill-current" />
-                        Match!
-                      </Badge>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <CompatibilityScore score={match.compatibility} />
+                    <div className="absolute top-3 left-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full px-3 py-1">
+                      <span className="text-white font-bold text-sm">{match.compatibility}% Match</span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-xl font-bold text-white">{firstName}{age}</h4>
+                      <div className="flex items-center space-x-1 bg-green-500/20 border border-green-500/30 rounded-full px-2 py-1">
+                        <Heart className="h-3 w-3 text-green-400 fill-current" />
+                        <span className="text-green-400 text-xs font-medium">Match!</span>
+                      </div>
+                    </div>
                     
-                    <p className="text-gray-700 text-sm leading-relaxed line-clamp-2">
-                      {profile.bio || 'No bio available'}
+                    <p className="text-gray-300 text-sm mb-4 line-clamp-2">
+                      {profile.bio || 'Executive professional seeking meaningful connections'}
                     </p>
                     
-                    <div className="flex items-center justify-between pt-2">
-                      <span className="text-xs text-gray-500">
-                        Matched {new Date(match.created_at).toLocaleDateString()}
-                      </span>
-                      <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
-                        <MessageCircle className="h-4 w-4 mr-1" />
-                        Message
-                      </Button>
+                    <div className="flex items-center justify-between text-xs text-gray-400 mb-4">
+                      <span>Matched {new Date(match.created_at).toLocaleDateString()}</span>
+                      <div className="flex items-center space-x-1">
+                        <Trophy className="w-3 h-3 text-yellow-400" />
+                        <span className="text-yellow-400">Executive</span>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
+                    
+                    <div className="flex space-x-2">
+                      <button className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-lg font-semibold hover:scale-105 transition-all">
+                        <MessageCircle className="w-4 h-4 mr-1 inline" />
+                        Message
+                      </button>
+                      <button className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-2 rounded-lg font-semibold hover:scale-105 transition-all">
+                        <Briefcase className="w-4 h-4 mr-1 inline" />
+                        Connect
+                      </button>
+                    </div>
+                  </div>
+                </div>
               );
             })}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };

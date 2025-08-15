@@ -43,14 +43,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      console.log('Attempting sign in for:', email);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
         password
       });
 
+      console.log('Sign in response:', { data, error });
+
       if (error) {
+        console.error('Authentication error:', error);
         throw error;
       }
+
+      console.log('Sign in successful');
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
@@ -69,6 +75,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error('Passwords do not match');
       }
 
+      const redirectUrl = `${window.location.origin}/auth?mode=signup&success=true`;
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -76,13 +84,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           data: {
             first_name: firstName,
             last_name: lastName
-          }
+          },
+          emailRedirectTo: redirectUrl,
+          captchaToken: undefined // Explicitly disable captcha for now
         }
       });
 
       if (error) {
         throw error;
       }
+
+      console.log('Sign up successful, user will receive confirmation email');
     } catch (error) {
       console.error('Sign up error:', error);
       throw error;

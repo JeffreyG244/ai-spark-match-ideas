@@ -15,10 +15,9 @@ const DashboardGrid = () => {
       icon: MessageCircle,
       path: '/messages',
       buttonText: 'Open Messages',
-      iconColor: 'text-purple-500',
-      borderColor: 'border-purple-200',
-      bgColor: 'bg-purple-50',
-      buttonBg: 'bg-purple-500 hover:bg-purple-600'
+      gradient: 'from-love-primary to-love-secondary',
+      iconGradient: 'from-purple-400 to-pink-500',
+      bgGradient: 'from-purple-500/10 to-pink-500/10'
     },
     {
       title: 'Matches',
@@ -26,10 +25,9 @@ const DashboardGrid = () => {
       icon: Heart,
       path: '/matches',
       buttonText: 'View Matches',
-      iconColor: 'text-red-500',
-      borderColor: 'border-red-200',
-      bgColor: 'bg-red-50',
-      buttonBg: 'bg-red-500 hover:bg-red-600'
+      gradient: 'from-rose-500 to-pink-600',
+      iconGradient: 'from-rose-400 to-pink-500',
+      bgGradient: 'from-rose-500/10 to-pink-500/10'
     },
     {
       title: 'Discover',
@@ -37,10 +35,9 @@ const DashboardGrid = () => {
       icon: Users,
       path: '/discover',
       buttonText: 'Start Discovering',
-      iconColor: 'text-blue-500',
-      borderColor: 'border-blue-200',
-      bgColor: 'bg-blue-50',
-      buttonBg: 'bg-blue-500 hover:bg-blue-600'
+      gradient: 'from-love-secondary to-love-accent',
+      iconGradient: 'from-blue-400 to-purple-500',
+      bgGradient: 'from-blue-500/10 to-purple-500/10'
     },
     {
       title: 'Membership',
@@ -48,10 +45,9 @@ const DashboardGrid = () => {
       icon: Crown,
       path: '/membership',
       buttonText: 'View Plans',
-      iconColor: 'text-orange-500',
-      borderColor: 'border-orange-200',
-      bgColor: 'bg-orange-50',
-      buttonBg: 'bg-orange-500 hover:bg-orange-600'
+      gradient: 'from-amber-500 to-orange-600',
+      iconGradient: 'from-amber-400 to-orange-500',
+      bgGradient: 'from-amber-500/10 to-orange-500/10'
     }
   ];
 
@@ -60,47 +56,41 @@ const DashboardGrid = () => {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
       {dashboardItems.map((item) => (
         <Card 
           key={item.title} 
-          className={`
-            ${item.borderColor} ${item.bgColor} 
-            hover:shadow-lg hover:scale-105 
-            transition-all duration-200 cursor-pointer 
-            group border-2 hover:border-purple-300
-          `}
+          className="bg-slate-800/40 backdrop-blur-xl border border-slate-600/30 hover:border-purple-500/50
+            hover:shadow-2xl hover:shadow-purple-500/20 hover:scale-[1.02]
+            transition-all duration-300 cursor-pointer group relative overflow-hidden"
           onClick={() => handleCardClick(item.path)}
         >
-          <CardHeader className="text-center">
-            <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition-shadow`}>
-              <item.icon className={`h-8 w-8 ${item.iconColor}`} />
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4">
+              <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${item.iconGradient} flex items-center justify-center
+                shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                <item.icon className="h-8 w-8 text-white" />
+              </div>
+              
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-white mb-1">{item.title}</h3>
+                <p className="text-slate-400 text-sm mb-3">{item.description}</p>
+                
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(item.path);
+                  }}
+                  className={`bg-gradient-to-r ${item.gradient} hover:opacity-90 
+                    text-white font-medium py-2 px-6 rounded-xl text-sm
+                    shadow-md hover:shadow-lg transition-all duration-300`}
+                >
+                  {item.buttonText}
+                </Button>
+              </div>
+              
+              <ArrowRight className="h-5 w-5 text-slate-500 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
             </div>
-            
-            <CardTitle className="text-xl group-hover:text-purple-700 transition-colors">
-              {item.title}
-            </CardTitle>
-            
-            <CardDescription className="text-gray-600">
-              {item.description}
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent className="text-center pb-4">
-            <div className="flex items-center justify-center text-purple-600 group-hover:text-purple-700 transition-colors mb-4">
-              <span className="text-sm font-medium mr-2">Get Started</span>
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-            
-            <Button
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent card click when button is clicked
-                navigate(item.path);
-              }}
-              className={`w-full text-white shadow-md hover:shadow-lg transition-shadow ${item.buttonBg}`}
-            >
-              {item.buttonText}
-            </Button>
           </CardContent>
         </Card>
       ))}

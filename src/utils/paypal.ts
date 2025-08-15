@@ -30,7 +30,11 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
 
   // Header text
   const headerText = document.createElement('div');
-  headerText.innerHTML = '<div style="font-size: 16px; font-weight: bold; color: #333; margin-bottom: 15px;">Choose Your Payment Method</div>';
+  headerText.style.fontSize = '16px';
+  headerText.style.fontWeight = 'bold';
+  headerText.style.color = '#333';
+  headerText.style.marginBottom = '15px';
+  headerText.textContent = 'Choose Your Payment Method';
   
   // PayPal and credit card logos
   const paymentLogos = document.createElement('div');
@@ -145,7 +149,7 @@ export const createPayPalHostedButton = (containerId: string, hostedButtonId: st
   securityNotice.style.marginTop = '20px';
   securityNotice.style.textAlign = 'center';
   securityNotice.style.fontStyle = 'italic';
-  securityNotice.innerHTML = '🔒 Secure 256-bit SSL encryption powered by PayPal';
+  securityNotice.textContent = '🔒 Secure 256-bit SSL encryption powered by PayPal';
 
   // Assemble the form in the correct order
   form.appendChild(cmdInput);

@@ -712,7 +712,7 @@ export const seedDatingProfiles = async (): Promise<{ success: boolean; message:
     
     // Check if profiles already exist
     const { data: existingProfiles, error: checkError } = await supabase
-      .from('dating_profiles')
+      .from('users')
       .select('id', { count: 'exact' });
 
     if (checkError) {
@@ -736,10 +736,25 @@ export const seedDatingProfiles = async (): Promise<{ success: boolean; message:
     let insertedCount = 0;
 
     for (let i = 0; i < datingProfiles.length; i += batchSize) {
-      const batch = datingProfiles.slice(i, i + batchSize);
+      const batch = datingProfiles.slice(i, i + batchSize).map((profile, index) => ({
+        id: `dating-profile-${profile.first_name.toLowerCase()}-${profile.last_name.toLowerCase()}-${Date.now()}-${index}`,
+        email: profile.email,
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        age: profile.age,
+        gender: profile.gender,
+        city: profile.city,
+        state: profile.state,
+        bio: profile.bio,
+        interests: profile.interests,
+        photos: profile.photo_urls,
+        date_of_birth: new Date(Date.now() - (profile.age * 365 * 24 * 60 * 60 * 1000)).toISOString().split('T')[0],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }));
       
       const { data, error } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .insert(batch)
         .select();
 

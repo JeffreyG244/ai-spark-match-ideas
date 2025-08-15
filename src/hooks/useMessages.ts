@@ -91,10 +91,10 @@ export const useMessages = (conversationId: string | null) => {
     try {
       // Use the secure rate limiting function that exists in the database
       const { data, error } = await supabase.rpc('secure_rate_limit_check', {
-        p_user_id: user.id,
-        p_action: 'send_message',
-        p_max_requests: 10,
-        p_window_seconds: 60
+        user_id_param: user.id,
+        action_type: 'send_message',
+        max_requests: 10,
+        window_minutes: 1
       });
 
       if (error) {

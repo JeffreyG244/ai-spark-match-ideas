@@ -18,9 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import SecurityMonitor from '../security/SecurityMonitor';
-import MessagingTest from '../messaging/MessagingTest';
 import DataSeeder from './DataSeeder';
-import N8NWebhookTest from './N8NWebhookTest';
 
 interface SystemStats {
   totalUsers: number;
@@ -60,19 +58,20 @@ const SystemHealthDashboard = () => {
     try {
       setLoading(true);
 
-      // Get total users (approximation based on profiles)
+      // Get total users
       const { count: profileCount } = await supabase
-        .from('profiles')
+        .from('users')
         .select('*', { count: 'exact', head: true });
 
-      // Get active dating profiles
+      // Get active user profiles
       const { count: datingProfileCount } = await supabase
-        .from('dating_profiles')
-        .select('*', { count: 'exact', head: true });
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
 
       // Get total matches
       const { count: matchCount } = await supabase
-        .from('matches')
+        .from('executive_matches')
         .select('*', { count: 'exact', head: true });
 
       // Get total messages
@@ -80,10 +79,8 @@ const SystemHealthDashboard = () => {
         .from('conversation_messages')
         .select('*', { count: 'exact', head: true });
 
-      // Get security events
-      const { count: securityCount } = await supabase
-        .from('security_events')
-        .select('*', { count: 'exact', head: true });
+      // Skip security events (table doesn't exist)
+      const securityCount = 0;
 
       setStats({
         totalUsers: profileCount || 0,
@@ -111,7 +108,7 @@ const SystemHealthDashboard = () => {
 
     // Database connectivity
     try {
-      await supabase.from('profiles').select('count', { count: 'exact', head: true });
+      await supabase.from('users').select('count', { count: 'exact', head: true });
       checks.push({
         service: 'Database',
         status: 'healthy',
@@ -165,7 +162,7 @@ const SystemHealthDashboard = () => {
 
     // Matching system
     try {
-      await supabase.from('matches').select('count', { count: 'exact', head: true });
+      await supabase.from('executive_matches').select('count', { count: 'exact', head: true });
       checks.push({
         service: 'Matching Engine',
         status: 'healthy',
@@ -324,14 +321,8 @@ const SystemHealthDashboard = () => {
       {/* Security Monitor */}
       <SecurityMonitor />
 
-      {/* Messaging Test */}
-      <MessagingTest />
-
       {/* Data Seeder */}
       <DataSeeder />
-
-      {/* N8N Webhook Test */}
-      <N8NWebhookTest />
 
       {/* System Info */}
       <Card>

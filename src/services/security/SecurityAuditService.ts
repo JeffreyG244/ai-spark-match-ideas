@@ -11,7 +11,8 @@ export class SecurityAuditService {
     details: string | Record<string, any>,
     severity: 'low' | 'medium' | 'high' | 'critical' = 'low'
   ): Promise<void> {
-    return AuditLogService.logSecurityEvent(eventType, details, severity);
+    const detailsObj = typeof details === 'string' ? { message: details } : details;
+    return AuditLogService.logSecurityEvent(eventType, severity, detailsObj);
   }
 
   static async getSecurityLogs(limit: number = 50): Promise<SecurityLogEntry[]> {
@@ -19,7 +20,7 @@ export class SecurityAuditService {
   }
 
   static async resolveSecurityLog(logId: string): Promise<void> {
-    return LogResolutionService.resolveSecurityLog(logId);
+    return LogResolutionService.resolveSecurityLog(logId, 'Resolved via SecurityAuditService');
   }
 
   static async logAdminAction(

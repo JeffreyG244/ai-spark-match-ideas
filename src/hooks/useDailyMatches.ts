@@ -12,10 +12,10 @@ interface DailyMatch {
   viewed: boolean;
   created_at: string;
   user_profile?: {
-    user_id: string;
+    id: string;
     email: string;
     bio: string | null;
-    photo_urls: string[] | null;
+    photos: string[] | null;
     first_name?: string;
     age?: number;
     gender?: string;
@@ -42,11 +42,8 @@ export const useDailyMatches = () => {
       let userPreferences = { gender_preference: 'Everyone', age_min: 18, age_max: 65 };
       let userGender = 'Unknown';
 
-      const { data: compatibilityData } = await supabase
-        .from('compatibility_answers')
-        .select('answers')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Mock compatibility data since the table doesn't exist
+      const compatibilityData = null;
 
       if (compatibilityData?.answers) {
         const answers = compatibilityData.answers as any;
@@ -60,8 +57,8 @@ export const useDailyMatches = () => {
         .from('daily_matches')
         .select('*')
         .eq('user_id', user.id)
-        .eq('suggested_date', new Date().toISOString().split('T')[0])
-        .order('compatibility_score', { ascending: false });
+        .eq('date', new Date().toISOString().split('T')[0])
+        .order('recommendation_score', { ascending: false });
 
       if (matchesError) {
         console.error('Error loading daily matches:', matchesError);
@@ -74,12 +71,12 @@ export const useDailyMatches = () => {
         
         // Get profiles first
         let { data: allProfiles, error: profilesError } = await supabase
-          .from('dating_profiles')
+          .from('users')
           .select('*')
-          .eq('visible', true)
+          .eq('is_active', true)
           .gte('age', userPreferences.age_min)
           .lte('age', userPreferences.age_max)
-          .neq('user_id', user.id);
+          .neq('id', user.id);
 
         if (profilesError || !allProfiles) {
           console.error('Error loading profiles:', profilesError);
@@ -87,12 +84,10 @@ export const useDailyMatches = () => {
           return;
         }
 
-        // Get compatibility answers for these profiles
-        const profileUserIds = allProfiles.map(p => p.user_id).filter(Boolean);
-        let { data: answersData, error: answersError } = await supabase
-          .from('compatibility_answers')
-          .select('user_id, answers')
-          .in('user_id', profileUserIds);
+        // Mock compatibility answers since the table doesn't exist
+        const profileUserIds = allProfiles.map(p => p.id).filter(Boolean);
+        let answersData: any[] = [];
+        const answersError = null;
 
         if (answersError) {
           console.error('Error loading compatibility answers:', answersError);
@@ -108,7 +103,7 @@ export const useDailyMatches = () => {
         // Combine profiles with their answers
         const profilesWithAnswers = allProfiles.map(profile => ({
           ...profile,
-          compatibility_answers: answersMap.get(profile.user_id) || null
+          compatibility_answers: answersMap.get(profile.id) || null
         }));
 
         if (profilesWithAnswers && profilesWithAnswers.length > 0) {
@@ -127,11 +122,11 @@ export const useDailyMatches = () => {
             let userWantsProfile = false;
             if (userPreferences.gender_preference === 'Everyone') {
               userWantsProfile = true;
-            } else if (userPreferences.gender_preference === 'Men' && profileGender === 'male') {
+            } else if (userPreferences.gender_preference === 'Men' && (profileGender === 'male' || profileGender === 'man' || profileGender === 'men')) {
               userWantsProfile = true;
-            } else if (userPreferences.gender_preference === 'Women' && profileGender === 'female') {
+            } else if (userPreferences.gender_preference === 'Women' && (profileGender === 'female' || profileGender === 'woman' || profileGender === 'women')) {
               userWantsProfile = true;
-            } else if (userPreferences.gender_preference === 'Non-binary' && profileGender === 'non-binary') {
+            } else if (userPreferences.gender_preference === 'Non-binary' && (profileGender === 'non-binary' || profileGender === 'nonbinary')) {
               userWantsProfile = true;
             }
 
@@ -139,11 +134,11 @@ export const useDailyMatches = () => {
             let profileWantsUser = false;
             if (profileSeekingGender === 'Everyone') {
               profileWantsUser = true;
-            } else if (profileSeekingGender === 'Men' && userGender === 'Male') {
+            } else if (profileSeekingGender === 'Men' && (userGender === 'Male' || userGender === 'Man' || userGender === 'male' || userGender === 'man')) {
               profileWantsUser = true;
-            } else if (profileSeekingGender === 'Women' && userGender === 'Female') {
+            } else if (profileSeekingGender === 'Women' && (userGender === 'Female' || userGender === 'Woman' || userGender === 'female' || userGender === 'woman')) {
               profileWantsUser = true;
-            } else if (profileSeekingGender === 'Non-binary' && userGender === 'Non-binary') {
+            } else if (profileSeekingGender === 'Non-binary' && (userGender === 'Non-binary' || userGender === 'Nonbinary' || userGender === 'non-binary' || userGender === 'nonbinary')) {
               profileWantsUser = true;
             }
 
@@ -156,19 +151,19 @@ export const useDailyMatches = () => {
         if (profilesData && profilesData.length > 0) {
           // Convert profiles to daily matches format
           const convertedMatches = profilesData.slice(0, 5).map(profile => ({
-            id: `daily-${user.id}-${profile.user_id}`,
+            id: `daily-${user.id}-${profile.id}`,
             user_id: user.id,
-            suggested_user_id: profile.user_id,
+            suggested_user_id: profile.id,
             compatibility_score: Math.floor(Math.random() * 30) + 60,
             suggested_date: new Date().toISOString().split('T')[0],
             viewed: false,
             created_at: new Date().toISOString(),
             user_profile: {
-              user_id: profile.user_id,
+              id: profile.id,
               email: profile.email,
               bio: profile.bio,
-              photo_urls: Array.isArray(profile.photo_urls) && profile.photo_urls.length > 0 
-                ? profile.photo_urls 
+              photos: Array.isArray(profile.photos) && profile.photos.length > 0 
+                ? profile.photos 
                 : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
               first_name: profile.first_name,
               age: profile.age,
@@ -184,12 +179,12 @@ export const useDailyMatches = () => {
 
       // Process existing daily matches
       if (existingMatches && existingMatches.length > 0) {
-        const userIds = existingMatches.map(match => match.suggested_user_id);
+        const userIds = existingMatches.map(match => match.recommended_user_id);
         
         const { data: profilesData, error: profilesError } = await supabase
-          .from('dating_profiles')
+          .from('users')
           .select('*')
-          .in('user_id', userIds);
+          .in('id', userIds);
 
         if (profilesError) {
           console.error('Error loading profiles for daily matches:', profilesError);
@@ -197,24 +192,30 @@ export const useDailyMatches = () => {
         }
 
         const processedMatches = existingMatches.map(match => {
-          const profile = profilesData?.find(p => p.user_id === match.suggested_user_id);
+          const profile = profilesData?.find(p => p.id === match.recommended_user_id);
           return {
-            ...match,
+            id: match.id,
+            user_id: match.user_id,
+            suggested_user_id: match.recommended_user_id,
+            compatibility_score: match.recommendation_score || 75,
+            suggested_date: match.date,
+            viewed: false,
+            created_at: new Date().toISOString(),
             user_profile: profile ? {
-              user_id: profile.user_id,
-              email: profile.email || `${profile.user_id}@example.com`,
+              id: profile.id,
+              email: profile.email || `${profile.id}@example.com`,
               bio: profile.bio || '',
-              photo_urls: profile.photo_urls && Array.isArray(profile.photo_urls) && profile.photo_urls.length > 0 
-                ? profile.photo_urls 
+              photos: profile.photos && Array.isArray(profile.photos) && profile.photos.length > 0 
+                ? profile.photos 
                 : ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
               first_name: profile.first_name || 'User',
               age: profile.age || 25,
               gender: profile.gender || 'Unknown'
             } : {
-              user_id: match.suggested_user_id,
-              email: `${match.suggested_user_id}@example.com`,
+              id: match.recommended_user_id,
+              email: `${match.recommended_user_id}@example.com`,
               bio: '',
-              photo_urls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+              photos: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
               first_name: 'User',
               age: 25,
               gender: 'Unknown'
@@ -244,11 +245,8 @@ export const useDailyMatches = () => {
       let userPreferences = { gender_preference: 'Everyone', age_min: 18, age_max: 65 };
       let userGender = 'Unknown';
 
-      const { data: compatibilityData } = await supabase
-        .from('compatibility_answers')
-        .select('answers')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Mock compatibility data since the table doesn't exist
+      const compatibilityData = null;
 
       if (compatibilityData?.answers) {
         const answers = compatibilityData.answers as any;
@@ -258,12 +256,12 @@ export const useDailyMatches = () => {
 
       // Get compatible profiles first
       let { data: allProfiles, error: profilesError } = await supabase
-        .from('dating_profiles')
+        .from('users')
         .select('*')
-        .eq('visible', true)
+        .eq('is_active', true)
         .gte('age', userPreferences.age_min)
         .lte('age', userPreferences.age_max)
-        .neq('user_id', user.id)
+        .neq('id', user.id)
         .limit(matchCount * 2);
 
       if (profilesError || !allProfiles) {
@@ -271,12 +269,10 @@ export const useDailyMatches = () => {
         return;
       }
 
-      // Get compatibility answers for these profiles
-      const profileUserIds = allProfiles.map(p => p.user_id).filter(Boolean);
-      let { data: answersData, error: answersError } = await supabase
-        .from('compatibility_answers')
-        .select('user_id, answers')
-        .in('user_id', profileUserIds);
+      // Mock compatibility answers since the table doesn't exist
+      const profileUserIds = allProfiles.map(p => p.id).filter(Boolean);
+      let answersData: any[] = [];
+      const answersError = null;
 
       if (answersError) {
         console.error('Error loading compatibility answers:', answersError);
@@ -292,7 +288,7 @@ export const useDailyMatches = () => {
       // Combine profiles with their answers
       const profiles = allProfiles.map(profile => ({
         ...profile,
-        compatibility_answers: answersMap.get(profile.user_id) || null
+        compatibility_answers: answersMap.get(profile.id) || null
       }));
 
 
@@ -310,14 +306,14 @@ export const useDailyMatches = () => {
 
           // Check bidirectional compatibility
           let userWantsProfile = userPreferences.gender_preference === 'Everyone' ||
-            (userPreferences.gender_preference === 'Men' && profileGender === 'male') ||
-            (userPreferences.gender_preference === 'Women' && profileGender === 'female') ||
-            (userPreferences.gender_preference === 'Non-binary' && profileGender === 'non-binary');
+            (userPreferences.gender_preference === 'Men' && (profileGender === 'male' || profileGender === 'man' || profileGender === 'men')) ||
+            (userPreferences.gender_preference === 'Women' && (profileGender === 'female' || profileGender === 'woman' || profileGender === 'women')) ||
+            (userPreferences.gender_preference === 'Non-binary' && (profileGender === 'non-binary' || profileGender === 'nonbinary'));
 
            let profileWantsUser = profileSeekingGender === 'Everyone' ||
-            (profileSeekingGender === 'Men' && userGender === 'Male') ||
-            (profileSeekingGender === 'Women' && userGender === 'Female') ||
-            (profileSeekingGender === 'Non-binary' && userGender === 'Non-binary') ||
+            (profileSeekingGender === 'Men' && (userGender === 'Male' || userGender === 'Man' || userGender === 'male' || userGender === 'man')) ||
+            (profileSeekingGender === 'Women' && (userGender === 'Female' || userGender === 'Woman' || userGender === 'female' || userGender === 'woman')) ||
+            (profileSeekingGender === 'Non-binary' && (userGender === 'Non-binary' || userGender === 'Nonbinary' || userGender === 'non-binary' || userGender === 'nonbinary')) ||
             userGender === 'Unknown'; // Be lenient if user gender is unknown
 
           return userWantsProfile && profileWantsUser;
@@ -326,10 +322,9 @@ export const useDailyMatches = () => {
         // Create daily matches from filtered profiles
         const dailyMatchData = filteredProfiles.slice(0, matchCount).map(profile => ({
           user_id: user.id,
-          suggested_user_id: profile.user_id,
-          compatibility_score: Math.floor(Math.random() * 30) + 60,
-          suggested_date: new Date().toISOString().split('T')[0],
-          viewed: false
+          recommended_user_id: profile.id,
+          recommendation_score: Math.floor(Math.random() * 30) + 60,
+          date: new Date().toISOString().split('T')[0]
         }));
 
         if (dailyMatchData.length > 0) {
@@ -358,7 +353,7 @@ export const useDailyMatches = () => {
     try {
       const { error } = await supabase
         .from('daily_matches')
-        .update({ viewed: true })
+        .update({ action: 'viewed' })
         .eq('id', matchId);
 
       if (error) {

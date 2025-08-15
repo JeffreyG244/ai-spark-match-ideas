@@ -5,47 +5,47 @@ export interface DatabasePasswordValidationResult {
   isValid: boolean;
   errors: string[];
   score: number;
+  isLeaked?: boolean;
+  strength?: string;
 }
 
 /**
- * Validate password using the database function with comprehensive rules
+ * Validate password using client-side rules (database functions removed for auth fix)
  */
 export const validatePasswordWithDatabase = async (password: string): Promise<DatabasePasswordValidationResult> => {
-  try {
-    const { data, error } = await supabase.rpc('validate_password_enhanced', {
-      password: password
-    });
+  const errors: string[] = [];
+  let score = 0;
 
-    if (error) {
-      console.error('Database password validation error:', error);
-      // Fallback to basic validation if database function fails
-      return {
-        isValid: password.length >= 8,
-        errors: password.length < 8 ? ['Password must be at least 8 characters'] : [],
-        score: password.length >= 8 ? 50 : 0
-      };
-    }
-
-    // The function returns a single row with columns: is_valid, errors, score
-    const result = data?.[0];
-    if (!result) {
-      throw new Error('No validation result returned');
-    }
-
-    return {
-      isValid: result.is_valid,
-      errors: result.errors || [],
-      score: result.score || 0
-    };
-  } catch (error) {
-    console.error('Password validation failed:', error);
-    // Fallback validation
-    return {
-      isValid: password.length >= 8,
-      errors: password.length < 8 ? ['Password must be at least 8 characters'] : [],
-      score: password.length >= 8 ? 50 : 0
-    };
+  // Basic client-side validation rules
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters long');
+  } else {
+    score += 25;
   }
+  
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter');
+  } else {
+    score += 25;
+  }
+  
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter');
+  } else {
+    score += 25;
+  }
+  
+  if (!/\d/.test(password)) {
+    errors.push('Password must contain at least one number');
+  } else {
+    score += 25;
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    score: Math.min(score, 100),
+    errors
+  };
 };
 
 /**
@@ -64,23 +64,16 @@ export const getPasswordStrengthText = (score: number): { text: string; color: s
  */
 export const getPasswordRules = async (): Promise<Array<{ description: string; pattern: string }>> => {
   try {
-    const { data, error } = await supabase
-      .from('password_rules')
-      .select('description, pattern')
-      .order('rule_id');
-
-    if (error) {
-      console.error('Failed to fetch password rules:', error);
-      return [
-        { description: 'At least 8 characters', pattern: '^.{8,}$' },
-        { description: 'At least one uppercase letter', pattern: '[A-Z]' },
-        { description: 'At least one lowercase letter', pattern: '[a-z]' },
-        { description: 'At least one number', pattern: '[0-9]' },
-        { description: 'At least one special character', pattern: '[^A-Za-z0-9]' }
-      ];
-    }
-
-    return data || [];
+    // Mock password rules since password_rules table doesn't exist
+    console.log('Password rules requested (returning default rules)');
+    
+    return [
+      { description: 'At least 8 characters', pattern: '^.{8,}$' },
+      { description: 'At least one uppercase letter', pattern: '[A-Z]' },
+      { description: 'At least one lowercase letter', pattern: '[a-z]' },
+      { description: 'At least one number', pattern: '[0-9]' },
+      { description: 'At least one special character', pattern: '[^A-Za-z0-9]' }
+    ];
   } catch (error) {
     console.error('Error fetching password rules:', error);
     return [];

@@ -6,10 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Heart, User, Camera, MapPin, Calendar } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import Logo from '@/components/ui/logo';
 
 interface SignUpData {
   email: string;
@@ -97,16 +97,20 @@ const SignUpFlow = () => {
     setLoading(true);
     try {
       const profileData = {
-        user_id: user.id,
+        id: user.id,
         email: formData.email,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        date_of_birth: new Date(new Date().getFullYear() - formData.age, 0, 1).toISOString().split('T')[0],
+        city: formData.location || 'Unknown',
         bio: formData.bio || `${formData.firstName} from ${formData.location}. Age ${formData.age}.`,
-        photo_urls: [],
+        photos: [],
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from('users')
         .upsert(profileData)
         .select();
 
@@ -151,11 +155,11 @@ const SignUpFlow = () => {
 
   if (step === 1) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-love-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md shadow-xl border-0">
           <CardHeader className="text-center pb-2">
-            <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Heart className="h-8 w-8 text-white" />
+            <div className="flex items-center justify-center mb-6">
+              <Logo size="lg" />
             </div>
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
               Join Our Community
@@ -243,11 +247,11 @@ const SignUpFlow = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-love-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-xl border-0">
         <CardHeader className="text-center">
-          <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <User className="h-8 w-8 text-white" />
+          <div className="flex items-center justify-center mb-6">
+            <Logo size="lg" />
           </div>
           <CardTitle className="text-2xl font-bold">Complete Your Profile</CardTitle>
           <p className="text-gray-600 text-sm">Tell us about yourself</p>

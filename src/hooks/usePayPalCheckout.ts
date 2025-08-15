@@ -16,6 +16,18 @@ const HOSTED_BUTTON_IDS = {
   premium: {
     monthly: 'R9JUL65GYT282', // Premium Plan monthly button
     annual: 'R9JUL65GYT282'   // Using same button for now - create separate annual button if needed
+  },
+  executive: {
+    monthly: 'VXK6T685HD2K6', // Executive Plan monthly button (using plus for now)
+    annual: 'VXK6T685HD2K6'   // Executive Plan annual button
+  },
+  'c-suite': {
+    monthly: 'R9JUL65GYT282', // C-Suite Plan monthly button (using premium for now)
+    annual: 'R9JUL65GYT282'   // C-Suite Plan annual button
+  },
+  vip: {
+    monthly: 'R9JUL65GYT282', // VIP Plan monthly button (using premium for now)
+    annual: 'R9JUL65GYT282'   // VIP Plan annual button
   }
 };
 
@@ -81,17 +93,22 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
         currentPath: location.pathname
       });
       
-      const planType = plan.name.toLowerCase() as 'plus' | 'premium';
+      const planType = plan.name.toLowerCase();
       
-      if (!['plus', 'premium'].includes(planType)) {
-        throw new Error('Invalid plan type selected');
+      // Map plan names to PayPal button configs
+      const planKey = planType === 'standard' ? 'premium' : 
+                     planType === 'basic' ? 'plus' : 
+                     planType;
+      
+      if (!HOSTED_BUTTON_IDS[planKey as keyof typeof HOSTED_BUTTON_IDS]) {
+        throw new Error(`Plan type "${planType}" is not configured for PayPal checkout`);
       }
 
       // Simple setup - no complex SDK loading needed
       await loadPayPalScript();
       
       // Get the hosted button ID for the selected plan and billing cycle
-      const hostedButtonId = HOSTED_BUTTON_IDS[planType][billingCycle];
+      const hostedButtonId = HOSTED_BUTTON_IDS[planKey as keyof typeof HOSTED_BUTTON_IDS][billingCycle];
       
       logger.log('Using PayPal button ID:', hostedButtonId);
 
@@ -99,7 +116,7 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
 
       // Add a close button to the modal
       const closeButton = document.createElement('button');
-      closeButton.innerHTML = '×';
+      closeButton.textContent = '×';
       closeButton.style.position = 'absolute';
       closeButton.style.top = '10px';
       closeButton.style.right = '15px';
@@ -145,12 +162,26 @@ export const usePayPalCheckout = (checkSubscriptionStatus: () => Promise<void>) 
 
       // Add payment options info
       const paymentInfo = document.createElement('div');
-      paymentInfo.innerHTML = `
-        <div style="display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; flex-wrap: wrap;">
-          <img src="https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png" alt="PayPal" style="height: 20px;">
-          <img src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/cc-badges-ppmcvdam.png" alt="Credit Cards" style="height: 20px;">
-        </div>
-      `;
+      const paymentContainer = document.createElement('div');
+      paymentContainer.style.display = 'flex';
+      paymentContainer.style.justifyContent = 'center';
+      paymentContainer.style.gap = '5px';
+      paymentContainer.style.marginBottom = '15px';
+      paymentContainer.style.flexWrap = 'wrap';
+      
+      const paypalImg = document.createElement('img');
+      paypalImg.src = 'https://www.paypalobjects.com/webstatic/mktg/Logo/pp-logo-100px.png';
+      paypalImg.alt = 'PayPal';
+      paypalImg.style.height = '20px';
+      
+      const cardImg = document.createElement('img');
+      cardImg.src = 'https://www.paypalobjects.com/webstatic/en_US/i/buttons/cc-badges-ppmcvdam.png';
+      cardImg.alt = 'Credit Cards';
+      cardImg.style.height = '20px';
+      
+      paymentContainer.appendChild(paypalImg);
+      paymentContainer.appendChild(cardImg);
+      paymentInfo.appendChild(paymentContainer);
       paypalContainer.appendChild(paymentInfo);
 
       // Create the PayPal hosted button

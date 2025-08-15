@@ -1,10 +1,12 @@
 
+import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Heart, Brain, Shield, Target, MessageCircle, Star, CheckCircle, Users, Clock, Trophy, Zap, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import Logo from '@/components/ui/logo';
 
 const HowItWorks = () => {
   const navigate = useNavigate();
@@ -69,28 +71,42 @@ const HowItWorks = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50">
       <div className="container mx-auto px-6 py-8">
-        {/* Header */}
-        <nav className="flex justify-between items-center mb-12">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center">
-              <Heart className="h-6 w-6 text-white" />
+        {/* Navigation Header */}
+        <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 rounded-lg mb-12">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-6">
+                <Link to="/">
+                  <Logo size="md" />
+                </Link>
+                <nav className="hidden md:flex items-center space-x-6">
+                  <Link to="/" className="text-gray-600 hover:text-purple-600 transition-colors">
+                    Home
+                  </Link>
+                  <Link to="/safety" className="text-gray-600 hover:text-purple-600 transition-colors">
+                    Safety
+                  </Link>
+                  <Link to="/legal" className="text-gray-600 hover:text-purple-600 transition-colors">
+                    Legal
+                  </Link>
+                  <Link to="/success-stories" className="text-gray-600 hover:text-purple-600 transition-colors">
+                    Success Stories
+                  </Link>
+                </nav>
+              </div>
+              <div className="flex items-center space-x-4">
+                <Link to="/auth">
+                  <Button variant="outline">Sign In</Button>
+                </Link>
+                <Link to="/membership">
+                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
+                    Get Started
+                  </Button>
+                </Link>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 cursor-pointer" onClick={() => navigate("/")}>
-              Luvlang
-            </h1>
           </div>
-          <div className="flex gap-3">
-            {!user ? (
-              <Button onClick={() => navigate("/auth")} className="bg-purple-600 hover:bg-purple-700">
-                Start Matching
-              </Button>
-            ) : (
-              <Button onClick={() => navigate("/membership")} className="bg-purple-600 hover:bg-purple-700">
-                Upgrade Plan
-              </Button>
-            )}
-          </div>
-        </nav>
+        </header>
 
         {/* Hero Section */}
         <div className="text-center mb-16">

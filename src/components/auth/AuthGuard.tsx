@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -17,45 +17,72 @@ const AuthGuard = ({ children, requireAuth = true }: AuthGuardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
+  const handleAuthStateChange = useCallback((event: any, session: Session | null) => {
+    console.log('Auth state changed:', event, session?.user?.email);
+    setSession(session);
+    setUser(session?.user ?? null);
+    
+    if (event === 'SIGNED_IN') {
+      setTimeout(() => {
+        toast({
+          title: 'Successfully signed in',
+          description: 'Welcome to Luvlang!',
+        });
         
-        if (event === 'SIGNED_IN') {
-          toast({
-            title: 'Successfully signed in',
-            description: 'Welcome to Luvlang!',
-          });
-          
-          // Redirect to dashboard if on auth page
-          if (location.pathname === '/auth') {
-            navigate('/dashboard');
-          }
-        } else if (event === 'SIGNED_OUT') {
-          toast({
-            title: 'Signed out',
-            description: 'Come back soon!',
-          });
-          navigate('/auth');
+        // Redirect to dashboard if on auth page
+        if (location.pathname === '/auth') {
+          navigate('/dashboard');
         }
-        
-        setLoading(false);
-      }
-    );
+      }, 100);
+    } else if (event === 'SIGNED_OUT') {
+      setTimeout(() => {
+        toast({
+          title: 'Signed out',
+          description: 'Come back soon!',
+        });
+        navigate('/auth');
+      }, 100);
+    }
+    
+    setLoading(false);
+  }, [location.pathname, navigate, toast]);
+
+  useEffect(() => {
+    let mounted = true;
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting session:', error);
+          setLoading(false);
+          return;
+        }
+        
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
 
-    return () => subscription.unsubscribe();
-  }, [navigate, location.pathname]);
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [handleAuthStateChange]);
 
   useEffect(() => {
     if (!loading) {

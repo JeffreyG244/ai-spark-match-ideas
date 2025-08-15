@@ -180,7 +180,7 @@ const PhotoVerification = () => {
               <p className="text-gray-700">
                 For photo verification assistance:
                 <br />
-                Email: verification@luvlang.com
+                Email: support@luvlang.org
                 <br />
                 Phone: 1-800-LUVLANG (1-800-588-5264)
                 <br />

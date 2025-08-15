@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Shield, AlertTriangle } from 'lucide-react';
 import { checkUserRole } from '@/utils/enhancedSecurity';
 import { isProductionEnvironment } from '@/utils/security';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AdminGuardProps {
   children: React.ReactNode;
@@ -33,7 +34,8 @@ const AdminGuard: React.FC<AdminGuardProps> = ({
     }
 
     try {
-      const roleCheck = await checkUserRole(requiredRole);
+      const { data: { user } } = await supabase.auth.getUser();
+      const roleCheck = await checkUserRole(user?.id || '', requiredRole);
       setHasRequiredRole(roleCheck);
     } catch (error) {
       console.error('Error checking user role:', error);

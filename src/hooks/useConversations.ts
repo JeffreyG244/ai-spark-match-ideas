@@ -32,10 +32,11 @@ export const useConversations = () => {
 
       if (error) throw error;
 
-      // Add other participant info
+      // Add other participant info and updated_at field
       const conversationsWithOtherParticipant = data?.map(conv => ({
         ...conv,
-        other_participant: conv.participant_1 === user.id ? conv.participant_2 : conv.participant_1
+        other_participant: conv.participant_1 === user.id ? conv.participant_2 : conv.participant_1,
+        updated_at: conv.last_message_at || conv.created_at
       })) || [];
 
       setConversations(conversationsWithOtherParticipant);

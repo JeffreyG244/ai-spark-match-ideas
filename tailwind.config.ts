@@ -52,7 +52,7 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				// Modern dating app colors
+				// Sophisticated Professional Dating App
 				love: {
 					primary: 'hsl(var(--love-primary))',
 					secondary: 'hsl(var(--love-secondary))',
@@ -60,7 +60,10 @@ export default {
 					background: 'hsl(var(--love-background))',
 					surface: 'hsl(var(--love-surface))',
 					text: 'hsl(var(--love-text))',
-					'text-light': 'hsl(var(--love-text-light))'
+					'text-light': 'hsl(var(--love-text-light))',
+					'text-muted': 'hsl(var(--love-text-muted))',
+					border: 'hsl(var(--love-border))',
+					card: 'hsl(var(--love-card))'
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',

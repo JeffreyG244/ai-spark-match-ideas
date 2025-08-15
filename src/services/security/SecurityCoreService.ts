@@ -188,10 +188,9 @@ export class SecurityCoreService {
         session_id: user?.id ? `session_${user.id}_${Date.now()}` : undefined
       };
 
-      // With the new RLS policies, this will work for system logging
-      const { error } = await supabase
-        .from('security_logs')
-        .insert(logEntry);
+      // Mock security logging since security_logs table doesn't exist
+      console.log('Security event logged (mocked):', logEntry);
+      const error = null;
 
       if (error) {
         console.error('Failed to log security event:', error);

@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Database, Users, Heart, MessageCircle, Calendar, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { seedDiverseProfiles } from '@/utils/diverseSeedProfiles';
 
 interface SeedingStatus {
   profiles: number;
-  compatibility: number;
   matches: number;
   dailyMatches: number;
   conversations: number;
@@ -24,44 +21,47 @@ const DataSeeder = () => {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<SeedingStatus>({
     profiles: 0,
-    compatibility: 0,
     matches: 0,
     dailyMatches: 0,
     conversations: 0,
     messages: 0
   });
 
-  const generateTestProfiles = () => {
+  const generateTestUsers = () => {
     const genders = ['male', 'female', 'non-binary'];
     const cities = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio', 'San Diego', 'Dallas', 'San Jose'];
     const states = ['NY', 'CA', 'IL', 'TX', 'AZ', 'PA', 'CA', 'TX', 'CA'];
-    const interests = ['reading', 'traveling', 'cooking', 'photography', 'hiking', 'music', 'movies', 'sports', 'art', 'dancing'];
+    const interests = ['reading', 'traveling', 'cooking', 'photography', 'hiking', 'music', 'movies', 'sports', 'art', 'dancing', 'technology', 'business', 'leadership'];
+    const industries = ['Technology', 'Finance', 'Healthcare', 'Marketing', 'Consulting', 'Real Estate', 'Legal', 'Education', 'Entertainment', 'Non-profit'];
+    const jobTitles = ['CEO', 'VP Marketing', 'Senior Director', 'Managing Director', 'Chief Technology Officer', 'Principal Consultant', 'Senior Partner', 'Executive Director'];
+    const companies = ['Microsoft', 'Goldman Sachs', 'McKinsey & Company', 'Google', 'JP Morgan', 'Deloitte', 'Meta', 'Tesla', 'Amazon', 'Apple'];
+    
     const bios = [
-      "Love exploring new places and trying different cuisines. Looking for someone who shares my passion for adventure!",
-      "Passionate about photography and capturing life's beautiful moments. Let's create memories together!",
-      "Fitness enthusiast who enjoys hiking and outdoor activities. Seeking an active partner for life's journey.",
-      "Book lover and coffee addict. Perfect date would be browsing bookstores and discussing our favorite reads.",
-      "Travel enthusiast with a wanderlust spirit. Have passport, will travel - care to join me?",
-      "Food lover who enjoys cooking and trying new restaurants. Let's explore the culinary world together!",
-      "Music lover who plays guitar in spare time. Looking for someone to harmonize with in life.",
-      "Art enthusiast who loves visiting museums and galleries. Seeking someone who appreciates creativity.",
-      "Outdoor adventurer who loves camping and stargazing. Let's explore nature's wonders together!",
-      "Tech professional by day, chef by night. Looking for someone to share delicious meals and great conversations."
+      "Passionate executive focused on building innovative teams and driving results. Love traveling and exploring new cuisines.",
+      "Strategic leader with a focus on digital transformation. Enjoy hiking, photography, and mentoring emerging professionals.",
+      "C-suite executive with expertise in scaling organizations. When not working, you'll find me reading or at the wine country.",
+      "Technology leader passionate about AI and sustainable business practices. Love cooking and hosting dinner parties.",
+      "Financial services executive with global experience. Enjoy art galleries, classical music, and philanthropy work.",
+      "Marketing executive specializing in brand strategy. Passionate about design thinking and social impact initiatives.",
+      "Operations leader focused on organizational excellence. Enjoy fitness, mindfulness practices, and family time.",
+      "Strategy consultant with Fortune 500 experience. Love adventure travel, fine dining, and continuous learning.",
+      "Healthcare executive driving innovation in patient care. Passionate about wellness, yoga, and community service.",
+      "Real estate executive with portfolio management expertise. Enjoy golf, sailing, and collecting vintage wines."
     ];
 
-    const maleNames = ['James', 'Michael', 'Robert', 'John', 'David', 'William', 'Richard', 'Joseph', 'Thomas', 'Christopher', 'Charles', 'Daniel', 'Matthew', 'Anthony', 'Mark', 'Donald', 'Steven', 'Paul', 'Andrew', 'Joshua'];
-    const femaleNames = ['Mary', 'Patricia', 'Jennifer', 'Linda', 'Elizabeth', 'Barbara', 'Susan', 'Jessica', 'Sarah', 'Karen', 'Nancy', 'Lisa', 'Betty', 'Helen', 'Sandra', 'Donna', 'Carol', 'Ruth', 'Sharon', 'Michelle'];
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin'];
+    const maleNames = ['James', 'Michael', 'Robert', 'David', 'William', 'Richard', 'Joseph', 'Thomas', 'Christopher', 'Charles', 'Daniel', 'Matthew', 'Anthony', 'Mark', 'Steven', 'Paul', 'Andrew', 'Joshua', 'Alexander', 'Ryan'];
+    const femaleNames = ['Sarah', 'Jennifer', 'Lisa', 'Michelle', 'Jessica', 'Emily', 'Ashley', 'Amanda', 'Nicole', 'Elizabeth', 'Rachel', 'Stephanie', 'Lauren', 'Melissa', 'Christina', 'Rebecca', 'Laura', 'Samantha', 'Katherine', 'Victoria'];
+    const lastNames = ['Chen', 'Rodriguez', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Martinez', 'Anderson', 'Taylor', 'Thomas', 'Wilson', 'Thompson', 'Martinez', 'Clark', 'Lewis', 'Walker', 'Hall'];
 
-    const profiles = [];
-    for (let i = 0; i < 50; i++) {
+    const users = [];
+    for (let i = 0; i < 25; i++) {
       const gender = genders[Math.floor(Math.random() * genders.length)];
       const cityIndex = Math.floor(Math.random() * cities.length);
-      const isMAle = gender === 'male';
-      const firstName = isMAle ? maleNames[Math.floor(Math.random() * maleNames.length)] : femaleNames[Math.floor(Math.random() * femaleNames.length)];
+      const isMale = gender === 'male';
+      const firstName = isMale ? maleNames[Math.floor(Math.random() * maleNames.length)] : femaleNames[Math.floor(Math.random() * femaleNames.length)];
       const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
       
-      // Gender-appropriate profile images
+      // Professional profile images
       const maleImages = [
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop',
         'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=600&fit=crop',
@@ -78,58 +78,38 @@ const DataSeeder = () => {
         'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=600&fit=crop'
       ];
 
-      const photoUrls = isMAle ? 
+      const photoUrls = isMale ? 
         [maleImages[Math.floor(Math.random() * maleImages.length)]] :
         [femaleImages[Math.floor(Math.random() * femaleImages.length)]];
 
-      profiles.push({
-        user_id: `test-user-${i}`,
-        email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@example.com`,
+      users.push({
+        id: `exec-user-${i}`,
+        email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@executive.com`,
         first_name: firstName,
         last_name: lastName,
-        age: Math.floor(Math.random() * 20) + 25, // Ages 25-44
+        age: Math.floor(Math.random() * 15) + 30, // Ages 30-44
+        date_of_birth: new Date(1980 + Math.floor(Math.random() * 15), Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString().split('T')[0],
         gender: gender,
-        bio: bios[Math.floor(Math.random() * bios.length)],
+        looking_for: gender === 'male' ? 'female' : gender === 'female' ? 'male' : 'non-binary',
+        job_title: jobTitles[Math.floor(Math.random() * jobTitles.length)],
+        company: companies[Math.floor(Math.random() * companies.length)],
+        industry: industries[Math.floor(Math.random() * industries.length)],
         city: cities[cityIndex],
         state: states[cityIndex],
-        interests: interests.slice(0, Math.floor(Math.random() * 5) + 3),
-        photo_urls: photoUrls,
-        relationship_goals: 'Long-term relationship',
-        partner_preferences: 'Someone who shares similar interests and values'
+        country: 'US',
+        bio: bios[Math.floor(Math.random() * bios.length)],
+        photos: photoUrls,
+        interests: interests.slice(0, Math.floor(Math.random() * 4) + 3),
+        salary_range: '$200,000+',
+        education_level: 'Graduate Degree',
+        university: 'Harvard Business School',
+        work_schedule: 'Executive Hours',
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
     }
-    return profiles;
-  };
-
-  const generateCompatibilityAnswers = (profiles: any[]) => {
-    return profiles.map(profile => {
-      // Determine seeking preference based on profile context
-      let seeking = 'Everyone';
-      if (profile.partner_preferences) {
-        const prefs = profile.partner_preferences.toLowerCase();
-        if (prefs.includes('men') && !prefs.includes('women')) seeking = 'Men';
-        else if (prefs.includes('women') && !prefs.includes('men')) seeking = 'Women';
-        else if (prefs.includes('regardless of gender') || prefs.includes('any gender') || prefs.includes('transcends gender')) seeking = 'Everyone';
-      }
-
-      return {
-        user_id: profile.user_id,
-        answers: {
-          "1": "Moderate importance",
-          "2": "A few times a week", 
-          "3": "Movies at home",
-          "4": "Early bird",
-          "5": "Cats",
-          "6": "Ambitious",
-          "7": profile.gender === 'Male' ? 'Male' : profile.gender === 'Female' ? 'Female' : 'Non-binary',
-          "8": "City",
-          "9": "Save it",
-          "10": "Emotional connection",
-          "11": "Long-term relationship",
-          "12": seeking
-        }
-      };
-    });
+    return users;
   };
 
   const seedDatabase = async () => {
@@ -146,153 +126,150 @@ const DataSeeder = () => {
     setProgress(0);
     
     try {
-      // Step 0: Create current user's dating profile and compatibility answers
-      setProgress(5);
-      
-      // Get user metadata
-      const userData = user.user_metadata || {};
-      const firstName = userData.first_name || 'User';
-      const lastName = userData.last_name || 'Name';
-      
-      // Create user's dating profile
-      const userProfile = {
-        user_id: user.id,
-        email: user.email || 'user@example.com',
-        first_name: firstName,
-        last_name: lastName,
-        age: 28,
-        gender: 'male', // Set based on your preference
-        bio: 'Looking for meaningful connections and genuine relationships.',
-        city: 'San Francisco',
-        state: 'CA',
-        interests: ['technology', 'travel', 'cooking', 'music'],
-        photo_urls: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
-        relationship_goals: 'Long-term relationship',
-        partner_preferences: 'Someone who shares similar interests and values'
-      };
-
-      await supabase
-        .from('dating_profiles')
-        .upsert(userProfile, { onConflict: 'user_id' });
-
-      // Create user's compatibility answers
-      const userCompatibilityAnswers = {
-        user_id: user.id,
-        answers: {
-          "1": "Very important",
-          "2": "A few times a week", 
-          "3": "Movies at home",
-          "4": "Early bird",
-          "5": "Dogs",
-          "6": "Ambitious",
-          "7": "Male", // User's gender
-          "8": "City",
-          "9": "Save it",
-          "10": "Emotional connection",
-          "11": "Long-term relationship",
-          "12": "Women" // What user is seeking
-        }
-      };
-
-      await supabase
-        .from('compatibility_answers')
-        .upsert(userCompatibilityAnswers, { onConflict: 'user_id' });
-
+      // Step 1: Create current user profile if it doesn't exist
       setProgress(10);
-
-      // Step 1: Generate and insert dating profiles (including diverse LGBTQ+ profiles)
-      const profiles = generateTestProfiles();
-      const { error: profilesError } = await supabase
-        .from('dating_profiles')
-        .upsert(profiles, { onConflict: 'user_id' });
       
-      if (profilesError) throw profilesError;
-
-      // Step 1.5: Add diverse LGBTQ+ profiles
-      const diverseResult = await seedDiverseProfiles();
-      let diverseCount = 0;
-      if (diverseResult.success && diverseResult.count) {
-        diverseCount = diverseResult.count;
-      }
+      const userData = user.user_metadata || {};
+      const firstName = userData.first_name || 'Executive';
+      const lastName = userData.last_name || 'User';
       
-      setStatus(prev => ({ ...prev, profiles: profiles.length + 1 + diverseCount })); // +1 for user profile + diverse profiles
+      await supabase
+        .from('users')
+        .upsert({
+          id: user.id,
+          email: user.email || 'user@executive.com',
+          first_name: firstName,
+          last_name: lastName,
+          age: 35,
+          date_of_birth: '1988-01-01',
+          gender: 'male',
+          looking_for: 'female',
+          job_title: 'Chief Executive Officer',
+          company: 'Innovative Solutions Inc',
+          industry: 'Technology',
+          city: 'San Francisco',
+          state: 'CA',
+          country: 'US',
+          bio: 'Passionate about building innovative products and meaningful relationships.',
+          photos: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=600&fit=crop'],
+          interests: ['technology', 'leadership', 'travel', 'innovation'],
+          salary_range: '$500,000+',
+          education_level: 'Graduate Degree',
+          university: 'Stanford University',
+          work_schedule: 'Executive Hours',
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
+
       setProgress(25);
 
-      // Step 2: Generate and insert compatibility answers
-      const compatibilityAnswers = generateCompatibilityAnswers(profiles);
-      const { error: compatibilityError } = await supabase
-        .from('compatibility_answers')
-        .upsert(compatibilityAnswers, { onConflict: 'user_id' });
+      // Step 2: Create test executive users
+      const testUsers = generateTestUsers();
       
-      if (compatibilityError) {
-        console.error('Compatibility answers error:', compatibilityError);
-        throw compatibilityError;
+      // Clear existing test data first
+      await supabase.from('users').delete().like('email', '%@executive.com').neq('id', user.id);
+      
+      const { error: usersError } = await supabase
+        .from('users')
+        .insert(testUsers);
+      
+      if (usersError) {
+        console.error('Users creation error:', usersError);
+        throw usersError;
       }
-      setStatus(prev => ({ ...prev, compatibility: compatibilityAnswers.length + 1 })); // +1 for user
-      setProgress(40);
+      
+      setStatus(prev => ({ ...prev, profiles: testUsers.length + 1 }));
+      setProgress(50);
 
-      // Step 3: Create sample matches for current user
-      const userCompatibleProfiles = profiles.slice(0, 10);
-      const matches = userCompatibleProfiles.map(profile => ({
+      // Step 3: Create executive matches
+      const matches = testUsers.slice(0, 8).map(testUser => ({
         user_id: user.id,
-        matched_user_id: profile.user_id,
-        compatibility: Math.floor(Math.random() * 30) + 70,
-        status: 'accepted' as const
+        matched_user_id: testUser.id,
+        compatibility_score: Math.floor(Math.random() * 25) + 75, // 75-99
+        status: 'pending',
+        match_reasons: ['Professional compatibility', 'Shared interests', 'Geographic proximity'],
+        common_interests: testUser.interests.slice(0, 2),
+        professional_score: Math.floor(Math.random() * 20) + 80,
+        personality_score: Math.floor(Math.random() * 20) + 80,
+        values_alignment_score: Math.floor(Math.random() * 20) + 80,
+        communication_compatibility: Math.floor(Math.random() * 20) + 80,
+        created_at: new Date().toISOString()
       }));
 
       const { error: matchesError } = await supabase
-        .from('matches')
-        .upsert(matches, { onConflict: 'user_id,matched_user_id' });
+        .from('executive_matches')
+        .insert(matches);
       
-      if (matchesError) throw matchesError;
+      if (matchesError) {
+        console.error('Matches creation error:', matchesError);
+        throw matchesError;
+      }
+      
       setStatus(prev => ({ ...prev, matches: matches.length }));
-      setProgress(60);
+      setProgress(75);
 
       // Step 4: Create daily matches
-      const dailyMatches = profiles.slice(0, 5).map(profile => ({
+      const dailyMatches = testUsers.slice(0, 5).map(testUser => ({
         user_id: user.id,
-        suggested_user_id: profile.user_id,
-        compatibility_score: Math.floor(Math.random() * 30) + 70,
-        suggested_date: new Date().toISOString().split('T')[0],
-        viewed: false
+        recommended_user_id: testUser.id,
+        recommendation_score: Math.floor(Math.random() * 25) + 75,
+        date: new Date().toISOString().split('T')[0],
+        recommendation_reasons: ['High compatibility', 'Similar career level'],
+        professional_highlight: `${testUser.job_title} at ${testUser.company}`,
+        ai_confidence: Math.floor(Math.random() * 15) + 85,
+        networking_opportunity: Math.random() > 0.5
       }));
 
       const { error: dailyMatchesError } = await supabase
         .from('daily_matches')
-        .upsert(dailyMatches, { onConflict: 'user_id,suggested_user_id,suggested_date' });
+        .insert(dailyMatches);
       
-      if (dailyMatchesError) throw dailyMatchesError;
+      if (dailyMatchesError) {
+        console.error('Daily matches creation error:', dailyMatchesError);
+        throw dailyMatchesError;
+      }
+      
       setStatus(prev => ({ ...prev, dailyMatches: dailyMatches.length }));
-      setProgress(80);
+      setProgress(90);
 
-      // Step 5: Create sample conversations and messages
-      const conversations = userCompatibleProfiles.slice(0, 3).map(profile => ({
+      // Step 5: Create sample conversations
+      const conversations = testUsers.slice(0, 3).map(testUser => ({
         participant_1: user.id,
-        participant_2: profile.user_id
+        participant_2: testUser.id,
+        created_at: new Date().toISOString(),
+        last_message_at: new Date().toISOString(),
+        message_count: 2
       }));
 
       const { data: conversationData, error: conversationsError } = await supabase
         .from('conversations')
-        .upsert(conversations, { onConflict: 'participant_1,participant_2' })
+        .insert(conversations)
         .select();
       
-      if (conversationsError) throw conversationsError;
+      if (conversationsError) {
+        console.error('Conversations creation error:', conversationsError);
+        throw conversationsError;
+      }
+      
       setStatus(prev => ({ ...prev, conversations: conversations.length }));
 
       // Create sample messages
       if (conversationData && conversationData.length > 0) {
-        const messages = conversationData.flatMap(conv => [
+        const messages = conversationData.flatMap((conv, index) => [
           {
             conversation_id: conv.id,
             sender_id: conv.participant_2,
-            content: "Hey! I saw your profile and thought we might have a lot in common. How's your day going?",
-            message_type: 'text'
+            content: `Hi! I saw your profile and was impressed by your work at ${user.user_metadata?.company || 'your company'}. Would love to connect over coffee!`,
+            message_type: 'text',
+            created_at: new Date(Date.now() - 3600000).toISOString() // 1 hour ago
           },
           {
             conversation_id: conv.id,
             sender_id: user.id,
-            content: "Hi there! Thanks for reaching out. I'm doing well, just finished a great book. What about you?",
-            message_type: 'text'
+            content: `Thank you for reaching out! I'd enjoy connecting as well. Are you free for lunch this week?`,
+            message_type: 'text',
+            created_at: new Date(Date.now() - 1800000).toISOString() // 30 minutes ago
           }
         ]);
 
@@ -300,28 +277,33 @@ const DataSeeder = () => {
           .from('conversation_messages')
           .insert(messages);
         
-        if (messagesError) throw messagesError;
+        if (messagesError) {
+          console.error('Messages creation error:', messagesError);
+          throw messagesError;
+        }
+        
         setStatus(prev => ({ ...prev, messages: messages.length }));
       }
 
       setProgress(100);
       
-      // Trigger N8N webhook for the user profile
+      // Trigger N8N webhook
       try {
-        await supabase.functions.invoke('profile-webhook', {
+        await supabase.functions.invoke('professional-match-trigger', {
           body: { 
             user_id: user.id, 
-            event_type: 'profile_seeded' 
+            event_type: 'database_seeded',
+            timestamp: new Date().toISOString()
           }
         });
-        console.log('N8N webhook triggered for user profile');
+        console.log('Professional matching triggered');
       } catch (webhookError) {
         console.warn('N8N webhook failed:', webhookError);
       }
       
       toast({
-        title: 'Database Seeded Successfully!',
-        description: 'Test data has been created and N8N workflow triggered. You can now test all features.',
+        title: 'Executive Database Seeded!',
+        description: 'Test executive profiles and matches have been created successfully.',
       });
 
     } catch (error: any) {
@@ -340,29 +322,15 @@ const DataSeeder = () => {
     try {
       setIsSeeding(true);
       
-      // Clear test data (be careful not to delete real user data)
-      // Use the uuids directly since we can't use LIKE with uuid columns in Supabase
-      const { data: testProfiles } = await supabase
-        .from('dating_profiles')
-        .select('user_id')
-        .filter('email', 'like', '%@example.com');
-      
-      if (testProfiles && testProfiles.length > 0) {
-        const testUserIds = testProfiles.map(p => p.user_id);
-        
-        // Delete related data
-        await supabase.from('conversation_messages').delete().in('sender_id', testUserIds);
-        await supabase.from('conversations').delete().in('participant_1', testUserIds);
-        await supabase.from('conversations').delete().in('participant_2', testUserIds);
-        await supabase.from('daily_matches').delete().in('suggested_user_id', testUserIds);
-        await supabase.from('matches').delete().in('matched_user_id', testUserIds);
-        await supabase.from('compatibility_answers').delete().in('user_id', testUserIds);
-        await supabase.from('dating_profiles').delete().in('user_id', testUserIds);
-      }
+      // Clear test data
+      await supabase.from('conversation_messages').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('conversations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('daily_matches').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('executive_matches').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('users').delete().like('email', '%@executive.com').neq('id', user?.id || '');
       
       setStatus({
         profiles: 0,
-        compatibility: 0,
         matches: 0,
         dailyMatches: 0,
         conversations: 0,
@@ -371,7 +339,7 @@ const DataSeeder = () => {
       
       toast({
         title: 'Test Data Cleared',
-        description: 'All test data has been removed from the database.',
+        description: 'All test executive data has been removed.',
       });
     } catch (error: any) {
       console.error('Error clearing test data:', error);
@@ -386,13 +354,13 @@ const DataSeeder = () => {
   };
 
   return (
-    <Card className="border-blue-200">
+    <Card className="border-purple-200">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Database className="h-5 w-5 text-blue-600" />
-          Test Data Seeder
+          <Database className="h-5 w-5 text-purple-600" />
+          Executive Data Seeder
         </CardTitle>
-        <p className="text-sm text-gray-600">Generate test data to make all app features functional for testing</p>
+        <p className="text-sm text-gray-600">Generate executive test data for the professional dating platform</p>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Progress Bar */}
@@ -410,18 +378,10 @@ const DataSeeder = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
-              <Users className="h-4 w-4 text-blue-600" />
-              <span className="text-2xl font-bold text-blue-600">{status.profiles}</span>
+              <Users className="h-4 w-4 text-purple-600" />
+              <span className="text-2xl font-bold text-purple-600">{status.profiles}</span>
             </div>
-            <div className="text-sm text-gray-600">Dating Profiles</div>
-          </div>
-          
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <span className="text-2xl font-bold text-green-600">{status.compatibility}</span>
-            </div>
-            <div className="text-sm text-gray-600">Compatibility Data</div>
+            <div className="text-sm text-gray-600">Executive Profiles</div>
           </div>
           
           <div className="text-center">
@@ -429,29 +389,29 @@ const DataSeeder = () => {
               <Heart className="h-4 w-4 text-pink-600" />
               <span className="text-2xl font-bold text-pink-600">{status.matches}</span>
             </div>
-            <div className="text-sm text-gray-600">Matches</div>
+            <div className="text-sm text-gray-600">Executive Matches</div>
           </div>
           
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
-              <Calendar className="h-4 w-4 text-purple-600" />
-              <span className="text-2xl font-bold text-purple-600">{status.dailyMatches}</span>
+              <Calendar className="h-4 w-4 text-blue-600" />
+              <span className="text-2xl font-bold text-blue-600">{status.dailyMatches}</span>
             </div>
             <div className="text-sm text-gray-600">Daily Matches</div>
           </div>
           
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
-              <MessageCircle className="h-4 w-4 text-orange-600" />
-              <span className="text-2xl font-bold text-orange-600">{status.conversations}</span>
+              <MessageCircle className="h-4 w-4 text-green-600" />
+              <span className="text-2xl font-bold text-green-600">{status.conversations}</span>
             </div>
             <div className="text-sm text-gray-600">Conversations</div>
           </div>
           
           <div className="text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
-              <MessageCircle className="h-4 w-4 text-green-600" />
-              <span className="text-2xl font-bold text-green-600">{status.messages}</span>
+              <CheckCircle className="h-4 w-4 text-orange-600" />
+              <span className="text-2xl font-bold text-orange-600">{status.messages}</span>
             </div>
             <div className="text-sm text-gray-600">Messages</div>
           </div>
@@ -462,9 +422,9 @@ const DataSeeder = () => {
           <Button 
             onClick={seedDatabase}
             disabled={isSeeding}
-            className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
+            className="bg-purple-600 hover:bg-purple-700 text-white flex-1"
           >
-            {isSeeding ? 'Seeding...' : 'Seed Test Data'}
+            {isSeeding ? 'Creating Executive Profiles...' : 'Seed Executive Data'}
           </Button>
           
           <Button 
@@ -478,10 +438,10 @@ const DataSeeder = () => {
         </div>
 
         {/* Info */}
-        <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <AlertTriangle className="h-4 w-4 text-blue-600 mt-0.5" />
-          <div className="text-sm text-blue-800">
-            <strong>Inclusive Dating Platform:</strong> This will create diverse test profiles including LGBTQ+ representation (lesbian, gay, bisexual, transgender, non-binary, and pansexual profiles) to ensure your platform works for all users. Use "Clear Test Data" to remove when done testing.
+        <div className="flex items-start gap-2 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+          <AlertTriangle className="h-4 w-4 text-purple-600 mt-0.5" />
+          <div className="text-sm text-purple-800">
+            <strong>Executive Platform:</strong> This creates C-suite level professionals, VPs, and senior executives with realistic job titles, companies, and professional backgrounds. Perfect for testing the executive dating experience.
           </div>
         </div>
       </CardContent>

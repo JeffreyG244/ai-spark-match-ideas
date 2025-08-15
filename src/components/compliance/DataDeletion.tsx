@@ -31,9 +31,9 @@ const DataDeletion = () => {
     try {
       // Delete user profile data using correct table name
       const { error: profileError } = await supabase
-        .from('profiles')
+        .from('users')
         .delete()
-        .eq('user_id', user.id);
+        .eq('id', user.id);
 
       if (profileError) throw profileError;
 
@@ -45,23 +45,13 @@ const DataDeletion = () => {
 
       if (messagesError) throw messagesError;
 
-      // Delete matches
+      // Delete executive matches
       const { error: matchesError } = await supabase
-        .from('matches')
+        .from('executive_matches')
         .delete()
         .or(`user_id.eq.${user.id},matched_user_id.eq.${user.id}`);
 
       if (matchesError) throw matchesError;
-
-      // Log the deletion
-      await supabase
-        .from('security_logs')
-        .insert({
-          user_id: user.id,
-          event_type: 'user_data_deletion',
-          severity: 'medium',
-          details: { reason: 'user_requested', timestamp: new Date().toISOString() }
-        });
 
       // Note: We cannot delete the auth user from client-side code
       // This would typically be handled by a server-side function or edge function

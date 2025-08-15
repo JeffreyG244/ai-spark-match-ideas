@@ -68,6 +68,26 @@ const PlanCard: React.FC<PlanCardProps> = ({
         return value ? 'Incognito mode' : null;
       case 'travel_mode':
         return value ? 'Travel mode' : null;
+      case 'profile_verification':
+        return value ? 'Profile verification' : null;
+      case 'read_receipts':
+        return value ? 'Read receipts' : null;
+      case 'video_chat':
+        return value ? 'Video chat' : null;
+      case 'ai_recommendations':
+        return value ? 'AI-powered recommendations' : null;
+      case 'passport':
+        return value ? 'Travel passport' : null;
+      case 'priority_likes':
+        return value ? 'Priority likes' : null;
+      case 'personal_matchmaker':
+        return value ? 'Personal matchmaker' : null;
+      case 'exclusive_events':
+        return value ? 'Exclusive events' : null;
+      case 'dating_coach':
+        return value ? 'Dating coach' : null;
+      case 'vip_support':
+        return value ? '24/7 VIP support' : null;
       default:
         return null;
     }
@@ -102,12 +122,14 @@ const PlanCard: React.FC<PlanCardProps> = ({
   const isPremium = plan.name === 'Premium';
   const isPlus = plan.name === 'Plus';
   const isFree = plan.name === 'Free';
+  const isVIP = plan.name === 'VIP';
 
   return (
     <Card 
       className={`relative ${
         isPlus ? 'border-2 border-purple-500 shadow-lg' : 
         isPremium ? 'border-2 border-yellow-500 shadow-lg' :
+        isVIP ? 'border-2 border-violet-500 shadow-lg' :
         isFree ? 'border-2 border-green-500 shadow-lg' :
         'border-purple-200'
       } ${isCurrentPlan ? 'ring-2 ring-green-500' : ''}`}
@@ -126,6 +148,15 @@ const PlanCard: React.FC<PlanCardProps> = ({
           <Badge className="bg-yellow-500 text-white border-yellow-500">
             <Crown className="w-3 h-3 mr-1" />
             Best Value
+          </Badge>
+        </div>
+      )}
+
+      {isVIP && (
+        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+          <Badge className="bg-violet-500 text-white border-violet-500">
+            <Crown className="w-3 h-3 mr-1" />
+            VIP Elite
           </Badge>
         </div>
       )}
@@ -172,6 +203,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
               isFree ? '#10B981' : 
               isPlus ? '#7C3AED' : 
               isPremium ? '#EAB308' : 
+              isVIP ? '#8B5CF6' :
               plan.highlight_color || '#7C3AED'
             ) : undefined,
             borderColor: isCurrentPlan && isFree ? '#10B981' : undefined,

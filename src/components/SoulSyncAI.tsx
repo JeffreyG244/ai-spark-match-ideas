@@ -2,55 +2,52 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Brain, Zap, Users, Heart, Target } from "lucide-react";
+import { Shield, Users, AlertTriangle, CheckCircle, Eye, Lock } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 const SoulSyncAI = () => {
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [syncComplete, setSyncComplete] = useState(true);
+  const [safetyActive, setSafetyActive] = useState(true);
+  const [isScanning, setIsScanning] = useState(false);
 
-  const soulTraits = [
-    { trait: "Core Values", compatibility: 94, insight: "Strong alignment on family, career, and personal growth" },
-    { trait: "Life Philosophy", compatibility: 88, insight: "Similar perspectives on spirituality and purpose" },
-    { trait: "Emotional Depth", compatibility: 91, insight: "Matched capacity for emotional intimacy" },
-    { trait: "Communication Soul", compatibility: 96, insight: "Natural harmony in expression and understanding" },
-    { trait: "Future Vision", compatibility: 87, insight: "Aligned dreams and aspirations" }
+  const safetyFeatures = [
+    { feature: "Profile Verification", status: "Active", score: 98 },
+    { feature: "Background Check", status: "Verified", score: 95 },
+    { feature: "Behavioral Analysis", status: "Monitoring", score: 92 },
+    { feature: "Photo Authenticity", status: "Verified", score: 100 },
+    { feature: "Communication Safety", status: "Protected", score: 96 }
   ];
 
-  const soulMatches = [
+  const safetyAlerts = [
     {
-      name: "Maya Thompson",
-      soulScore: 96,
-      connection: "Twin Soul",
-      traits: ["Deep empathy", "Creative spirit", "Growth mindset"],
-      soulInsight: "Your souls speak the same language of compassion and creativity"
+      type: "Verified Match",
+      name: "Sarah Chen",
+      level: "Trusted",
+      details: "Full verification completed, clean background check"
     },
     {
-      name: "James Rivera",
-      soulScore: 92,
-      connection: "Kindred Spirit",
-      traits: ["Philosophical depth", "Adventurous heart", "Authentic nature"],
-      soulInsight: "A beautiful balance of depth and adventure awaits"
+      type: "Safety Alert",
+      name: "Anonymous User",
+      level: "Caution",
+      details: "Incomplete verification - proceed with standard safety protocols"
     }
   ];
 
-  const runSoulSync = () => {
-    setIsAnalyzing(true);
+  const activateSafetyGuard = () => {
+    setIsScanning(true);
     toast({
-      title: "Luvlang AI Activated",
-      description: "Analyzing your soul's deepest patterns and desires...",
+      title: "Personal Safety Guard Activated",
+      description: "Conducting comprehensive safety analysis of your connections...",
     });
 
     setTimeout(() => {
-      setIsAnalyzing(false);
-      setSyncComplete(true);
+      setIsScanning(false);
+      setSafetyActive(true);
       toast({
-        title: "Soul Analysis Complete",
-        description: "Your soul's blueprint has been mapped with precision!",
+        title: "Safety Analysis Complete",
+        description: "Your connections have been verified and safety protocols are active!",
       });
-    }, 4500);
+    }, 3500);
   };
 
   return (
@@ -58,67 +55,81 @@ const SoulSyncAI = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Brain className="h-8 w-8 text-purple-600" />
-            Luvlang AI
+            <Shield className="h-8 w-8 text-emerald-600" />
+            Personal Safety Guard
           </h2>
-          <p className="text-gray-600">Deep personality matching at the soul level</p>
+          <p className="text-gray-600">Advanced protection for your dating experience</p>
         </div>
-        <Button onClick={runSoulSync} disabled={isAnalyzing} className="bg-purple-600 hover:bg-purple-700">
-          {isAnalyzing ? (
+        <Button onClick={activateSafetyGuard} disabled={isScanning} className="bg-emerald-600 hover:bg-emerald-700">
+          {isScanning ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Syncing Souls...
+              Scanning Safety...
             </>
           ) : (
             <>
-              <Zap className="h-4 w-4 mr-2" />
-              Deep Soul Sync
+              <Shield className="h-4 w-4 mr-2" />
+              Activate Safety Guard
             </>
           )}
         </Button>
       </div>
 
-      {syncComplete && (
+      {safetyActive && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="border-purple-200">
+          <Card className="border-emerald-200">
             <CardHeader>
-              <CardTitle className="text-purple-800">Soul Compatibility Matrix</CardTitle>
-              <CardDescription>AI-analyzed soul-level connections</CardDescription>
+              <CardTitle className="text-emerald-800">Safety Status Monitor</CardTitle>
+              <CardDescription>Real-time protection metrics</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {soulTraits.map((trait, index) => (
-                <div key={index} className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium">{trait.trait}</span>
-                    <Badge className="bg-purple-100 text-purple-800">{trait.compatibility}%</Badge>
+              {safetyFeatures.map((item, index) => (
+                <div key={index} className="flex justify-between items-center p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-emerald-600" />
+                    <div>
+                      <p className="font-medium text-sm">{item.feature}</p>
+                      <p className="text-xs text-gray-600">{item.status}</p>
+                    </div>
                   </div>
-                  <Progress value={trait.compatibility} className="h-2" />
-                  <p className="text-sm text-gray-600">{trait.insight}</p>
+                  <Badge className="bg-emerald-600 text-white">{item.score}%</Badge>
                 </div>
               ))}
             </CardContent>
           </Card>
 
-          <Card className="border-purple-200">
+          <Card className="border-emerald-200">
             <CardHeader>
-              <CardTitle className="text-purple-800">Soul-Level Matches</CardTitle>
-              <CardDescription>People who resonate with your soul's frequency</CardDescription>
+              <CardTitle className="text-emerald-800">Safety Alerts & Verifications</CardTitle>
+              <CardDescription>Current safety status of your connections</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {soulMatches.map((match, index) => (
-                <div key={index} className="border border-purple-200 rounded-lg p-4 bg-purple-50">
+              {safetyAlerts.map((alert, index) => (
+                <div key={index} className="border border-emerald-200 rounded-lg p-4 bg-emerald-50">
                   <div className="flex justify-between items-center mb-2">
-                    <h4 className="font-semibold">{match.name}</h4>
-                    <Badge className="bg-purple-600">{match.soulScore}% Soul Match</Badge>
+                    <h4 className="font-semibold text-sm">{alert.name}</h4>
+                    <Badge className={alert.level === "Trusted" ? "bg-emerald-600" : "bg-amber-500"}>
+                      {alert.level}
+                    </Badge>
                   </div>
-                  <p className="text-sm font-medium text-purple-700 mb-2">{match.connection}</p>
-                  <p className="text-sm text-gray-600 mb-3 italic">{match.soulInsight}</p>
-                  <div className="flex flex-wrap gap-1">
-                    {match.traits.map((trait, i) => (
-                      <Badge key={i} variant="outline" className="text-xs border-purple-300">
-                        {trait}
-                      </Badge>
-                    ))}
+                  <p className="text-xs font-medium text-emerald-700 mb-2 flex items-center gap-2">
+                    {alert.level === "Trusted" ? (
+                      <CheckCircle className="h-3 w-3" />
+                    ) : (
+                      <AlertTriangle className="h-3 w-3" />
+                    )}
+                    {alert.type}
+                  </p>
+                  <p className="text-xs text-gray-600">{alert.details}</p>
+                  <div className="flex gap-2 mt-3">
+                    <Button size="sm" variant="outline" className="text-xs border-emerald-300">
+                      <Eye className="h-3 w-3 mr-1" />
+                      View Profile
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-xs border-emerald-300">
+                      <Lock className="h-3 w-3 mr-1" />
+                      Safety Options
+                    </Button>
                   </div>
                 </div>
               ))}

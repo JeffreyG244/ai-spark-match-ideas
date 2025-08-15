@@ -5,6 +5,11 @@ import { Navigate } from 'react-router-dom';
 import PreLaunchDashboard from '@/components/admin/PreLaunchDashboard';
 import SystemIntegrationTest from '@/components/admin/SystemIntegrationTest';
 import PreLaunchSecurityAuditComponent from '@/components/admin/PreLaunchSecurityAudit';
+import ProductionChecklist from '@/components/admin/ProductionChecklist';
+import ProfileManager from '@/components/admin/ProfileManager';
+import N8NSystemCheck from '@/components/admin/N8NSystemCheck';
+import ComprehensiveSystemDiagnostic from '@/components/admin/ComprehensiveSystemDiagnostic';
+import SystemDiagnosticReport from '@/components/admin/SystemDiagnosticReport';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -29,6 +34,11 @@ const PreLaunchAudit = () => {
           </Link>
         </div>
         <div className="space-y-8">
+          <SystemDiagnosticReport />
+          <ComprehensiveSystemDiagnostic />
+          <N8NSystemCheck />
+          <ProductionChecklist />
+          <ProfileManager />
           <PreLaunchSecurityAuditComponent />
           <SystemIntegrationTest />
           <PreLaunchDashboard />

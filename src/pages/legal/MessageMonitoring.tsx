@@ -176,7 +176,7 @@ const MessageMonitoring = () => {
               <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg mb-6">
                 <h3 className="font-semibold text-gray-800 mb-2">Appeals Process</h3>
                 <ul className="list-disc list-inside text-gray-700 space-y-1">
-                  <li>Contest moderation decisions through appeals@luvlang.com</li>
+                  <li>Contest moderation decisions through support@luvlang.org</li>
                   <li>Provide context and explanation for your appeal</li>
                   <li>Independent review by senior moderation staff</li>
                   <li>Response within 72 hours for urgent cases</li>
@@ -188,11 +188,7 @@ const MessageMonitoring = () => {
               <p className="text-gray-700">
                 For questions about message monitoring:
                 <br />
-                Email: safety@luvlang.com
-                <br />
-                Appeals: appeals@luvlang.com
-                <br />
-                Privacy: privacy@luvlang.com
+                Email: support@luvlang.org
                 <br />
                 Phone: 1-800-LUVLANG (1-800-588-5264)
               </p>

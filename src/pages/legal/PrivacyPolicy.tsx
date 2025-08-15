@@ -99,7 +99,7 @@ const PrivacyPolicy = () => {
               <p className="text-gray-700">
                 For privacy questions or to exercise your rights, contact us at:
                 <br />
-                Email: <a href="mailto:privacy@luvlang.com" className="text-purple-600 hover:text-purple-800">privacy@luvlang.com</a>
+                Email: <a href="mailto:support@luvlang.org" className="text-purple-600 hover:text-purple-800">support@luvlang.org</a>
                 <br />
                 Address: [Your Company Address]
               </p>

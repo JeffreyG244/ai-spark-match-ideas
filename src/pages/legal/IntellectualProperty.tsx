@@ -143,7 +143,7 @@ const IntellectualProperty = () => {
                   To report intellectual property violations:
                 </p>
                 <ul className="list-disc list-inside text-blue-700 space-y-2">
-                  <li>Email: <a href="mailto:ip@luvlang.com" className="text-purple-600 hover:text-purple-800">ip@luvlang.com</a></li>
+                  <li>Email: <a href="mailto:support@luvlang.org" className="text-purple-600 hover:text-purple-800">support@luvlang.org</a></li>
                   <li>Subject: "IP Violation Report"</li>
                   <li>Include all required DMCA information</li>
                   <li>Allow 5-7 business days for response</li>
@@ -165,9 +165,7 @@ const IntellectualProperty = () => {
               <p className="text-gray-700">
                 For intellectual property questions or reports:
                 <br />
-                Email: <a href="mailto:ip@luvlang.com" className="text-purple-600 hover:text-purple-800">ip@luvlang.com</a>
-                <br />
-                Legal Department: <a href="mailto:legal@luvlang.com" className="text-purple-600 hover:text-purple-800">legal@luvlang.com</a>
+                Email: <a href="mailto:support@luvlang.org" className="text-purple-600 hover:text-purple-800">support@luvlang.org</a>
                 <br />
                 Address: [Your Company Address]
               </p>
