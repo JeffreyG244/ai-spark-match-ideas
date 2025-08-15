@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import './App.css';
 
+// LuvLang Professional Dating Platform - Fresh Build
 // Simple Photo Upload Component
 function PhotoUpload() {
   const [photos, setPhotos] = useState([]);
