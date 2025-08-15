@@ -15,6 +15,12 @@ function App() {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
+  // PayPal membership state
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [billingCycle, setBillingCycle] = useState('monthly');
+  const [paypalLoading, setPaypalLoading] = useState(false);
+  const [paypalError, setPaypalError] = useState(null);
+
   // Initialize user session and load data
   useEffect(() => {
     console.log('🚀 Initializing Supabase connection...');
@@ -368,6 +374,52 @@ function App() {
     audioChunksRef.current = [];
   };
 
+  // PayPal membership functions
+  const handlePayPalPurchase = async (planType) => {
+    if (!user) {
+      alert('Please sign in to purchase a membership');
+      return;
+    }
+
+    setPaypalLoading(true);
+    setPaypalError(null);
+    setSelectedPlan(planType);
+
+    try {
+      console.log('💳 Creating PayPal order...', { planType, billingCycle });
+
+      const response = await fetch('https://tzskjzkolyiwhijslqmq.supabase.co/functions/v1/create-paypal-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+        body: JSON.stringify({
+          planType,
+          billingCycle
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ PayPal order created:', data);
+
+      // In a real implementation, you would redirect to PayPal here
+      alert(`✅ PayPal order created successfully! Order ID: ${data.orderID}\nAmount: $${data.amount}\n\nIn production, you would be redirected to PayPal to complete payment.`);
+
+    } catch (error) {
+      console.error('❌ PayPal order creation failed:', error);
+      setPaypalError(error.message);
+      alert(`❌ PayPal error: ${error.message}`);
+    } finally {
+      setPaypalLoading(false);
+    }
+  };
+
   return (
     <div className="App">
       <header className="app-header">
@@ -520,6 +572,91 @@ function App() {
               • Voice recordings help with compatibility matching<br/>
               • {isSignedIn ? 'Data persists between sessions' : 'Guest mode recordings are temporary'}
             </div>
+          </div>
+        </div>
+
+        {/* Membership Plans Section */}
+        <div className="section">
+          <h2>💎 Premium Membership Plans</h2>
+          <p>Unlock advanced matching algorithms and exclusive features with our premium plans.</p>
+          
+          <div className="billing-toggle">
+            <button 
+              className={`billing-button ${billingCycle === 'monthly' ? 'active' : ''}`}
+              onClick={() => setBillingCycle('monthly')}
+            >
+              Monthly
+            </button>
+            <button 
+              className={`billing-button ${billingCycle === 'yearly' ? 'active' : ''}`}
+              onClick={() => setBillingCycle('yearly')}
+            >
+              Yearly (Save 20%)
+            </button>
+          </div>
+
+          <div className="plans-grid">
+            <div className="plan-card">
+              <h3>🌟 Premium</h3>
+              <div className="plan-price">
+                <span className="currency">$</span>
+                <span className="amount">{billingCycle === 'yearly' ? '199' : '19.99'}</span>
+                <span className="period">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
+              </div>
+              <ul className="plan-features">
+                <li>✓ Advanced AI matching</li>
+                <li>✓ Voice compatibility analysis</li>
+                <li>✓ Unlimited messages</li>
+                <li>✓ Priority customer support</li>
+              </ul>
+              <button 
+                className={`plan-button ${paypalLoading && selectedPlan === 'premium' ? 'loading' : ''}`}
+                onClick={() => handlePayPalPurchase('premium')}
+                disabled={paypalLoading}
+              >
+                {paypalLoading && selectedPlan === 'premium' ? 'Processing...' : '💳 Purchase with PayPal'}
+              </button>
+            </div>
+
+            <div className="plan-card featured">
+              <div className="popular-badge">Most Popular</div>
+              <h3>💎 VIP</h3>
+              <div className="plan-price">
+                <span className="currency">$</span>
+                <span className="amount">{billingCycle === 'yearly' ? '399' : '39.99'}</span>
+                <span className="period">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
+              </div>
+              <ul className="plan-features">
+                <li>✓ Everything in Premium</li>
+                <li>✓ Profile boost & highlights</li>
+                <li>✓ Advanced search filters</li>
+                <li>✓ Exclusive VIP events</li>
+                <li>✓ Personal dating coach</li>
+              </ul>
+              <button 
+                className={`plan-button ${paypalLoading && selectedPlan === 'vip' ? 'loading' : ''}`}
+                onClick={() => handlePayPalPurchase('vip')}
+                disabled={paypalLoading}
+              >
+                {paypalLoading && selectedPlan === 'vip' ? 'Processing...' : '💳 Purchase with PayPal'}
+              </button>
+            </div>
+          </div>
+
+          {paypalError && (
+            <div className="error-message">
+              ❌ Error: {paypalError}
+            </div>
+          )}
+
+          <div className="payment-info">
+            <h4>🔒 Secure Payment Processing</h4>
+            <p>
+              • Payments processed securely through PayPal<br/>
+              • SSL encrypted transactions<br/>
+              • No payment information stored on our servers<br/>
+              • Cancel anytime through your PayPal account
+            </p>
           </div>
         </div>
       </main>
