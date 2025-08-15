@@ -8,9 +8,15 @@ function PhotoUpload() {
   const fileInputRef = useRef(null);
 
   const handleFileSelect = async (event) => {
+    console.log('File select triggered', event);
+    
     const files = event.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) {
+      console.log('No files selected');
+      return;
+    }
 
+    console.log(`Processing ${files.length} files`);
     setIsUploading(true);
 
     try {
@@ -18,34 +24,55 @@ function PhotoUpload() {
       
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        console.log(`Processing file ${i + 1}:`, file.name, file.type, file.size);
         
+        // Check file type
         if (!file.type.startsWith('image/')) {
-          alert(`${file.name} is not a valid image file.`);
+          console.error(`Invalid file type: ${file.type}`);
+          alert(`${file.name} is not a valid image file. Please select JPG, PNG, GIF, or WebP images.`);
           continue;
         }
 
+        // Check file size (5MB limit)
         if (file.size > 5 * 1024 * 1024) {
-          alert(`${file.name} is too large. Maximum size is 5MB.`);
+          console.error(`File too large: ${file.size} bytes`);
+          alert(`${file.name} is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum size is 5MB.`);
           continue;
         }
 
-        const imageUrl = URL.createObjectURL(file);
-        
-        newPhotos.push({
-          id: Date.now() + i,
-          url: imageUrl,
-          file: file,
-          isPrimary: photos.length === 0 && newPhotos.length === 0
-        });
+        try {
+          const imageUrl = URL.createObjectURL(file);
+          console.log('Created object URL:', imageUrl);
+          
+          newPhotos.push({
+            id: Date.now() + i,
+            url: imageUrl,
+            file: file,
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+            isPrimary: photos.length === 0 && newPhotos.length === 0
+          });
+        } catch (urlError) {
+          console.error('Error creating object URL:', urlError);
+          alert(`Failed to process ${file.name}. Please try again.`);
+        }
       }
 
       if (newPhotos.length > 0) {
-        setPhotos(prev => [...prev, ...newPhotos]);
-        alert(`Successfully uploaded ${newPhotos.length} photo(s).`);
+        console.log('Adding photos to state:', newPhotos);
+        setPhotos(prev => {
+          const updated = [...prev, ...newPhotos];
+          console.log('Updated photos state:', updated);
+          return updated;
+        });
+        alert(`✅ Successfully uploaded ${newPhotos.length} photo(s)!`);
+      } else {
+        alert('No valid photos were uploaded. Please check your file types and sizes.');
       }
     } catch (error) {
       console.error('Upload error:', error);
-      alert('An error occurred while uploading photos.');
+      alert(`Upload failed: ${error.message}. Please try again.`);
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
@@ -85,20 +112,31 @@ function PhotoUpload() {
       {photos.length < 6 && (
         <div className="upload-controls">
           <button
-            onClick={() => fileInputRef.current?.click()}
+            onClick={() => {
+              console.log('Upload button clicked');
+              fileInputRef.current?.click();
+            }}
             disabled={isUploading}
             className="btn primary"
           >
-            {isUploading ? 'Uploading...' : 'Upload Photos'}
+            {isUploading ? '⏳ Uploading...' : '📷 Upload Photos'}
           </button>
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
             multiple
             onChange={handleFileSelect}
             style={{ display: 'none' }}
+            onClick={(e) => {
+              console.log('File input clicked');
+              // Reset the input to allow re-selecting the same file
+              e.target.value = '';
+            }}
           />
+          <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>
+            Supported: JPG, PNG, GIF, WebP • Max 5MB per photo • Up to 6 photos
+          </p>
         </div>
       )}
 
@@ -128,35 +166,107 @@ function VoiceRecording() {
   const [audioUrl, setAudioUrl] = useState(null);
 
   const startRecording = async () => {
+    console.log('Starting voice recording...');
+    
+    // Check if browser supports getUserMedia
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      alert('❌ Voice recording is not supported in this browser. Please try Chrome, Firefox, or Safari.');
+      return;
+    }
+
+    // Check if we're on HTTPS (required for microphone access)
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      alert('🔒 Microphone access requires HTTPS. Please ensure you\'re on a secure connection.');
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
+      console.log('Requesting microphone access...');
       
+      // Request microphone permission with detailed options
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+      
+      console.log('Microphone access granted:', stream);
+
+      // Check if MediaRecorder is supported
+      if (!window.MediaRecorder) {
+        alert('❌ Voice recording is not supported in this browser. Please update your browser.');
+        stream.getTracks().forEach(track => track.stop());
+        return;
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+      });
+      
+      mediaRecorderRef.current = mediaRecorder;
       const audioChunks = [];
       
       mediaRecorder.ondataavailable = (event) => {
-        audioChunks.push(event.data);
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
+          console.log('Audio data chunk received:', event.data.size, 'bytes');
+        }
       };
       
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        console.log('Recording stopped, processing audio...');
+        const mimeType = mediaRecorder.mimeType;
+        const audioBlob = new Blob(audioChunks, { type: mimeType });
         const url = URL.createObjectURL(audioBlob);
         setAudioUrl(url);
+        
+        // Clean up the stream
+        stream.getTracks().forEach(track => {
+          track.stop();
+          console.log('Audio track stopped');
+        });
+        
+        console.log('Audio blob created:', audioBlob.size, 'bytes');
+      };
+
+      mediaRecorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event.error);
+        alert('❌ Recording error occurred. Please try again.');
         stream.getTracks().forEach(track => track.stop());
       };
       
       mediaRecorder.start();
       setIsRecording(true);
       
-      alert('Recording started! Speak naturally for 30 seconds for voice analysis.');
+      alert('🎤 Recording started! Speak naturally for 30 seconds for voice analysis.');
+      console.log('Recording started successfully');
 
       setTimeout(() => {
-        stopRecording();
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+          stopRecording();
+        }
       }, 30000);
       
     } catch (error) {
-      alert('Please allow microphone access for voice analysis');
+      console.error('Microphone access error:', error);
+      
+      let errorMessage = '❌ Microphone access denied. ';
+      
+      if (error.name === 'NotAllowedError') {
+        errorMessage += 'Please click the microphone icon in your browser\'s address bar and allow access, then try again.';
+      } else if (error.name === 'NotFoundError') {
+        errorMessage += 'No microphone found. Please connect a microphone and try again.';
+      } else if (error.name === 'NotReadableError') {
+        errorMessage += 'Microphone is being used by another application. Please close other apps and try again.';
+      } else if (error.name === 'OverconstrainedError') {
+        errorMessage += 'Microphone settings conflict. Please try again.';
+      } else {
+        errorMessage += `Error: ${error.message}. Please check your microphone settings and try again.`;
+      }
+      
+      alert(errorMessage);
     }
   };
 
