@@ -146,7 +146,6 @@ const Dashboard = () => {
           <div className="mb-8">
             <PhotoUploadDebug />
           </div>
-          
           <DashboardGrid />
 
           {/* Additional Info */}
