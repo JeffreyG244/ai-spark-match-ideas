@@ -2,18 +2,36 @@ import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from './supabase.js';
 import './App.css';
 
-// LuvLang Logo Component with Your Actual Logo
-function LuvLangLogo() {
+// LuvLang Logo Component - Your Actual Logo
+const LuvLangLogo = () => {
   return (
-    <div className="luvlang-logo">
-      <img 
-        src="/luvlang-logo.png"
-        alt="LuvLang Logo - Purple Pink Heart with LuvLang text"
-        className="luvlang-logo-image"
-      />
+    <div className="luvlang-logo-container">
+      {/* Heart */}
+      <svg
+        viewBox="0 0 100 100"
+        xmlns="http://www.w3.org/2000/svg"
+        className="luvlang-heart"
+      >
+        <defs>
+          <linearGradient id="heartGradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#ff6aa3" />
+            <stop offset="60%" stopColor="#a855f7" />
+            <stop offset="100%" stopColor="#4f46e5" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M50 15 C35 -5, 0 5, 0 37 C0 60, 25 80, 50 95 C75 80, 100 60, 100 37 C100 5, 65 -5, 50 15 Z"
+          fill="url(#heartGradient)"
+        />
+      </svg>
+
+      {/* Text */}
+      <h1 className="luvlang-text">
+        LUV LANG
+      </h1>
     </div>
   );
-}
+};
 
 // Enhanced Photo Upload Component with Supabase
 function PhotoUpload() {
