@@ -23,28 +23,38 @@ const Dashboard = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const { membershipLevel, loading: badgeLoading } = useMembershipBadge();
 
-  // Show welcome message on mount
+  // Show welcome message once per session
   useEffect(() => {
     if (user && !loading) {
-      const showWelcomeAlert = () => {
-        const currentHour = new Date().getHours();
-        const greeting = currentHour < 12 ? 'Good morning' : currentHour < 18 ? 'Good afternoon' : 'Good evening';
-        
-        showAlert({
-          type: 'welcome',
-          title: `${greeting}, ${user.user_metadata?.first_name || 'Executive'}!`,
-          message: "Welcome back to your executive dating command center. You have 3 new matches waiting.",
-          actionText: "View Matches",
-          onAction: () => navigate('/matches'),
-          autoHide: true,
-          duration: 6000,
-          showBadge: true,
-          badgeText: "3 New"
-        });
-      };
+      const welcomeShownKey = `welcome_shown_${user.id}`;
+      const lastWelcomeDate = sessionStorage.getItem(welcomeShownKey);
+      const today = new Date().toDateString();
+      
+      // Only show if we haven't shown it today in this session
+      if (lastWelcomeDate !== today) {
+        const showWelcomeAlert = () => {
+          const currentHour = new Date().getHours();
+          const greeting = currentHour < 12 ? 'Good morning' : currentHour < 18 ? 'Good afternoon' : 'Good evening';
+          
+          showAlert({
+            type: 'welcome',
+            title: `${greeting}, ${user.user_metadata?.first_name || 'Executive'}!`,
+            message: "Welcome back to your executive dating command center. You have 3 new matches waiting.",
+            actionText: "View Matches",
+            onAction: () => navigate('/matches'),
+            autoHide: true,
+            duration: 6000,
+            showBadge: true,
+            badgeText: "3 New"
+          });
+          
+          // Mark as shown for this session and date
+          sessionStorage.setItem(welcomeShownKey, today);
+        };
 
-      // Small delay to ensure smooth page load
-      setTimeout(showWelcomeAlert, 1000);
+        // Small delay to ensure smooth page load
+        setTimeout(showWelcomeAlert, 1000);
+      }
     }
   }, [user, loading, showAlert, navigate]);
 
