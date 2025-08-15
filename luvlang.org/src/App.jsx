@@ -12,7 +12,9 @@ function PhotoUpload() {
 
   // Initialize user session
   useEffect(() => {
-    console.log('🚀 Initializing Supabase connection...');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🚀 Initializing Supabase connection...');
+    }
     initializeUser();
   }, []);
 
