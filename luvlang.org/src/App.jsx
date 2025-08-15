@@ -108,11 +108,15 @@ function PhotoUpload() {
   };
 
   const handleFileSelect = async (event) => {
-    console.log('File select triggered', event);
+    console.log('🔍 File select triggered', event);
+    console.log('🔍 Event target:', event.target);
+    console.log('🔍 User state:', user);
+    console.log('🔍 SignedIn state:', isSignedIn);
     
     const files = event.target.files;
     if (!files || files.length === 0) {
-      console.log('No files selected');
+      console.log('⚠️ No files selected');
+      alert('⚠️ No files were selected. Please try selecting files again.');
       return;
     }
 
@@ -252,14 +256,40 @@ function PhotoUpload() {
         <div className="upload-controls">
           <button
             onClick={() => {
-              console.log('Upload button clicked');
-              fileInputRef.current?.click();
+              console.log('🖱️ Upload button clicked');
+              console.log('🔍 File input ref:', fileInputRef.current);
+              console.log('🔍 Is uploading:', isUploading);
+              if (fileInputRef.current) {
+                console.log('✅ Triggering file input click');
+                fileInputRef.current.click();
+              } else {
+                console.error('❌ File input ref is null!');
+                alert('❌ Upload button error. Please refresh the page and try again.');
+              }
             }}
             disabled={isUploading}
             className="btn primary"
           >
             {isUploading ? '⏳ Uploading...' : '📷 Upload Photos'}
           </button>
+          
+          {/* Alternative visible file input for debugging */}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileSelect}
+            style={{ 
+              margin: '1rem 0', 
+              padding: '0.5rem',
+              border: '2px solid #8B0000',
+              borderRadius: '8px'
+            }}
+          />
+          <p style={{ fontSize: '0.8rem', color: '#8B0000', fontWeight: 'bold' }}>
+            ⚠️ DEBUG: Use this visible file input if button above doesn't work
+          </p>
+          
           <input
             ref={fileInputRef}
             type="file"
@@ -268,7 +298,8 @@ function PhotoUpload() {
             onChange={handleFileSelect}
             style={{ display: 'none' }}
             onClick={(e) => {
-              console.log('File input clicked');
+              console.log('📁 File input clicked');
+              console.log('📁 File input element:', e.target);
               // Reset the input to allow re-selecting the same file
               e.target.value = '';
             }}
