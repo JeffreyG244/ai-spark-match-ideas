@@ -9,10 +9,13 @@ function ProfessionalGallery() {
 
   const handleFileSelect = async (event) => {
     console.log('Professional Gallery - File select triggered', event);
+    console.log('Event target:', event.target);
+    console.log('Files available:', event.target.files);
     
     const files = event.target.files;
     if (!files || files.length === 0) {
-      console.log('No files selected');
+      console.log('No files selected or files is null');
+      alert('No files selected. Please try selecting files again.');
       return;
     }
 
@@ -121,11 +124,12 @@ function ProfessionalGallery() {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,image/jpeg,image/jpg,image/png,image/gif,image/webp"
           multiple
           onChange={handleFileSelect}
           style={{ display: 'none' }}
           id="professional-photo-upload"
+          capture="environment"
         />
         
         <label htmlFor="professional-photo-upload" className="btn primary large">
