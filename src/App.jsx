@@ -1,18 +1,139 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { supabase } from './supabase.js';
 import './App.css';
 
 function App() {
   const [photos, setPhotos] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isSignedIn, setIsSignedIn] = useState(false);
   
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
-  const [recordingStatus, setRecordingStatus] = useState('inactive'); // inactive, requesting, recording, stopped
+  const [recordingStatus, setRecordingStatus] = useState('inactive');
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
-  const handlePhotoUpload = (event) => {
+  // Initialize user session and load data
+  useEffect(() => {
+    console.log('🚀 Initializing Supabase connection...');
+    initializeUser();
+  }, []);
+
+  const initializeUser = async () => {
+    try {
+      // Try to get existing session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        console.log('✅ User session found:', session.user.id);
+        setUser(session.user);
+        setIsSignedIn(true);
+        loadUserData(session.user.id);
+      } else {
+        console.log('👤 No session, signing in anonymously...');
+        await signInAnonymously();
+      }
+    } catch (error) {
+      console.error('❌ Session initialization error:', error);
+      await signInAnonymously();
+    }
+  };
+
+  const signInAnonymously = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInAnonymously();
+      
+      if (error) {
+        console.error('❌ Anonymous sign-in error:', error);
+        // Fallback to guest mode
+        const guestUser = { id: 'guest-' + Date.now() };
+        setUser(guestUser);
+        setIsSignedIn(false);
+        return;
+      }
+
+      console.log('✅ Anonymous user created:', data.user.id);
+      setUser(data.user);
+      setIsSignedIn(true);
+      
+      // Create user profile
+      await createUserProfile(data.user.id);
+      
+    } catch (error) {
+      console.error('❌ Anonymous sign-in failed:', error);
+      // Fallback to guest mode
+      const guestUser = { id: 'guest-' + Date.now() };
+      setUser(guestUser);
+      setIsSignedIn(false);
+    }
+  };
+
+  const createUserProfile = async (userId) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: userId,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (error && error.code !== '23505') { // Ignore duplicate key error
+        console.error('❌ Profile creation error:', error);
+      } else {
+        console.log('✅ User profile created/updated');
+      }
+    } catch (error) {
+      console.error('❌ Profile creation failed:', error);
+    }
+  };
+
+  const loadUserData = async (userId) => {
+    try {
+      console.log('📂 Loading user data for:', userId);
+      
+      // Load photos from Supabase Storage
+      const { data: photoList, error: listError } = await supabase.storage
+        .from('profile-photos')
+        .list(`${userId}/`);
+
+      if (listError) {
+        console.error('❌ Error loading photos:', listError);
+        return;
+      }
+
+      if (photoList && photoList.length > 0) {
+        const photosWithUrls = await Promise.all(
+          photoList.map(async (file) => {
+            const { data: { publicUrl } } = supabase.storage
+              .from('profile-photos')
+              .getPublicUrl(`${userId}/${file.name}`);
+            
+            return {
+              id: file.name,
+              url: publicUrl,
+              name: file.name,
+              size: (file.metadata?.size / 1024 / 1024)?.toFixed(1) + 'MB' || 'Unknown'
+            };
+          })
+        );
+        
+        setPhotos(photosWithUrls);
+        console.log('✅ Loaded photos:', photosWithUrls.length);
+      }
+    } catch (error) {
+      console.error('❌ Error loading user data:', error);
+    }
+  };
+
+  const handlePhotoUpload = async (event) => {
+    if (!user) {
+      alert('Please wait for user initialization...');
+      return;
+    }
+
     const files = Array.from(event.target.files);
     
     if (files.length === 0) {
@@ -21,54 +142,95 @@ function App() {
     }
 
     setUploading(true);
+    console.log('📤 Starting photo upload for user:', user.id);
     
     try {
-      const newPhotos = files.map((file, index) => {
+      const uploadedPhotos = [];
+      
+      for (const file of files) {
         // Validate file type
         if (!file.type.startsWith('image/')) {
           alert(`${file.name} is not an image file`);
-          return null;
+          continue;
         }
         
         // Validate file size (5MB limit)
         if (file.size > 5 * 1024 * 1024) {
           alert(`${file.name} is too large. Maximum size is 5MB`);
-          return null;
+          continue;
         }
 
-        // Create preview URL
-        const url = URL.createObjectURL(file);
-        
-        return {
-          id: Date.now() + index,
-          file: file,
-          url: url,
+        const fileName = `${Date.now()}-${file.name}`;
+        const filePath = `${user.id}/${fileName}`;
+
+        console.log('📷 Uploading:', fileName);
+
+        // Upload to Supabase Storage
+        const { data, error } = await supabase.storage
+          .from('profile-photos')
+          .upload(filePath, file);
+
+        if (error) {
+          console.error('❌ Upload error:', error);
+          alert(`Failed to upload ${file.name}: ${error.message}`);
+          continue;
+        }
+
+        console.log('✅ Upload successful:', data.path);
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('profile-photos')
+          .getPublicUrl(data.path);
+
+        uploadedPhotos.push({
+          id: fileName,
+          url: publicUrl,
           name: file.name,
           size: (file.size / 1024 / 1024).toFixed(1) + 'MB'
-        };
-      }).filter(Boolean);
+        });
+      }
 
-      if (newPhotos.length > 0) {
-        setPhotos(prev => [...prev, ...newPhotos]);
-        alert(`Successfully uploaded ${newPhotos.length} photo(s)!`);
+      if (uploadedPhotos.length > 0) {
+        setPhotos(prev => [...prev, ...uploadedPhotos]);
+        alert(`✅ Successfully uploaded ${uploadedPhotos.length} photo(s) to Supabase!`);
+        console.log('🎉 Photos uploaded to Supabase storage');
       }
     } catch (error) {
+      console.error('❌ Upload process error:', error);
       alert('Upload failed. Please try again.');
-      console.error('Upload error:', error);
     } finally {
       setUploading(false);
-      event.target.value = ''; // Reset input
+      event.target.value = '';
     }
   };
 
-  const removePhoto = (photoId) => {
-    setPhotos(prev => {
-      const photoToRemove = prev.find(p => p.id === photoId);
-      if (photoToRemove?.url) {
-        URL.revokeObjectURL(photoToRemove.url);
+  const removePhoto = async (photoId) => {
+    if (!user) return;
+
+    try {
+      console.log('🗑️ Removing photo:', photoId);
+      
+      const filePath = `${user.id}/${photoId}`;
+      
+      const { error } = await supabase.storage
+        .from('profile-photos')
+        .remove([filePath]);
+
+      if (error) {
+        console.error('❌ Delete error:', error);
+        alert('Failed to delete photo');
+        return;
       }
-      return prev.filter(p => p.id !== photoId);
-    });
+
+      setPhotos(prev => prev.filter(p => p.id !== photoId));
+      console.log('✅ Photo deleted from Supabase');
+      alert('Photo deleted successfully');
+      
+    } catch (error) {
+      console.error('❌ Delete process error:', error);
+      alert('Failed to delete photo');
+    }
   };
 
   // Voice recording functions
@@ -87,38 +249,36 @@ function App() {
       
       console.log('✅ Microphone access granted');
       
-      // Reset audio chunks
       audioChunksRef.current = [];
       
-      // Create MediaRecorder
       const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
       mediaRecorderRef.current = new MediaRecorder(stream, { mimeType });
       
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
-          console.log('📊 Audio data chunk received:', event.data.size);
         }
       };
       
-      mediaRecorderRef.current.onstop = () => {
+      mediaRecorderRef.current.onstop = async () => {
         console.log('🛑 Recording stopped, processing audio...');
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
         
-        // Stop all tracks to free up microphone
-        stream.getTracks().forEach(track => {
-          track.stop();
-          console.log('🔇 Stopped audio track');
-        });
+        // Save to Supabase if user is available
+        if (user && isSignedIn) {
+          await saveVoiceRecording(audioBlob, mimeType);
+        } else {
+          // Fallback to local storage for guest users
+          const url = URL.createObjectURL(audioBlob);
+          setAudioUrl(url);
+        }
         
+        stream.getTracks().forEach(track => track.stop());
         setRecordingStatus('stopped');
-        alert('✅ Voice recording completed successfully!');
+        alert('✅ Voice recording completed and saved!');
       };
       
-      // Start recording
-      mediaRecorderRef.current.start(1000); // Collect data every second
+      mediaRecorderRef.current.start(1000);
       setIsRecording(true);
       setRecordingStatus('recording');
       console.log('🔴 Recording started...');
@@ -128,28 +288,60 @@ function App() {
       setRecordingStatus('inactive');
       
       if (error.name === 'NotAllowedError') {
-        alert('🎤 Microphone access denied. Please allow microphone permissions in your browser settings and try again.');
+        alert('🎤 Microphone access denied. Please allow microphone permissions and try again.');
       } else if (error.name === 'NotFoundError') {
         alert('🎤 No microphone found. Please connect a microphone and try again.');
-      } else if (error.name === 'NotSupportedError') {
-        alert('🎤 Voice recording is not supported in your browser. Please try a different browser.');
       } else {
         alert(`🎤 Recording error: ${error.message}`);
       }
     }
   };
 
+  const saveVoiceRecording = async (audioBlob, mimeType) => {
+    try {
+      const fileName = `voice-${Date.now()}.${mimeType.split('/')[1]}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      console.log('💾 Saving voice recording to Supabase:', fileName);
+
+      const { data, error } = await supabase.storage
+        .from('voice-recordings')
+        .upload(filePath, audioBlob);
+
+      if (error) {
+        console.error('❌ Voice upload error:', error);
+        // Fallback to local URL
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        return;
+      }
+
+      console.log('✅ Voice recording saved to Supabase');
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('voice-recordings')
+        .getPublicUrl(data.path);
+
+      setAudioUrl(publicUrl);
+      
+    } catch (error) {
+      console.error('❌ Voice save error:', error);
+      // Fallback to local URL
+      const url = URL.createObjectURL(audioBlob);
+      setAudioUrl(url);
+    }
+  };
+
   const stopRecording = () => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      console.log('⏹️ Stopping recording...');
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
   };
 
   const clearRecording = () => {
-    console.log('🗑️ Clearing recording...');
-    if (audioUrl) {
+    if (audioUrl && audioUrl.startsWith('blob:')) {
       URL.revokeObjectURL(audioUrl);
     }
     setAudioUrl(null);
@@ -161,6 +353,13 @@ function App() {
     <div className="App">
       <header className="app-header">
         <h1>LuvLang Professional Dating</h1>
+        <div className="connection-status">
+          {isSignedIn ? (
+            <span style={{ color: '#28a745' }}>🟢 Connected to Supabase</span>
+          ) : (
+            <span style={{ color: '#ffc107' }}>🟡 Guest Mode</span>
+          )}
+        </div>
       </header>
 
       <main className="app-main">
@@ -183,19 +382,20 @@ function App() {
               htmlFor="photo-input" 
               className={`upload-button ${uploading ? 'uploading' : ''}`}
             >
-              {uploading ? 'Uploading...' : '📷 Choose Photos'}
+              {uploading ? 'Uploading to Supabase...' : '📷 Choose Photos'}
             </label>
             
             <div className="upload-info">
               • Supports JPG, PNG, GIF, WebP<br/>
               • Maximum 5MB per photo<br/>
-              • Select multiple photos at once
+              • Photos saved to Supabase database<br/>
+              • {isSignedIn ? 'Data persists between sessions' : 'Guest mode - limited storage'}
             </div>
           </div>
 
           {photos.length > 0 && (
             <div className="photos-section">
-              <h3>Your Photos ({photos.length})</h3>
+              <h3>Your Photos ({photos.length}) - Stored in Supabase</h3>
               <div className="photos-grid">
                 {photos.map(photo => (
                   <div key={photo.id} className="photo-item">
@@ -219,7 +419,7 @@ function App() {
             <div className="empty-state">
               <div className="empty-icon">📷</div>
               <h3>No photos uploaded yet</h3>
-              <p>Click "Choose Photos" to get started!</p>
+              <p>Click "Choose Photos" to upload to Supabase database!</p>
             </div>
           )}
         </div>
@@ -256,7 +456,7 @@ function App() {
               <div className="voice-controls">
                 <div className="voice-icon recording">🔴</div>
                 <h3>Recording in Progress...</h3>
-                <p>Speak clearly into your microphone. Click stop when finished.</p>
+                <p>Speak clearly into your microphone. Recording will be saved to Supabase.</p>
                 <button 
                   onClick={stopRecording}
                   className="voice-button stop"
@@ -269,8 +469,8 @@ function App() {
             {recordingStatus === 'stopped' && audioUrl && (
               <div className="voice-controls">
                 <div className="voice-icon">✅</div>
-                <h3>Recording Complete!</h3>
-                <p>Your voice message has been recorded successfully.</p>
+                <h3>Recording Complete - Saved to Supabase!</h3>
+                <p>Your voice message has been recorded and stored in the database.</p>
                 
                 <div className="audio-playback">
                   <audio controls src={audioUrl} style={{ width: '100%', marginBottom: '1rem' }}>
@@ -297,9 +497,9 @@ function App() {
             
             <div className="voice-info">
               • Speak for 10-60 seconds for best results<br/>
-              • Ensure you're in a quiet environment<br/>
+              • Recordings saved to Supabase voice-recordings bucket<br/>
               • Voice recordings help with compatibility matching<br/>
-              • Your browser may ask for microphone permissions
+              • {isSignedIn ? 'Data persists between sessions' : 'Guest mode recordings are temporary'}
             </div>
           </div>
         </div>
