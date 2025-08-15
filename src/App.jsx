@@ -135,9 +135,13 @@ function App() {
   };
 
   const handlePhotoUpload = async (event) => {
+    console.log('🔍 Photo upload triggered!', event);
+    console.log('📁 Files selected:', event.target.files);
+    
     const files = Array.from(event.target.files);
     
     if (files.length === 0) {
+      console.log('⚠️ No files selected');
       alert('Please select at least one photo');
       return;
     }
@@ -374,6 +378,18 @@ function App() {
     audioChunksRef.current = [];
   };
 
+  // Alternative photo upload using direct file input trigger
+  const triggerFileSelect = () => {
+    console.log('🎯 Alternative upload triggered');
+    const fileInput = document.getElementById('photo-input');
+    if (fileInput) {
+      console.log('✅ File input found, clicking...');
+      fileInput.click();
+    } else {
+      console.log('❌ File input not found!');
+    }
+  };
+
   // PayPal membership functions
   const handlePayPalPurchase = async (planType) => {
     if (!user) {
@@ -452,9 +468,20 @@ function App() {
             <label 
               htmlFor="photo-input" 
               className={`upload-button ${uploading ? 'uploading' : ''}`}
+              onClick={() => console.log('🖱️ Photo upload button clicked!')}
             >
               {uploading ? 'Uploading to Supabase...' : '📷 Choose Photos'}
             </label>
+            
+            {/* Alternative upload button for debugging */}
+            <button 
+              onClick={triggerFileSelect}
+              className="upload-button"
+              style={{ marginLeft: '1rem', background: '#28a745' }}
+              disabled={uploading}
+            >
+              🔧 Test Upload
+            </button>
             
             <div className="upload-info">
               • Supports JPG, PNG, GIF, WebP<br/>
