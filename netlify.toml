@@ -2,6 +2,10 @@
   command = "npm run build"
   publish = "dist"
 
+# Disable plugins that might be causing issues
+[build.environment]
+  SKIP_PLUGINS = "true"
+
 [[redirects]]
   from = "http://*"
   to = "https://:splat"
