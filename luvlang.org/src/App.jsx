@@ -223,12 +223,12 @@ function VoiceRecording() {
           <div className="voice-matches">
             <h4>Voice-Compatible Matches</h4>
             <div className="match-item">
-              <h5>Emma Wilson</h5>
+              <h5>Sarah Johnson</h5>
               <span className="compatibility">94% compatible</span>
               <p>Warm, melodic voice with a gentle speaking pace</p>
             </div>
             <div className="match-item">
-              <h5>Sofia Martinez</h5>
+              <h5>Maria Rodriguez</h5>
               <span className="compatibility">89% compatible</span>
               <p>Clear, confident voice with expressive intonation</p>
             </div>
@@ -268,32 +268,32 @@ function Matches() {
         const result = await response.json();
         console.log('N8N matching workflow triggered:', result);
         
-        // Simulate receiving matches
+        // Simulate receiving matches with properly matched photos and profiles
         const newMatches = [
           {
             id: 1,
-            name: "Emma Wilson",
+            name: "Sarah Johnson",
             age: 28,
             compatibility: 94,
-            image: "https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=400",
+            image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face",
             bio: "Software engineer who loves hiking and coffee",
             distance: "2 miles away"
           },
           {
             id: 2,
-            name: "Sofia Martinez",
+            name: "Maria Rodriguez",
             age: 26,
             compatibility: 89,
-            image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400",
+            image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face",
             bio: "Artist and yoga instructor",
             distance: "5 miles away"
           },
           {
             id: 3,
-            name: "Rachel Chen",
+            name: "Emily Chen",
             age: 30,
             compatibility: 87,
-            image: "https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=400",
+            image: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=400&h=400&fit=crop&crop=face",
             bio: "Marketing director with a passion for travel",
             distance: "3 miles away"
           }
@@ -369,19 +369,19 @@ function Messages() {
   const [conversations, setConversations] = useState([
     {
       id: 1,
-      name: "Emma Wilson",
+      name: "Sarah Johnson",
       lastMessage: "Hey! Thanks for the like 😊",
       time: "2 min ago",
       unread: true,
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=100"
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
     },
     {
       id: 2,
-      name: "Sofia Martinez",
+      name: "Maria Rodriguez",
       lastMessage: "That hiking spot looks amazing!",
       time: "1 hour ago",
       unread: false,
-      image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100"
+      image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face"
     }
   ]);
 
