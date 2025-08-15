@@ -31,11 +31,17 @@ serve(async (req) => {
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    if (userError) {
+      logStep("Auth error details", { error: userError.message, token: token.substring(0, 20) + "..." });
+      throw new Error(`Authentication error: ${userError.message}`);
+    }
     
     const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    if (!user) throw new Error("User not authenticated");
+    
+    // For anonymous users, use user.id as email fallback
+    const userEmail = user.email || `${user.id}@anonymous.luvlang.org`;
+    logStep("User authenticated", { userId: user.id, email: userEmail, isAnonymous: !user.email });
 
     const { planType, billingCycle } = await req.json();
     logStep("Request data", { planType, billingCycle });

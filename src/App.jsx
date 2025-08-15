@@ -129,11 +129,6 @@ function App() {
   };
 
   const handlePhotoUpload = async (event) => {
-    if (!user) {
-      alert('Please wait for user initialization...');
-      return;
-    }
-
     const files = Array.from(event.target.files);
     
     if (files.length === 0) {
@@ -142,7 +137,7 @@ function App() {
     }
 
     setUploading(true);
-    console.log('📤 Starting photo upload for user:', user.id);
+    console.log('📤 Starting photo upload...');
     
     try {
       const uploadedPhotos = [];
@@ -160,41 +155,65 @@ function App() {
           continue;
         }
 
-        const fileName = `${Date.now()}-${file.name}`;
-        const filePath = `${user.id}/${fileName}`;
+        console.log('📷 Processing:', file.name);
 
-        console.log('📷 Uploading:', fileName);
+        // Try Supabase storage first, fallback to local storage
+        let photoUrl = null;
+        let uploadMethod = 'local';
 
-        // Upload to Supabase Storage
-        const { data, error } = await supabase.storage
-          .from('profile-photos')
-          .upload(filePath, file);
+        if (user && isSignedIn) {
+          try {
+            const fileName = `${Date.now()}-${file.name}`;
+            const filePath = `${user.id}/${fileName}`;
 
-        if (error) {
-          console.error('❌ Upload error:', error);
-          alert(`Failed to upload ${file.name}: ${error.message}`);
-          continue;
+            // Try to upload to Supabase
+            const { data, error } = await supabase.storage
+              .from('profile-photos')
+              .upload(filePath, file);
+
+            if (!error && data) {
+              const { data: { publicUrl } } = supabase.storage
+                .from('profile-photos')
+                .getPublicUrl(data.path);
+              
+              photoUrl = publicUrl;
+              uploadMethod = 'supabase';
+              console.log('✅ Uploaded to Supabase:', data.path);
+            } else {
+              console.log('⚠️ Supabase upload failed, using local storage:', error?.message);
+              photoUrl = URL.createObjectURL(file);
+            }
+          } catch (supabaseError) {
+            console.log('⚠️ Supabase error, using local storage:', supabaseError.message);
+            photoUrl = URL.createObjectURL(file);
+          }
+        } else {
+          // Guest mode or no user - use local storage
+          photoUrl = URL.createObjectURL(file);
         }
 
-        console.log('✅ Upload successful:', data.path);
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('profile-photos')
-          .getPublicUrl(data.path);
-
-        uploadedPhotos.push({
-          id: fileName,
-          url: publicUrl,
-          name: file.name,
-          size: (file.size / 1024 / 1024).toFixed(1) + 'MB'
-        });
+        if (photoUrl) {
+          uploadedPhotos.push({
+            id: Date.now() + Math.random(),
+            url: photoUrl,
+            name: file.name,
+            size: (file.size / 1024 / 1024).toFixed(1) + 'MB',
+            method: uploadMethod
+          });
+        }
       }
 
       if (uploadedPhotos.length > 0) {
         setPhotos(prev => [...prev, ...uploadedPhotos]);
-        alert(`✅ Successfully uploaded ${uploadedPhotos.length} photo(s) to Supabase!`);
-        console.log('🎉 Photos uploaded to Supabase storage');
+        const supabaseCount = uploadedPhotos.filter(p => p.method === 'supabase').length;
+        const localCount = uploadedPhotos.filter(p => p.method === 'local').length;
+        
+        let message = `✅ Uploaded ${uploadedPhotos.length} photo(s)!`;
+        if (supabaseCount > 0) message += ` ${supabaseCount} to Supabase.`;
+        if (localCount > 0) message += ` ${localCount} locally.`;
+        
+        alert(message);
+        console.log('🎉 Photos uploaded:', uploadedPhotos);
       }
     } catch (error) {
       console.error('❌ Upload process error:', error);
