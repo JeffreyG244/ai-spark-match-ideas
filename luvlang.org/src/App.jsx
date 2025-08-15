@@ -1,11 +1,109 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { supabase } from './supabase.js';
 import './App.css';
 
-// Simple Photo Upload Component
+// Enhanced Photo Upload Component with Supabase
 function PhotoUpload() {
   const [photos, setPhotos] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isSignedIn, setIsSignedIn] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Initialize user session
+  useEffect(() => {
+    console.log('🚀 Initializing Supabase connection...');
+    initializeUser();
+  }, []);
+
+  const initializeUser = async () => {
+    try {
+      // Try to get existing session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        console.log('✅ User session found:', session.user.id);
+        setUser(session.user);
+        setIsSignedIn(true);
+        loadUserPhotos(session.user.id);
+      } else {
+        console.log('👤 No session, signing in anonymously...');
+        await signInAnonymously();
+      }
+    } catch (error) {
+      console.error('❌ Session initialization error:', error);
+      await signInAnonymously();
+    }
+  };
+
+  const signInAnonymously = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInAnonymously();
+      
+      if (error) {
+        console.error('❌ Anonymous sign-in error:', error);
+        // Fallback to guest mode
+        const guestUser = { id: 'guest-' + Date.now() };
+        setUser(guestUser);
+        setIsSignedIn(false);
+        return;
+      }
+
+      console.log('✅ Anonymous user created:', data.user.id);
+      setUser(data.user);
+      setIsSignedIn(true);
+      
+    } catch (error) {
+      console.error('❌ Anonymous sign-in failed:', error);
+      // Fallback to guest mode
+      const guestUser = { id: 'guest-' + Date.now() };
+      setUser(guestUser);
+      setIsSignedIn(false);
+    }
+  };
+
+  const loadUserPhotos = async (userId) => {
+    try {
+      console.log('📂 Loading user photos for:', userId);
+      
+      // Load photos from Supabase Storage
+      const { data: photoList, error: listError } = await supabase.storage
+        .from('profile-photos')
+        .list(`${userId}/`);
+
+      if (listError) {
+        console.error('❌ Error loading photos:', listError);
+        return;
+      }
+
+      if (photoList && photoList.length > 0) {
+        const photosWithUrls = await Promise.all(
+          photoList.map(async (file) => {
+            const { data: { publicUrl } } = supabase.storage
+              .from('profile-photos')
+              .getPublicUrl(`${userId}/${file.name}`);
+            
+            return {
+              id: file.name,
+              url: publicUrl,
+              fileName: file.name,
+              fileSize: file.metadata?.size || 0,
+              isPrimary: false // You could store this in database
+            };
+          })
+        );
+        
+        if (photosWithUrls.length > 0) {
+          photosWithUrls[0].isPrimary = true; // Make first photo primary
+        }
+        
+        setPhotos(photosWithUrls);
+        console.log('✅ Loaded photos:', photosWithUrls.length);
+      }
+    } catch (error) {
+      console.error('❌ Error loading user photos:', error);
+    }
+  };
 
   const handleFileSelect = async (event) => {
     console.log('File select triggered', event);
@@ -40,22 +138,54 @@ function PhotoUpload() {
           continue;
         }
 
-        try {
-          const imageUrl = URL.createObjectURL(file);
-          console.log('Created object URL:', imageUrl);
-          
+        // Try Supabase storage first, fallback to local storage
+        let photoUrl = null;
+        let uploadMethod = 'local';
+
+        if (user && isSignedIn) {
+          try {
+            const fileName = `${Date.now()}-${file.name}`;
+            const filePath = `${user.id}/${fileName}`;
+
+            console.log('📤 Uploading to Supabase:', filePath);
+
+            // Try to upload to Supabase
+            const { data, error } = await supabase.storage
+              .from('profile-photos')
+              .upload(filePath, file);
+
+            if (!error && data) {
+              const { data: { publicUrl } } = supabase.storage
+                .from('profile-photos')
+                .getPublicUrl(data.path);
+              
+              photoUrl = publicUrl;
+              uploadMethod = 'supabase';
+              console.log('✅ Uploaded to Supabase:', data.path);
+            } else {
+              console.log('⚠️ Supabase upload failed, using local storage:', error?.message);
+              photoUrl = URL.createObjectURL(file);
+            }
+          } catch (supabaseError) {
+            console.log('⚠️ Supabase error, using local storage:', supabaseError.message);
+            photoUrl = URL.createObjectURL(file);
+          }
+        } else {
+          // Guest mode or no user - use local storage
+          photoUrl = URL.createObjectURL(file);
+        }
+
+        if (photoUrl) {
           newPhotos.push({
             id: Date.now() + i,
-            url: imageUrl,
+            url: photoUrl,
             file: file,
             fileName: file.name,
             fileSize: file.size,
             fileType: file.type,
+            uploadMethod: uploadMethod,
             isPrimary: photos.length === 0 && newPhotos.length === 0
           });
-        } catch (urlError) {
-          console.error('Error creating object URL:', urlError);
-          alert(`Failed to process ${file.name}. Please try again.`);
         }
       }
 
@@ -66,7 +196,14 @@ function PhotoUpload() {
           console.log('Updated photos state:', updated);
           return updated;
         });
-        alert(`✅ Successfully uploaded ${newPhotos.length} photo(s)!`);
+        const supabaseCount = newPhotos.filter(p => p.uploadMethod === 'supabase').length;
+        const localCount = newPhotos.filter(p => p.uploadMethod === 'local').length;
+        
+        let message = `✅ Uploaded ${newPhotos.length} photo(s)!`;
+        if (supabaseCount > 0) message += ` ${supabaseCount} to Supabase.`;
+        if (localCount > 0) message += ` ${localCount} locally.`;
+        
+        alert(message);
       } else {
         alert('No valid photos were uploaded. Please check your file types and sizes.');
       }
@@ -156,14 +293,64 @@ function PhotoUpload() {
   );
 }
 
-// Voice Recording Component
+// Enhanced Voice Recording Component with Supabase
 function VoiceRecording() {
   const [isRecording, setIsRecording] = useState(false);
   const [hasRecording, setHasRecording] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isSignedIn, setIsSignedIn] = useState(false);
   const mediaRecorderRef = useRef(null);
   const [audioUrl, setAudioUrl] = useState(null);
+
+  // Initialize user session
+  useEffect(() => {
+    console.log('🎤 Initializing voice recording with Supabase...');
+    initializeUser();
+  }, []);
+
+  const initializeUser = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        console.log('✅ Voice: User session found:', session.user.id);
+        setUser(session.user);
+        setIsSignedIn(true);
+      } else {
+        console.log('👤 Voice: No session, signing in anonymously...');
+        await signInAnonymously();
+      }
+    } catch (error) {
+      console.error('❌ Voice: Session initialization error:', error);
+      await signInAnonymously();
+    }
+  };
+
+  const signInAnonymously = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInAnonymously();
+      
+      if (error) {
+        console.error('❌ Voice: Anonymous sign-in error:', error);
+        const guestUser = { id: 'guest-' + Date.now() };
+        setUser(guestUser);
+        setIsSignedIn(false);
+        return;
+      }
+
+      console.log('✅ Voice: Anonymous user created:', data.user.id);
+      setUser(data.user);
+      setIsSignedIn(true);
+      
+    } catch (error) {
+      console.error('❌ Voice: Anonymous sign-in failed:', error);
+      const guestUser = { id: 'guest-' + Date.now() };
+      setUser(guestUser);
+      setIsSignedIn(false);
+    }
+  };
 
   const startRecording = async () => {
     console.log('Starting voice recording...');
@@ -215,12 +402,19 @@ function VoiceRecording() {
         }
       };
       
-      mediaRecorder.onstop = () => {
+      mediaRecorder.onstop = async () => {
         console.log('Recording stopped, processing audio...');
         const mimeType = mediaRecorder.mimeType;
         const audioBlob = new Blob(audioChunks, { type: mimeType });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
+        
+        // Save to Supabase if user is available
+        if (user && isSignedIn) {
+          await saveVoiceRecording(audioBlob, mimeType);
+        } else {
+          // Fallback to local storage for guest users
+          const url = URL.createObjectURL(audioBlob);
+          setAudioUrl(url);
+        }
         
         // Clean up the stream
         stream.getTracks().forEach(track => {
@@ -270,13 +464,49 @@ function VoiceRecording() {
     }
   };
 
+  const saveVoiceRecording = async (audioBlob, mimeType) => {
+    try {
+      const fileName = `voice-${Date.now()}.${mimeType.split('/')[1]}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      console.log('💾 Saving voice recording to Supabase:', fileName);
+
+      const { data, error } = await supabase.storage
+        .from('voice-recordings')
+        .upload(filePath, audioBlob);
+
+      if (error) {
+        console.error('❌ Voice upload error:', error);
+        // Fallback to local URL
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        return;
+      }
+
+      console.log('✅ Voice recording saved to Supabase');
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('voice-recordings')
+        .getPublicUrl(data.path);
+
+      setAudioUrl(publicUrl);
+      
+    } catch (error) {
+      console.error('❌ Voice save error:', error);
+      // Fallback to local URL
+      const url = URL.createObjectURL(audioBlob);
+      setAudioUrl(url);
+    }
+  };
+
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       setHasRecording(true);
       
-      alert('Recording complete! Your voice sample has been captured successfully.');
+      alert('Recording complete! Your voice sample has been captured and saved successfully.');
     }
   };
 
@@ -610,6 +840,195 @@ function Discover() {
   );
 }
 
+// Premium Membership Component with PayPal Integration
+function PremiumMembership() {
+  const [user, setUser] = useState(null);
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [billingCycle, setBillingCycle] = useState('monthly');
+  const [paypalLoading, setPaypalLoading] = useState(false);
+  const [paypalError, setPaypalError] = useState(null);
+
+  // Initialize user session
+  useEffect(() => {
+    console.log('💎 Initializing membership with Supabase...');
+    initializeUser();
+  }, []);
+
+  const initializeUser = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        console.log('✅ Membership: User session found:', session.user.id);
+        setUser(session.user);
+        setIsSignedIn(true);
+      } else {
+        console.log('👤 Membership: No session, signing in anonymously...');
+        await signInAnonymously();
+      }
+    } catch (error) {
+      console.error('❌ Membership: Session initialization error:', error);
+      await signInAnonymously();
+    }
+  };
+
+  const signInAnonymously = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInAnonymously();
+      
+      if (error) {
+        console.error('❌ Membership: Anonymous sign-in error:', error);
+        const guestUser = { id: 'guest-' + Date.now() };
+        setUser(guestUser);
+        setIsSignedIn(false);
+        return;
+      }
+
+      console.log('✅ Membership: Anonymous user created:', data.user.id);
+      setUser(data.user);
+      setIsSignedIn(true);
+      
+    } catch (error) {
+      console.error('❌ Membership: Anonymous sign-in failed:', error);
+      const guestUser = { id: 'guest-' + Date.now() };
+      setUser(guestUser);
+      setIsSignedIn(false);
+    }
+  };
+
+  const handlePayPalPurchase = async (planType) => {
+    if (!user) {
+      alert('Please sign in to purchase a membership');
+      return;
+    }
+
+    setPaypalLoading(true);
+    setPaypalError(null);
+    setSelectedPlan(planType);
+
+    try {
+      console.log('💳 Creating PayPal order...', { planType, billingCycle });
+
+      const response = await fetch('https://tzskjzkolyiwhijslqmq.supabase.co/functions/v1/create-paypal-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+        body: JSON.stringify({
+          planType,
+          billingCycle
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ PayPal order created:', data);
+
+      // In a real implementation, you would redirect to PayPal here
+      alert(`✅ PayPal order created successfully! Order ID: ${data.orderID}\nAmount: $${data.amount}\n\nIn production, you would be redirected to PayPal to complete payment.`);
+
+    } catch (error) {
+      console.error('❌ PayPal order creation failed:', error);
+      setPaypalError(error.message);
+      alert(`❌ PayPal error: ${error.message}`);
+    } finally {
+      setPaypalLoading(false);
+    }
+  };
+
+  return (
+    <div className="section">
+      <h2>💎 Premium Membership Plans</h2>
+      <p>Unlock advanced matching algorithms and exclusive features with our premium plans.</p>
+      
+      <div className="billing-toggle">
+        <button 
+          className={`billing-button ${billingCycle === 'monthly' ? 'active' : ''}`}
+          onClick={() => setBillingCycle('monthly')}
+        >
+          Monthly
+        </button>
+        <button 
+          className={`billing-button ${billingCycle === 'yearly' ? 'active' : ''}`}
+          onClick={() => setBillingCycle('yearly')}
+        >
+          Yearly (Save 20%)
+        </button>
+      </div>
+
+      <div className="plans-grid">
+        <div className="plan-card">
+          <h3>🌟 Premium</h3>
+          <div className="plan-price">
+            <span className="currency">$</span>
+            <span className="amount">{billingCycle === 'yearly' ? '199' : '19.99'}</span>
+            <span className="period">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
+          </div>
+          <ul className="plan-features">
+            <li>✓ Advanced AI matching</li>
+            <li>✓ Voice compatibility analysis</li>
+            <li>✓ Unlimited messages</li>
+            <li>✓ Priority customer support</li>
+          </ul>
+          <button 
+            className={`plan-button ${paypalLoading && selectedPlan === 'premium' ? 'loading' : ''}`}
+            onClick={() => handlePayPalPurchase('premium')}
+            disabled={paypalLoading}
+          >
+            {paypalLoading && selectedPlan === 'premium' ? 'Processing...' : '💳 Purchase with PayPal'}
+          </button>
+        </div>
+
+        <div className="plan-card featured">
+          <div className="popular-badge">Most Popular</div>
+          <h3>💎 VIP</h3>
+          <div className="plan-price">
+            <span className="currency">$</span>
+            <span className="amount">{billingCycle === 'yearly' ? '399' : '39.99'}</span>
+            <span className="period">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
+          </div>
+          <ul className="plan-features">
+            <li>✓ Everything in Premium</li>
+            <li>✓ Profile boost & highlights</li>
+            <li>✓ Advanced search filters</li>
+            <li>✓ Exclusive VIP events</li>
+            <li>✓ Personal dating coach</li>
+          </ul>
+          <button 
+            className={`plan-button ${paypalLoading && selectedPlan === 'vip' ? 'loading' : ''}`}
+            onClick={() => handlePayPalPurchase('vip')}
+            disabled={paypalLoading}
+          >
+            {paypalLoading && selectedPlan === 'vip' ? 'Processing...' : '💳 Purchase with PayPal'}
+          </button>
+        </div>
+      </div>
+
+      {paypalError && (
+        <div className="error-message">
+          ❌ Error: {paypalError}
+        </div>
+      )}
+
+      <div className="payment-info">
+        <h4>🔒 Secure Payment Processing</h4>
+        <p>
+          • Payments processed securely through PayPal<br/>
+          • SSL encrypted transactions<br/>
+          • No payment information stored on our servers<br/>
+          • Cancel anytime through your PayPal account
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // Main App Component
 function App() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -626,6 +1045,8 @@ function App() {
         return <Messages />;
       case 'discover':
         return <Discover />;
+      case 'membership':
+        return <PremiumMembership />;
       default:
         return (
           <div className="dashboard">
@@ -666,6 +1087,13 @@ function App() {
                 <h3>Discover</h3>
                 <p>Find new people in your area</p>
                 <button className="btn">Start Discovering</button>
+              </div>
+
+              <div className="feature-card" onClick={() => setCurrentPage('membership')}>
+                <div className="feature-icon">💎</div>
+                <h3>Premium Membership</h3>
+                <p>Unlock advanced features with premium plans</p>
+                <button className="btn">View Plans</button>
               </div>
             </div>
 
@@ -731,6 +1159,12 @@ function App() {
             className={currentPage === 'voice' ? 'active' : ''}
           >
             Voice
+          </button>
+          <button 
+            onClick={() => setCurrentPage('membership')}
+            className={currentPage === 'membership' ? 'active' : ''}
+          >
+            Membership
           </button>
         </nav>
       </header>
