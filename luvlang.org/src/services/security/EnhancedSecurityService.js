@@ -1,0 +1,283 @@
+import { supabase } from '@/integrations/supabase/client';
+import DOMPurify from 'dompurify';
+import { validatePasswordWithDatabase } from '@/utils/databasePasswordValidation';
+export class EnhancedSecurityService {
+    static DANGEROUS_PATTERNS = [
+        /<script[\s\S]*?>[\s\S]*?<\/script>/gi,
+        /javascript:/gi,
+        /vbscript:/gi,
+        /data:text\/html/gi,
+        /on\w+\s*=/gi,
+        /@import/gi,
+        /expression\s*\(/gi,
+        /(\bUNION\b|\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b|\bDROP\b)/gi,
+        /\.\.\//g,
+        /[;&|`$(){}[\]]/g,
+    ];
+    static INAPPROPRIATE_PATTERNS = [
+        /contact.*me.*at/i,
+        /instagram|snapchat|whatsapp|telegram/i,
+        /money|bitcoin|crypto|investment/i,
+        /cashapp|venmo|paypal/i,
+        /\b\d{10,}\b/g, // Phone numbers
+        /@\w+\.(com|net|org)/gi, // Email addresses
+    ];
+    static MAX_LENGTHS = {
+        BIO: 500,
+        MESSAGE: 1000,
+        VALUES: 300,
+        GOALS: 300,
+        GREEN_FLAGS: 300,
+    };
+    /**
+     * Comprehensive input validation and sanitization
+     */
+    static async validateAndSanitizeInput(input, contentType, maxLength) {
+        const errors = [];
+        const warnings = [];
+        let riskLevel = 'low';
+        if (!input || typeof input !== 'string') {
+            return {
+                isValid: false,
+                errors: ['Invalid input type'],
+                warnings: [],
+                riskLevel: 'medium'
+            };
+        }
+        // Length validation
+        const limit = maxLength || this.MAX_LENGTHS[contentType.toUpperCase()] || 1000;
+        if (input.length > limit) {
+            errors.push(`Content exceeds maximum length of ${limit} characters`);
+            riskLevel = 'medium';
+        }
+        // Check for dangerous patterns
+        for (const pattern of this.DANGEROUS_PATTERNS) {
+            if (pattern.test(input)) {
+                errors.push('Content contains potentially dangerous patterns');
+                riskLevel = 'critical';
+                await this.logSecurityEvent('dangerous_content_detected', {
+                    contentType,
+                    pattern: pattern.source.substring(0, 50),
+                    inputLength: input.length
+                }, 'critical');
+                break;
+            }
+        }
+        // Check for inappropriate content
+        for (const pattern of this.INAPPROPRIATE_PATTERNS) {
+            if (pattern.test(input)) {
+                warnings.push('Content may contain inappropriate contact information');
+                if (riskLevel === 'low')
+                    riskLevel = 'medium';
+            }
+        }
+        // Sanitize input
+        let sanitized = DOMPurify.sanitize(input, {
+            ALLOWED_TAGS: [],
+            ALLOWED_ATTR: [],
+            KEEP_CONTENT: true,
+            RETURN_DOM: false,
+            RETURN_DOM_FRAGMENT: false,
+            RETURN_TRUSTED_TYPE: false
+        });
+        // Additional character encoding
+        sanitized = sanitized
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#x27;')
+            .replace(/\//g, '&#x2F;');
+        return {
+            isValid: errors.length === 0,
+            sanitized,
+            errors,
+            warnings,
+            riskLevel
+        };
+    }
+    /**
+     * Enhanced password validation using database function
+     */
+    static async validatePasswordStrength(password) {
+        return await validatePasswordWithDatabase(password);
+    }
+    /**
+     * Enhanced rate limiting with progressive penalties
+     */
+    static async checkRateLimit(action, identifier, maxRequests = 60, windowMinutes = 60) {
+        try {
+            const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000);
+            // Check current request count
+            const { data: requests, error } = await supabase
+                .from('rate_limits')
+                .select('*')
+                .eq('action', action)
+                .eq('identifier', identifier)
+                .gte('timestamp', windowStart.toISOString());
+            if (error)
+                throw error;
+            const currentCount = requests?.length || 0;
+            const remaining = Math.max(0, maxRequests - currentCount);
+            const resetTime = new Date(Date.now() + windowMinutes * 60 * 1000);
+            // Check if rate limit exceeded
+            if (currentCount >= maxRequests) {
+                // Check for existing block
+                const { data: block } = await supabase
+                    .from('rate_limit_blocks')
+                    .select('*')
+                    .eq('action', action)
+                    .eq('identifier', identifier)
+                    .gt('blocked_until', new Date().toISOString())
+                    .single();
+                if (block) {
+                    return {
+                        allowed: false,
+                        remainingRequests: 0,
+                        resetTime,
+                        retryAfter: Math.ceil((new Date(block.blocked_until).getTime() - Date.now()) / 1000)
+                    };
+                }
+                // Create new block with progressive penalty
+                const blockDuration = Math.min(3600, 300 * Math.pow(2, Math.floor(currentCount / maxRequests)));
+                const blockedUntil = new Date(Date.now() + blockDuration * 1000);
+                await supabase
+                    .from('rate_limit_blocks')
+                    .insert({
+                    action,
+                    identifier,
+                    blocked_until: blockedUntil.toISOString(),
+                    request_count: currentCount
+                });
+                await this.logSecurityEvent('rate_limit_exceeded', {
+                    action,
+                    identifier,
+                    requestCount: currentCount,
+                    blockDuration
+                }, 'high');
+                return {
+                    allowed: false,
+                    remainingRequests: 0,
+                    resetTime,
+                    retryAfter: blockDuration
+                };
+            }
+            // Log the request
+            await supabase
+                .from('rate_limits')
+                .insert({
+                action,
+                identifier,
+                timestamp: new Date().toISOString()
+            });
+            return {
+                allowed: true,
+                remainingRequests: remaining - 1,
+                resetTime
+            };
+        }
+        catch (error) {
+            console.error('Rate limit check failed:', error);
+            // Fail open with conservative limits
+            return {
+                allowed: true,
+                remainingRequests: 5,
+                resetTime: new Date(Date.now() + 60 * 1000)
+            };
+        }
+    }
+    /**
+     * File upload validation
+     */
+    static validateFileUpload(file) {
+        const errors = [];
+        const warnings = [];
+        let riskLevel = 'low';
+        // File type validation
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            errors.push('Invalid file type. Only JPEG, PNG, and WebP images are allowed');
+            riskLevel = 'high';
+        }
+        // File size validation (5MB limit)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            errors.push('File too large. Maximum size is 5MB');
+            riskLevel = 'medium';
+        }
+        if (file.size === 0) {
+            errors.push('File is empty');
+            riskLevel = 'medium';
+        }
+        // Filename validation
+        const suspiciousPatterns = [
+            /\.(exe|bat|cmd|scr|pif|com)$/i,
+            /[<>:"|?*]/,
+            /\.\./,
+            /^\./, // Hidden files
+        ];
+        if (suspiciousPatterns.some(pattern => pattern.test(file.name))) {
+            errors.push('Suspicious filename detected');
+            riskLevel = 'critical';
+        }
+        if (file.name.length > 255) {
+            errors.push('Filename too long');
+            riskLevel = 'medium';
+        }
+        return {
+            isValid: errors.length === 0,
+            errors,
+            warnings,
+            riskLevel
+        };
+    }
+    /**
+     * Log security events
+     */
+    static async logSecurityEvent(eventType, details, severity) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            await supabase
+                .from('security_logs')
+                .insert({
+                event_type: eventType,
+                severity,
+                details,
+                user_id: user?.id || null,
+                ip_address: null, // Will be populated by database trigger if available
+                user_agent: navigator.userAgent,
+                session_id: null, // Could be enhanced with session tracking
+            });
+        }
+        catch (error) {
+            console.error('Failed to log security event:', error);
+        }
+    }
+    /**
+     * Check user authentication and session validity
+     */
+    static async validateSession() {
+        try {
+            const { data: { user }, error } = await supabase.auth.getUser();
+            if (error) {
+                await this.logSecurityEvent('session_validation_failed', { error: error.message }, 'medium');
+                return { isValid: false, user: null, error: error.message };
+            }
+            if (!user) {
+                return { isValid: false, user: null, error: 'No user session found' };
+            }
+            // Check if session is recent (within last 24 hours)
+            const sessionAge = Date.now() - new Date(user.last_sign_in_at || 0).getTime();
+            const maxSessionAge = 24 * 60 * 60 * 1000; // 24 hours
+            if (sessionAge > maxSessionAge) {
+                await this.logSecurityEvent('session_expired', { sessionAge, userId: user.id }, 'medium');
+                return { isValid: false, user: null, error: 'Session expired' };
+            }
+            return { isValid: true, user };
+        }
+        catch (error) {
+            console.error('Session validation error:', error);
+            return { isValid: false, user: null, error: 'Session validation failed' };
+        }
+    }
+}

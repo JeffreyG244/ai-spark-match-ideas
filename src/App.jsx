@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import './App.css';
 
-// LuvLang Professional Dating Platform - Fresh Build
+// LuvLang Professional Dating Platform - Rich Dark Red & Purple Theme v2.0
 // Simple Photo Upload Component
 function PhotoUpload() {
   const [photos, setPhotos] = useState([]);

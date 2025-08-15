@@ -1,7 +1,7 @@
 /* Main App Styles */
 .App {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #8B0000 0%, #4B0082 100%);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -19,7 +19,7 @@
 .app-header h1 {
   font-size: 2rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #8B0000, #4B0082);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   cursor: pointer;
@@ -45,7 +45,7 @@
 
 .app-header nav button:hover,
 .app-header nav button.active {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #8B0000, #4B0082);
   color: white;
   transform: translateY(-1px);
 }
@@ -93,13 +93,13 @@
 }
 
 .btn.primary {
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #8B0000, #4B0082);
   color: white;
 }
 
 .btn.primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 25px rgba(139, 0, 0, 0.4);
 }
 
 .btn.secondary {
@@ -220,7 +220,7 @@
 .analysis-results {
   margin-top: 2rem;
   padding: 1.5rem;
-  background: linear-gradient(135deg, #667eea10, #764ba210);
+  background: linear-gradient(135deg, #8B000010, #4B008210);
   border-radius: 12px;
 }
 
@@ -233,7 +233,7 @@
   padding: 1rem;
   border-radius: 8px;
   margin-bottom: 0.5rem;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #8B0000;
 }
 
 .compatibility {
@@ -354,7 +354,7 @@
 }
 
 .conversation-item.unread {
-  background: linear-gradient(135deg, #667eea10, #764ba210);
+  background: linear-gradient(135deg, #8B000010, #4B008210);
 }
 
 .conversation-avatar {
@@ -395,7 +395,7 @@
 .unread-indicator {
   width: 12px;
   height: 12px;
-  background: #667eea;
+  background: #8B0000;
   border-radius: 50%;
   position: absolute;
   right: 1rem;
@@ -472,7 +472,7 @@
 .dashboard h2 {
   font-size: 2.5rem;
   margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #8B0000, #4B0082);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
