@@ -1,145 +1,60 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 220 8.9% 46.1%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 220 8.9% 46.1%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 8.9% 46.1%;
-
-    --primary: 346 77% 49.8%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 220 8.9% 46.1%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 346 77% 49.8%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 346 77% 49.8%;
-
-    /* Sophisticated Professional Theme */
-    --love-primary: 280 85% 60%;
-    --love-secondary: 320 70% 65%;
-    --love-accent: 260 80% 70%;
-    --love-background: 280 20% 12%;
-    --love-surface: 280 15% 16%;
-    --love-text: 280 10% 98%;
-    --love-text-light: 280 8% 78%;
-    --love-text-muted: 280 6% 65%;
-    --love-border: 280 15% 20%;
-    --love-card: 280 18% 14%;
-    
-    /* Sophisticated gradients */
-    --love-gradient-bg: linear-gradient(135deg, hsl(280 20% 12%), hsl(320 15% 14%));
-    --love-gradient-card: linear-gradient(135deg, hsl(280 18% 14%), hsl(320 16% 16%));
-    --love-gradient-primary: linear-gradient(135deg, hsl(280 85% 60%), hsl(320 70% 65%));
-    --love-gradient-subtle: linear-gradient(135deg, hsl(280 15% 16%), hsl(280 18% 18%));
-    
-    /* Interactive states */
-    --love-like: 142 76% 36%;
-    --love-pass: 0 84% 60%;
-    
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(346 77% 49.8%), hsl(262 83% 58%));
-    --gradient-secondary: linear-gradient(135deg, hsl(262 83% 58%), hsl(346 77% 49.8%));
-    --gradient-background: linear-gradient(135deg, hsl(0 0% 98%), hsl(346 77% 97%));
-
-    /* Metallic tokens */
-    --gold-1: 45 100% 70%;
-    --gold-2: 42 100% 60%;
-    --gold-3: 38 100% 50%;
-    --silver-1: 210 15% 85%;
-    --silver-2: 210 15% 70%;
-    --silver-3: 210 15% 55%;
-    --star-bright: 60 100% 50%;
-
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 220 8.9% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 220 8.9% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 220 8.9% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 346 77% 49.8%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 346 77% 49.8%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 346 77% 49.8%;
-
-    /* Dark mode dating colors */
-    --love-primary: 346 77% 49.8%;
-    --love-secondary: 262 83% 58%;
-    --love-accent: 24 95% 53%;
-    --love-background: 220 8.9% 4.9%;
-    --love-surface: 217.2 32.6% 17.5%;
-    --love-text: 210 40% 98%;
-    --love-text-light: 215 20.2% 65.1%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
+/* Global CSS Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f5f5;
+  color: #333;
+  line-height: 1.6;
+}
 
-  body {
-    @apply bg-background text-foreground;
-  }
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Basic button reset */
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Basic input reset */
+input, textarea, select {
+  font-family: inherit;
+}
+
+/* Remove default button and input styling */
+button:focus,
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Basic link styling */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
