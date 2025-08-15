@@ -31,28 +31,21 @@ body {
 /* LuvLang Logo Styles */
 .luvlang-logo {
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  gap: 8px;
 }
 
-.heart-logo svg {
-  filter: drop-shadow(0 4px 8px rgba(139, 92, 246, 0.2));
-  transition: transform 0.3s ease;
+.luvlang-logo-image {
+  width: 120px;
+  height: auto;
+  max-width: 120px;
+  filter: drop-shadow(0 4px 12px rgba(139, 92, 246, 0.3));
+  transition: transform 0.3s ease, filter 0.3s ease;
 }
 
-.heart-logo svg:hover {
-  transform: scale(1.1);
-}
-
-.logo-text {
-  font-size: 24px;
-  font-weight: bold;
-  background: var(--gradient-heart);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: 1px;
+.luvlang-logo-image:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 6px 16px rgba(139, 92, 246, 0.4));
 }
 
 /* Header Styles */
@@ -916,13 +909,9 @@ body {
     padding: 1.5rem;
   }
   
-  .logo-text {
-    font-size: 20px;
-  }
-  
-  .heart-logo svg {
-    width: 50px;
-    height: 45px;
+  .luvlang-logo-image {
+    width: 100px;
+    max-width: 100px;
   }
   
   .app-main {

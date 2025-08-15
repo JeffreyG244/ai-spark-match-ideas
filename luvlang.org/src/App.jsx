@@ -2,23 +2,15 @@ import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from './supabase.js';
 import './App.css';
 
-// LuvLang Logo Component with Purple/Pink Heart
+// LuvLang Logo Component with Your Actual Logo
 function LuvLangLogo() {
   return (
     <div className="luvlang-logo">
-      <div className="heart-logo">
-        <svg width="60" height="54" viewBox="0 0 60 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M30 54C30 54 0 36 0 18C0 8.1 8.1 0 18 0C24.3 0 30 3.6 30 3.6S35.7 0 42 0C51.9 0 60 8.1 60 18C60 36 30 54 30 54Z" 
-                fill="url(#heartGradient)"/>
-          <defs>
-            <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#8B5CF6" />
-              <stop offset="100%" stopColor="#EC4899" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-      <div className="logo-text">LuvLang</div>
+      <img 
+        src="/luvlang-logo.png"
+        alt="LuvLang Logo - Purple Pink Heart with LuvLang text"
+        className="luvlang-logo-image"
+      />
     </div>
   );
 }
