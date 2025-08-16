@@ -235,9 +235,33 @@ const SimplePhotoCapture = () => {
             setPhotos(updatedPhotos);
             setPhotoCount(photoCount + 1);
             console.log('✅ Photo captured successfully');
+            
+            // Auto-save to basic profiles table for compatibility
+            try {
+                const { error: basicProfileError } = await supabase
+                    .from('profiles')
+                    .upsert({
+                        user_id: user.id,
+                        email: user.email || '',
+                        photo_urls: updatedPhotos,
+                        primary_photo_url: updatedPhotos[0],
+                        first_name: '',
+                        last_name: '',
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id' });
+                
+                if (basicProfileError) {
+                    console.warn('Basic profile auto-save failed:', basicProfileError.message);
+                } else {
+                    console.log('✅ Auto-saved to basic profiles table');
+                }
+            } catch (autoSaveError) {
+                console.warn('Auto-save error:', autoSaveError);
+            }
+            
             toast({
                 title: 'Photo Captured!',
-                description: `Photo ${photoCount + 1}/5 uploaded successfully.`,
+                description: `Photo ${photoCount + 1}/5 uploaded and auto-saved.`,
             });
         }
         catch (error) {

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { X, ChevronLeft, ChevronRight, Camera, Upload } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Camera, Upload, Check, AlertCircle, Clock } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -73,6 +73,8 @@ const ExecutiveProfileForm = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const N8N_WEBHOOK_URL = 'https://luvlang.org/webhook-test/luvlang-match';
 
   useEffect(() => {
@@ -127,6 +129,90 @@ const ExecutiveProfileForm = () => {
       }
     })();
   }, [user]);
+
+  // Auto-save functionality
+  const autoSaveProfile = async (data: FormData) => {
+    if (!user) return;
+    
+    setAutoSaveStatus('saving');
+    
+    try {
+      const payload = {
+        user_id: user.id,
+        first_name: data.firstName || null,
+        last_name: data.lastName || null,
+        age: data.age ? Number(data.age) : null,
+        pronouns: data.pronouns || null,
+        executive_title: data.executiveTitle || null,
+        industry: data.industry || null,
+        success_level: data.successLevel || null,
+        primary_location: data.primaryLocation || null,
+        lifestyle_level: data.lifestyleLevel || null,
+        sexual_orientation: data.sexualOrientation,
+        relationship_style: data.relationshipStyle || null,
+        interested_in_meeting: data.interestedInMeeting,
+        deal_breakers: data.dealBreakers,
+        age_range_min: data.ageRangeMin ? Number(data.ageRangeMin) : null,
+        age_range_max: data.ageRangeMax ? Number(data.ageRangeMax) : null,
+        distance_preference: data.distancePreference ? Number(data.distancePreference) : null,
+        political_views: data.politicalViews || null,
+        religious_views: data.religiousViews || null,
+        family_plans: data.familyPlans || null,
+        living_arrangement: data.livingArrangement || null,
+        core_values: data.coreValues,
+        languages_spoken: data.languagesSpoken,
+        myers_briggs_type: data.myersBriggsType || null,
+        attachment_style: data.attachmentStyle || null,
+        love_languages: data.loveLanguages,
+        conflict_resolution_style: data.conflictResolutionStyle || null,
+        communication_style: data.communicationStyle,
+        weekend_activities: data.weekendActivities,
+        cultural_interests: data.culturalInterests,
+        intellectual_pursuits: data.intellectualPursuits,
+        vacation_style: data.vacationStyle,
+        photos: data.photos,
+        voice_introduction: data.voiceIntroduction || null,
+        completed: false, // Auto-save doesn't mark as completed
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('executive_dating_profiles')
+        .upsert(payload, { onConflict: 'user_id' });
+        
+      if (error) throw error;
+      
+      setAutoSaveStatus('saved');
+      setLastSaved(new Date());
+      
+      // Reset to idle after 3 seconds
+      setTimeout(() => setAutoSaveStatus('idle'), 3000);
+      
+    } catch (error) {
+      console.error('Auto-save error:', error);
+      setAutoSaveStatus('error');
+      
+      // Reset to idle after 5 seconds
+      setTimeout(() => setAutoSaveStatus('idle'), 5000);
+    }
+  };
+
+  // Debounced auto-save effect
+  useEffect(() => {
+    if (!user) return;
+    
+    // Skip auto-save if this is the initial load
+    if (Object.values(formData).every(value => 
+      Array.isArray(value) ? value.length === 0 : value === ''
+    )) return;
+
+    // Debounce auto-save by 2 seconds
+    const timeoutId = setTimeout(() => {
+      autoSaveProfile(formData);
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData, user]);
 
   const sections = [
     'Executive Profile',
@@ -733,8 +819,42 @@ const handleComplete = async () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Executive Profile</h1>
-          <p className="text-purple-200">Create your comprehensive dating profile</p>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <h1 className="text-4xl font-bold text-white">Executive Profile</h1>
+            
+            {/* Auto-save Status Indicator */}
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm">
+              {autoSaveStatus === 'saving' && (
+                <>
+                  <Clock className="h-4 w-4 text-yellow-300 animate-spin" />
+                  <span className="text-sm text-yellow-300">Saving...</span>
+                </>
+              )}
+              {autoSaveStatus === 'saved' && (
+                <>
+                  <Check className="h-4 w-4 text-green-300" />
+                  <span className="text-sm text-green-300">
+                    Saved {lastSaved && new Date(lastSaved).toLocaleTimeString()}
+                  </span>
+                </>
+              )}
+              {autoSaveStatus === 'error' && (
+                <>
+                  <AlertCircle className="h-4 w-4 text-red-300" />
+                  <span className="text-sm text-red-300">Save failed</span>
+                </>
+              )}
+              {autoSaveStatus === 'idle' && lastSaved && (
+                <>
+                  <Check className="h-4 w-4 text-gray-300" />
+                  <span className="text-sm text-gray-300">
+                    Last saved {new Date(lastSaved).toLocaleTimeString()}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+          <p className="text-purple-200">Create your comprehensive dating profile • Auto-saves as you type</p>
         </div>
 
         {/* Progress */}
