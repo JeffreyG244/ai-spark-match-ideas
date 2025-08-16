@@ -6,12 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { X, ChevronLeft, ChevronRight, Camera, Upload } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Camera, Upload, Check, AlertCircle, Clock } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceIntroductionCapture from './VoiceIntroductionCapture';
+import { PhotoUploadService } from '@/utils/photoUploadService';
 
 interface FormData {
   // Section 1: Executive Profile
@@ -73,6 +74,9 @@ const ExecutiveProfileForm = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [uploadingPhotos, setUploadingPhotos] = useState<boolean[]>(new Array(8).fill(false));
   const N8N_WEBHOOK_URL = 'https://luvlang.org/webhook-test/luvlang-match';
 
   useEffect(() => {
@@ -128,6 +132,90 @@ const ExecutiveProfileForm = () => {
     })();
   }, [user]);
 
+  // Auto-save functionality
+  const autoSaveProfile = async (data: FormData) => {
+    if (!user) return;
+    
+    setAutoSaveStatus('saving');
+    
+    try {
+      const payload = {
+        user_id: user.id,
+        first_name: data.firstName || null,
+        last_name: data.lastName || null,
+        age: data.age ? Number(data.age) : null,
+        pronouns: data.pronouns || null,
+        executive_title: data.executiveTitle || null,
+        industry: data.industry || null,
+        success_level: data.successLevel || null,
+        primary_location: data.primaryLocation || null,
+        lifestyle_level: data.lifestyleLevel || null,
+        sexual_orientation: data.sexualOrientation,
+        relationship_style: data.relationshipStyle || null,
+        interested_in_meeting: data.interestedInMeeting,
+        deal_breakers: data.dealBreakers,
+        age_range_min: data.ageRangeMin ? Number(data.ageRangeMin) : null,
+        age_range_max: data.ageRangeMax ? Number(data.ageRangeMax) : null,
+        distance_preference: data.distancePreference ? Number(data.distancePreference) : null,
+        political_views: data.politicalViews || null,
+        religious_views: data.religiousViews || null,
+        family_plans: data.familyPlans || null,
+        living_arrangement: data.livingArrangement || null,
+        core_values: data.coreValues,
+        languages_spoken: data.languagesSpoken,
+        myers_briggs_type: data.myersBriggsType || null,
+        attachment_style: data.attachmentStyle || null,
+        love_languages: data.loveLanguages,
+        conflict_resolution_style: data.conflictResolutionStyle || null,
+        communication_style: data.communicationStyle,
+        weekend_activities: data.weekendActivities,
+        cultural_interests: data.culturalInterests,
+        intellectual_pursuits: data.intellectualPursuits,
+        vacation_style: data.vacationStyle,
+        photos: data.photos,
+        voice_introduction: data.voiceIntroduction || null,
+        completed: false, // Auto-save doesn't mark as completed
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('executive_dating_profiles')
+        .upsert(payload, { onConflict: 'user_id' });
+        
+      if (error) throw error;
+      
+      setAutoSaveStatus('saved');
+      setLastSaved(new Date());
+      
+      // Reset to idle after 3 seconds
+      setTimeout(() => setAutoSaveStatus('idle'), 3000);
+      
+    } catch (error) {
+      console.error('Auto-save error:', error);
+      setAutoSaveStatus('error');
+      
+      // Reset to idle after 5 seconds
+      setTimeout(() => setAutoSaveStatus('idle'), 5000);
+    }
+  };
+
+  // Debounced auto-save effect
+  useEffect(() => {
+    if (!user) return;
+    
+    // Skip auto-save if this is the initial load
+    if (Object.values(formData).every(value => 
+      Array.isArray(value) ? value.length === 0 : value === ''
+    )) return;
+
+    // Debounce auto-save by 2 seconds
+    const timeoutId = setTimeout(() => {
+      autoSaveProfile(formData);
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
+  }, [formData, user]);
+
   const sections = [
     'Executive Profile',
     'Identity & Preferences', 
@@ -156,6 +244,79 @@ const ExecutiveProfileForm = () => {
     setFormData(prev => {
       const currentArray = prev[field] as string[];
       return { ...prev, [field]: currentArray.filter(item => item !== value) };
+    });
+  };
+
+  const handlePhotoUpload = async (index: number, file: File) => {
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please sign in to upload photos.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Update uploading state for this specific photo slot
+    setUploadingPhotos(prev => {
+      const newState = [...prev];
+      newState[index] = true;
+      return newState;
+    });
+
+    try {
+      const result = await PhotoUploadService.uploadPhotoWithFallback(
+        file,
+        user.id,
+        user.email || ''
+      );
+
+      if (result.success) {
+        // Update the photos array in form data
+        setFormData(prev => {
+          const newPhotos = [...prev.photos];
+          newPhotos[index] = result.publicUrl;
+          return { ...prev, photos: newPhotos };
+        });
+
+        toast({
+          title: 'Photo Uploaded',
+          description: `Photo ${index + 1} uploaded successfully.`,
+        });
+
+        if (result.databaseError) {
+          console.warn('Database fallback used:', result.databaseError);
+        }
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      console.error('Photo upload failed:', error);
+      toast({
+        title: 'Upload Failed',
+        description: error.message || 'Failed to upload photo.',
+        variant: 'destructive'
+      });
+    } finally {
+      // Reset uploading state for this photo slot
+      setUploadingPhotos(prev => {
+        const newState = [...prev];
+        newState[index] = false;
+        return newState;
+      });
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setFormData(prev => {
+      const newPhotos = [...prev.photos];
+      newPhotos[index] = '';
+      return { ...prev, photos: newPhotos };
+    });
+
+    toast({
+      title: 'Photo Removed',
+      description: `Photo ${index + 1} has been removed.`,
     });
   };
 
@@ -681,17 +842,67 @@ const handleComplete = async () => {
         <Label>Professional Gallery (4-8 photos)</Label>
         <div className="mt-2 space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(8)].map((_, index) => (
-              <div
-                key={index}
-                className="aspect-square border-2 border-dashed border-purple-300 rounded-lg flex items-center justify-center bg-purple-50 hover:bg-purple-100 transition-colors cursor-pointer"
-              >
-                <div className="text-center">
-                  <Camera className="h-8 w-8 text-purple-400 mx-auto mb-2" />
-                  <p className="text-sm text-purple-600">Photo {index + 1}</p>
+            {[...Array(8)].map((_, index) => {
+              const hasPhoto = formData.photos[index];
+              const isUploading = uploadingPhotos[index];
+              
+              return (
+                <div key={index} className="aspect-square relative">
+                  {hasPhoto ? (
+                    // Show uploaded photo with remove option
+                    <div className="relative w-full h-full">
+                      <img
+                        src={hasPhoto}
+                        alt={`Professional photo ${index + 1}`}
+                        className="w-full h-full object-cover rounded-lg border-2 border-purple-300"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
+                        onClick={() => removePhoto(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    // Show upload area
+                    <div
+                      className="w-full h-full border-2 border-dashed border-purple-300 rounded-lg flex items-center justify-center bg-purple-50 hover:bg-purple-100 transition-colors cursor-pointer relative"
+                      onClick={() => {
+                        if (!isUploading) {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (file) {
+                              handlePhotoUpload(index, file);
+                            }
+                          };
+                          input.click();
+                        }
+                      }}
+                    >
+                      <div className="text-center">
+                        {isUploading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-600 border-t-transparent mx-auto mb-2"></div>
+                            <p className="text-sm text-purple-600">Uploading...</p>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-8 w-8 text-purple-400 mx-auto mb-2" />
+                            <p className="text-sm text-purple-600">Photo {index + 1}</p>
+                            <p className="text-xs text-purple-500 mt-1">Click to upload</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="bg-purple-50 p-4 rounded-lg">
             <h4 className="font-medium text-purple-800 mb-2">Photo Guidelines:</h4>
@@ -733,8 +944,42 @@ const handleComplete = async () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Executive Profile</h1>
-          <p className="text-purple-200">Create your comprehensive dating profile</p>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <h1 className="text-4xl font-bold text-white">Executive Profile</h1>
+            
+            {/* Auto-save Status Indicator */}
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm">
+              {autoSaveStatus === 'saving' && (
+                <>
+                  <Clock className="h-4 w-4 text-yellow-300 animate-spin" />
+                  <span className="text-sm text-yellow-300">Saving...</span>
+                </>
+              )}
+              {autoSaveStatus === 'saved' && (
+                <>
+                  <Check className="h-4 w-4 text-green-300" />
+                  <span className="text-sm text-green-300">
+                    Saved {lastSaved && new Date(lastSaved).toLocaleTimeString()}
+                  </span>
+                </>
+              )}
+              {autoSaveStatus === 'error' && (
+                <>
+                  <AlertCircle className="h-4 w-4 text-red-300" />
+                  <span className="text-sm text-red-300">Save failed</span>
+                </>
+              )}
+              {autoSaveStatus === 'idle' && lastSaved && (
+                <>
+                  <Check className="h-4 w-4 text-gray-300" />
+                  <span className="text-sm text-gray-300">
+                    Last saved {new Date(lastSaved).toLocaleTimeString()}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+          <p className="text-purple-200">Create your comprehensive dating profile • Auto-saves as you type</p>
         </div>
 
         {/* Progress */}

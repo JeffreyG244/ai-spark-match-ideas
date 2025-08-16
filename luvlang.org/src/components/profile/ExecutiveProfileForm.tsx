@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceIntroductionCapture from './VoiceIntroductionCapture';
+import { PhotoUploadService } from '@/utils/photoUploadService';
 
 interface FormData {
   // Section 1: Executive Profile
@@ -75,6 +76,7 @@ const ExecutiveProfileForm = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [autoSaveStatus, setAutoSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [uploadingPhotos, setUploadingPhotos] = useState<boolean[]>(new Array(8).fill(false));
   const N8N_WEBHOOK_URL = 'https://luvlang.org/webhook-test/luvlang-match';
 
   useEffect(() => {
@@ -242,6 +244,79 @@ const ExecutiveProfileForm = () => {
     setFormData(prev => {
       const currentArray = prev[field] as string[];
       return { ...prev, [field]: currentArray.filter(item => item !== value) };
+    });
+  };
+
+  const handlePhotoUpload = async (index: number, file: File) => {
+    if (!user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please sign in to upload photos.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    // Update uploading state for this specific photo slot
+    setUploadingPhotos(prev => {
+      const newState = [...prev];
+      newState[index] = true;
+      return newState;
+    });
+
+    try {
+      const result = await PhotoUploadService.uploadPhotoWithFallback(
+        file,
+        user.id,
+        user.email || ''
+      );
+
+      if (result.success) {
+        // Update the photos array in form data
+        setFormData(prev => {
+          const newPhotos = [...prev.photos];
+          newPhotos[index] = result.publicUrl;
+          return { ...prev, photos: newPhotos };
+        });
+
+        toast({
+          title: 'Photo Uploaded',
+          description: `Photo ${index + 1} uploaded successfully.`,
+        });
+
+        if (result.databaseError) {
+          console.warn('Database fallback used:', result.databaseError);
+        }
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      console.error('Photo upload failed:', error);
+      toast({
+        title: 'Upload Failed',
+        description: error.message || 'Failed to upload photo.',
+        variant: 'destructive'
+      });
+    } finally {
+      // Reset uploading state for this photo slot
+      setUploadingPhotos(prev => {
+        const newState = [...prev];
+        newState[index] = false;
+        return newState;
+      });
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    setFormData(prev => {
+      const newPhotos = [...prev.photos];
+      newPhotos[index] = '';
+      return { ...prev, photos: newPhotos };
+    });
+
+    toast({
+      title: 'Photo Removed',
+      description: `Photo ${index + 1} has been removed.`,
     });
   };
 
@@ -767,17 +842,67 @@ const handleComplete = async () => {
         <Label>Professional Gallery (4-8 photos)</Label>
         <div className="mt-2 space-y-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(8)].map((_, index) => (
-              <div
-                key={index}
-                className="aspect-square border-2 border-dashed border-purple-300 rounded-lg flex items-center justify-center bg-purple-50 hover:bg-purple-100 transition-colors cursor-pointer"
-              >
-                <div className="text-center">
-                  <Camera className="h-8 w-8 text-purple-400 mx-auto mb-2" />
-                  <p className="text-sm text-purple-600">Photo {index + 1}</p>
+            {[...Array(8)].map((_, index) => {
+              const hasPhoto = formData.photos[index];
+              const isUploading = uploadingPhotos[index];
+              
+              return (
+                <div key={index} className="aspect-square relative">
+                  {hasPhoto ? (
+                    // Show uploaded photo with remove option
+                    <div className="relative w-full h-full">
+                      <img
+                        src={hasPhoto}
+                        alt={`Professional photo ${index + 1}`}
+                        className="w-full h-full object-cover rounded-lg border-2 border-purple-300"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
+                        onClick={() => removePhoto(index)}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    // Show upload area
+                    <div
+                      className="w-full h-full border-2 border-dashed border-purple-300 rounded-lg flex items-center justify-center bg-purple-50 hover:bg-purple-100 transition-colors cursor-pointer relative"
+                      onClick={() => {
+                        if (!isUploading) {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*';
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (file) {
+                              handlePhotoUpload(index, file);
+                            }
+                          };
+                          input.click();
+                        }
+                      }}
+                    >
+                      <div className="text-center">
+                        {isUploading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-600 border-t-transparent mx-auto mb-2"></div>
+                            <p className="text-sm text-purple-600">Uploading...</p>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-8 w-8 text-purple-400 mx-auto mb-2" />
+                            <p className="text-sm text-purple-600">Photo {index + 1}</p>
+                            <p className="text-xs text-purple-500 mt-1">Click to upload</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="bg-purple-50 p-4 rounded-lg">
             <h4 className="font-medium text-purple-800 mb-2">Photo Guidelines:</h4>
