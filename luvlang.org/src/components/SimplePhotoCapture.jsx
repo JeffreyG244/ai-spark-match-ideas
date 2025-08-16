@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Camera, X } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/supabase';
+import { supabase } from '@/integrations/supabase/client';
 const SimplePhotoCapture = () => {
     const { user } = useAuth();
     const [photoCount, setPhotoCount] = useState(0);

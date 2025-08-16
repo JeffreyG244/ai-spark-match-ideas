@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/supabase';
+import { supabase } from '@/integrations/supabase/client';
 export const usePhotoUpload = (photos, onPhotosChange) => {
     const { user } = useAuth();
     const [isUploading, setIsUploading] = useState(false);
