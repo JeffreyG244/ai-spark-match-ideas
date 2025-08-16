@@ -5,6 +5,7 @@ import { Upload, Info } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { PhotoUploadService } from '@/utils/photoUploadService';
 
 const PhotoUploadDebug = () => {
   const { user } = useAuth();
@@ -56,103 +57,33 @@ const PhotoUploadDebug = () => {
       const profilePhotoBucket = buckets?.find(b => b.name === 'profile-photos');
       addDebugInfo(`Profile photos bucket: ${profilePhotoBucket ? 'EXISTS' : 'NOT FOUND'}`);
 
-      // Test upload
-      const filename = `debug-test/${user.id}/${Date.now()}_${file.name}`;
-      addDebugInfo(`Attempting upload with filename: ${filename}`);
-
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('profile-photos')
-        .upload(filename, file, {
-          contentType: file.type,
-          upsert: false
-        });
-
-      if (uploadError) {
-        addDebugInfo(`UPLOAD ERROR: ${uploadError.message}`);
-        toast({
-          title: 'Upload Failed',
-          description: uploadError.message,
-          variant: 'destructive'
-        });
-      } else {
-        addDebugInfo(`SUCCESS: File uploaded to ${uploadData?.path}`);
+      // Use the new PhotoUploadService that bypasses RLS issues
+      addDebugInfo(`Using PhotoUploadService to handle upload...`);
+      
+      const result = await PhotoUploadService.uploadPhotoWithFallback(
+        file, 
+        user.id, 
+        user.email || ''
+      );
+      
+      if (result.success) {
+        addDebugInfo(`SUCCESS: ${result.message}`);
+        addDebugInfo(`Public URL: ${result.publicUrl}`);
         
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('profile-photos')
-          .getPublicUrl(filename);
-        
-        addDebugInfo(`Public URL: ${publicUrl}`);
-        
-        // Now save to profiles table
-        addDebugInfo('Saving photo URL to profiles table...');
-        
-        try {
-          // Get current profile
-          const { data: currentProfile, error: selectError } = await supabase
-            .from('profiles')
-            .select('id, photo_urls, user_id')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          if (selectError) {
-            addDebugInfo(`ERROR getting profile: ${selectError.message}`);
-          } else {
-            addDebugInfo(`Current profile found: ${currentProfile ? 'YES' : 'NO'}`);
-            
-            const currentPhotos = currentProfile?.photo_urls || [];
-            const updatedPhotos = [...currentPhotos, publicUrl];
-            
-            if (!currentProfile) {
-              // Create new profile
-              addDebugInfo('Creating new profile...');
-              const { error: insertError } = await supabase
-                .from('profiles')
-                .insert([{
-                  user_id: user.id,
-                  email: user.email || '',
-                  photo_urls: updatedPhotos,
-                  primary_photo_url: publicUrl,
-                  first_name: '',
-                  last_name: ''
-                }]);
-              
-              if (insertError) {
-                addDebugInfo(`ERROR creating profile: ${insertError.message}`);
-              } else {
-                addDebugInfo('SUCCESS: Profile created with photo');
-              }
-            } else {
-              // Update existing profile
-              addDebugInfo('Updating existing profile...');
-              const updateData: any = {
-                photo_urls: updatedPhotos
-              };
-              
-              if (currentPhotos.length === 0) {
-                updateData.primary_photo_url = publicUrl;
-              }
-              
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update(updateData)
-                .eq('user_id', user.id);
-              
-              if (updateError) {
-                addDebugInfo(`ERROR updating profile: ${updateError.message}`);
-              } else {
-                addDebugInfo('SUCCESS: Profile updated with photo');
-              }
-            }
-          }
-        } catch (dbError) {
-          const dbErrorMessage = dbError instanceof Error ? dbError.message : 'Unknown database error';
-          addDebugInfo(`DATABASE ERROR: ${dbErrorMessage}`);
+        if (result.databaseError) {
+          addDebugInfo(`DATABASE FALLBACK: ${result.databaseError}`);
         }
         
         toast({
           title: 'Upload Success',
-          description: 'Test file uploaded and saved to profile!',
+          description: result.message,
+        });
+      } else {
+        addDebugInfo(`UPLOAD FAILED: ${result.error}`);
+        toast({
+          title: 'Upload Failed',
+          description: result.error,
+          variant: 'destructive'
         });
       }
 
