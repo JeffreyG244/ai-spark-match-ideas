@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,13 +16,9 @@ export const usePhotoUpload = (photos: Photo[], onPhotosChange: (photos: Photo[]
   const maxPhotos = 6;
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('handleFileSelect called', event.target.files?.length);
-    
     const files = event.target.files;
-    console.log('Photo upload started:', { files: files?.length, user: user?.id });
     
     if (!files || !user) {
-      console.error('Photo upload failed: Missing files or user', { files: !!files, user: !!user });
       toast({
         title: 'Upload Error',
         description: 'Unable to access files or user not authenticated.',
@@ -33,7 +28,6 @@ export const usePhotoUpload = (photos: Photo[], onPhotosChange: (photos: Photo[]
     }
 
     if (photos.length + files.length > maxPhotos) {
-      console.warn('Too many photos:', { current: photos.length, adding: files.length, max: maxPhotos });
       toast({
         title: 'Too Many Photos',
         description: `You can only upload up to ${maxPhotos} photos.`,
@@ -74,25 +68,7 @@ export const usePhotoUpload = (photos: Photo[], onPhotosChange: (photos: Photo[]
         const randomId = Math.random().toString(36).substring(2);
         const filename = `${user.id}/${timestamp}_${randomId}_${file.name}`;
 
-        // Check if bucket exists and create if needed
-        console.log('Checking for profile-photos bucket...');
-        const { data: buckets, error: bucketListError } = await supabase.storage.listBuckets();
-        console.log('Bucket list:', { buckets, error: bucketListError });
-        
-        const bucketExists = buckets?.some(bucket => bucket.name === 'profile-photos');
-        console.log('Bucket exists:', bucketExists);
-        
-        if (!bucketExists) {
-          console.log('Creating profile-photos bucket...');
-          const { data: newBucket, error: createError } = await supabase.storage.createBucket('profile-photos', {
-            public: true,
-            fileSizeLimit: 10 * 1024 * 1024 // 10MB
-          });
-          console.log('Bucket creation result:', { data: newBucket, error: createError });
-        }
-
-        console.log('Uploading file:', { filename, fileType: file.type, fileSize: file.size });
-        
+        // Upload to storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('profile-photos')
           .upload(filename, file, {
@@ -100,10 +76,7 @@ export const usePhotoUpload = (photos: Photo[], onPhotosChange: (photos: Photo[]
             upsert: false
           });
 
-        console.log('Upload result:', { data: uploadData, error: uploadError });
-
         if (uploadError) {
-          console.error('Upload error:', uploadError);
           toast({
             title: 'Upload Failed',
             description: `Failed to upload ${file.name}: ${uploadError.message}`,
@@ -131,7 +104,6 @@ export const usePhotoUpload = (photos: Photo[], onPhotosChange: (photos: Photo[]
         });
       }
     } catch (error) {
-      console.error('Upload error:', error);
       toast({
         title: 'Upload Error',
         description: 'An unexpected error occurred while uploading.',

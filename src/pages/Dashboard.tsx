@@ -13,9 +13,6 @@ import { useAlert } from '@/components/providers/AlertProvider';
 import MembershipBadge from '@/components/profile/MembershipBadge';
 import { useMembershipBadge } from '@/hooks/useMembershipBadge';
 import Logo from '@/components/ui/logo';
-import PhotoUploadDebug from '@/components/debug/PhotoUploadDebug';
-
-
 const Dashboard = () => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
@@ -142,10 +139,6 @@ const Dashboard = () => {
           <WelcomeSection user={user} />
           <ProfileSetupSection onStartProfileSetup={() => setShowProfileSetup(true)} />
           
-          {/* Debug Photo Upload - Remove in production */}
-          <div className="mb-8">
-            <PhotoUploadDebug />
-          </div>
           <DashboardGrid />
 
           {/* Additional Info */}
