@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Camera, X } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/supabase';
 const SimplePhotoCapture = () => {
     const { user } = useAuth();
     const [photoCount, setPhotoCount] = useState(0);
@@ -183,37 +183,50 @@ const SimplePhotoCapture = () => {
             const { data: { publicUrl } } = supabase.storage
                 .from('profile-photos')
                 .getPublicUrl(filename);
-            // Get current profile photos using the correct table name 'profiles'
+            // Get current profile photos using the correct schema
             const { data: currentProfile } = await supabase
                 .from('profiles')
-                .select('*')
+                .select('id, photo_urls, user_id')
                 .eq('user_id', user.id)
                 .maybeSingle();
+            
             // Handle photos array
             const currentPhotos = currentProfile?.photo_urls || [];
             const updatedPhotos = [...currentPhotos, publicUrl];
-            // Update profile with new photo using correct table and column names
+            
+            // Update profile with new photo
             if (!currentProfile) {
-                // Create new profile
+                // Create new profile if it doesn't exist
                 const { error: insertError } = await supabase
                     .from('profiles')
                     .insert([{
                         user_id: user.id,
                         email: user.email || '',
-                        photo_urls: updatedPhotos
+                        photo_urls: updatedPhotos,
+                        primary_photo_url: updatedPhotos[0], // Set first photo as primary
+                        first_name: '',
+                        last_name: ''
                     }]);
+                    
                 if (insertError) {
                     throw new Error(`Profile creation failed: ${insertError.message}`);
                 }
-            }
-            else {
+            } else {
                 // Update existing profile
+                const updateData = {
+                    photo_urls: updatedPhotos
+                };
+                
+                // Set primary photo if this is the first photo
+                if (currentPhotos.length === 0) {
+                    updateData.primary_photo_url = publicUrl;
+                }
+                
                 const { error: updateError } = await supabase
                     .from('profiles')
-                    .update({
-                    photo_urls: updatedPhotos
-                })
+                    .update(updateData)
                     .eq('user_id', user.id);
+                    
                 if (updateError) {
                     throw new Error(`Profile update failed: ${updateError.message}`);
                 }
@@ -272,22 +285,38 @@ const SimplePhotoCapture = () => {
     // Load existing photos on mount
     useEffect(() => {
         const loadExistingPhotos = async () => {
-            if (!user)
+            if (!user) {
+                console.log('⚠️ No user found for loading photos');
                 return;
+            }
+            
             try {
-                const { data } = await supabase
+                console.log('📂 Loading existing photos for user:', user.id);
+                const { data, error } = await supabase
                     .from('profiles')
                     .select('photo_urls')
                     .eq('user_id', user.id)
                     .maybeSingle();
-                if (data && data.photo_urls) {
+                    
+                if (error) {
+                    console.error('❌ Error loading photos:', error.message);
+                    return;
+                }
+                
+                if (data && data.photo_urls && Array.isArray(data.photo_urls)) {
                     setPhotos(data.photo_urls);
                     setPhotoCount(data.photo_urls.length);
-                    console.log('📂 Loaded existing photos:', data.photo_urls.length);
+                    console.log('✅ Loaded existing photos:', data.photo_urls.length);
+                } else {
+                    console.log('📂 No existing photos found');
+                    setPhotos([]);
+                    setPhotoCount(0);
                 }
             }
             catch (error) {
                 console.error('❌ Error loading photos:', error);
+                setPhotos([]);
+                setPhotoCount(0);
             }
         };
         loadExistingPhotos();

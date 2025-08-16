@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/supabase';
 export const usePhotoUpload = (photos, onPhotosChange) => {
     const { user } = useAuth();
     const [isUploading, setIsUploading] = useState(false);
@@ -70,7 +70,70 @@ export const usePhotoUpload = (photos, onPhotosChange) => {
                 });
             }
             if (newPhotos.length > 0) {
-                onPhotosChange([...photos, ...newPhotos]);
+                const updatedPhotos = [...photos, ...newPhotos];
+                
+                // Save photo URLs to database
+                try {
+                    // Get current profile
+                    const { data: currentProfile } = await supabase
+                        .from('profiles')
+                        .select('id, photo_urls, user_id')
+                        .eq('user_id', user.id)
+                        .maybeSingle();
+                    
+                    const photoUrls = updatedPhotos.map(photo => photo.url);
+                    
+                    if (!currentProfile) {
+                        // Create new profile
+                        const { error: insertError } = await supabase
+                            .from('profiles')
+                            .insert([{
+                                user_id: user.id,
+                                email: user.email || '',
+                                photo_urls: photoUrls,
+                                primary_photo_url: photoUrls[0],
+                                first_name: '',
+                                last_name: ''
+                            }]);
+                            
+                        if (insertError) {
+                            console.error('Profile creation error:', insertError);
+                            toast({
+                                title: 'Database Error',
+                                description: 'Photos uploaded but could not save to profile.',
+                                variant: 'destructive'
+                            });
+                        }
+                    } else {
+                        // Update existing profile
+                        const updateData = {
+                            photo_urls: photoUrls
+                        };
+                        
+                        // Set primary photo if this is the first photo
+                        if (!currentProfile.photo_urls || currentProfile.photo_urls.length === 0) {
+                            updateData.primary_photo_url = photoUrls[0];
+                        }
+                        
+                        const { error: updateError } = await supabase
+                            .from('profiles')
+                            .update(updateData)
+                            .eq('user_id', user.id);
+                            
+                        if (updateError) {
+                            console.error('Profile update error:', updateError);
+                            toast({
+                                title: 'Database Error',
+                                description: 'Photos uploaded but could not save to profile.',
+                                variant: 'destructive'
+                            });
+                        }
+                    }
+                } catch (dbError) {
+                    console.error('Database operation failed:', dbError);
+                }
+                
+                onPhotosChange(updatedPhotos);
                 toast({
                     title: 'Photos Uploaded',
                     description: `Successfully uploaded ${newPhotos.length} photo(s).`,
