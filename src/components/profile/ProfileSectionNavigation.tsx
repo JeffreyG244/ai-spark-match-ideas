@@ -19,11 +19,15 @@ const ProfileSectionNavigation = ({
   photoCount
 }: ProfileSectionNavigationProps) => {
   return (
-    <div className="flex flex-wrap gap-4">
+    <div className="flex flex-wrap gap-4 mb-6">
       <Button
         variant={activeSection === 'profile' ? 'default' : 'outline'}
         onClick={() => setActiveSection('profile')}
-        className="flex items-center gap-2"
+        className={`flex items-center gap-2 ${
+          activeSection === 'profile' 
+            ? 'bg-primary text-primary-foreground' 
+            : 'bg-white/90 text-foreground border-2 hover:bg-accent hover:text-accent-foreground'
+        }`}
       >
         <User className="h-4 w-4" />
         Basic Profile
@@ -31,7 +35,11 @@ const ProfileSectionNavigation = ({
       <Button
         variant={activeSection === 'personality' ? 'default' : 'outline'}
         onClick={() => setActiveSection('personality')}
-        className="flex items-center gap-2"
+        className={`flex items-center gap-2 ${
+          activeSection === 'personality' 
+            ? 'bg-primary text-primary-foreground' 
+            : 'bg-white/90 text-foreground border-2 hover:bg-accent hover:text-accent-foreground'
+        }`}
       >
         <Brain className="h-4 w-4" />
         Personality ({personalityAnswerCount}/6)
@@ -39,7 +47,11 @@ const ProfileSectionNavigation = ({
       <Button
         variant={activeSection === 'interests' ? 'default' : 'outline'}
         onClick={() => setActiveSection('interests')}
-        className="flex items-center gap-2"
+        className={`flex items-center gap-2 ${
+          activeSection === 'interests' 
+            ? 'bg-primary text-primary-foreground' 
+            : 'bg-white/90 text-foreground border-2 hover:bg-accent hover:text-accent-foreground'
+        }`}
       >
         <Heart className="h-4 w-4" />
         Interests ({interestCount})
@@ -47,7 +59,11 @@ const ProfileSectionNavigation = ({
       <Button
         variant={activeSection === 'photos' ? 'default' : 'outline'}
         onClick={() => setActiveSection('photos')}
-        className="flex items-center gap-2"
+        className={`flex items-center gap-2 ${
+          activeSection === 'photos' 
+            ? 'bg-primary text-primary-foreground' 
+            : 'bg-white/90 text-foreground border-2 hover:bg-accent hover:text-accent-foreground'
+        }`}
       >
         <Camera className="h-4 w-4" />
         Photos ({photoCount}/6)
