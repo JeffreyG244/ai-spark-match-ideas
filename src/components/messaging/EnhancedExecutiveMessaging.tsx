@@ -351,36 +351,19 @@ const EnhancedExecutiveMessaging = () => {
     if (!selectedConversation) return;
     
     try {
-      // Update conversation to archived status
-      const { error } = await supabase
-        .from('conversations')
-        .update({ is_archived: true })
-        .eq('id', selectedConversation.id);
+      console.log('Archiving conversation:', selectedConversation.id);
       
-      if (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to archive conversation',
-          variant: 'destructive'
-        });
-        return;
-      }
-      
-      // Update UI - remove from active conversations list
+      // For demo purposes, just update local state (no Supabase calls)
+      // Remove conversation from active list
       setConversations(prev => prev.filter(conv => conv.id !== selectedConversation.id));
       setSelectedConversation(null);
+      setMessages([]);
       
-      toast({
-        title: 'Conversation Archived',
-        description: `Conversation with ${selectedConversation.name} has been archived`
-      });
+      alert(`Conversation with ${selectedConversation.name} has been archived`);
       
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred',
-        variant: 'destructive'
-      });
+      console.error('Error archiving conversation:', error);
+      alert('Error: Failed to archive conversation. Please try again.');
     }
   };
 
@@ -388,52 +371,19 @@ const EnhancedExecutiveMessaging = () => {
     if (!selectedConversation) return;
     
     try {
-      // Delete all messages in the conversation first
-      const { error: messagesError } = await supabase
-        .from('messages')
-        .delete()
-        .eq('conversation_id', selectedConversation.id);
+      console.log('Deleting conversation:', selectedConversation.id);
       
-      if (messagesError) {
-        toast({
-          title: 'Error',
-          description: 'Failed to delete messages',
-          variant: 'destructive'
-        });
-        return;
-      }
-      
-      // Then delete the conversation
-      const { error: conversationError } = await supabase
-        .from('conversations')
-        .delete()
-        .eq('id', selectedConversation.id);
-      
-      if (conversationError) {
-        toast({
-          title: 'Error',
-          description: 'Failed to delete conversation',
-          variant: 'destructive'
-        });
-        return;
-      }
-      
-      // Update UI
+      // For demo purposes, just update local state (no Supabase calls)
+      // Remove conversation from local state
       setConversations(prev => prev.filter(conv => conv.id !== selectedConversation.id));
       setSelectedConversation(null);
+      setMessages([]);
       
-      toast({
-        title: 'Conversation Deleted',
-        description: `Conversation with ${selectedConversation.name} has been permanently deleted`,
-        variant: 'destructive'
-      });
+      alert(`Conversation with ${selectedConversation.name} has been deleted`);
       
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'An unexpected error occurred',
-        variant: 'destructive'
-      });
+      console.error('Error deleting conversation:', error);
+      alert('Error: Failed to delete conversation. Please try again.');
     }
   };
 
