@@ -72,13 +72,30 @@ const EnhancedExecutiveMessaging = () => {
     loadConversations();
   }, [user]);
 
-  // Re-filter messages whenever deleted messages change
-  useEffect(() => {
-    if (selectedConversation) {
-      console.log('🔄 Re-filtering messages due to deleted messages change');
-      loadMessages(selectedConversation.id);
+  // Remove problematic useEffect that was causing issues
+
+  // Helper function to get current deleted messages (sync with localStorage)
+  const getCurrentDeletedMessages = (): string[] => {
+    try {
+      const stored = localStorage.getItem('deletedMessages');
+      const fromStorage = stored ? JSON.parse(stored) : [];
+      console.log('💾 getCurrentDeletedMessages - localStorage:', fromStorage, 'state:', deletedMessageIds);
+      
+      // Use whichever is more recent/comprehensive
+      const allDeleted = [...new Set([...fromStorage, ...deletedMessageIds])];
+      
+      // Sync state if it's different
+      if (JSON.stringify(allDeleted.sort()) !== JSON.stringify(deletedMessageIds.sort())) {
+        console.log('🔄 Syncing deleted messages state');
+        setDeletedMessageIds(allDeleted);
+      }
+      
+      return allDeleted;
+    } catch (error) {
+      console.error('Error getting deleted messages:', error);
+      return deletedMessageIds;
     }
-  }, [deletedMessageIds, selectedConversation]);
+  };
 
   const loadConversations = async () => {
     try {
@@ -191,7 +208,10 @@ const EnhancedExecutiveMessaging = () => {
 
   const loadMessages = (conversationId: string) => {
     console.log('🔄 loadMessages called for conversation:', conversationId);
-    console.log('🗑️ Current deleted message IDs from state:', deletedMessageIds);
+    
+    // Get the most up-to-date deleted messages
+    const currentDeleted = getCurrentDeletedMessages();
+    console.log('🗑️ Current deleted message IDs:', currentDeleted);
     
     // Professional executive messages based on conversation
     const conversationMessages: Record<string, Message[]> = {
@@ -289,7 +309,7 @@ const EnhancedExecutiveMessaging = () => {
     console.log('📨 Original messages for conversation', conversationId + ':', originalMessages.map(m => m.id));
     
     const messagesToShow = originalMessages.filter(message => {
-      const isDeleted = deletedMessageIds.includes(message.id);
+      const isDeleted = currentDeleted.includes(message.id);
       if (isDeleted) {
         console.log('🚫 Filtering out deleted message:', message.id);
       }
@@ -312,9 +332,10 @@ const EnhancedExecutiveMessaging = () => {
       status: 'sent'
     };
 
-    // Only add message if it's not in deleted list (using React state)
+    // Only add message if it's not in deleted list
+    const currentDeleted = getCurrentDeletedMessages();
     setMessages(prev => {
-      const filteredPrev = prev.filter(msg => !deletedMessageIds.includes(msg.id));
+      const filteredPrev = prev.filter(msg => !currentDeleted.includes(msg.id));
       return [...filteredPrev, message];
     });
     setNewMessage('');
@@ -713,9 +734,11 @@ const EnhancedExecutiveMessaging = () => {
         console.error('❌ Error saving deleted message:', error);
       }
 
-      // Remove message from local state
-      const updatedMessages = messages.filter(msg => msg.id !== messageId);
-      setMessages(updatedMessages);
+      // Immediately reload messages to reflect the deletion
+      if (selectedConversation) {
+        console.log('🔄 Reloading messages after deletion');
+        loadMessages(selectedConversation.id);
+      }
       
       console.log('Message deleted successfully and persisted');
       
