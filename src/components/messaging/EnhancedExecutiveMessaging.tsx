@@ -59,11 +59,10 @@ const EnhancedExecutiveMessaging = () => {
       const stored = localStorage.getItem('deletedMessages');
       if (stored) {
         const parsed = JSON.parse(stored);
-        console.log('🔄 Loaded deleted messages from localStorage:', parsed);
         setDeletedMessageIds(parsed);
       }
     } catch (error) {
-      console.error('Error loading deleted messages:', error);
+      // Silently handle localStorage errors
     }
   }, []);
 
@@ -79,20 +78,17 @@ const EnhancedExecutiveMessaging = () => {
     try {
       const stored = localStorage.getItem('deletedMessages');
       const fromStorage = stored ? JSON.parse(stored) : [];
-      console.log('💾 getCurrentDeletedMessages - localStorage:', fromStorage, 'state:', deletedMessageIds);
       
       // Use whichever is more recent/comprehensive
       const allDeleted = [...new Set([...fromStorage, ...deletedMessageIds])];
       
       // Sync state if it's different
       if (JSON.stringify(allDeleted.sort()) !== JSON.stringify(deletedMessageIds.sort())) {
-        console.log('🔄 Syncing deleted messages state');
         setDeletedMessageIds(allDeleted);
       }
       
       return allDeleted;
     } catch (error) {
-      console.error('Error getting deleted messages:', error);
       return deletedMessageIds;
     }
   };
@@ -189,13 +185,11 @@ const EnhancedExecutiveMessaging = () => {
       setConversations(allConversations);
       
       if (allConversations.length > 0) {
-        console.log('🚀 Auto-selecting first conversation on component load');
         setSelectedConversation(allConversations[0]);
         loadMessages(allConversations[0].id);
       }
       
     } catch (error) {
-      console.error('Error loading conversations:', error);
       toast({
         title: 'Error',
         description: 'Failed to load conversations',
@@ -207,11 +201,8 @@ const EnhancedExecutiveMessaging = () => {
   };
 
   const loadMessages = (conversationId: string) => {
-    console.log('🔄 loadMessages called for conversation:', conversationId);
-    
     // Get the most up-to-date deleted messages
     const currentDeleted = getCurrentDeletedMessages();
-    console.log('🗑️ Current deleted message IDs:', currentDeleted);
     
     // Professional executive messages based on conversation
     const conversationMessages: Record<string, Message[]> = {
@@ -306,17 +297,7 @@ const EnhancedExecutiveMessaging = () => {
     
     // Filter out deleted messages
     const originalMessages = conversationMessages[conversationId] || defaultMessages;
-    console.log('📨 Original messages for conversation', conversationId + ':', originalMessages.map(m => m.id));
-    
-    const messagesToShow = originalMessages.filter(message => {
-      const isDeleted = currentDeleted.includes(message.id);
-      if (isDeleted) {
-        console.log('🚫 Filtering out deleted message:', message.id);
-      }
-      return !isDeleted;
-    });
-    
-    console.log('✅ Messages to show:', messagesToShow.map(m => m.id));
+    const messagesToShow = originalMessages.filter(message => !currentDeleted.includes(message.id));
     setMessages(messagesToShow);
   };
 
@@ -416,19 +397,22 @@ const EnhancedExecutiveMessaging = () => {
     if (!selectedConversation) return;
     
     try {
-      console.log('Archiving conversation:', selectedConversation.id);
-      
-      // For demo purposes, just update local state (no Supabase calls)
       // Remove conversation from active list
       setConversations(prev => prev.filter(conv => conv.id !== selectedConversation.id));
       setSelectedConversation(null);
       setMessages([]);
       
-      alert(`Conversation with ${selectedConversation.name} has been archived`);
+      toast({
+        title: 'Conversation Archived',
+        description: `Conversation with ${selectedConversation.name} has been archived`
+      });
       
     } catch (error) {
-      console.error('Error archiving conversation:', error);
-      alert('Error: Failed to archive conversation. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to archive conversation',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -436,19 +420,22 @@ const EnhancedExecutiveMessaging = () => {
     if (!selectedConversation) return;
     
     try {
-      console.log('Deleting conversation:', selectedConversation.id);
-      
-      // For demo purposes, just update local state (no Supabase calls)
       // Remove conversation from local state
       setConversations(prev => prev.filter(conv => conv.id !== selectedConversation.id));
       setSelectedConversation(null);
       setMessages([]);
       
-      alert(`Conversation with ${selectedConversation.name} has been deleted`);
+      toast({
+        title: 'Conversation Deleted',
+        description: `Conversation with ${selectedConversation.name} has been deleted`
+      });
       
     } catch (error) {
-      console.error('Error deleting conversation:', error);
-      alert('Error: Failed to delete conversation. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to delete conversation',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -635,7 +622,6 @@ const EnhancedExecutiveMessaging = () => {
           : 'hover:bg-muted/50 border-transparent'
       }`}
       onClick={() => {
-        console.log('🔄 Conversation clicked:', conversation.id, conversation.name);
         setSelectedConversation(conversation);
         loadMessages(conversation.id);
       }}
@@ -694,28 +680,29 @@ const EnhancedExecutiveMessaging = () => {
 
   const handleDeleteMessage = (messageId: string) => {
     try {
-      console.log('Attempting to delete message:', messageId);
-      
       // Check if messageId exists
       if (!messageId) {
-        console.error('No message ID provided');
-        alert('Error: Unable to delete message - invalid ID');
+        toast({
+          title: 'Error',
+          description: 'Unable to delete message - invalid ID',
+          variant: 'destructive'
+        });
         return;
       }
 
       // Find the message first
       const messageToDelete = messages.find(msg => msg.id === messageId);
       if (!messageToDelete) {
-        console.error('Message not found:', messageId);
-        alert('Error: Message not found');
+        toast({
+          title: 'Error',
+          description: 'Message not found',
+          variant: 'destructive'
+        });
         return;
       }
 
       // Add message ID to deleted messages in both localStorage AND React state
       try {
-        console.log('💾 DELETING MESSAGE:', messageId);
-        console.log('📋 Current deleted messages before deletion:', deletedMessageIds);
-        
         if (!deletedMessageIds.includes(messageId)) {
           const updatedDeleted = [...deletedMessageIds, messageId];
           
@@ -724,30 +711,27 @@ const EnhancedExecutiveMessaging = () => {
           
           // Also save to localStorage for persistence
           localStorage.setItem('deletedMessages', JSON.stringify(updatedDeleted));
-          
-          console.log('✅ Message ID saved to both state and localStorage:', messageId);
-          console.log('📋 Updated deleted messages:', updatedDeleted);
-        } else {
-          console.log('⚠️ Message already in deleted list:', messageId);
         }
       } catch (error) {
-        console.error('❌ Error saving deleted message:', error);
+        // Handle localStorage errors silently
       }
 
       // Immediately reload messages to reflect the deletion
       if (selectedConversation) {
-        console.log('🔄 Reloading messages after deletion');
         loadMessages(selectedConversation.id);
       }
       
-      console.log('Message deleted successfully and persisted');
-      
-      // Use simple alert instead of toast to avoid potential toast issues
-      alert('Message deleted successfully');
+      toast({
+        title: 'Message Deleted',
+        description: 'Message has been successfully deleted'
+      });
       
     } catch (error) {
-      console.error('Error deleting message:', error);
-      alert('Error: Failed to delete message. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to delete message. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -795,14 +779,8 @@ const EnhancedExecutiveMessaging = () => {
                   <div className="absolute top-8 right-0 bg-slate-800/95 backdrop-blur-xl border border-gray-600/30 rounded-lg p-1 shadow-2xl z-50 min-w-[120px]">
                     <button
                       onClick={() => {
-                        console.log('Delete button clicked for message:', message.id);
-                        console.log('Message object:', message);
-                        
                         if (window.confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
-                          console.log('User confirmed deletion');
                           handleDeleteMessage(message.id);
-                        } else {
-                          console.log('User cancelled deletion');
                         }
                         setShowDeleteMenu(false);
                       }}

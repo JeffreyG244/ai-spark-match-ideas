@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Users, 
   Shield, 
@@ -31,6 +32,7 @@ const RoleManager: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRole, setNewUserRole] = useState('user');
+  const { toast } = useToast();
 
   useEffect(() => {
     checkAdminStatus();
@@ -88,7 +90,11 @@ const RoleManager: React.FC = () => {
       const mockProfile = { user_id: 'mock-user-id' };
       
       if (!mockProfile) {
-        alert('User not found with that email address.');
+        toast({
+          title: 'Error',
+          description: 'User not found with that email address.',
+          variant: 'destructive'
+        });
         return;
       }
 
@@ -99,7 +105,11 @@ const RoleManager: React.FC = () => {
       setNewUserRole('user');
     } catch (error) {
       console.error('Failed to assign role:', error);
-      alert('Failed to assign role. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to assign role. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -111,7 +121,11 @@ const RoleManager: React.FC = () => {
       await loadUserRoles();
     } catch (error) {
       console.error('Failed to revoke role:', error);
-      alert('Failed to revoke role. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to revoke role. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
