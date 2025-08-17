@@ -166,6 +166,9 @@ const EnhancedExecutiveMessaging = () => {
   };
 
   const loadMessages = (conversationId: string) => {
+    // Get deleted message IDs from localStorage
+    const deletedMessageIds = JSON.parse(localStorage.getItem('deletedMessages') || '[]');
+    
     // Professional executive messages based on conversation
     const conversationMessages: Record<string, Message[]> = {
       '1': [
@@ -257,7 +260,11 @@ const EnhancedExecutiveMessaging = () => {
       }
     ];
     
-    setMessages(conversationMessages[conversationId] || defaultMessages);
+    // Filter out deleted messages
+    const messagesToShow = (conversationMessages[conversationId] || defaultMessages)
+      .filter(message => !deletedMessageIds.includes(message.id));
+    
+    setMessages(messagesToShow);
   };
 
   const sendMessage = () => {
@@ -645,11 +652,18 @@ const EnhancedExecutiveMessaging = () => {
         return;
       }
 
+      // Add message ID to deleted messages in localStorage
+      const deletedMessageIds = JSON.parse(localStorage.getItem('deletedMessages') || '[]');
+      if (!deletedMessageIds.includes(messageId)) {
+        deletedMessageIds.push(messageId);
+        localStorage.setItem('deletedMessages', JSON.stringify(deletedMessageIds));
+      }
+
       // Remove message from local state
       const updatedMessages = messages.filter(msg => msg.id !== messageId);
       setMessages(updatedMessages);
       
-      console.log('Message deleted successfully');
+      console.log('Message deleted successfully and persisted');
       
       // Use simple alert instead of toast to avoid potential toast issues
       alert('Message deleted successfully');
