@@ -931,6 +931,33 @@ export type Database = {
           },
         ]
       }
+      password_reset_requests: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          email: string | null
+          id: string
+          ip_address: unknown
+          updated_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          ip_address: unknown
+          updated_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          ip_address?: unknown
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       phone_verifications: {
         Row: {
           attempts: number | null
@@ -942,6 +969,7 @@ export type Database = {
           updated_at: string | null
           user_id: string
           verification_code: string | null
+          verification_code_hash: string | null
           verified_at: string | null
         }
         Insert: {
@@ -954,6 +982,7 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           verification_code?: string | null
+          verification_code_hash?: string | null
           verified_at?: string | null
         }
         Update: {
@@ -966,6 +995,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           verification_code?: string | null
+          verification_code_hash?: string | null
           verified_at?: string | null
         }
         Relationships: []
@@ -1138,7 +1168,7 @@ export type Database = {
           profile_complete: boolean | null
           sexual_orientation: string | null
           updated_at: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           age?: number | null
@@ -1162,7 +1192,7 @@ export type Database = {
           profile_complete?: boolean | null
           sexual_orientation?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           age?: number | null
@@ -1186,7 +1216,7 @@ export type Database = {
           profile_complete?: boolean | null
           sexual_orientation?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1876,6 +1906,24 @@ export type Database = {
         }
         Relationships: []
       }
+      public_profiles_safe: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          public_data: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          public_data?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          public_data?: Json | null
+        }
+        Relationships: []
+      }
       user_interests_view: {
         Row: {
           category_name: string | null
@@ -2544,8 +2592,12 @@ export type Database = {
         Returns: undefined
       }
       has_role: {
-        Args: { check_role: string; check_user_id: string }
+        Args: { check_user_id: string; role_name: string }
         Returns: boolean
+      }
+      hash_verification_code: {
+        Args: { code: string }
+        Returns: string
       }
       is_admin: {
         Args: Record<PropertyKey, never>

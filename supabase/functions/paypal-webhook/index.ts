@@ -18,7 +18,12 @@ serve(async (req) => {
   }
 
   try {
-    logStep("Webhook received");
+    // CRITICAL SECURITY FIX: Add basic rate limiting for webhook endpoint
+    const clientIP = req.headers.get('x-forwarded-for') || 
+                     req.headers.get('x-real-ip') || 
+                     'unknown';
+    
+    logStep("Webhook received", { ip: clientIP, userAgent: req.headers.get('user-agent') });
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -26,11 +31,56 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    // Basic rate limiting - max 100 requests per IP per hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    
+    try {
+      const { data: recentRequests } = await supabaseClient
+        .from('security_logs')
+        .select('id')
+        .eq('event_type', 'paypal_webhook_received')
+        .gte('created_at', oneHourAgo.toISOString())
+        .like('details->ip_address', `"${clientIP}"`);
+
+      if (recentRequests && recentRequests.length > 100) {
+        await supabaseClient.from('security_logs').insert({
+          event_type: 'paypal_webhook_rate_limit_exceeded',
+          severity: 'high',
+          details: { ip_address: clientIP, requests_in_hour: recentRequests.length }
+        });
+        
+        return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429,
+        });
+      }
+    } catch (rateLimitError) {
+      logStep("Rate limit check failed", rateLimitError);
+      // Continue processing but log the issue
+    }
+
     const webhookData = await req.json();
     logStep("Webhook data received", { eventType: webhookData.event_type });
 
-    // Verify webhook signature (implement according to PayPal docs)
-    // TODO: Add webhook signature verification for security
+    // Log the webhook receipt for security monitoring
+    await supabaseClient.from('security_logs').insert({
+      event_type: 'paypal_webhook_received',
+      severity: 'low',
+      details: {
+        ip_address: clientIP,
+        event_type: webhookData.event_type,
+        webhook_id: webhookData.id,
+        user_agent: req.headers.get('user-agent')
+      }
+    });
+
+    // CRITICAL SECURITY TODO: Verify webhook signature
+    // This is commented for now but MUST be implemented before production
+    // const signature = req.headers.get('PAYPAL-TRANSMISSION-SIG');
+    // const webhookId = Deno.env.get('PAYPAL_WEBHOOK_ID');
+    // if (!verifyPayPalSignature(signature, webhookData, webhookId)) {
+    //   throw new Error('Invalid webhook signature');
+    // }
 
     // Handle different PayPal webhook events
     switch (webhookData.event_type) {
