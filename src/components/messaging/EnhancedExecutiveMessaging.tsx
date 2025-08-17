@@ -166,8 +166,14 @@ const EnhancedExecutiveMessaging = () => {
   };
 
   const loadMessages = (conversationId: string) => {
-    // Get deleted message IDs from localStorage
-    const deletedMessageIds = JSON.parse(localStorage.getItem('deletedMessages') || '[]');
+    // Get deleted message IDs from localStorage with error handling
+    let deletedMessageIds: string[] = [];
+    try {
+      deletedMessageIds = JSON.parse(localStorage.getItem('deletedMessages') || '[]');
+    } catch (error) {
+      console.warn('Error loading deleted messages from localStorage:', error);
+      deletedMessageIds = [];
+    }
     
     // Professional executive messages based on conversation
     const conversationMessages: Record<string, Message[]> = {
@@ -652,11 +658,16 @@ const EnhancedExecutiveMessaging = () => {
         return;
       }
 
-      // Add message ID to deleted messages in localStorage
-      const deletedMessageIds = JSON.parse(localStorage.getItem('deletedMessages') || '[]');
-      if (!deletedMessageIds.includes(messageId)) {
-        deletedMessageIds.push(messageId);
-        localStorage.setItem('deletedMessages', JSON.stringify(deletedMessageIds));
+      // Add message ID to deleted messages in localStorage with error handling
+      try {
+        const deletedMessageIds = JSON.parse(localStorage.getItem('deletedMessages') || '[]');
+        if (!deletedMessageIds.includes(messageId)) {
+          deletedMessageIds.push(messageId);
+          localStorage.setItem('deletedMessages', JSON.stringify(deletedMessageIds));
+          console.log('Message ID saved to localStorage:', messageId);
+        }
+      } catch (error) {
+        console.error('Error saving deleted message to localStorage:', error);
       }
 
       // Remove message from local state
