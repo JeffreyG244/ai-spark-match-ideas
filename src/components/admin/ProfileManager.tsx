@@ -233,19 +233,60 @@ const ProfileManager: React.FC = () => {
   };
 
   const handleRemoveAllSeedProfiles = async () => {
-    if (!confirm('Are you sure you want to remove ALL seed profiles? This will delete all profiles with seed/example email domains. This action cannot be undone.')) {
+    if (!confirm('Are you sure you want to remove ALL seed profiles? This will delete all profiles with seed/example email domains, stock photos, and known seed names. This action cannot be undone.')) {
       return;
     }
 
     setIsLoading(true);
     try {
-      // First, get all seed profiles (identified by common seed email patterns)
-      const { data: seedProfiles, error: fetchError } = await supabase
+      // Get all users first, then filter client-side for comprehensive detection
+      const { data: allUsers, error: fetchError } = await supabase
         .from('users')
-        .select('id, email, first_name, last_name')
-        .or('email.like.%@example.com,email.like.%@professional.com,email.like.%dating@%,email.like.%seed%,email.like.%demo%,email.like.%test%');
+        .select('id, email, first_name, last_name, photos');
 
       if (fetchError) throw fetchError;
+
+      if (!allUsers || allUsers.length === 0) {
+        toast({
+          title: 'No Profiles Found',
+          description: 'No profiles were found in the database.',
+        });
+        return;
+      }
+
+      // Comprehensive seed profile detection
+      const seedFirstNames = [
+        'Alex', 'Michael', 'David', 'James', 'Ryan', 'Carlos', 'Brandon', 'Kevin', 'Marcus', 'Daniel',
+        'Noah', 'Tyler', 'Jacob', 'Ethan', 'Luke', 'Andrew', 'Connor', 'Ian', 'Jordan', 'Mason',
+        'Sarah', 'Emma', 'Jessica', 'Ashley', 'Amanda', 'Olivia', 'Sophia', 'Mia', 'Isabella', 'Emily',
+        'Madison', 'Ava', 'Victoria', 'Grace', 'Hannah', 'Samantha', 'Nicole', 'Elizabeth', 'Taylor', 'Rachel'
+      ];
+
+      const seedProfiles = allUsers.filter(user => {
+        // Check email patterns
+        const emailCheck = user.email && (
+          user.email.includes('@example.com') ||
+          user.email.includes('@professional.com') ||
+          user.email.includes('dating@') ||
+          user.email.includes('seed') ||
+          user.email.includes('demo') ||
+          user.email.includes('test') ||
+          user.email.includes('.dating@') ||
+          user.email.includes('@dating.')
+        );
+
+        // Check first names from seed data
+        const nameCheck = seedFirstNames.includes(user.first_name);
+
+        // Check for stock photo patterns (Unsplash URLs commonly used in seed data)
+        const photoCheck = user.photos && Array.isArray(user.photos) && 
+          user.photos.some((photo: string) => 
+            photo.includes('unsplash.com') || 
+            photo.includes('images.unsplash.com')
+          );
+
+        return emailCheck || nameCheck || photoCheck;
+      });
 
       if (!seedProfiles || seedProfiles.length === 0) {
         toast({
@@ -254,6 +295,11 @@ const ProfileManager: React.FC = () => {
         });
         return;
       }
+
+      console.log(`Found ${seedProfiles.length} seed profiles to remove:`, seedProfiles.map(p => ({
+        name: `${p.first_name} ${p.last_name}`,
+        email: p.email
+      })));
 
       // Delete related data first (conversations, matches, etc.)
       const profileIds = seedProfiles.map(p => p.id);
@@ -418,7 +464,10 @@ const ProfileManager: React.FC = () => {
           <div className="space-y-4">
             <p className="text-sm text-red-700">
               <strong>⚠️ DANGER ZONE:</strong> This will permanently delete ALL seed profiles and related data (conversations, matches, etc.). 
-              This includes profiles with emails containing: @example.com, @professional.com, dating@, seed, demo, test.
+              This includes profiles with:
+              • Email patterns: @example.com, @professional.com, dating@, seed, demo, test
+              • Common seed names: Alex, Michael, David, Sarah, Emma, etc.
+              • Stock photos: Unsplash URLs commonly used in seed data
             </p>
             <Button 
               onClick={handleRemoveAllSeedProfiles}
