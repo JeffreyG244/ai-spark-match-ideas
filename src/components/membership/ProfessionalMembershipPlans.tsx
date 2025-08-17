@@ -110,15 +110,11 @@ const ProfessionalMembershipPlans = () => {
           { text: 'Everything in Executive', icon: Diamond },
           { text: 'Personal matchmaker assigned', icon: Crown },
           { text: 'C-level exclusive events', icon: Star },
-          { text: 'Private dining experiences', icon: Star },
           { text: 'Executive retreat access', icon: Globe },
           { text: 'Background verification', icon: Shield },
-          { text: 'Luxury travel dating', icon: Globe },
-          { text: 'Personal brand consulting', icon: Briefcase },
           { text: '24/7 concierge support', icon: Crown },
           { text: 'White-glove onboarding', icon: Crown },
           { text: 'Executive coaching', icon: Users },
-          { text: 'Private jet meetups', icon: Star },
           { text: 'Elite member directory', icon: Diamond },
           { text: 'Relationship psychology sessions', icon: Heart }
         ];
