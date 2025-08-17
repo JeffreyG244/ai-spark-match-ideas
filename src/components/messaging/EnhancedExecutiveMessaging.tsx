@@ -676,12 +676,22 @@ const EnhancedExecutiveMessaging = () => {
     </div>
   );
 
+  const handleDeleteMessage = (messageId: string) => {
+    setMessages(prev => prev.filter(msg => msg.id !== messageId));
+    toast({
+      title: 'Message Deleted',
+      description: 'Message has been permanently deleted',
+      variant: 'destructive'
+    });
+  };
+
   const MessageBubble = ({ message }: { message: Message }) => {
     const isMe = message.senderId === user?.id || message.senderId === 'me';
+    const [showDeleteMenu, setShowDeleteMenu] = useState(false);
     
     return (
-      <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4`}>
-        <div className={`max-w-xs lg:max-w-md ${
+      <div className={`flex ${isMe ? 'justify-end' : 'justify-start'} mb-4 group`}>
+        <div className={`relative max-w-xs lg:max-w-md ${
           isMe 
             ? 'bg-gradient-to-r from-love-primary to-love-secondary text-white' 
             : 'bg-muted text-foreground'
@@ -703,6 +713,35 @@ const EnhancedExecutiveMessaging = () => {
               </div>
             )}
           </div>
+          
+          {/* Delete button - only show for user's own messages */}
+          {isMe && (
+            <div className="absolute -right-2 -top-2">
+              <div className="relative">
+                <button
+                  onClick={() => setShowDeleteMenu(!showDeleteMenu)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-700/90 hover:bg-slate-600/90 rounded-full p-1 shadow-lg"
+                >
+                  <MoreVertical className="w-3 h-3 text-white" />
+                </button>
+                
+                {showDeleteMenu && (
+                  <div className="absolute top-8 right-0 bg-slate-800/95 backdrop-blur-xl border border-gray-600/30 rounded-lg p-1 shadow-2xl z-50 min-w-[120px]">
+                    <button
+                      onClick={() => {
+                        handleDeleteMessage(message.id);
+                        setShowDeleteMenu(false);
+                      }}
+                      className="w-full flex items-center space-x-2 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-red-400 text-sm"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Delete</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
