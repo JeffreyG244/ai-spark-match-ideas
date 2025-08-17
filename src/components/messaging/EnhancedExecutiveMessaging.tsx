@@ -179,7 +179,7 @@ const EnhancedExecutiveMessaging = () => {
     const conversationMessages: Record<string, Message[]> = {
       '1': [
         {
-          id: '1',
+          id: 'conv1_1',
           senderId: 'other',
           content: "Hello! I noticed we have a lot in common professionally. Your leadership experience in digital transformation really caught my attention.",
           timestamp: '10:30 AM',
@@ -187,7 +187,7 @@ const EnhancedExecutiveMessaging = () => {
           status: 'read'
         },
         {
-          id: '2',
+          id: 'conv1_2',
           senderId: user?.id || 'me',
           content: "Thank you! I'd be happy to connect. Your background in enterprise solutions at Meta is impressive - I've been following your work on AR/VR integration.",
           timestamp: '10:45 AM',
@@ -195,7 +195,7 @@ const EnhancedExecutiveMessaging = () => {
           status: 'read'
         },
         {
-          id: '3',
+          id: 'conv1_3',
           senderId: 'other',
           content: "Thank you! I've been passionate about the intersection of technology and business strategy. Perhaps we could schedule a coffee meeting to discuss potential synergies?",
           timestamp: '11:00 AM',
@@ -203,7 +203,7 @@ const EnhancedExecutiveMessaging = () => {
           status: 'read'
         },
         {
-          id: '4',
+          id: 'conv1_4',
           senderId: user?.id || 'me',
           content: "That sounds perfect. I'm free this Friday afternoon if that works for you. I know a great place downtown - The Executive Lounge at the Marriott.",
           timestamp: '11:15 AM',
@@ -211,7 +211,7 @@ const EnhancedExecutiveMessaging = () => {
           status: 'delivered'
         },
         {
-          id: '5',
+          id: 'conv1_5',
           senderId: 'other',
           content: "Perfect! Looking forward to our coffee meeting this Friday at 3 PM at The Executive Lounge. I'll bring some insights on our upcoming Q4 initiatives.",
           timestamp: '2 min ago',
@@ -221,7 +221,7 @@ const EnhancedExecutiveMessaging = () => {
       ],
       '2': [
         {
-          id: '1',
+          id: 'conv2_1',
           senderId: 'other',
           content: "Great to connect! I see we're both in the finance sector. Your experience with global markets alignment would be valuable for our upcoming expansion.",
           timestamp: '9:15 AM',
@@ -229,7 +229,7 @@ const EnhancedExecutiveMessaging = () => {
           status: 'read'
         },
         {
-          id: '2',
+          id: 'conv2_2',
           senderId: user?.id || 'me',
           content: "Absolutely! Goldman Sachs has always been at the forefront of financial innovation. I'd love to hear about your expansion plans.",
           timestamp: '9:30 AM',
@@ -237,7 +237,7 @@ const EnhancedExecutiveMessaging = () => {
           status: 'read'
         },
         {
-          id: '3',
+          id: 'conv2_3',
           senderId: 'other',
           content: "Thanks for the connection, would love to discuss synergies between our organizations. Are you available for a brief call this week?",
           timestamp: '1 hour ago',
@@ -249,7 +249,7 @@ const EnhancedExecutiveMessaging = () => {
 
     const defaultMessages: Message[] = [
       {
-        id: '1',
+        id: 'default_1',
         senderId: 'other',
         content: "Great to match with you! Your professional background is impressive.",
         timestamp: '2:00 PM',
@@ -257,7 +257,7 @@ const EnhancedExecutiveMessaging = () => {
         status: 'read'
       },
       {
-        id: '2',
+        id: 'default_2',
         senderId: user?.id || 'me',
         content: "Thank you! Looking forward to connecting and exploring potential collaborations.",
         timestamp: '2:15 PM',
@@ -277,7 +277,7 @@ const EnhancedExecutiveMessaging = () => {
     if (!newMessage.trim() || !selectedConversation) return;
 
     const message: Message = {
-      id: Date.now().toString(),
+      id: `new_${Date.now()}`,
       senderId: user?.id || 'me',
       content: newMessage,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -285,7 +285,19 @@ const EnhancedExecutiveMessaging = () => {
       status: 'sent'
     };
 
-    setMessages(prev => [...prev, message]);
+    // Get current deleted messages to ensure we don't add them back
+    let deletedMessageIds: string[] = [];
+    try {
+      deletedMessageIds = JSON.parse(localStorage.getItem('deletedMessages') || '[]');
+    } catch (error) {
+      console.warn('Error loading deleted messages:', error);
+    }
+
+    // Only add message if it's not in deleted list
+    setMessages(prev => {
+      const filteredPrev = prev.filter(msg => !deletedMessageIds.includes(msg.id));
+      return [...filteredPrev, message];
+    });
     setNewMessage('');
 
     toast({
