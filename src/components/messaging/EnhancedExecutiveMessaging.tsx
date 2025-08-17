@@ -149,6 +149,7 @@ const EnhancedExecutiveMessaging = () => {
       setConversations(allConversations);
       
       if (allConversations.length > 0) {
+        console.log('🚀 Auto-selecting first conversation on component load');
         setSelectedConversation(allConversations[0]);
         loadMessages(allConversations[0].id);
       }
