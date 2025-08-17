@@ -2,17 +2,7 @@
   publish = "dist"
   command = "npm run build"
 
-[build.environment]
-  NODE_VERSION = "20"
-
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-
-# Force SSL certificate refresh
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Robots-Tag = "index, follow"
-    Cache-Control = "no-cache"
