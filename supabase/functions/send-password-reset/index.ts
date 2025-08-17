@@ -20,12 +20,52 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    console.log('Password reset request received');
+    // CRITICAL SECURITY FIX: Rate limiting protection
+    const clientIP = req.headers.get('x-forwarded-for') || 
+                     req.headers.get('x-real-ip') || 
+                     req.headers.get('cf-connecting-ip') || 
+                     'unknown';
+    
+    console.log(`Password reset request received from IP: ${clientIP}`);
     
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
+
+    // Check rate limiting - max 3 attempts per hour per IP, 5 per email per hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    
+    const { data: recentRequests, error: rateLimitError } = await supabaseClient
+      .from('password_reset_requests')
+      .select('*')
+      .eq('ip_address', clientIP)
+      .gte('created_at', oneHourAgo.toISOString());
+
+    if (recentRequests && recentRequests.length >= 3) {
+      console.log(`Rate limit exceeded for IP: ${clientIP} (${recentRequests.length} attempts)`);
+      
+      // Log security event
+      await supabaseClient.from('security_logs').insert({
+        event_type: 'password_reset_rate_limit_exceeded',
+        severity: 'medium',
+        details: {
+          ip_address: clientIP,
+          attempts_in_hour: recentRequests.length,
+          user_agent: req.headers.get('user-agent')
+        }
+      });
+
+      return new Response(
+        JSON.stringify({ 
+          error: 'Too many password reset attempts from this IP. Please try again in 1 hour.' 
+        }),
+        {
+          status: 429,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
+      );
+    }
 
     const { email }: PasswordResetRequest = await req.json();
     
@@ -39,6 +79,24 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
+
+    // Validate email format
+    if (!email.includes('@') || email.length < 5) {
+      return new Response(
+        JSON.stringify({ error: 'Valid email address is required' }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
+      );
+    }
+
+    // Log the rate limiting attempt (track regardless of user existence)
+    await supabaseClient.from('password_reset_requests').insert({
+      ip_address: clientIP,
+      email: email,
+      attempts: 1
+    });
 
     console.log('Processing password reset for email:', email);
 

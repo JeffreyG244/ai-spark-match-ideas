@@ -62,33 +62,58 @@ Deno.serve(async (req) => {
       throw new Error('Too many verification attempts')
     }
 
-    // Verify the code
-    if (verification.verification_code !== verificationCode) {
-      // Increment attempts
-      await supabase
+    // CRITICAL SECURITY FIX: Use secure hashed verification instead of plaintext
+    // Try new secure hash method first
+    const { data: secureResult, error: secureError } = await supabase
+      .rpc('verify_phone_code_secure', {
+        user_id: user.id,
+        submitted_code: verificationCode
+      });
+
+    if (secureError) {
+      console.error('Secure verification error:', secureError);
+      
+      // Fallback to legacy plaintext method for backwards compatibility
+      if (verification.verification_code !== verificationCode) {
+        // Increment attempts
+        await supabase
+          .from('phone_verifications')
+          .update({ 
+            attempts: verification.attempts + 1,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', verification.id)
+
+        throw new Error('Invalid verification code')
+      }
+
+      // Mark as verified (legacy method)
+      const { error: updateError } = await supabase
         .from('phone_verifications')
         .update({ 
-          attempts: verification.attempts + 1,
+          verified_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
         .eq('id', verification.id)
-
+        
+      if (updateError) {
+        console.error('Update error:', updateError)
+        throw new Error('Failed to verify phone number')
+      }
+    } else if (!secureResult) {
       throw new Error('Invalid verification code')
     }
 
-    // Mark as verified - this will trigger the database function to update user_verifications
-    const { error: updateError } = await supabase
-      .from('phone_verifications')
-      .update({ 
-        verified_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', verification.id)
-
-    if (updateError) {
-      console.error('Update error:', updateError)
-      throw new Error('Failed to verify phone number')
-    }
+    // Log successful verification
+    await supabase.from('security_logs').insert({
+      event_type: 'phone_verification_successful',
+      severity: 'low',
+      details: {
+        user_id: user.id,
+        phone_number: phoneNumber,
+        verification_method: secureError ? 'legacy_plaintext' : 'secure_hash'
+      }
+    });
 
     return new Response(
       JSON.stringify({ 
