@@ -678,21 +678,35 @@ const EnhancedExecutiveMessaging = () => {
 
   const handleDeleteMessage = (messageId: string) => {
     try {
-      // Remove message from local state
-      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      console.log('Attempting to delete message:', messageId);
       
-      // Show success toast
-      toast({
-        title: 'Message Deleted',
-        description: 'Message has been permanently deleted'
-      });
+      // Check if messageId exists
+      if (!messageId) {
+        console.error('No message ID provided');
+        alert('Error: Unable to delete message - invalid ID');
+        return;
+      }
+
+      // Find the message first
+      const messageToDelete = messages.find(msg => msg.id === messageId);
+      if (!messageToDelete) {
+        console.error('Message not found:', messageId);
+        alert('Error: Message not found');
+        return;
+      }
+
+      // Remove message from local state
+      const updatedMessages = messages.filter(msg => msg.id !== messageId);
+      setMessages(updatedMessages);
+      
+      console.log('Message deleted successfully');
+      
+      // Use simple alert instead of toast to avoid potential toast issues
+      alert('Message deleted successfully');
+      
     } catch (error) {
       console.error('Error deleting message:', error);
-      toast({
-        title: 'Delete Failed',
-        description: 'Unable to delete message. Please try again.',
-        variant: 'destructive'
-      });
+      alert('Error: Failed to delete message. Please try again.');
     }
   };
 
@@ -740,8 +754,14 @@ const EnhancedExecutiveMessaging = () => {
                   <div className="absolute top-8 right-0 bg-slate-800/95 backdrop-blur-xl border border-gray-600/30 rounded-lg p-1 shadow-2xl z-50 min-w-[120px]">
                     <button
                       onClick={() => {
+                        console.log('Delete button clicked for message:', message.id);
+                        console.log('Message object:', message);
+                        
                         if (window.confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
+                          console.log('User confirmed deletion');
                           handleDeleteMessage(message.id);
+                        } else {
+                          console.log('User cancelled deletion');
                         }
                         setShowDeleteMenu(false);
                       }}
