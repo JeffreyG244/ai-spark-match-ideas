@@ -677,12 +677,23 @@ const EnhancedExecutiveMessaging = () => {
   );
 
   const handleDeleteMessage = (messageId: string) => {
-    setMessages(prev => prev.filter(msg => msg.id !== messageId));
-    toast({
-      title: 'Message Deleted',
-      description: 'Message has been permanently deleted',
-      variant: 'destructive'
-    });
+    try {
+      // Remove message from local state
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      
+      // Show success toast
+      toast({
+        title: 'Message Deleted',
+        description: 'Message has been permanently deleted'
+      });
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast({
+        title: 'Delete Failed',
+        description: 'Unable to delete message. Please try again.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const MessageBubble = ({ message }: { message: Message }) => {
@@ -729,7 +740,9 @@ const EnhancedExecutiveMessaging = () => {
                   <div className="absolute top-8 right-0 bg-slate-800/95 backdrop-blur-xl border border-gray-600/30 rounded-lg p-1 shadow-2xl z-50 min-w-[120px]">
                     <button
                       onClick={() => {
-                        handleDeleteMessage(message.id);
+                        if (window.confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
+                          handleDeleteMessage(message.id);
+                        }
                         setShowDeleteMenu(false);
                       }}
                       className="w-full flex items-center space-x-2 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-red-400 text-sm"
