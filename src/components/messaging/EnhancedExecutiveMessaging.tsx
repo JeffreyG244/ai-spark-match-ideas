@@ -166,10 +166,15 @@ const EnhancedExecutiveMessaging = () => {
   };
 
   const loadMessages = (conversationId: string) => {
+    console.log('🔄 loadMessages called for conversation:', conversationId);
+    
     // Get deleted message IDs from localStorage with error handling
     let deletedMessageIds: string[] = [];
     try {
-      deletedMessageIds = JSON.parse(localStorage.getItem('deletedMessages') || '[]');
+      const storedData = localStorage.getItem('deletedMessages');
+      console.log('📦 Raw localStorage data:', storedData);
+      deletedMessageIds = JSON.parse(storedData || '[]');
+      console.log('🗑️ Parsed deleted message IDs:', deletedMessageIds);
     } catch (error) {
       console.warn('Error loading deleted messages from localStorage:', error);
       deletedMessageIds = [];
@@ -267,9 +272,18 @@ const EnhancedExecutiveMessaging = () => {
     ];
     
     // Filter out deleted messages
-    const messagesToShow = (conversationMessages[conversationId] || defaultMessages)
-      .filter(message => !deletedMessageIds.includes(message.id));
+    const originalMessages = conversationMessages[conversationId] || defaultMessages;
+    console.log('📨 Original messages for conversation', conversationId + ':', originalMessages.map(m => m.id));
     
+    const messagesToShow = originalMessages.filter(message => {
+      const isDeleted = deletedMessageIds.includes(message.id);
+      if (isDeleted) {
+        console.log('🚫 Filtering out deleted message:', message.id);
+      }
+      return !isDeleted;
+    });
+    
+    console.log('✅ Messages to show:', messagesToShow.map(m => m.id));
     setMessages(messagesToShow);
   };
 
@@ -595,6 +609,7 @@ const EnhancedExecutiveMessaging = () => {
           : 'hover:bg-muted/50 border-transparent'
       }`}
       onClick={() => {
+        console.log('🔄 Conversation clicked:', conversation.id, conversation.name);
         setSelectedConversation(conversation);
         loadMessages(conversation.id);
       }}
@@ -672,14 +687,24 @@ const EnhancedExecutiveMessaging = () => {
 
       // Add message ID to deleted messages in localStorage with error handling
       try {
-        const deletedMessageIds = JSON.parse(localStorage.getItem('deletedMessages') || '[]');
-        if (!deletedMessageIds.includes(messageId)) {
-          deletedMessageIds.push(messageId);
-          localStorage.setItem('deletedMessages', JSON.stringify(deletedMessageIds));
-          console.log('Message ID saved to localStorage:', messageId);
+        console.log('💾 DELETING MESSAGE:', messageId);
+        const currentDeleted = JSON.parse(localStorage.getItem('deletedMessages') || '[]');
+        console.log('📋 Current deleted messages before deletion:', currentDeleted);
+        
+        if (!currentDeleted.includes(messageId)) {
+          currentDeleted.push(messageId);
+          localStorage.setItem('deletedMessages', JSON.stringify(currentDeleted));
+          console.log('✅ Message ID saved to localStorage:', messageId);
+          console.log('📋 Updated deleted messages:', currentDeleted);
+          
+          // Verify it was saved
+          const verification = localStorage.getItem('deletedMessages');
+          console.log('🔍 Verification - localStorage now contains:', verification);
+        } else {
+          console.log('⚠️ Message already in deleted list:', messageId);
         }
       } catch (error) {
-        console.error('Error saving deleted message to localStorage:', error);
+        console.error('❌ Error saving deleted message to localStorage:', error);
       }
 
       // Remove message from local state
