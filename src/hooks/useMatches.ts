@@ -219,9 +219,42 @@ export const useMatches = () => {
     loadMatches();
   }, [user]);
 
+  const deleteMatch = async (matchId: string) => {
+    if (!user) return false;
+    
+    try {
+      // Delete from executive_matches table
+      const { error: execMatchError } = await supabase
+        .from('executive_matches')
+        .delete()
+        .eq('id', matchId);
+
+      // Handle sample matches (demo data)
+      if (matchId.startsWith('sample-')) {
+        // Remove from local state for sample matches
+        setMatches(prev => prev.filter(match => match.id !== matchId));
+        return true;
+      }
+
+      if (execMatchError) {
+        console.error('Error deleting match:', execMatchError);
+        return false;
+      }
+
+      // Reload matches to reflect deletion
+      await loadMatches();
+      return true;
+      
+    } catch (error) {
+      console.error('Error in deleteMatch:', error);
+      return false;
+    }
+  };
+
   return {
     matches,
     isLoading,
-    loadMatches
+    loadMatches,
+    deleteMatch
   };
 };
