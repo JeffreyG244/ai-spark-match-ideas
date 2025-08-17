@@ -57,13 +57,13 @@ export const SecureSessionManager = () => {
         return;
       }
 
-      // Handle session refresh requirement
-      if (sessionData.requiresRefresh) {
-        toast({
-          title: 'Session Expiring Soon',
-          description: 'Your session will expire soon. Please save your work.',
-        });
-      }
+      // Handle session refresh requirement - banner removed per user request
+      // if (sessionData.requiresRefresh) {
+      //   toast({
+      //     title: 'Session Expiring Soon',
+      //     description: 'Your session will expire soon. Please save your work.',
+      //   });
+      // }
 
       // Check for suspicious device changes
       if (sessionData.deviceFingerprint) {

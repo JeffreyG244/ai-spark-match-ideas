@@ -24,11 +24,7 @@ const Legal = lazy(() => import("./pages/Legal"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 
 
-// Load other components normally (admin pages, etc.)
-import PreLaunchAudit from "./pages/PreLaunchAudit";
-import SeedUsers from "./pages/SeedUsers";
-import SeedDatingProfiles from "./pages/SeedDatingProfiles";
-import SeedEnhancedProfiles from "./pages/SeedEnhancedProfiles";
+// Load other components normally
 import NotFound from "./pages/NotFound";
 import Verification from "./pages/Verification";
 import Safety from "./pages/Safety";
@@ -36,8 +32,6 @@ import Analytics from "./pages/Analytics";
 import SuccessStories from "./pages/SuccessStories";
 import Moderation from "./pages/Moderation";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
-import SystemAudit from "./pages/SystemAudit";
-import SupabaseAuditReport from "./pages/SupabaseAuditReport";
 
 // Legal pages
 import TermsOfService from "./pages/legal/TermsOfService";
@@ -99,13 +93,6 @@ function App() {
                      <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
                     <Route path="/legal" element={<Legal />} />
                     <Route path="/how-it-works" element={<HowItWorks />} />
-                    <Route path="/seed-users" element={<SeedUsers />} />
-                    <Route path="/seed-dating-profiles" element={<SeedDatingProfiles />} />
-                    <Route path="/seed-enhanced-profiles" element={<SeedEnhancedProfiles />} />
-                     <Route path="/pre-launch-audit" element={<PreLaunchAudit />} />
-                     <Route path="/system-audit" element={<SystemAudit />} />
-                     <Route path="/supabase-audit" element={<SupabaseAuditReport />} />
-                     <Route path="/admin" element={<PreLaunchAudit />} />
                     <Route path="/verification" element={<Verification />} />
                     <Route path="/safety" element={<Safety />} />
                     <Route path="/analytics" element={<Analytics />} />

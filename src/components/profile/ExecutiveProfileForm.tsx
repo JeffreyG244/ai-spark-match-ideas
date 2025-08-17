@@ -132,7 +132,7 @@ const ExecutiveProfileForm = () => {
     'Executive Profile',
     'Identity & Preferences', 
     'Lifestyle & Values',
-    'Psychology & Compatibility',
+    'Psychology',
     'Interests & Culture',
     'Professional Gallery'
   ];
@@ -755,10 +755,10 @@ const handleComplete = async () => {
                 variant={currentSection === index + 1 ? "default" : "outline"}
                 size="sm"
                 onClick={() => setCurrentSection(index + 1)}
-                className={`text-xs ${
+                className={`text-xs whitespace-nowrap overflow-hidden text-ellipsis font-medium ${
                   currentSection === index + 1 
-                    ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                    : 'border-purple-400 text-purple-200 hover:bg-purple-700/20'
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-md' 
+                    : 'bg-purple-100/90 border-purple-300 text-purple-800 hover:bg-purple-200/90 hover:border-purple-400 shadow-sm'
                 }`}
               >
                 {section}

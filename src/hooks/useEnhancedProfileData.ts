@@ -57,11 +57,8 @@ export const useEnhancedProfileData = () => {
 
   const loadProfile = async () => {
     if (!user) {
-      console.log('Profile load skipped: No authenticated user');
       return;
     }
-    
-    console.log('Loading profile for user:', user.id);
     setIsLoading(true);
     
     try {
@@ -73,7 +70,6 @@ export const useEnhancedProfileData = () => {
         .maybeSingle();
 
       if (userProfileError && userProfileError.code !== 'PGRST116') {
-        console.error('Error loading user profile:', userProfileError);
         toast({
           title: 'Load Error',
           description: 'Failed to load your profile data.',
@@ -81,8 +77,6 @@ export const useEnhancedProfileData = () => {
         });
         return;
       }
-
-      console.log('Loaded user profile:', userProfile);
 
       // Combine the data from users table
       const combinedData: EnhancedProfileData = {
@@ -98,11 +92,9 @@ export const useEnhancedProfileData = () => {
         photo_urls: userProfile?.photos || [],
       };
 
-      console.log('Combined profile data:', combinedData);
       setProfileData(combinedData);
       setProfileExists(!!userProfile);
     } catch (error) {
-      console.error('Unexpected error loading profile:', error);
       toast({
         title: 'Load Error',
         description: 'An unexpected error occurred while loading your profile.',
@@ -115,7 +107,6 @@ export const useEnhancedProfileData = () => {
 
   const saveProfile = async (showSuccessToast = true) => {
     if (!user) {
-      console.error('Profile save failed: No authenticated user');
       toast({
         title: 'Authentication Required',
         description: 'Please log in to save your profile.',
@@ -125,13 +116,11 @@ export const useEnhancedProfileData = () => {
     }
 
     if (isSaving) {
-      console.log('Profile save skipped: Already saving');
       return { success: false };
     }
 
     // Validate bio minimum length
     if (profileData.bio && profileData.bio.length < 150) {
-      console.warn('Profile save failed: Bio too short', profileData.bio?.length);
       toast({
         title: 'Bio Too Short',
         description: 'Please write at least 150 characters about yourself.',
@@ -139,8 +128,6 @@ export const useEnhancedProfileData = () => {
       });
       return { success: false };
     }
-
-    console.log('Starting profile save for user:', user.id);
     setIsSaving(true);
     
     try {
@@ -170,8 +157,6 @@ export const useEnhancedProfileData = () => {
         updated_at: new Date().toISOString()
       };
 
-      console.log('Saving user profile payload:', userProfilePayload);
-
       const { data: upsertData, error: userProfileError } = await supabase
         .from('users')
         .upsert(userProfilePayload, { 
@@ -181,7 +166,6 @@ export const useEnhancedProfileData = () => {
         .select();
 
       if (userProfileError) {
-        console.error('User profile save error:', userProfileError);
         toast({
           title: 'Save Failed',
           description: `Failed to save profile: ${userProfileError.message}`,
@@ -189,8 +173,6 @@ export const useEnhancedProfileData = () => {
         });
         return { success: false };
       }
-
-      console.log('Profile save successful:', upsertData);
       setProfileExists(true);
       
       if (showSuccessToast) {
@@ -202,7 +184,6 @@ export const useEnhancedProfileData = () => {
       
       return { success: true };
     } catch (error) {
-      console.error('Unexpected save error:', error);
       toast({
         title: 'Unexpected Error',
         description: 'An unexpected error occurred. Please try again.',

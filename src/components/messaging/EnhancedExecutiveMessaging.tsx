@@ -347,11 +347,94 @@ const EnhancedExecutiveMessaging = () => {
     });
   };
 
-  const handleArchiveConversation = () => {
-    toast({
-      title: 'Conversation Archived',
-      description: `Conversation with ${selectedConversation?.name} has been archived`
-    });
+  const handleArchiveConversation = async () => {
+    if (!selectedConversation) return;
+    
+    try {
+      // Update conversation to archived status
+      const { error } = await supabase
+        .from('conversations')
+        .update({ is_archived: true })
+        .eq('id', selectedConversation.id);
+      
+      if (error) {
+        toast({
+          title: 'Error',
+          description: 'Failed to archive conversation',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      // Update UI - remove from active conversations list
+      setConversations(prev => prev.filter(conv => conv.id !== selectedConversation.id));
+      setSelectedConversation(null);
+      
+      toast({
+        title: 'Conversation Archived',
+        description: `Conversation with ${selectedConversation.name} has been archived`
+      });
+      
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleDeleteConversation = async () => {
+    if (!selectedConversation) return;
+    
+    try {
+      // Delete all messages in the conversation first
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('conversation_id', selectedConversation.id);
+      
+      if (messagesError) {
+        toast({
+          title: 'Error',
+          description: 'Failed to delete messages',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      // Then delete the conversation
+      const { error: conversationError } = await supabase
+        .from('conversations')
+        .delete()
+        .eq('id', selectedConversation.id);
+      
+      if (conversationError) {
+        toast({
+          title: 'Error',
+          description: 'Failed to delete conversation',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      // Update UI
+      setConversations(prev => prev.filter(conv => conv.id !== selectedConversation.id));
+      setSelectedConversation(null);
+      
+      toast({
+        title: 'Conversation Deleted',
+        description: `Conversation with ${selectedConversation.name} has been permanently deleted`,
+        variant: 'destructive'
+      });
+      
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleBlockUser = () => {
@@ -437,6 +520,16 @@ const EnhancedExecutiveMessaging = () => {
           >
             <Archive className="w-4 h-4 text-yellow-400" />
             <span className="text-sm">Archive Conversation</span>
+          </button>
+          <button
+            onClick={() => {
+              handleDeleteConversation();
+              setShowMoreMenu(false);
+            }}
+            className="w-full flex items-center space-x-3 px-3 py-2 hover:bg-slate-700/50 rounded-lg transition-all text-white"
+          >
+            <Trash2 className="w-4 h-4 text-red-400" />
+            <span className="text-sm">Delete Conversation</span>
           </button>
           <button
             onClick={() => {

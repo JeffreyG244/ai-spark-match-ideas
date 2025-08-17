@@ -28,11 +28,11 @@ const NavigationTabs = () => {
                   className="flex items-center gap-3 px-8 py-4 rounded-2xl 
                   data-[state=active]:bg-gradient-to-r data-[state=active]:from-love-primary data-[state=active]:to-love-secondary 
                   data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:shadow-love-primary/30
-                  data-[state=active]:scale-105 data-[state=active]:border-love-primary/30
-                  hover:bg-love-card hover:text-love-text hover:scale-[1.02] hover:border-love-primary/30
+                  data-[state=active]:scale-105 data-[state=active]:border-love-primary/50
+                  hover:bg-gradient-to-r hover:from-purple-400 hover:to-pink-400 hover:text-white hover:scale-[1.02] hover:border-purple-400 hover:shadow-lg
                   transition-all duration-300 ease-out whitespace-nowrap
-                  border border-love-border/30 bg-love-surface/50
-                  font-semibold text-love-text-muted text-sm
+                  border-2 border-purple-300 bg-gradient-to-r from-purple-200 to-pink-200 shadow-md
+                  font-bold text-purple-800 text-sm
                   backdrop-blur-sm"
                 >
                   <Icon className="h-5 w-5" />

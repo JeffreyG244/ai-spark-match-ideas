@@ -31,12 +31,13 @@ const SessionManager = () => {
   }, [user, signOut]);
 
   const handleSessionWarning = useCallback(() => {
-    if (user) {
-      toast({
-        title: 'Session Expiring Soon',
-        description: 'Your session will expire in 5 minutes due to inactivity.',
-      });
-    }
+    // Session expiring banner removed per user request
+    // if (user) {
+    //   toast({
+    //     title: 'Session Expiring Soon',
+    //     description: 'Your session will expire in 5 minutes due to inactivity.',
+    //   });
+    // }
   }, [user]);
 
   const resetSessionTimer = useCallback(() => {

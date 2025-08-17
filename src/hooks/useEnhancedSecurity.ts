@@ -36,12 +36,13 @@ export const useEnhancedSecurity = () => {
         return;
       }
       
-      if (sessionCheck.requiresRefresh) {
-        toast({
-          title: 'Session Expiring',
-          description: 'Your session will expire soon.',
-        });
-      }
+      // Session expiring banner removed per user request
+      // if (sessionCheck.requiresRefresh) {
+      //   toast({
+      //     title: 'Session Expiring',
+      //     description: 'Your session will expire soon.',
+      //   });
+      // }
       
       setSecurityStatus(prev => ({
         ...prev,

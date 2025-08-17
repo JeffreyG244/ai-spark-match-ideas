@@ -13,6 +13,7 @@ import { useAlert } from '@/components/providers/AlertProvider';
 import MembershipBadge from '@/components/profile/MembershipBadge';
 import { useMembershipBadge } from '@/hooks/useMembershipBadge';
 import Logo from '@/components/ui/logo';
+
 const Dashboard = () => {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();

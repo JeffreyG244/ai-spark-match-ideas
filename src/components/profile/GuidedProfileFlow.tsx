@@ -372,7 +372,14 @@ const GuidedProfileFlow = () => {
               </div>
               <EnhancedPhotoUpload
                 photos={photos}
-                onPhotosChange={setPhotos}
+                onPhotosChange={(newPhotos) => {
+                  setPhotos(newPhotos);
+                  // Update profile data with photo URLs
+                  const photoUrls = newPhotos.map(photo => photo.url);
+                  updateProfileField('photo_urls', photoUrls);
+                  // Auto-save photos to database
+                  saveProfile(false);
+                }}
               />
               {(photos || []).length >= 3 && (
                 <div className="text-center pt-4">

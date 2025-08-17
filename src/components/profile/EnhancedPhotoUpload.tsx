@@ -42,19 +42,42 @@ const EnhancedPhotoUpload = ({ photos, onPhotosChange }: EnhancedPhotoUploadProp
       <CardContent className="space-y-4">
         {/* Upload Button */}
         {photos.length < maxPhotos && (
-          <div className="flex gap-2">
+          <div className="space-y-3">
+            <div 
+              className="border-2 border-dashed border-purple-300 rounded-lg p-6 text-center cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-colors"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="h-8 w-8 text-purple-400 mx-auto mb-2" />
+              <p className="text-sm font-medium text-purple-700 mb-1">
+                {isUploading ? 'Uploading photos...' : 'Click to upload photos'}
+              </p>
+              <p className="text-xs text-gray-500">
+                JPG, PNG, or WebP • Max 5MB each • {maxPhotos - photos.length} slots available
+              </p>
+            </div>
+            
             <Button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="bg-purple-600 hover:bg-purple-700"
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
             >
-              <Upload className="h-4 w-4 mr-2" />
-              {isUploading ? 'Uploading...' : 'Upload Photos'}
+              {isUploading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Choose Photos
+                </>
+              )}
             </Button>
+            
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
               multiple
               onChange={handleFileSelect}
               className="hidden"
