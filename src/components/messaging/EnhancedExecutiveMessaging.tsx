@@ -11,320 +11,70 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
-import { useMatches } from '@/hooks/useMatches';
+import { useConversations } from '@/hooks/useConversations';
+import { useMessages } from '@/hooks/useMessages';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
-interface Conversation {
-  id: string;
-  name: string;
-  lastMessage: string;
-  timestamp: string;
-  unreadCount: number;
-  isOnline: boolean;
-  photo: string;
-  title: string;
-  company: string;
-  isVerified: boolean;
-  isPremium: boolean;
-}
-
-interface Message {
-  id: string;
-  senderId: string;
-  content: string;
-  timestamp: string;
-  type: 'text' | 'meeting' | 'system';
-  status: 'sent' | 'delivered' | 'read';
-}
-
 const EnhancedExecutiveMessaging = () => {
   const { user } = useAuth();
-  const { matches } = useMatches();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showCoffeeDateDialog, setShowCoffeeDateDialog] = useState(false);
-  const [deletedMessageIds, setDeletedMessageIds] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load deleted messages from localStorage on component mount
+  // Use real database hooks
+  const { conversations, isLoading: conversationsLoading } = useConversations();
+  const { messages, isLoading: messagesLoading, isSending, sendMessage, deleteMessage } = useMessages(selectedConversationId);
+
+  const loading = conversationsLoading || messagesLoading;
+  
+  // Get selected conversation details
+  const selectedConversation = selectedConversationId 
+    ? conversations.find(c => c.id === selectedConversationId) 
+    : null;
+
+  // Auto-select first conversation when conversations load
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('deletedMessages');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setDeletedMessageIds(parsed);
-      }
-    } catch (error) {
-      // Silently handle localStorage errors
+    if (conversations.length > 0 && !selectedConversationId) {
+      console.log('Auto-selecting first conversation:', conversations[0].id);
+      setSelectedConversationId(conversations[0].id);
     }
-  }, []);
+  }, [conversations, selectedConversationId]);
 
-  useEffect(() => {
-    // Always load conversations immediately
-    loadConversations();
-  }, [user]);
+  // Handle sending messages
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversationId) return;
 
-  // Remove problematic useEffect that was causing issues
-
-  // Helper function to get current deleted messages (sync with localStorage)
-  const getCurrentDeletedMessages = (): string[] => {
     try {
-      const stored = localStorage.getItem('deletedMessages');
-      const fromStorage = stored ? JSON.parse(stored) : [];
-      
-      // Use whichever is more recent/comprehensive
-      const allDeleted = [...new Set([...fromStorage, ...deletedMessageIds])];
-      
-      // Sync state if it's different
-      if (JSON.stringify(allDeleted.sort()) !== JSON.stringify(deletedMessageIds.sort())) {
-        setDeletedMessageIds(allDeleted);
-      }
-      
-      return allDeleted;
-    } catch (error) {
-      return deletedMessageIds;
-    }
-  };
-
-  const loadConversations = async () => {
-    try {
-      setLoading(true);
-      
-      // Create professional executive conversations (mix of real matches and demo data)
-      const executiveProfiles = [
-        {
-          id: '1',
-          name: 'Alexandra Sterling',
-          title: 'Chief Technology Officer',
-          company: 'Meta',
-          photo: 'https://images.unsplash.com/photo-1494790108755-2616c2b10db8?w=400&h=400&fit=crop&crop=face&auto=format&q=80',
-          lastMessage: "Looking forward to our coffee meeting this Friday!",
-          timestamp: '2 min ago',
-          unreadCount: 2,
-          isOnline: true,
-          isVerified: true,
-          isPremium: true
-        },
-        {
-          id: '2',
-          name: 'Marcus Chen',
-          title: 'Managing Director',
-          company: 'Goldman Sachs',
-          photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face&auto=format&q=80',
-          lastMessage: "Thanks for the connection, would love to discuss synergies...",
-          timestamp: '1 hour ago',
-          unreadCount: 1,
-          isOnline: true,
-          isVerified: true,
-          isPremium: true
-        },
-        {
-          id: '3',
-          name: 'Sofia Rodriguez',
-          title: 'VP of Marketing',
-          company: 'Netflix',
-          photo: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&h=400&fit=crop&crop=face&auto=format&q=80',
-          lastMessage: "Your profile caught my attention. Great work on the sustainability initiative!",
-          timestamp: '3 hours ago',
-          unreadCount: 0,
-          isOnline: false,
-          isVerified: true,
-          isPremium: true
-        },
-        {
-          id: '4',
-          name: 'David Park',
-          title: 'Senior VP Sales',
-          company: 'Salesforce',
-          photo: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face&auto=format&q=80',
-          lastMessage: "Great to match with you! Would love to explore collaboration opportunities.",
-          timestamp: '1 day ago',
-          unreadCount: 0,
-          isOnline: false,
-          isVerified: true,
-          isPremium: false
-        },
-        {
-          id: '5',
-          name: 'Jennifer Walsh',
-          title: 'Chief Financial Officer',
-          company: 'JPMorgan',
-          photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face&auto=format&q=80',
-          lastMessage: "Impressive background! Let's schedule a call to discuss potential partnerships.",
-          timestamp: '2 days ago',
-          unreadCount: 0,
-          isOnline: false,
-          isVerified: true,
-          isPremium: false
-        }
-      ];
-
-      // Add any real matches if they exist
-      const realMatches = matches.slice(0, 3).map((match, index) => ({
-        id: `real_${match.id}`,
-        name: match.match_profile?.first_name || 'Executive Professional',
-        title: 'Senior Executive',
-        company: 'Fortune 500',
-        photo: match.match_profile?.photos?.[0] || 'https://images.unsplash.com/photo-1494790108755-2616c2b10db8?w=400&h=400&fit=crop&crop=face&auto=format&q=80',
-        lastMessage: "Great to match with you!",
-        timestamp: `${index + 3} days ago`,
-        unreadCount: 0,
-        isOnline: false,
-        isVerified: true,
-        isPremium: true
-      }));
-
-      const allConversations = [...executiveProfiles, ...realMatches];
-      setConversations(allConversations);
-      
-      if (allConversations.length > 0) {
-        setSelectedConversation(allConversations[0]);
-        loadMessages(allConversations[0].id);
-      }
-      
+      await sendMessage(newMessage.trim());
+      setNewMessage('');
+      toast({
+        title: 'Message Sent',
+        description: 'Your message has been sent successfully'
+      });
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to load conversations',
+        title: 'Send Failed', 
+        description: 'Failed to send message. Please try again.',
         variant: 'destructive'
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const loadMessages = (conversationId: string) => {
-    // Get the most up-to-date deleted messages
-    const currentDeleted = getCurrentDeletedMessages();
-    
-    // Professional executive messages based on conversation
-    const conversationMessages: Record<string, Message[]> = {
-      '1': [
-        {
-          id: 'conv1_1',
-          senderId: 'other',
-          content: "Hello! I noticed we have a lot in common professionally. Your leadership experience in digital transformation really caught my attention.",
-          timestamp: '10:30 AM',
-          type: 'text',
-          status: 'read'
-        },
-        {
-          id: 'conv1_2',
-          senderId: user?.id || 'me',
-          content: "Thank you! I'd be happy to connect. Your background in enterprise solutions at Meta is impressive - I've been following your work on AR/VR integration.",
-          timestamp: '10:45 AM',
-          type: 'text',
-          status: 'read'
-        },
-        {
-          id: 'conv1_3',
-          senderId: 'other',
-          content: "Thank you! I've been passionate about the intersection of technology and business strategy. Perhaps we could schedule a coffee meeting to discuss potential synergies?",
-          timestamp: '11:00 AM',
-          type: 'text',
-          status: 'read'
-        },
-        {
-          id: 'conv1_4',
-          senderId: user?.id || 'me',
-          content: "That sounds perfect. I'm free this Friday afternoon if that works for you. I know a great place downtown - The Executive Lounge at the Marriott.",
-          timestamp: '11:15 AM',
-          type: 'text',
-          status: 'delivered'
-        },
-        {
-          id: 'conv1_5',
-          senderId: 'other',
-          content: "Perfect! Looking forward to our coffee meeting this Friday at 3 PM at The Executive Lounge. I'll bring some insights on our upcoming Q4 initiatives.",
-          timestamp: '2 min ago',
-          type: 'meeting',
-          status: 'sent'
-        }
-      ],
-      '2': [
-        {
-          id: 'conv2_1',
-          senderId: 'other',
-          content: "Great to connect! I see we're both in the finance sector. Your experience with global markets alignment would be valuable for our upcoming expansion.",
-          timestamp: '9:15 AM',
-          type: 'text',
-          status: 'read'
-        },
-        {
-          id: 'conv2_2',
-          senderId: user?.id || 'me',
-          content: "Absolutely! Goldman Sachs has always been at the forefront of financial innovation. I'd love to hear about your expansion plans.",
-          timestamp: '9:30 AM',
-          type: 'text',
-          status: 'read'
-        },
-        {
-          id: 'conv2_3',
-          senderId: 'other',
-          content: "Thanks for the connection, would love to discuss synergies between our organizations. Are you available for a brief call this week?",
-          timestamp: '1 hour ago',
-          type: 'text',
-          status: 'sent'
-        }
-      ]
-    };
-
-    const defaultMessages: Message[] = [
-      {
-        id: 'default_1',
-        senderId: 'other',
-        content: "Great to match with you! Your professional background is impressive.",
-        timestamp: '2:00 PM',
-        type: 'text',
-        status: 'read'
-      },
-      {
-        id: 'default_2',
-        senderId: user?.id || 'me',
-        content: "Thank you! Looking forward to connecting and exploring potential collaborations.",
-        timestamp: '2:15 PM',
-        type: 'text',
-        status: 'delivered'
+  // Handle deleting messages
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      const success = await deleteMessage(messageId);
+      if (success) {
+        console.log('Message deleted successfully via database');
       }
-    ];
-    
-    // Filter out deleted messages
-    const originalMessages = conversationMessages[conversationId] || defaultMessages;
-    const messagesToShow = originalMessages.filter(message => !currentDeleted.includes(message.id));
-    setMessages(messagesToShow);
-  };
-
-  const sendMessage = () => {
-    if (!newMessage.trim() || !selectedConversation) return;
-
-    const message: Message = {
-      id: `new_${Date.now()}`,
-      senderId: user?.id || 'me',
-      content: newMessage,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      type: 'text',
-      status: 'sent'
-    };
-
-    // Only add message if it's not in deleted list
-    const currentDeleted = getCurrentDeletedMessages();
-    setMessages(prev => {
-      const filteredPrev = prev.filter(msg => !currentDeleted.includes(msg.id));
-      return [...filteredPrev, message];
-    });
-    setNewMessage('');
-
-    toast({
-      title: 'Message Sent',
-      description: `Message sent to ${selectedConversation.name}`
-    });
+    } catch (error) {
+      console.error('Failed to delete message:', error);
+    }
   };
 
   // Professional emoji set for executives
@@ -614,129 +364,59 @@ const EnhancedExecutiveMessaging = () => {
     )
   );
 
-  const ConversationItem = ({ conversation }: { conversation: Conversation }) => (
+  const ConversationItem = ({ conversation }: { conversation: { id: string; created_at: string; last_message?: string } }) => (
     <div 
       className={`p-4 cursor-pointer transition-all border-l-4 ${
-        selectedConversation?.id === conversation.id 
+        selectedConversationId === conversation.id 
           ? 'bg-love-primary/5 border-love-primary' 
           : 'hover:bg-muted/50 border-transparent'
       }`}
       onClick={() => {
-        setSelectedConversation(conversation);
-        loadMessages(conversation.id);
+        console.log('Selecting conversation:', conversation.id);
+        setSelectedConversationId(conversation.id);
       }}
     >
       <div className="flex items-center space-x-3">
         <div className="relative">
-          <img 
-            src={conversation.photo} 
-            alt={conversation.name}
-            className="w-12 h-12 rounded-xl object-cover"
-            onError={(e) => {
-              const target = e.currentTarget;
-              target.src = '/api/placeholder/400/400';
-            }}
-          />
-          {conversation.isOnline && (
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-background rounded-full"></div>
-          )}
-          {conversation.isPremium && (
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
-              <Crown className="w-3 h-3 text-white" />
-            </div>
-          )}
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <User className="w-6 h-6 text-white" />
+          </div>
+          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-background rounded-full"></div>
         </div>
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center space-x-2">
-              <h4 className="font-semibold text-foreground truncate">{conversation.name}</h4>
-              {conversation.isVerified && (
-                <Shield className="w-4 h-4 text-emerald-500" />
-              )}
+              <h4 className="font-semibold text-foreground truncate">
+                Professional Connection
+              </h4>
+              <Shield className="w-4 h-4 text-emerald-500" />
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs text-muted-foreground">{conversation.timestamp}</span>
-              {conversation.unreadCount > 0 && (
-                <div className="w-5 h-5 bg-love-primary rounded-full flex items-center justify-center">
-                  <span className="text-xs text-white font-medium">{conversation.unreadCount}</span>
-                </div>
-              )}
+              <span className="text-xs text-muted-foreground">
+                {new Date(conversation.created_at).toLocaleDateString()}
+              </span>
             </div>
           </div>
           
           <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground truncate">{conversation.lastMessage}</p>
+            <p className="text-sm text-muted-foreground truncate">
+              {conversation.last_message || "Start your professional conversation"}
+            </p>
           </div>
           
           <div className="flex items-center space-x-2 mt-1">
             <Briefcase className="w-3 h-3 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">{conversation.title} at {conversation.company}</span>
+            <span className="text-xs text-muted-foreground">Executive Professional</span>
           </div>
         </div>
       </div>
     </div>
   );
 
-  const handleDeleteMessage = (messageId: string) => {
-    try {
-      // Check if messageId exists
-      if (!messageId) {
-        toast({
-          title: 'Error',
-          description: 'Unable to delete message - invalid ID',
-          variant: 'destructive'
-        });
-        return;
-      }
 
-      // Find the message first
-      const messageToDelete = messages.find(msg => msg.id === messageId);
-      if (!messageToDelete) {
-        toast({
-          title: 'Error',
-          description: 'Message not found',
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      // Add message ID to deleted messages in both localStorage AND React state
-      try {
-        if (!deletedMessageIds.includes(messageId)) {
-          const updatedDeleted = [...deletedMessageIds, messageId];
-          
-          // Update React state immediately
-          setDeletedMessageIds(updatedDeleted);
-          
-          // Also save to localStorage for persistence
-          localStorage.setItem('deletedMessages', JSON.stringify(updatedDeleted));
-        }
-      } catch (error) {
-        // Handle localStorage errors silently
-      }
-
-      // Immediately reload messages to reflect the deletion
-      if (selectedConversation) {
-        loadMessages(selectedConversation.id);
-      }
-      
-      toast({
-        title: 'Message Deleted',
-        description: 'Message has been successfully deleted'
-      });
-      
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete message. Please try again.',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  const MessageBubble = ({ message }: { message: Message }) => {
-    const isMe = message.senderId === user?.id || message.senderId === 'me';
+  const MessageBubble = ({ message }: { message: { id: string; sender_id: string; content: string; created_at: string } }) => {
+    const isMe = message.sender_id === user?.id;
     const [showDeleteMenu, setShowDeleteMenu] = useState(false);
     
     return (
@@ -746,20 +426,17 @@ const EnhancedExecutiveMessaging = () => {
             ? 'bg-gradient-to-r from-love-primary to-love-secondary text-white' 
             : 'bg-muted text-foreground'
         } rounded-2xl px-4 py-2 shadow-sm`}>
-          {message.type === 'meeting' && (
-            <div className="flex items-center space-x-2 mb-2">
-              <Calendar className="w-4 h-4" />
-              <span className="text-xs font-medium">Meeting Scheduled</span>
-            </div>
-          )}
           <p className="text-sm leading-relaxed">{message.content}</p>
           <div className="flex items-center justify-between mt-2">
-            <span className="text-xs opacity-70">{message.timestamp}</span>
+            <span className="text-xs opacity-70">
+              {new Date(message.created_at).toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}
+            </span>
             {isMe && (
               <div className="flex items-center space-x-1">
-                {message.status === 'sent' && <Clock className="w-3 h-3 opacity-70" />}
-                {message.status === 'delivered' && <CheckCircle className="w-3 h-3 opacity-70" />}
-                {message.status === 'read' && <CheckCircle className="w-3 h-3 text-emerald-400" />}
+                <CheckCircle className="w-3 h-3 opacity-70" />
               </div>
             )}
           </div>
@@ -855,27 +532,18 @@ const EnhancedExecutiveMessaging = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="relative">
-                    <img 
-                      src={selectedConversation.photo} 
-                      alt={selectedConversation.name}
-                      className="w-10 h-10 rounded-xl object-cover"
-                    />
-                    {selectedConversation.isOnline && (
-                      <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border border-background rounded-full"></div>
-                    )}
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border border-background rounded-full"></div>
                   </div>
                   <div>
                     <div className="flex items-center space-x-2">
-                      <h3 className="font-semibold text-foreground">{selectedConversation.name}</h3>
-                      {selectedConversation.isVerified && (
-                        <Shield className="w-4 h-4 text-emerald-500" />
-                      )}
-                      {selectedConversation.isPremium && (
-                        <Crown className="w-4 h-4 text-yellow-500" />
-                      )}
+                      <h3 className="font-semibold text-foreground">Professional Connection</h3>
+                      <Shield className="w-4 h-4 text-emerald-500" />
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {selectedConversation.isOnline ? 'Active now' : 'Last seen 2 hours ago'}
+                      Active now
                     </p>
                   </div>
                 </div>
@@ -966,12 +634,12 @@ const EnhancedExecutiveMessaging = () => {
                   placeholder="Type your professional message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   className="flex-1 bg-slate-700/50 border-slate-600/30 text-white placeholder-gray-400"
                 />
                 <Button 
-                  onClick={sendMessage}
-                  disabled={!newMessage.trim()}
+                  onClick={handleSendMessage}
+                  disabled={!newMessage.trim() || isSending}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />

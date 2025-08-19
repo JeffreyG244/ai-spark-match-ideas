@@ -57,6 +57,7 @@ export const useMessages = (conversationId: string | null) => {
         .from('conversation_messages')
         .select('*')
         .eq('conversation_id', conversationId)
+        .is('deleted_at', null) // Only get non-deleted messages
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -356,11 +357,109 @@ export const useMessages = (conversationId: string | null) => {
     };
   }, [conversationId, user]);
 
+  const deleteMessage = async (messageId: string) => {
+    if (!user) return false;
+
+    try {
+      console.log('Deleting message from database:', messageId);
+      
+      // Security: Only delete messages sent by the current user
+      const { data: message, error: messageError } = await supabase
+        .from('conversation_messages')
+        .select('sender_id, conversation_id')
+        .eq('id', messageId)
+        .single();
+        
+      if (messageError || !message) {
+        console.error('Message not found:', messageError?.message);
+        toast({
+          title: 'Error',
+          description: 'Message not found',
+          variant: 'destructive'
+        });
+        return false;
+      }
+      
+      // Check if user owns this message
+      if (message.sender_id !== user.id) {
+        console.error('User does not own this message');
+        logSecurityEvent('unauthorized_message_delete', 
+          `User ${user.id} attempted to delete message ${messageId} owned by ${message.sender_id}`, 'high');
+        toast({
+          title: 'Access denied',
+          description: 'You can only delete your own messages',
+          variant: 'destructive'
+        });
+        return false;
+      }
+
+      // Verify user is participant in conversation
+      const { data: conversation, error: conversationError } = await supabase
+        .from('conversations')
+        .select('*')
+        .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
+        .eq('id', message.conversation_id)
+        .single();
+        
+      if (conversationError || !conversation) {
+        logSecurityEvent('unauthorized_conversation_message_delete', 
+          `User ${user.id} attempted to delete message from unauthorized conversation`, 'high');
+        toast({
+          title: 'Access denied',
+          description: 'You cannot delete messages from this conversation',
+          variant: 'destructive'
+        });
+        return false;
+      }
+
+      // Soft delete the message by setting deleted_at timestamp
+      const { error: deleteError } = await supabase
+        .from('conversation_messages')
+        .update({ 
+          deleted_at: new Date().toISOString(),
+          content: '[Message deleted]' // Optional: replace content
+        })
+        .eq('id', messageId);
+
+      if (deleteError) {
+        console.error('Failed to delete message:', deleteError);
+        toast({
+          title: 'Delete failed',
+          description: 'Unable to delete message. Please try again.',
+          variant: 'destructive'
+        });
+        return false;
+      }
+
+      // Remove from local state immediately
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      
+      toast({
+        title: 'Message deleted',
+        description: 'Message has been permanently deleted'
+      });
+      
+      console.log('Message deleted successfully:', messageId);
+      return true;
+      
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      logSecurityEvent('message_delete_error', `User ${user.id}: ${error}`, 'medium');
+      toast({
+        title: 'Delete failed',
+        description: 'An unexpected error occurred',
+        variant: 'destructive'
+      });
+      return false;
+    }
+  };
+
   return {
     messages,
     isLoading,
     isSending,
     sendMessage,
-    markAsRead
+    markAsRead,
+    deleteMessage
   };
 };
