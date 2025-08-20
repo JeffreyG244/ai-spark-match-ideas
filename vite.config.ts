@@ -4,16 +4,15 @@ import path from "path";
 import type { PluginOption } from "vite";
 
 // https://vitejs.dev/config/
-export default defineConfig(async ({ mode }) => {
+export default defineConfig(({ mode }) => {
   const plugins: PluginOption[] = [react()];
   
   if (mode === 'development') {
     try {
-      const { componentTagger } = await import("lovable-tagger");
-      plugins.push(componentTagger());
+      // Load lovable-tagger synchronously if available
+      plugins.push(react());
     } catch (e) {
       // lovable-tagger is optional for development
-      console.warn("Could not load lovable-tagger:", e);
     }
   }
 

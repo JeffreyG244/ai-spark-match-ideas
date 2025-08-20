@@ -289,7 +289,7 @@ const SimplePhotoUpload = () => {
           <div className="space-y-3">
             <Button
               onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading || storageReady === false}
+              disabled={isUploading || !storageReady}
               className="w-full bg-white/20 hover:bg-white/30 text-white border-white/20"
             >
               <Upload className="w-4 h-4 mr-2" />
