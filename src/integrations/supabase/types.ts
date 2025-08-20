@@ -1408,6 +1408,9 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          photo_urls: string[] | null
+          photos_updated_at: string | null
+          primary_photo_url: string | null
           private_data: Json | null
           public_data: Json | null
           updated_at: string | null
@@ -1415,6 +1418,9 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id: string
+          photo_urls?: string[] | null
+          photos_updated_at?: string | null
+          primary_photo_url?: string | null
           private_data?: Json | null
           public_data?: Json | null
           updated_at?: string | null
@@ -1422,6 +1428,9 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          photo_urls?: string[] | null
+          photos_updated_at?: string | null
+          primary_photo_url?: string | null
           private_data?: Json | null
           public_data?: Json | null
           updated_at?: string | null
@@ -1652,7 +1661,9 @@ export type Database = {
           personality_traits: string[] | null
           phone_number: string | null
           photos: string[] | null
+          photos_updated_at: string | null
           preferred_industries: string[] | null
+          primary_photo_url: string | null
           profile_views: number | null
           response_rate: number | null
           salary_range: string | null
@@ -1727,7 +1738,9 @@ export type Database = {
           personality_traits?: string[] | null
           phone_number?: string | null
           photos?: string[] | null
+          photos_updated_at?: string | null
           preferred_industries?: string[] | null
+          primary_photo_url?: string | null
           profile_views?: number | null
           response_rate?: number | null
           salary_range?: string | null
@@ -1802,7 +1815,9 @@ export type Database = {
           personality_traits?: string[] | null
           phone_number?: string | null
           photos?: string[] | null
+          photos_updated_at?: string | null
           preferred_industries?: string[] | null
+          primary_photo_url?: string | null
           profile_views?: number | null
           response_rate?: number | null
           salary_range?: string | null

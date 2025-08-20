@@ -232,6 +232,133 @@ const ProfileManager: React.FC = () => {
     }
   };
 
+  const handleRemoveAllSeedProfiles = async () => {
+    if (!confirm('Are you sure you want to remove ALL seed profiles? This will delete all profiles with seed/example email domains, stock photos, and known seed names. This action cannot be undone.')) {
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Get all users first, then filter client-side for comprehensive detection
+      const { data: allUsers, error: fetchError } = await supabase
+        .from('users')
+        .select('id, email, first_name, last_name, photos');
+
+      if (fetchError) throw fetchError;
+
+      if (!allUsers || allUsers.length === 0) {
+        toast({
+          title: 'No Profiles Found',
+          description: 'No profiles were found in the database.',
+        });
+        return;
+      }
+
+      // Comprehensive seed profile detection
+      const seedFirstNames = [
+        'Alex', 'Michael', 'David', 'James', 'Ryan', 'Carlos', 'Brandon', 'Kevin', 'Marcus', 'Daniel',
+        'Noah', 'Tyler', 'Jacob', 'Ethan', 'Luke', 'Andrew', 'Connor', 'Ian', 'Jordan', 'Mason',
+        'Sarah', 'Emma', 'Jessica', 'Ashley', 'Amanda', 'Olivia', 'Sophia', 'Mia', 'Isabella', 'Emily',
+        'Madison', 'Ava', 'Victoria', 'Grace', 'Hannah', 'Samantha', 'Nicole', 'Elizabeth', 'Taylor', 'Rachel'
+      ];
+
+      const seedProfiles = allUsers.filter(user => {
+        // Check email patterns
+        const emailCheck = user.email && (
+          user.email.includes('@example.com') ||
+          user.email.includes('@professional.com') ||
+          user.email.includes('dating@') ||
+          user.email.includes('seed') ||
+          user.email.includes('demo') ||
+          user.email.includes('test') ||
+          user.email.includes('.dating@') ||
+          user.email.includes('@dating.')
+        );
+
+        // Check first names from seed data
+        const nameCheck = seedFirstNames.includes(user.first_name);
+
+        // Check for stock photo patterns (Unsplash URLs commonly used in seed data)
+        const photoCheck = user.photos && Array.isArray(user.photos) && 
+          user.photos.some((photo: string) => 
+            photo.includes('unsplash.com') || 
+            photo.includes('images.unsplash.com')
+          );
+
+        return emailCheck || nameCheck || photoCheck;
+      });
+
+      if (!seedProfiles || seedProfiles.length === 0) {
+        toast({
+          title: 'No Seed Profiles Found',
+          description: 'No seed profiles were found to remove.',
+        });
+        return;
+      }
+
+      console.log(`Found ${seedProfiles.length} seed profiles to remove:`, seedProfiles.map(p => ({
+        name: `${p.first_name} ${p.last_name}`,
+        email: p.email
+      })));
+
+      // Delete related data first (conversations, matches, etc.)
+      const profileIds = seedProfiles.map(p => p.id);
+      
+      // Delete conversations where either participant is a seed profile
+      const { error: conversationError } = await supabase
+        .from('conversations')
+        .delete()
+        .or(`participant_1.in.(${profileIds.join(',')}),participant_2.in.(${profileIds.join(',')})`);
+
+      if (conversationError) {
+        console.error('Error deleting conversations:', conversationError);
+      }
+
+      // Delete matches involving seed profiles
+      const { error: matchError } = await supabase
+        .from('executive_matches')
+        .delete()
+        .or(`user_id.in.(${profileIds.join(',')}),matched_user_id.in.(${profileIds.join(',')})`);
+
+      if (matchError) {
+        console.error('Error deleting matches:', matchError);
+      }
+
+      // Delete daily matches involving seed profiles
+      const { error: dailyMatchError } = await supabase
+        .from('daily_matches')
+        .delete()
+        .or(`user_id.in.(${profileIds.join(',')}),potential_match_id.in.(${profileIds.join(',')})`);
+
+      if (dailyMatchError) {
+        console.error('Error deleting daily matches:', dailyMatchError);
+      }
+
+      // Finally, delete the seed profiles themselves
+      const { error: deleteError } = await supabase
+        .from('users')
+        .delete()
+        .in('id', profileIds);
+
+      if (deleteError) throw deleteError;
+
+      toast({
+        title: 'Success!',
+        description: `Successfully removed ${seedProfiles.length} seed profiles and all related data.`,
+      });
+      await fetchProfileStats();
+    } catch (error) {
+      console.error('Error removing seed profiles:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to remove seed profiles. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -276,58 +403,83 @@ const ProfileManager: React.FC = () => {
       </Card>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <Card>
+        <Card className="opacity-50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Camera className="h-5 w-5" />
-              Seed Realistic Profiles
+              Seed Realistic Profiles (Disabled)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-gray-600">
-              Add high-quality, realistic professional profiles with proper photos and diverse backgrounds.
+              Seeding functions have been disabled for production. Use "Remove All Seed Profiles" to clean existing data.
             </p>
             <div className="space-y-2">
-              <Badge variant="outline">High-quality photos</Badge>
-              <Badge variant="outline">Professional backgrounds</Badge>
-              <Badge variant="outline">Realistic bios</Badge>
+              <Badge variant="outline">Disabled for production</Badge>
+              <Badge variant="outline">Use removal function instead</Badge>
             </div>
             <Button 
-              onClick={handleSeedRealistic}
-              disabled={isLoading}
+              disabled={true}
               className="w-full"
             >
-              {isLoading ? 'Seeding...' : 'Seed Realistic Profiles'}
+              Seeding Disabled
             </Button>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="opacity-50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Heart className="h-5 w-5" />
-              Seed Diverse Profiles
+              Seed Diverse Profiles (Disabled)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-gray-600">
-              Add inclusive, diverse profiles with LGBTQ+ representation and varied orientations.
+              Seeding functions have been disabled for production. Use "Remove All Seed Profiles" to clean existing data.
             </p>
             <div className="space-y-2">
-              <Badge variant="outline">LGBTQ+ inclusive</Badge>
-              <Badge variant="outline">Diverse orientations</Badge>
-              <Badge variant="outline">Various backgrounds</Badge>
+              <Badge variant="outline">Disabled for production</Badge>
+              <Badge variant="outline">Use removal function instead</Badge>
             </div>
             <Button 
-              onClick={handleSeedDiverse}
-              disabled={isLoading}
+              disabled={true}
               className="w-full"
             >
-              {isLoading ? 'Seeding...' : 'Seed Diverse Profiles'}
+              Seeding Disabled
             </Button>
           </CardContent>
         </Card>
       </div>
+
+      {/* Danger Zone - Remove All Seed Profiles */}
+      <Card className="border-red-200 bg-red-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-red-700">
+            <Trash2 className="h-5 w-5" />
+            Remove All Seed Profiles
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-sm text-red-700">
+              <strong>⚠️ DANGER ZONE:</strong> This will permanently delete ALL seed profiles and related data (conversations, matches, etc.). 
+              This includes profiles with:
+              • Email patterns: @example.com, @professional.com, dating@, seed, demo, test
+              • Common seed names: Alex, Michael, David, Sarah, Emma, etc.
+              • Stock photos: Unsplash URLs commonly used in seed data
+            </p>
+            <Button 
+              onClick={handleRemoveAllSeedProfiles}
+              disabled={isLoading}
+              variant="destructive"
+              className="w-full"
+            >
+              {isLoading ? 'Removing...' : 'Remove All Seed Profiles'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid md:grid-cols-3 gap-4">
         <Card>

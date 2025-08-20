@@ -48,6 +48,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import Logo from '@/components/ui/logo';
+import SimplePhotoUploadButton from '@/components/SimplePhotoUploadButton';
 import { Input } from '@/components/ui/input';
 import { useMembershipBadge } from '@/hooks/useMembershipBadge';
 import {
@@ -566,6 +567,27 @@ const Settings = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-9">
+            {/* DEBUG PHOTO UPLOAD - REMOVE AFTER TESTING */}
+            <Card className="mb-6 bg-red-500/10 border-red-500/50">
+              <CardHeader>
+                <CardTitle className="text-red-400">🔧 DEBUG: Photo Upload Test</CardTitle>
+                <CardDescription className="text-red-300">
+                  This is a test upload button to debug the photo upload issue. Click this to test!
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <SimplePhotoUploadButton 
+                  onPhotoUploaded={(url) => {
+                    toast({
+                      title: "SUCCESS!",
+                      description: `Photo uploaded: ${url}`,
+                    });
+                  }}
+                  className="max-w-md"
+                />
+              </CardContent>
+            </Card>
+            
             {activeSettings && (
               <div className="space-y-6">
                 {/* Category Header */}

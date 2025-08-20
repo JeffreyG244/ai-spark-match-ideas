@@ -8,63 +8,91 @@ interface Photo {
   id: string;
   url: string;
   isPrimary: boolean;
+  filename?: string;
 }
 
 export const usePhotoUpload = (photos: Photo[], onPhotosChange: (photos: Photo[]) => void) => {
   const { user } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const maxPhotos = 6;
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
+  // Save photos to database after upload
+  const savePhotosToDatabase = async (updatedPhotos: Photo[]) => {
+    if (!user) return;
     
-    if (!files || files.length === 0) {
+    try {
+      const photoUrls = updatedPhotos.map(photo => photo.url);
+      const primaryPhotoUrl = updatedPhotos.find(p => p.isPrimary)?.url || photoUrls[0];
+      
+      // Update user_profiles table with new photos
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert({
+          id: user.id,
+          photo_urls: photoUrls,
+          primary_photo_url: primaryPhotoUrl,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error saving photos to database:', error);
+        toast({
+          title: 'Save Error',
+          description: 'Photos uploaded but failed to save to profile. Please try again.',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      console.error('Database save error:', error);
+    }
+  };
+
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    
+    if (!user) {
       toast({
-        title: 'No Files Selected',
-        description: 'Please select at least one image to upload.',
+        title: 'Authentication Required',
+        description: 'Please sign in to upload photos.',
         variant: 'destructive'
       });
       return;
     }
 
-    if (!user) {
-      toast({
-        title: 'Sign In Required',
-        description: 'Please sign in to upload photos to your profile.',
-        variant: 'destructive'
-      });
-      return;
-    }
+    if (files.length === 0) return;
 
     if (photos.length + files.length > maxPhotos) {
       toast({
         title: 'Too Many Photos',
-        description: `You can only upload up to ${maxPhotos} photos.`,
+        description: `You can upload a maximum of ${maxPhotos} photos.`,
         variant: 'destructive'
       });
       return;
     }
 
     setIsUploading(true);
+    const newPhotos: Photo[] = [];
 
     try {
-      const newPhotos: Photo[] = [];
-
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        const fileId = `${Date.now()}_${i}`;
         
-        // Validate file type
+        // Update progress
+        setUploadProgress(prev => ({ ...prev, [fileId]: 0 }));
+
+        // Validate file
         if (!file.type.startsWith('image/')) {
           toast({
             title: 'Invalid File Type',
-            description: `${file.name} is not a valid image file.`,
+            description: `${file.name} is not a valid image. Please use JPG, PNG, or WebP.`,
             variant: 'destructive'
           });
           continue;
         }
 
-        // Validate file size (5MB limit)
         if (file.size > 5 * 1024 * 1024) {
           toast({
             title: 'File Too Large',
@@ -74,111 +102,118 @@ export const usePhotoUpload = (photos: Photo[], onPhotosChange: (photos: Photo[]
           continue;
         }
 
-        const timestamp = Date.now();
-        const randomId = Math.random().toString(36).substring(2);
-        const filename = `${user.id}/${timestamp}_${randomId}_${file.name}`;
+        try {
+          // Generate filename
+          const timestamp = Date.now();
+          const randomId = Math.random().toString(36).substring(2);
+          const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+          const filename = `${user.id}/${timestamp}_${randomId}_${sanitizedFileName}`;
 
-        // Check if bucket exists and handle missing bucket
-        const { data: buckets, error: bucketListError } = await supabase.storage.listBuckets();
-        
-        if (bucketListError) {
-          toast({
-            title: 'Storage Error',
-            description: 'Unable to access photo storage. Please try again later.',
-            variant: 'destructive'
-          });
-          continue;
-        }
-        
-        const bucketExists = buckets?.some(bucket => bucket.name === 'profile-photos');
-        
-        if (!bucketExists) {
-          // Try to create bucket, but if it fails, show helpful error
-          const { error: createError } = await supabase.storage.createBucket('profile-photos', {
-            public: true,
-            fileSizeLimit: 10 * 1024 * 1024 // 10MB
-          });
-          
-          if (createError) {
+          // Update progress
+          setUploadProgress(prev => ({ ...prev, [fileId]: 25 }));
+
+          // Upload to Supabase
+          const { data, error } = await supabase.storage
+            .from('profile-photos')
+            .upload(filename, file, {
+              contentType: file.type,
+              upsert: false,
+              duplex: 'half'
+            });
+
+          if (error) {
+            console.error('Upload error:', error);
+            
+            let errorMessage = error.message;
+            if (error.message.includes('bucket')) {
+              errorMessage = 'Photo storage is temporarily unavailable. Please try again later.';
+            } else if (error.message.includes('policy')) {
+              errorMessage = 'Upload permissions error. Please contact support.';
+            } else if (error.message.includes('duplicate')) {
+              errorMessage = 'File already exists. Please rename your file.';
+            }
+
             toast({
-              title: 'Storage Setup Required',
-              description: 'Photo storage is not configured. Please contact support to enable photo uploads.',
+              title: 'Upload Failed',
+              description: `${file.name}: ${errorMessage}`,
               variant: 'destructive'
             });
             continue;
           }
-        }
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('profile-photos')
-          .upload(filename, file, {
-            contentType: file.type,
-            upsert: false
+
+          // Update progress
+          setUploadProgress(prev => ({ ...prev, [fileId]: 75 }));
+
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('profile-photos')
+            .getPublicUrl(filename);
+
+          // Verify URL accessibility
+          try {
+            const response = await fetch(publicUrl, { method: 'HEAD' });
+            if (!response.ok) {
+              throw new Error(`URL not accessible: ${response.status}`);
+            }
+          } catch (urlError) {
+            console.warn('URL verification failed:', urlError);
+          }
+
+          // Update progress
+          setUploadProgress(prev => ({ ...prev, [fileId]: 100 }));
+
+          // Add to photos array
+          newPhotos.push({
+            id: randomId,
+            url: publicUrl,
+            isPrimary: photos.length === 0 && newPhotos.length === 0,
+            filename: filename
           });
 
-        if (uploadError) {
-          let errorMessage = uploadError.message;
-          
-          // Provide more user-friendly error messages
-          if (uploadError.message.includes('bucket')) {
-            errorMessage = 'Photo storage is not available. Please try again later.';
-          } else if (uploadError.message.includes('policy')) {
-            errorMessage = 'Upload permissions not configured. Please contact support.';
-          } else if (uploadError.message.includes('size')) {
-            errorMessage = 'File is too large. Please use a smaller image.';
-          } else if (uploadError.message.includes('type')) {
-            errorMessage = 'File type not supported. Please use JPG, PNG, or WebP images.';
-          }
-          
+          console.log('✅ Photo uploaded successfully:', publicUrl);
+
+        } catch (fileError) {
+          console.error('File processing error:', fileError);
           toast({
-            title: 'Upload Failed',
-            description: `${file.name}: ${errorMessage}`,
+            title: 'Upload Error',
+            description: `Failed to process ${file.name}. Please try again.`,
             variant: 'destructive'
           });
-          continue;
         }
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('profile-photos')
-          .getPublicUrl(filename);
-
-        newPhotos.push({
-          id: randomId,
-          url: publicUrl,
-          isPrimary: photos.length === 0 && newPhotos.length === 0
-        });
       }
 
+      // Update photos if any successful uploads
       if (newPhotos.length > 0) {
         const updatedPhotos = [...photos, ...newPhotos];
         onPhotosChange(updatedPhotos);
         
-        // Trigger callback to save to profile if provided
-        if (onPhotosChange) {
-          // This will be handled by the parent component to save to database
-        }
-        
+        // Save to database
+        await savePhotosToDatabase(updatedPhotos);
+
         toast({
           title: 'Photos Uploaded',
-          description: `Successfully uploaded ${newPhotos.length} photo(s).`,
+          description: `Successfully uploaded ${newPhotos.length} photo(s)!`,
+          variant: 'default'
         });
       }
+
     } catch (error) {
+      console.error('Upload process error:', error);
       toast({
-        title: 'Upload Error',
-        description: 'An unexpected error occurred while uploading.',
+        title: 'Upload Failed',
+        description: 'An unexpected error occurred. Please try again.',
         variant: 'destructive'
       });
     } finally {
       setIsUploading(false);
-      // Reset file input to allow re-uploading same files
+      setUploadProgress({});
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
   };
 
-  const removePhoto = (photoId: string) => {
+  const removePhoto = async (photoId: string) => {
     const updatedPhotos = photos.filter(p => p.id !== photoId);
     
     // If we removed the primary photo, make the first remaining photo primary
@@ -187,18 +222,26 @@ export const usePhotoUpload = (photos: Photo[], onPhotosChange: (photos: Photo[]
     }
     
     onPhotosChange(updatedPhotos);
+    
+    // Save to database
+    await savePhotosToDatabase(updatedPhotos);
+    
     toast({
       title: 'Photo Removed',
       description: 'Photo has been removed from your profile.',
     });
   };
 
-  const setPrimaryPhoto = (photoId: string) => {
+  const setPrimaryPhoto = async (photoId: string) => {
     const updatedPhotos = photos.map(photo => ({
       ...photo,
       isPrimary: photo.id === photoId
     }));
     onPhotosChange(updatedPhotos);
+    
+    // Save to database
+    await savePhotosToDatabase(updatedPhotos);
+    
     toast({
       title: 'Primary Photo Set',
       description: 'This photo will be shown first on your profile.',
@@ -207,6 +250,7 @@ export const usePhotoUpload = (photos: Photo[], onPhotosChange: (photos: Photo[]
 
   return {
     isUploading,
+    uploadProgress,
     fileInputRef,
     maxPhotos,
     handleFileSelect,

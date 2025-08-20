@@ -1,7 +1,9 @@
 
 import { useState } from "react";
+import { useToast } from '@/hooks/use-toast';
 
 export default function UserProfileForm() {
+  const { toast } = useToast();
   const [form, setForm] = useState({
     age: "",
     gender: "",
@@ -18,7 +20,11 @@ export default function UserProfileForm() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (Object.values(form).some((val) => val.trim() === "")) {
-      alert("Please fill out all fields before continuing.");
+      toast({
+        title: 'Error',
+        description: 'Please fill out all fields before continuing.',
+        variant: 'destructive'
+      });
       return;
     }
 

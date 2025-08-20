@@ -37,7 +37,6 @@ const PhotoManagementCard = () => {
     // Update profile with new photos
     const photoUrls = updatedPhotos.map(photo => photo.url);
     updateProfileField('photo_urls', photoUrls);
-    await saveProfile();
   });
 
   const handleRemovePhoto = async (photoId: string) => {
