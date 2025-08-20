@@ -33,11 +33,10 @@ const PhotoManagementCard = () => {
     handleFileSelect,
     removePhoto,
     setPrimaryPhoto
-  } = usePhotoUpload(photos, async (updatedPhotos: Photo[]) => {
-    // Update profile with new photos
+  } = usePhotoUpload(photos, (updatedPhotos: Photo[]) => {
+    // Update local state - database save is handled in usePhotoUpload
     const photoUrls = updatedPhotos.map(photo => photo.url);
     updateProfileField('photo_urls', photoUrls);
-    await saveProfile();
   });
 
   const handleRemovePhoto = async (photoId: string) => {

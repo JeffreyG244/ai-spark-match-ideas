@@ -62,39 +62,39 @@ export const useEnhancedProfileData = () => {
     setIsLoading(true);
     
     try {
-      // Load from users table (primary table)
+      // Load from user_profiles table 
       const { data: userProfile, error: userProfileError } = await supabase
-        .from('users')
+        .from('user_profiles')
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
 
       if (userProfileError && userProfileError.code !== 'PGRST116') {
-        toast({
-          title: 'Load Error',
-          description: 'Failed to load your profile data.',
-          variant: 'destructive'
-        });
-        return;
+        console.error('Profile load error:', userProfileError);
       }
 
-      // Combine the data from users table
+      // Extract data from the user_profiles structure
+      const publicData = (userProfile?.public_data as any) || {};
+      const privateData = (userProfile?.private_data as any) || {};
+      
+      // Combine the data from user_profiles table
       const combinedData: EnhancedProfileData = {
-        first_name: userProfile?.first_name || '',
-        last_name: userProfile?.last_name || '',
-        age: userProfile?.age?.toString() || '',
-        gender: userProfile?.gender || '',
-        bio: userProfile?.bio || '',
-        city: userProfile?.city || '',
-        state: userProfile?.state || '',
-        zipcode: userProfile?.country || '', // Map country field to zipcode for UI
-        interests: userProfile?.interests?.join(', ') || '',
-        photo_urls: userProfile?.photos || [],
+        first_name: publicData.first_name || '',
+        last_name: publicData.last_name || '',
+        age: publicData.age?.toString() || '',
+        gender: publicData.gender || '',
+        bio: publicData.bio || '',
+        city: publicData.city || '',
+        state: publicData.state || '',
+        zipcode: publicData.zipcode || '',
+        interests: Array.isArray(publicData.interests) ? publicData.interests.join(', ') : (publicData.interests || ''),
+        photo_urls: userProfile?.photo_urls || [],
       };
 
       setProfileData(combinedData);
       setProfileExists(!!userProfile);
     } catch (error) {
+      console.error('Profile load error:', error);
       toast({
         title: 'Load Error',
         description: 'An unexpected error occurred while loading your profile.',
@@ -119,53 +119,40 @@ export const useEnhancedProfileData = () => {
       return { success: false };
     }
 
-    // Validate bio minimum length
-    if (profileData.bio && profileData.bio.length < 150) {
-      toast({
-        title: 'Bio Too Short',
-        description: 'Please write at least 150 characters about yourself.',
-        variant: 'destructive'
-      });
-      return { success: false };
-    }
     setIsSaving(true);
     
     try {
-      // Calculate age from date of birth if age is provided
-      let dateOfBirth = '1990-01-01'; // default fallback
-      if (profileData.age) {
-        const currentYear = new Date().getFullYear();
-        const birthYear = currentYear - parseInt(profileData.age);
-        dateOfBirth = `${birthYear}-01-01`;
-      }
-
-      // Save to users table (the main profile table used for matching)
-      const userProfilePayload = {
-        id: user.id,
-        email: user.email || '',
+      // Prepare data for user_profiles table
+      const publicData = {
         first_name: profileData.first_name || '',
         last_name: profileData.last_name || '',
         age: profileData.age ? parseInt(profileData.age) : null,
-        gender: profileData.gender || null,
+        gender: profileData.gender || '',
         bio: profileData.bio || '',
         city: profileData.city || '',
-        state: profileData.state || null,
-        country: profileData.zipcode || null, // Map zipcode UI field to country DB field
-        interests: profileData.interests ? profileData.interests.split(',').map(i => i.trim()) : null,
-        photos: profileData.photo_urls || [],
-        date_of_birth: dateOfBirth,
+        state: profileData.state || '',
+        zipcode: profileData.zipcode || '',
+        interests: profileData.interests ? profileData.interests.split(',').map(i => i.trim()) : [],
+      };
+
+      // Save to user_profiles table
+      const userProfilePayload = {
+        id: user.id,
+        public_data: publicData,
+        private_data: {},
+        photo_urls: profileData.photo_urls || [],
         updated_at: new Date().toISOString()
       };
 
-      const { data: upsertData, error: userProfileError } = await supabase
-        .from('users')
+      const { error: userProfileError } = await supabase
+        .from('user_profiles')
         .upsert(userProfilePayload, { 
           onConflict: 'id',
           ignoreDuplicates: false 
-        })
-        .select();
+        });
 
       if (userProfileError) {
+        console.error('Profile save error:', userProfileError);
         toast({
           title: 'Save Failed',
           description: `Failed to save profile: ${userProfileError.message}`,
@@ -173,6 +160,7 @@ export const useEnhancedProfileData = () => {
         });
         return { success: false };
       }
+
       setProfileExists(true);
       
       if (showSuccessToast) {
@@ -184,6 +172,7 @@ export const useEnhancedProfileData = () => {
       
       return { success: true };
     } catch (error) {
+      console.error('Unexpected profile save error:', error);
       toast({
         title: 'Unexpected Error',
         description: 'An unexpected error occurred. Please try again.',
