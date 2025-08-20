@@ -24,33 +24,33 @@ const Legal = lazy(() => import("./pages/Legal"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 
 
-// Load other components normally
-import NotFound from "./pages/NotFound";
-import Verification from "./pages/Verification";
-import Safety from "./pages/Safety";
-import Analytics from "./pages/Analytics";
-import SuccessStories from "./pages/SuccessStories";
-import Moderation from "./pages/Moderation";
-import ExecutiveDashboard from "./pages/ExecutiveDashboard";
+// Lazy load remaining components for better performance
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Verification = lazy(() => import("./pages/Verification"));
+const Safety = lazy(() => import("./pages/Safety"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const SuccessStories = lazy(() => import("./pages/SuccessStories"));
+const Moderation = lazy(() => import("./pages/Moderation"));
+const ExecutiveDashboard = lazy(() => import("./pages/ExecutiveDashboard"));
 
-// Legal pages
-import TermsOfService from "./pages/legal/TermsOfService";
-import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
-import CommunityGuidelines from "./pages/legal/CommunityGuidelines";
-import SafetyGuidelines from "./pages/legal/SafetyGuidelines";
-import CookiePolicy from "./pages/legal/CookiePolicy";
-import GDPR from "./pages/legal/GDPR";
-import CCPA from "./pages/legal/CCPA";
-import DataRetention from "./pages/legal/DataRetention";
-import IntellectualProperty from "./pages/legal/IntellectualProperty";
-import ContentModerationPolicy from "./pages/legal/ContentModerationPolicy";
-import MessageMonitoring from "./pages/legal/MessageMonitoring";
-import PhotoVerification from "./pages/legal/PhotoVerification";
-import IdentityVerificationPolicy from "./pages/legal/IdentityVerificationPolicy";
-import AgeVerificationPolicy from "./pages/legal/AgeVerificationPolicy";
-import BlockingReportingPolicy from "./pages/legal/BlockingReportingPolicy";
-import RomanceScamPrevention from "./pages/legal/RomanceScamPrevention";
-import AccountSuspension from "./pages/legal/AccountSuspension";
+// Legal pages - lazy loaded for better performance
+const TermsOfService = lazy(() => import("./pages/legal/TermsOfService"));
+const PrivacyPolicy = lazy(() => import("./pages/legal/PrivacyPolicy"));
+const CommunityGuidelines = lazy(() => import("./pages/legal/CommunityGuidelines"));
+const SafetyGuidelines = lazy(() => import("./pages/legal/SafetyGuidelines"));
+const CookiePolicy = lazy(() => import("./pages/legal/CookiePolicy"));
+const GDPR = lazy(() => import("./pages/legal/GDPR"));
+const CCPA = lazy(() => import("./pages/legal/CCPA"));
+const DataRetention = lazy(() => import("./pages/legal/DataRetention"));
+const IntellectualProperty = lazy(() => import("./pages/legal/IntellectualProperty"));
+const ContentModerationPolicy = lazy(() => import("./pages/legal/ContentModerationPolicy"));
+const MessageMonitoring = lazy(() => import("./pages/legal/MessageMonitoring"));
+const PhotoVerification = lazy(() => import("./pages/legal/PhotoVerification"));
+const IdentityVerificationPolicy = lazy(() => import("./pages/legal/IdentityVerificationPolicy"));
+const AgeVerificationPolicy = lazy(() => import("./pages/legal/AgeVerificationPolicy"));
+const BlockingReportingPolicy = lazy(() => import("./pages/legal/BlockingReportingPolicy"));
+const RomanceScamPrevention = lazy(() => import("./pages/legal/RomanceScamPrevention"));
+const AccountSuspension = lazy(() => import("./pages/legal/AccountSuspension"));
 
 const queryClient = new QueryClient();
 // Force rebuild
@@ -60,6 +60,7 @@ import SecureSessionManager from '@/components/security/SecureSessionManager';
 import { AlertProvider } from '@/components/providers/AlertProvider';
 import AuthGuard from '@/components/auth/AuthGuard';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 function App() {
   return (
@@ -72,11 +73,7 @@ function App() {
               <AlertProvider>
                 <Router>
                 <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-                  <Suspense fallback={
-                    <div className="min-h-screen flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-                    </div>
-                  }>
+                  <Suspense fallback={<LoadingSpinner size="lg" />}>
                    <Routes>
                      <Route path="/" element={<AuthGuard requireAuth={false}><Index /></AuthGuard>} />
                      <Route path="/auth" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
