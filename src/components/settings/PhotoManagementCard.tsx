@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,6 @@ const PhotoManagementCard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { profileData, isLoading, saveProfile, updateProfileField } = useEnhancedProfileData();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Convert profile photos to expected format
   const photos: Photo[] = (profileData.photo_urls || []).map((url, index) => ({
@@ -32,7 +31,8 @@ const PhotoManagementCard = () => {
     isUploading,
     handleFileSelect,
     removePhoto,
-    setPrimaryPhoto
+    setPrimaryPhoto,
+    fileInputRef
   } = usePhotoUpload(photos, async (updatedPhotos: Photo[]) => {
     // Update profile with new photos
     const photoUrls = updatedPhotos.map(photo => photo.url);
@@ -41,34 +41,13 @@ const PhotoManagementCard = () => {
   });
 
   const handleRemovePhoto = async (photoId: string) => {
-    const photoIndex = parseInt(photoId.split('-')[1]);
-    const updatedPhotos = [...(profileData.photo_urls || [])];
-    updatedPhotos.splice(photoIndex, 1);
-    
-    updateProfileField('photo_urls', updatedPhotos);
+    removePhoto(photoId);
     await saveProfile();
-    
-    toast({
-      title: "Photo Removed",
-      description: "Photo has been removed from your profile.",
-    });
   };
 
   const handleSetPrimary = async (photoId: string) => {
-    const photoIndex = parseInt(photoId.split('-')[1]);
-    const updatedPhotos = [...(profileData.photo_urls || [])];
-    
-    // Move selected photo to first position
-    const [selectedPhoto] = updatedPhotos.splice(photoIndex, 1);
-    updatedPhotos.unshift(selectedPhoto);
-    
-    updateProfileField('photo_urls', updatedPhotos);
+    setPrimaryPhoto(photoId);
     await saveProfile();
-    
-    toast({
-      title: "Primary Photo Updated",
-      description: "Your primary photo has been updated.",
-    });
   };
 
   if (isLoading) {

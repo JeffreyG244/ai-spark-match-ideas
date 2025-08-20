@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
+import SimpleWorkingUpload from '@/components/settings/SimpleWorkingUpload';
 
 interface FormData {
   firstName: string;
@@ -180,6 +181,21 @@ export default function ProfessionalProfile() {
                 </p>
               </div>
             </CardHeader>
+          </Card>
+
+          {/* Professional Gallery Section */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                🖼️ Professional Gallery
+              </CardTitle>
+              <p className="text-muted-foreground">
+                Upload professional photos to showcase yourself to potential matches
+              </p>
+            </CardHeader>
+            <CardContent>
+              <SimpleWorkingUpload />
+            </CardContent>
           </Card>
 
           {/* Professional Identity Section */}

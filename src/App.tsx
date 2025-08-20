@@ -32,6 +32,7 @@ import Analytics from "./pages/Analytics";
 import SuccessStories from "./pages/SuccessStories";
 import Moderation from "./pages/Moderation";
 import ExecutiveDashboard from "./pages/ExecutiveDashboard";
+import ExecutiveProfile from "./pages/ExecutiveProfile";
 
 // Legal pages
 import TermsOfService from "./pages/legal/TermsOfService";
@@ -99,6 +100,7 @@ function App() {
                     <Route path="/success-stories" element={<SuccessStories />} />
                     <Route path="/moderation" element={<Moderation />} />
                      <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
+                     <Route path="/executive-profile" element={<AuthGuard><ExecutiveProfile /></AuthGuard>} />
                      
                      
                     <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />

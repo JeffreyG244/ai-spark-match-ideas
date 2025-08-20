@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceIntroductionCapture from './VoiceIntroductionCapture';
+import SimpleWorkingUpload from '@/components/settings/SimpleWorkingUpload';
 
 interface FormData {
   // Section 1: Executive Profile
@@ -678,30 +679,21 @@ const handleComplete = async () => {
   const renderSection6 = () => (
     <div className="space-y-6">
       <div>
-        <Label>Professional Gallery (4-8 photos)</Label>
-        <div className="mt-2 space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(8)].map((_, index) => (
-              <div
-                key={index}
-                className="aspect-square border-2 border-dashed border-purple-300 rounded-lg flex items-center justify-center bg-purple-50 hover:bg-purple-100 transition-colors cursor-pointer"
-              >
-                <div className="text-center">
-                  <Camera className="h-8 w-8 text-purple-400 mx-auto mb-2" />
-                  <p className="text-sm text-purple-600">Photo {index + 1}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
-            <h4 className="font-medium text-purple-800 mb-2">Photo Guidelines:</h4>
-            <ul className="text-sm text-purple-700 space-y-1">
-              <li>• Professional headshot (required)</li>
+        <Label className="text-white text-lg">Professional Gallery (Upload 1-6 photos)</Label>
+        <div className="mt-4 space-y-4">
+          {/* Working Photo Upload Component */}
+          <SimpleWorkingUpload />
+          
+          <div className="bg-purple-900/50 border border-purple-400/50 backdrop-blur-sm p-4 rounded-lg">
+            <h4 className="font-medium text-purple-200 mb-2">Photo Guidelines:</h4>
+            <ul className="text-sm text-purple-300 space-y-1">
+              <li>• Professional headshot (recommended)</li>
               <li>• Business attire photos</li>
               <li>• Social/networking events</li>
               <li>• Lifestyle activities</li>
               <li>• High quality, well-lit images</li>
               <li>• Recent photos (within 2 years)</li>
+              <li>• 5MB max per photo</li>
             </ul>
           </div>
         </div>
