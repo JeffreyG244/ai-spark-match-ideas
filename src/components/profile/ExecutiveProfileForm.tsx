@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { X, ChevronLeft, ChevronRight, Camera, Upload } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Camera, Upload, User, Heart, Target, Brain, Palette, ImageIcon } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -130,12 +130,12 @@ const ExecutiveProfileForm = () => {
   }, [user]);
 
   const sections = [
-    'Executive Profile',
-    'Identity & Preferences', 
-    'Lifestyle & Values',
-    'Psychology',
-    'Interests & Culture',
-    'Professional Gallery'
+    { name: 'Executive Profile', icon: User },
+    { name: 'Identity & Preferences', icon: Heart }, 
+    { name: 'Lifestyle & Values', icon: Target },
+    { name: 'Psychology', icon: Brain },
+    { name: 'Interests & Culture', icon: Palette },
+    { name: 'Professional Gallery', icon: ImageIcon }
   ];
 
   const handleInputChange = (field: keyof FormData, value: string) => {
@@ -740,29 +740,33 @@ const handleComplete = async () => {
 
         {/* Section Navigation */}
         <div className="mb-8">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-            {sections.map((section, index) => (
-              <Button
-                key={index}
-                variant={currentSection === index + 1 ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentSection(index + 1)}
-                className={`text-xs whitespace-nowrap overflow-hidden text-ellipsis font-medium ${
-                  currentSection === index + 1 
-                    ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-md' 
-                    : 'bg-purple-100/90 border-purple-300 text-purple-800 hover:bg-purple-200/90 hover:border-purple-400 shadow-sm'
-                }`}
-              >
-                {section}
-              </Button>
-            ))}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {sections.map((section, index) => {
+              const IconComponent = section.icon;
+              return (
+                <Button
+                  key={index}
+                  variant={currentSection === index + 1 ? "default" : "outline"}
+                  onClick={() => setCurrentSection(index + 1)}
+                  className={`flex items-center gap-3 px-6 py-4 rounded-2xl h-auto
+                  ${currentSection === index + 1 
+                    ? 'bg-gradient-to-r from-love-primary to-love-secondary text-white shadow-xl shadow-love-primary/30 scale-105 border-love-primary/50' 
+                    : 'hover:bg-gradient-to-r hover:from-purple-400 hover:to-pink-400 hover:text-white hover:scale-[1.02] hover:border-purple-400 hover:shadow-lg border-2 border-purple-300 bg-gradient-to-r from-purple-200 to-pink-200 shadow-md text-purple-800'
+                  } 
+                  transition-all duration-300 ease-out whitespace-nowrap font-bold text-sm backdrop-blur-sm`}
+                >
+                  <IconComponent className="h-5 w-5" />
+                  <span className="hidden md:inline">{section.name}</span>
+                </Button>
+              );
+            })}
           </div>
         </div>
 
         {/* Form Card */}
         <Card className="bg-white/10 backdrop-blur-lg border-purple-300/30">
           <CardHeader>
-            <CardTitle className="text-2xl text-white">{sections[currentSection - 1]}</CardTitle>
+            <CardTitle className="text-2xl text-white">{sections[currentSection - 1].name}</CardTitle>
           </CardHeader>
           <CardContent className="text-white">
             {renderCurrentSection()}
