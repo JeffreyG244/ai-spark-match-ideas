@@ -19,7 +19,8 @@ export class SecurityLoggingService {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      const logEntry: Omit<SecurityLogEntry, 'id' | 'created_at'> = {
+      const logEntry = {
+        user_id: user?.id || null,
         event_type: eventType,
         severity,
         details: typeof details === 'string' ? { message: details } : details,
@@ -28,12 +29,9 @@ export class SecurityLoggingService {
         session_id: user?.id ? `session_${user.id}_${Date.now()}` : undefined
       };
 
-      // Mock security logging since security_logs table doesn't exist
-      console.log('Security event logged (mocked):', {
-        user_id: user?.id || undefined,
-        ...logEntry
-      });
-      const error = null;
+      const { error } = await supabase
+        .from('security_logs')
+        .insert([logEntry]);
 
       if (error) {
         console.error('Failed to log security event to database:', error);
