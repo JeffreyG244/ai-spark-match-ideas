@@ -43,22 +43,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('Attempting sign in for:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password
       });
 
-      console.log('Sign in response:', { data, error });
-
       if (error) {
-        console.error('Authentication error:', error);
         throw error;
       }
-
-      console.log('Sign in successful');
     } catch (error) {
-      console.error('Sign in error:', error);
       throw error;
     }
   };
@@ -94,9 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
 
-      console.log('Sign up successful, user will receive confirmation email');
     } catch (error) {
-      console.error('Sign up error:', error);
       throw error;
     }
   };
@@ -116,7 +107,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: 'Check your email for password reset instructions.',
       });
     } catch (error: any) {
-      console.error('Password reset error:', error);
       toast({
         title: 'Error',
         description: error.message || 'Failed to send password reset email',
@@ -129,7 +119,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error('Error signing out:', error);
+      throw error;
     }
   };
 
