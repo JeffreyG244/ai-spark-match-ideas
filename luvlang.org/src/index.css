@@ -1,121 +1,152 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Love-themed color palette */
+  --love-primary: 218 70% 60%;
+  --love-primary-glow: 220 80% 70%;
+  --love-secondary: 320 70% 60%;
+  --love-accent: 340 80% 65%;
+  
+  /* Neutral colors */
+  --love-background: 220 15% 7%;
+  --love-surface: 220 12% 10%;
+  --love-card: 220 10% 13%;
+  --love-border: 220 8% 20%;
+  
+  /* Text colors */
+  --love-text: 220 10% 95%;
+  --love-text-light: 220 8% 80%;
+  --love-text-muted: 220 6% 65%;
+  
+  /* Status colors */
+  --love-success: 142 71% 45%;
+  --love-warning: 38 92% 50%;
+  --love-error: 0 84% 60%;
+  
+  /* Gradients */
+  --love-gradient-primary: linear-gradient(135deg, hsl(var(--love-primary)), hsl(var(--love-secondary)));
+  --love-gradient-accent: linear-gradient(135deg, hsl(var(--love-accent)), hsl(var(--love-primary)));
+  --love-gradient-subtle: linear-gradient(135deg, hsl(var(--love-surface)), hsl(var(--love-card)));
+  
+  /* Effects */
+  --love-shadow-glow: 0 0 30px hsl(var(--love-primary) / 0.3);
+  --love-shadow-elegant: 0 10px 40px -10px hsl(var(--love-primary) / 0.2);
+  
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  
+  color-scheme: dark;
+  color: hsl(var(--love-text));
+  background-color: hsl(var(--love-background));
+  
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  
-  /* Performance improvements */
-  contain: layout style paint;
-  will-change: auto;
 }
 
-/* Accessibility improvements */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+* {
+  box-sizing: border-box;
 }
 
-/* Focus indicators for accessibility */
-*:focus-visible {
-  outline: 2px solid #7c3aed;
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* Skip to main content for screen readers */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.sr-only:focus {
-  position: static;
-  width: auto;
-  height: auto;
-  padding: 0.5rem;
+html,
+body {
   margin: 0;
-  overflow: visible;
-  clip: auto;
-  white-space: normal;
-  background: #7c3aed;
-  color: white;
-  border-radius: 4px;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+  padding: 0;
+  min-height: 100vh;
 }
 
 body {
-  margin: 0;
-  min-width: 320px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: hsl(var(--love-background));
+  color: hsl(var(--love-text));
+  line-height: 1.6;
+}
+
+#root {
   min-height: 100vh;
-  /* Remove centering for landing page */
-  /* Improve performance */
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
+::-webkit-scrollbar-track {
+  background: hsl(var(--love-surface));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--love-border));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--love-text-muted));
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid hsl(var(--love-primary));
+  outline-offset: 2px;
+}
+
+/* Button base styles */
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  transition: all 0.2s ease;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* Link styles */
+a {
+  color: hsl(var(--love-primary));
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: hsl(var(--love-primary-glow));
+}
+
+/* Form elements */
+input, textarea, select {
+  font-family: inherit;
+  background: hsl(var(--love-surface));
+  border: 1px solid hsl(var(--love-border));
+  color: hsl(var(--love-text));
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: hsl(var(--love-primary));
+  box-shadow: 0 0 0 3px hsl(var(--love-primary) / 0.1);
+  outline: none;
+}
+
+/* Utility classes */
+.text-gradient {
+  background: var(--love-gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.backdrop-blur-love {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.shadow-love {
+  box-shadow: var(--love-shadow-elegant);
+}
+
+.glow-love {
+  box-shadow: var(--love-shadow-glow);
 }

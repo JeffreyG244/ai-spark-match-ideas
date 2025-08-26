@@ -10,15 +10,18 @@ export class AuditLogService {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      // Mock security logging since security_logs table doesn't exist
-      console.log('Audit Event:', {
-        event_type: eventType,
-        severity,
-        details,
-        user_id: user?.id || null,
-        timestamp: new Date().toISOString(),
-        user_agent: navigator.userAgent
-      });
+      const { error } = await supabase
+        .from('security_logs')
+        .insert([{
+          user_id: user?.id || null,
+          event_type: eventType,
+          severity,
+          details
+        }]);
+
+      if (error) {
+        console.error('Failed to log audit event:', error);
+      }
     } catch (error) {
       console.error('Failed to log audit event:', error);
     }
@@ -32,9 +35,35 @@ export class AuditLogService {
     endDate?: Date;
   }): Promise<any[]> {
     try {
-      // Mock audit logs retrieval since security_logs table doesn't exist
-      console.log('Audit logs requested with filters:', filters);
-      return [];
+      let query = supabase
+        .from('security_logs')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (filters?.userId) {
+        query = query.eq('user_id', filters.userId);
+      }
+      if (filters?.eventType) {
+        query = query.eq('event_type', filters.eventType);
+      }
+      if (filters?.severity) {
+        query = query.eq('severity', filters.severity);
+      }
+      if (filters?.startDate) {
+        query = query.gte('created_at', filters.startDate.toISOString());
+      }
+      if (filters?.endDate) {
+        query = query.lte('created_at', filters.endDate.toISOString());
+      }
+
+      const { data, error } = await query.limit(100);
+      
+      if (error) {
+        console.error('Failed to retrieve audit logs:', error);
+        return [];
+      }
+      
+      return data || [];
     } catch (error) {
       console.error('Failed to retrieve audit logs:', error);
       return [];

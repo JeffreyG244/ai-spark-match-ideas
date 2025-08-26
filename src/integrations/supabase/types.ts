@@ -103,6 +103,27 @@ export type Database = {
         }
         Relationships: []
       }
+      breached_passwords: {
+        Row: {
+          breach_count: number | null
+          created_at: string | null
+          id: number
+          password_hash: string
+        }
+        Insert: {
+          breach_count?: number | null
+          created_at?: string | null
+          id?: number
+          password_hash: string
+        }
+        Update: {
+          breach_count?: number | null
+          created_at?: string | null
+          id?: number
+          password_hash?: string
+        }
+        Relationships: []
+      }
       conversation_messages: {
         Row: {
           ai_suggested: boolean | null
@@ -599,6 +620,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      failed_login_attempts: {
+        Row: {
+          attempt_time: string | null
+          blocked_until: string | null
+          email: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+        }
+        Insert: {
+          attempt_time?: string | null
+          blocked_until?: string | null
+          email: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+        }
+        Update: {
+          attempt_time?: string | null
+          blocked_until?: string | null
+          email?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+        }
+        Relationships: []
       }
       interest_categories: {
         Row: {
@@ -1404,6 +1452,27 @@ export type Database = {
           },
         ]
       }
+      user_password_history: {
+        Row: {
+          created_at: string | null
+          id: string
+          password_hash: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          password_hash: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          password_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           created_at: string | null
@@ -2173,8 +2242,16 @@ export type Database = {
         Args: { recipient_id: string; sender_id: string }
         Returns: boolean
       }
+      check_account_lockout: {
+        Args: { email_param: string; ip_param?: string }
+        Returns: Json
+      }
       check_https: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      check_password_reuse: {
+        Args: { new_password: string; user_id_param: string }
         Returns: boolean
       }
       clean_orphaned_photos: {
@@ -2542,6 +2619,10 @@ export type Database = {
         Args: { user1_id: string; user2_id: string }
         Returns: string
       }
+      get_password_requirements: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_profile_by_user_id: {
         Args:
           | { input_user_id: string }
@@ -2840,6 +2921,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      record_failed_login: {
+        Args: {
+          email_param: string
+          ip_param?: string
+          user_agent_param?: string
+        }
+        Returns: undefined
+      }
       run_security_diagnostics: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -2864,12 +2953,12 @@ export type Database = {
       }
       secure_rate_limit_check: {
         Args: {
-          action_type?: string
+          action_type: string
           max_requests?: number
           user_id_param: string
           window_minutes?: number
         }
-        Returns: Json
+        Returns: boolean
       }
       seed_dating_profiles: {
         Args: Record<PropertyKey, never>
@@ -3995,6 +4084,10 @@ export type Database = {
         Args: { p_is_online: boolean; p_user_id: string }
         Returns: undefined
       }
+      validate_password_security: {
+        Args: { password_text: string }
+        Returns: Json
+      }
       validate_password_strength: {
         Args: { password: string }
         Returns: Json
@@ -4002,6 +4095,13 @@ export type Database = {
       validate_password_with_leak_check: {
         Args: { password: string }
         Returns: Json
+      }
+      verify_rls_status: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          rls_enabled: boolean
+          table_name: string
+        }[]
       }
       view_nearby_matches: {
         Args: { p_profile_id: number }
