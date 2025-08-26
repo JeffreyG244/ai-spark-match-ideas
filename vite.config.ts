@@ -10,8 +10,8 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    // lovable-tagger temporarily disabled due to ESM compatibility issues
-    // Will be enabled when compatibility is resolved
+    // Note: lovable-tagger temporarily commented due to ESM compatibility issues
+    // The componentTagger plugin will be auto-enabled by Lovable runtime
   ],
   resolve: {
     alias: {
