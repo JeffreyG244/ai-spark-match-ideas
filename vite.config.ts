@@ -10,6 +10,8 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    // lovable-tagger temporarily disabled due to ESM compatibility issues
+    // Will be enabled when compatibility is resolved
   ],
   resolve: {
     alias: {
