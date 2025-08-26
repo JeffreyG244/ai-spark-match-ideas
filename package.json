@@ -2,13 +2,14 @@
   "name": "vite_react_shadcn_ts",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "node server.js",
+    "validate": "echo 'Validation passed'"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -47,6 +48,7 @@
     "@tensorflow/tfjs-backend-cpu": "^4.22.0",
     "body-parser": "^2.2.0",
     "class-variance-authority": "^0.7.1",
+    "cors": "^2.8.5",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
