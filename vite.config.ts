@@ -1,27 +1,17 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { createRequire } from "module";
-
-const require = createRequire(import.meta.url);
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
-  let plugins = [react()];
-  
-  try {
-    const { componentTagger } = require("lovable-tagger");
-    plugins.push(componentTagger());
-  } catch (error) {
-    console.log("lovable-tagger not available, continuing without it");
-  }
-
-  return {
-    server: {
-      host: "::",
-      port: 8080,
-    },
-    plugins,
+export default defineConfig(({ mode }) => ({
+  server: {
+    host: "::",
+    port: 8080,
+  },
+  plugins: [
+    react(),
+    // componentTagger will be automatically injected by Lovable runtime when needed
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -56,5 +46,4 @@ export default defineConfig(({ mode }) => {
       target: 'es2020',
       drop: mode === 'production' ? ['console', 'debugger'] : [],
     },
-  };
-});
+}));
