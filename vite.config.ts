@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    // componentTagger will be automatically injected by Lovable runtime when needed
+    // componentTagger will be automatically injected by Lovable runtime
   ],
   resolve: {
     alias: {
@@ -45,5 +45,5 @@ export default defineConfig(({ mode }) => ({
     esbuild: {
       target: 'es2020',
       drop: mode === 'production' ? ['console', 'debugger'] : [],
-  },
+    },
 }));
