@@ -32,15 +32,36 @@ const LoginForm = () => {
       return;
     }
 
+    console.log('Login form submit - Email:', formData.email, 'Password length:', formData.password.length);
+    
     setLoading(true);
     try {
       await signIn(formData.email, formData.password);
+      console.log('Login successful, should redirect soon');
       // Toast removed - now using custom alert banner system
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (error: any) {
+      console.error('Login error details:', {
+        message: error?.message,
+        code: error?.code,
+        status: error?.status,
+        name: error?.name,
+        fullError: error
+      });
+      
+      let errorMessage = 'Please check your credentials and try again.';
+      
+      // Provide more specific error messages
+      if (error?.message?.includes('Invalid login credentials')) {
+        errorMessage = 'Invalid email or password. Please double-check your credentials.';
+      } else if (error?.message?.includes('Email not confirmed')) {
+        errorMessage = 'Please check your email and click the confirmation link before signing in.';
+      } else if (error?.message?.includes('Too many requests')) {
+        errorMessage = 'Too many login attempts. Please wait a few minutes before trying again.';
+      }
+      
       toast({
         title: 'Sign In Failed',
-        description: 'Please check your credentials and try again.',
+        description: errorMessage,
         variant: 'destructive'
       });
     } finally {

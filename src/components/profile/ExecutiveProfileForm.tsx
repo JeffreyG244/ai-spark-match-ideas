@@ -13,8 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import VoiceIntroductionCapture from './VoiceIntroductionCapture';
 import SimpleWorkingUpload from '@/components/settings/SimpleWorkingUpload';
-
-const logoImage = '/lovable-uploads/5c07b7a7-1ceb-456a-a4b3-381d70437f98.png';
+import Logo from '@/components/ui/logo';
 
 interface FormData {
   // Section 1: Executive Profile
@@ -727,12 +726,8 @@ const handleComplete = async () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-48 h-48 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-full flex items-center justify-center mx-auto mb-8 backdrop-blur-sm border border-purple-300/30 shadow-2xl">
-            <img 
-              src={logoImage}
-              alt="Luvlang Logo"
-              className="w-40 h-40 object-contain"
-            />
+          <div className="flex justify-center mb-8">
+            <Logo size="lg" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Executive Profile</h1>
           <p className="text-purple-200">Create your comprehensive dating profile</p>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Crown, Briefcase, TrendingUp, Palette, Dumbbell, Plane, Lightbulb, ArrowRight } from 'lucide-react';
-const logoImage = '/lovable-uploads/5c07b7a7-1ceb-456a-a4b3-381d70437f98.png';
+import Logo from '@/components/ui/logo';
 
 interface ProfileSetupSectionProps {
   onStartProfileSetup: () => void;
@@ -10,12 +10,8 @@ const ProfileSetupSection = ({ onStartProfileSetup }: ProfileSetupSectionProps) 
   return (
     <div className="bg-gradient-to-r from-love-primary/10 to-love-secondary/10 backdrop-blur-xl border border-love-border rounded-3xl p-12 mb-8">
       <div className="text-center">
-        <div className="w-48 h-48 bg-gradient-to-r from-love-primary/20 to-love-secondary/20 rounded-full flex items-center justify-center mx-auto mb-8 backdrop-blur-sm border border-love-primary/30 shadow-2xl">
-          <img 
-            src={logoImage}
-            alt="Luvlang Logo"
-            className="w-40 h-40 object-contain"
-          />
+        <div className="flex justify-center mb-8">
+          <Logo size="lg" />
         </div>
         
         <h2 className="text-4xl md:text-5xl font-bold text-love-text mb-6 leading-tight">
