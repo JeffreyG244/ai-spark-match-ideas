@@ -188,8 +188,8 @@ const GuidedProfileFlow = () => {
         });
       }
 
-      // Navigate to analysis results page
-      navigate('/analysis-results');
+      // Navigate to discover page
+      navigate('/discover');
     } catch (error) {
       console.error('Error completing profile:', error);
       toast({

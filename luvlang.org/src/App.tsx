@@ -5,7 +5,6 @@ import AuthGuard from '@/components/auth/AuthGuard';
 import Index from '@/pages/Index';
 import Auth from '@/pages/Auth';
 import Dashboard from '@/pages/Dashboard';
-import AnalysisResults from '@/pages/AnalysisResults';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { AlertProvider } from '@/components/providers/AlertProvider';
 
@@ -39,14 +38,6 @@ function App() {
                 element={
                   <AuthGuard requireAuth={true}>
                     <Dashboard />
-                  </AuthGuard>
-                } 
-              />
-              <Route 
-                path="/analysis-results" 
-                element={
-                  <AuthGuard requireAuth={true}>
-                    <AnalysisResults />
                   </AuthGuard>
                 } 
               />
