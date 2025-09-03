@@ -1,6 +1,8 @@
 [build]
-  publish = "dist"
-  command = "npm run build"
+  base = "luvlang.org"
+  publish = "luvlang.org/dist"
+  command = "npm ci && npm run build"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF"
 
 [[redirects]]
   from = "/*"
