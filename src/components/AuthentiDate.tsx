@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Shield, CheckCircle, AlertTriangle, Camera, Verified } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 const AuthentiDate = () => {
   const [verificationLevel, setVerificationLevel] = useState(87);

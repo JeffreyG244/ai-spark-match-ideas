@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Mic, MicOff, Play, Pause, Volume2, AudioWaveform } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 const VoiceCompatibility = () => {
   const [isRecording, setIsRecording] = useState(false);

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Star, Target, Heart, Brain, CheckCircle, AlertCircle, Shield, User } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 import ProfileManager from "./ProfileManager";
 
 const ProfileBuilder = () => {

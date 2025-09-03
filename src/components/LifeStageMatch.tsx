@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Target, Calendar, MapPin, Briefcase, Home, Baby } from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 const LifeStageMatch = () => {
   const [analysisComplete, setAnalysisComplete] = useState(true);
