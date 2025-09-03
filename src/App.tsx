@@ -10,6 +10,7 @@ import { Suspense, lazy } from "react";
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const AnalysisResults = lazy(() => import("./pages/AnalysisResults"));
 const Discover = lazy(() => import("./pages/Discover"));
 const Matches = lazy(() => import("./pages/Matches"));
 const ProfessionalMatches = lazy(() => import("./pages/ProfessionalMatches"));
@@ -77,9 +78,10 @@ function App() {
                   <Suspense fallback={<LoadingSpinner size="lg" />}>
                    <Routes>
                      <Route path="/" element={<AuthGuard requireAuth={false}><Index /></AuthGuard>} />
-                     <Route path="/auth" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
-                     <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
-                     <Route path="/discover" element={<AuthGuard><Discover /></AuthGuard>} />
+                      <Route path="/auth" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
+                      <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
+                      <Route path="/analysis-results" element={<AuthGuard><AnalysisResults /></AuthGuard>} />
+                      <Route path="/discover" element={<AuthGuard><Discover /></AuthGuard>} />
                      <Route path="/matches" element={<AuthGuard><Matches /></AuthGuard>} />
                      <Route path="/professional-matches" element={<AuthGuard><ProfessionalMatches /></AuthGuard>} />
                      <Route path="/professional-profile" element={<AuthGuard><ProfessionalProfile /></AuthGuard>} />

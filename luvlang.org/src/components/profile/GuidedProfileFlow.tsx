@@ -407,13 +407,13 @@ const GuidedProfileFlow = () => {
               Profile Complete! 🎉
             </h2>
             <p className="text-green-700 mb-4">
-              Your profile is now ready to start matching with other users.
+              Your profile is now ready for AI analysis to find your perfect matches.
             </p>
             <Button
-              onClick={() => navigate('/discover')}
+              onClick={() => navigate('/analysis-results')}
               className="bg-green-600 hover:bg-green-700"
             >
-              Start Discovering Matches
+              View AI Analysis Results
             </Button>
           </CardContent>
         </Card>
