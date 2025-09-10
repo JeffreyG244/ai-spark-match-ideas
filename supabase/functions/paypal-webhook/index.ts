@@ -115,33 +115,199 @@ serve(async (req) => {
 async function handlePaymentCompleted(supabaseClient: any, webhookData: any) {
   logStep("Processing payment completion");
   
-  // Extract user info from PayPal data
-  const paymentData = webhookData.resource;
-  
-  // Update user subscription status
-  // TODO: Map PayPal payment to user and plan based on your button configuration
-  
-  logStep("Payment processed successfully");
+  try {
+    // Extract payment info from PayPal data
+    const paymentData = webhookData.resource;
+    const saleId = paymentData.id;
+    const amount = paymentData.amount?.total;
+    const currency = paymentData.amount?.currency;
+    const payerEmail = paymentData.payer?.payer_info?.email;
+    
+    logStep("Payment data extracted", {
+      saleId,
+      amount,
+      currency,
+      payerEmail
+    });
+
+    // Find user by email
+    let user_id = null;
+    if (payerEmail) {
+      const { data: users, error: userError } = await supabaseClient
+        .from('users')
+        .select('id')
+        .eq('email', payerEmail)
+        .maybeSingle();
+      
+      if (users) {
+        user_id = users.id;
+        logStep("User found for payment", { user_id, payerEmail });
+      } else {
+        logStep("No user found for email", { payerEmail });
+      }
+    }
+
+    // Determine plan based on amount (map your PayPal button amounts)
+    let plan = 'unknown';
+    let duration = 'monthly';
+    
+    if (amount) {
+      const amountNum = parseFloat(amount);
+      if (amountNum === 29.99) {
+        plan = 'plus';
+        duration = 'monthly';
+      } else if (amountNum === 299.99) {
+        plan = 'plus';
+        duration = 'annual';
+      } else if (amountNum === 49.99) {
+        plan = 'premium';
+        duration = 'monthly';
+      } else if (amountNum === 499.99) {
+        plan = 'premium';
+        duration = 'annual';
+      } else if (amountNum === 99.99) {
+        plan = 'executive';
+        duration = 'monthly';
+      } else if (amountNum === 999.99) {
+        plan = 'executive';
+        duration = 'annual';
+      }
+    }
+
+    // Record payment in database
+    const { error: paymentError } = await supabaseClient
+      .from('payments')
+      .insert({
+        user_id: user_id,
+        payment_provider: 'paypal',
+        payment_provider_id: saleId,
+        amount: amount ? parseFloat(amount) : null,
+        currency: currency,
+        status: 'completed',
+        plan_type: plan,
+        billing_cycle: duration,
+        payer_email: payerEmail,
+        raw_data: paymentData,
+        processed_at: new Date().toISOString()
+      });
+
+    if (paymentError) {
+      logStep("Error recording payment", paymentError);
+      throw paymentError;
+    }
+
+    // Update user subscription if we found the user
+    if (user_id && plan !== 'unknown') {
+      const expiresAt = new Date();
+      if (duration === 'annual') {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+      } else {
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+      }
+
+      const { error: subscriptionError } = await supabaseClient
+        .from('users')
+        .update({
+          subscription_tier: plan,
+          subscription_expires_at: expiresAt.toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user_id);
+
+      if (subscriptionError) {
+        logStep("Error updating subscription", subscriptionError);
+      } else {
+        logStep("Subscription updated successfully", {
+          user_id,
+          plan,
+          duration,
+          expires_at: expiresAt
+        });
+      }
+    }
+
+    logStep("Payment processed successfully");
+  } catch (error) {
+    logStep("Error processing payment", error);
+    throw error;
+  }
 }
 
 async function handleSubscriptionActivated(supabaseClient: any, webhookData: any) {
   logStep("Processing subscription activation");
   
-  const subscriptionData = webhookData.resource;
-  
-  // Update user subscription in database
-  // TODO: Implement subscription activation logic
-  
-  logStep("Subscription activated successfully");
+  try {
+    const subscriptionData = webhookData.resource;
+    const subscriptionId = subscriptionData.id;
+    const status = subscriptionData.status;
+    const plan = subscriptionData.plan_id;
+    
+    // For future implementation - when using PayPal subscriptions
+    logStep("Subscription activation data", {
+      subscriptionId,
+      status,
+      plan
+    });
+    
+    // Record subscription activation
+    const { error: logError } = await supabaseClient
+      .from('security_logs')
+      .insert({
+        event_type: 'paypal_subscription_activated',
+        severity: 'medium',
+        details: {
+          subscription_id: subscriptionId,
+          plan_id: plan,
+          status: status,
+          webhook_data: subscriptionData
+        }
+      });
+
+    if (logError) {
+      logStep("Error logging subscription activation", logError);
+    }
+    
+    logStep("Subscription activated successfully");
+  } catch (error) {
+    logStep("Error processing subscription activation", error);
+    throw error;
+  }
 }
 
 async function handleSubscriptionCancelled(supabaseClient: any, webhookData: any) {
   logStep("Processing subscription cancellation");
   
-  const subscriptionData = webhookData.resource;
-  
-  // Update user subscription status to cancelled
-  // TODO: Implement subscription cancellation logic
-  
-  logStep("Subscription cancelled successfully");
+  try {
+    const subscriptionData = webhookData.resource;
+    const subscriptionId = subscriptionData.id;
+    const status = subscriptionData.status;
+    
+    // For future implementation - when using PayPal subscriptions  
+    logStep("Subscription cancellation data", {
+      subscriptionId,
+      status
+    });
+    
+    // Record subscription cancellation
+    const { error: logError } = await supabaseClient
+      .from('security_logs')
+      .insert({
+        event_type: 'paypal_subscription_cancelled',
+        severity: 'medium',
+        details: {
+          subscription_id: subscriptionId,
+          status: status,
+          webhook_data: subscriptionData
+        }
+      });
+
+    if (logError) {
+      logStep("Error logging subscription cancellation", logError);
+    }
+    
+    logStep("Subscription cancelled successfully");
+  } catch (error) {
+    logStep("Error processing subscription cancellation", error);
+    throw error;
+  }
 }

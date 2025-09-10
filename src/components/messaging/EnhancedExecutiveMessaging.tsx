@@ -10,6 +10,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useConversations } from '@/hooks/useConversations';
 import { useMessages } from '@/hooks/useMessages';
 import { toast } from '@/hooks/use-toast';
+import { VideoCallManager } from '@/components/calling/VideoCallManager';
+import { SimpleCallButtons } from '@/components/calling/SimpleCallButtons';
 
 // Define interfaces for type safety
 interface Message {
@@ -44,6 +46,20 @@ const EnhancedExecutiveMessaging = () => {
   const selectedConversation = selectedConversationId 
     ? conversations.find(c => c.id === selectedConversationId) 
     : null;
+
+  // Get recipient info for calls
+  const getRecipientInfo = () => {
+    if (!selectedConversation || !user?.id) return null;
+    
+    const recipientId = selectedConversation.participant_1 === user.id 
+      ? selectedConversation.participant_2 
+      : selectedConversation.participant_1;
+      
+    return {
+      id: recipientId,
+      name: 'Professional Connection' // Could be enhanced with actual user data
+    };
+  };
 
   // Auto-select first conversation when conversations load
   useEffect(() => {
@@ -254,20 +270,12 @@ const EnhancedExecutiveMessaging = () => {
                 </div>
                 
                 <div className="flex items-center space-x-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="bg-slate-700/50 border-slate-600/30 text-white hover:bg-slate-600/50"
-                  >
-                    <Phone className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="bg-slate-700/50 border-slate-600/30 text-white hover:bg-slate-600/50"
-                  >
-                    <Video className="w-4 h-4" />
-                  </Button>
+                  {getRecipientInfo() && (
+                    <SimpleCallButtons
+                      recipientId={getRecipientInfo()!.id}
+                      recipientName={getRecipientInfo()!.name}
+                    />
+                  )}
                   <Button 
                     variant="outline" 
                     size="sm"

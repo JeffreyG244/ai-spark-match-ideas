@@ -30,11 +30,12 @@ serve(async (req) => {
       });
     }
 
-    // Get all potential matches from the database
+    // Get all potential matches from the database - FIXED: Using consolidated users table
     const { data: allProfiles, error: profilesError } = await supabase
-      .from('user_profiles')
-      .select('user_id, bio, values, life_goals, interests, photos, personality_answers')
-      .neq('user_id', user_id);
+      .from('users')
+      .select('id, bio, values, family_goals, lifestyle_preference, interests, photos, personality_answers, age, city, subscription_tier')
+      .neq('id', user_id)
+      .eq('verified', true); // Only include verified users for matching
 
     if (profilesError) {
       console.error('Error fetching profiles:', profilesError);
@@ -57,12 +58,12 @@ serve(async (req) => {
     for (const profile of allProfiles) {
       const compatibility = calculateCompatibility(currentUser, profile);
       
-      console.log(`Compatibility with ${profile.user_id}: ${compatibility.score}%`);
+      console.log(`Compatibility with ${profile.id}: ${compatibility.score}%`);
       
       if (compatibility.score > 30) { // Only include matches above 30% compatibility
         matches.push({
           user_id: user_id,
-          matched_user_id: profile.user_id,
+          matched_user_id: profile.id, // FIXED: Using correct id field
           compatibility_score: compatibility.score,
           match_reason: compatibility.reason,
           created_at: new Date().toISOString()
@@ -131,18 +132,18 @@ function calculateCompatibility(user: any, profile: any): { score: number; reaso
   let score = 0;
   const reasons = [];
 
-  console.log('Calculating compatibility between:', user.user_id, 'and', profile.user_id);
+  console.log('Calculating compatibility between:', user.user_id, 'and', profile.id);
   console.log('User data:', JSON.stringify(user, null, 2));
   console.log('Profile data:', JSON.stringify(profile, null, 2));
 
-  // Extract profile data with defaults
+  // Extract profile data with defaults - FIXED: Using consolidated schema
   const profilePersonality = profile.personality_answers || {};
-  const profileAge = parseInt(profilePersonality.age) || 30;
+  const profileAge = profile.age || parseInt(profilePersonality.age) || 30;
   const profileGender = profilePersonality.gender || 'Not specified';
-  const profileLocation = profilePersonality.location || 'Unknown';
+  const profileLocation = profile.city || profilePersonality.location || 'Unknown';
   const profileInterests = profile.interests || [];
   const profileValues = profile.values || '';
-  const profileGoals = profilePersonality.relationship_goals || profile.life_goals || '';
+  const profileGoals = profile.family_goals || profilePersonality.relationship_goals || '';
 
   console.log('Extracted profile data:', {
     age: profileAge,

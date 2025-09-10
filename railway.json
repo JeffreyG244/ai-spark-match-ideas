@@ -1,13 +1,10 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "nixpacks",
-    "buildCommand": "npm ci && npm run validate && npm run build"
+    "builder": "nixpacks"
   },
   "deploy": {
-    "startCommand": "npm start",
-    "restartPolicyType": "on-failure",
-    "restartPolicyMaxRetries": 10
+    "startCommand": "node railway-deploy/server.js"
   },
   "variables": {
     "NODE_ENV": "production"

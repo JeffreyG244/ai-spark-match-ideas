@@ -27,6 +27,7 @@ const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 // Lazy load remaining components for better performance
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Verification = lazy(() => import("./pages/Verification"));
+const VerificationCenter = lazy(() => import("./pages/VerificationCenter"));
 const Safety = lazy(() => import("./pages/Safety"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const SuccessStories = lazy(() => import("./pages/SuccessStories"));
@@ -62,6 +63,7 @@ import { AlertProvider } from '@/components/providers/AlertProvider';
 import AuthGuard from '@/components/auth/AuthGuard';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { CallReceiver } from '@/components/calling/CallReceiver';
 
 function App() {
   return (
@@ -92,6 +94,7 @@ function App() {
                     <Route path="/legal" element={<Legal />} />
                     <Route path="/how-it-works" element={<HowItWorks />} />
                     <Route path="/verification" element={<Verification />} />
+                    <Route path="/verification-center" element={<AuthGuard><VerificationCenter /></AuthGuard>} />
                     <Route path="/safety" element={<Safety />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/success-stories" element={<SuccessStories />} />
@@ -120,6 +123,7 @@ function App() {
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   </Suspense>
+                  <CallReceiver />
                   <Toaster />
                   <Sonner />
                 </div>

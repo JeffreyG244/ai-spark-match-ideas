@@ -10,7 +10,6 @@ max_rows = 1000
 
 [auth]
 enabled = true
-port = 54324
 site_url = "http://localhost:3000"
 additional_redirect_urls = ["https://lovable.app", "http://localhost:5173"]
 jwt_expiry = 3600
@@ -22,27 +21,21 @@ enable_manual_linking = false
 enable_signup = true
 double_confirm_changes = false
 enable_confirmations = false
-secure_email_change_enabled = false
-enable_anonymous_sign_ins = false
 
 [db]
-enabled = true
 port = 54322
 shadow_port = 54320
 major_version = 15
 
 [realtime]
 enabled = true
-port = 54323
 
 [studio]
 enabled = true
-port = 54324
+port = 54323
 api_url = "http://localhost:54321"
 
-[edge_runtime]
-enabled = true
-port = 54325
+[functions]
 
 [functions.create-paypal-order]
 verify_jwt = true

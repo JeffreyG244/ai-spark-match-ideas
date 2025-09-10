@@ -3,6 +3,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import ProfileEditCard from '@/components/settings/ProfileEditCard';
 import SimpleWorkingUpload from '@/components/settings/SimpleWorkingUpload';
+import ChangePasswordForm from '@/components/security/ChangePasswordForm';
+import TwoFactorAuth from '@/components/security/TwoFactorAuth';
+import LoginActivity from '@/components/security/LoginActivity';
+import DataExport from '@/components/security/DataExport';
+import PaymentMethodManager from '@/components/billing/PaymentMethodManager';
+import SubscriptionManager from '@/components/billing/SubscriptionManager';
+import BillingHistory from '@/components/billing/BillingHistory';
+import HelpCenter from '@/components/support/HelpCenter';
+import AccountDeletion from '@/components/support/AccountDeletion';
 import { 
   ArrowLeft, 
   User, 
@@ -258,32 +267,36 @@ const Settings = () => {
           title: 'Change Password',
           description: 'Update your account password',
           icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="10" width="12" height="10" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><circle cx="12" cy="6" r="4" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="10" y="14" width="4" height="2"/><rect x="11" y="16" width="2" height="2"/><circle cx="12" cy="15" r="1"/></svg>,
-          action: () => navigate('/auth/reset-password'),
-          type: 'navigation'
+          action: () => {},
+          type: 'custom',
+          component: 'change-password'
         },
         {
           id: 'two-factor',
           title: 'Two-Factor Authentication',
           description: 'Add an extra layer of security',
           icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="6" width="14" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="9" y="2" width="6" height="6" rx="1" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="8" y="10" width="2" height="2"/><rect x="11" y="10" width="2" height="2"/><rect x="14" y="10" width="2" height="2"/><rect x="8" y="13" width="2" height="2"/><rect x="11" y="13" width="2" height="2"/><rect x="14" y="13" width="2" height="2"/><rect x="11" y="16" width="2" height="2"/></svg>,
-          action: () => toast({ title: "Coming Soon", description: "Two-factor authentication will be available soon." }),
-          type: 'button'
+          action: () => {},
+          type: 'custom',
+          component: 'two-factor'
         },
         {
           id: 'login-activity',
           title: 'Login Activity',
           description: 'View your recent login history',
           icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="6" y="7" width="12" height="2"/><rect x="6" y="10" width="8" height="2"/><rect x="6" y="13" width="10" height="2"/><rect x="6" y="16" width="6" height="2"/><circle cx="18" cy="8" r="2" fill="currentColor"/></svg>,
-          action: () => toast({ title: "Security", description: "No suspicious login activity detected." }),
-          type: 'button'
+          action: () => {},
+          type: 'custom',
+          component: 'login-activity'
         },
         {
           id: 'data-export',
           title: 'Export My Data',
           description: 'Download a copy of your data',
           icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><rect x="7" y="7" width="10" height="2"/><rect x="7" y="10" width="8" height="2"/><rect x="7" y="13" width="6" height="2"/><rect x="7" y="16" width="4" height="2"/><path d="M12 2v6m0 0l-3-3m3 3l3-3" stroke="currentColor" strokeWidth="2" fill="none"/></svg>,
-          action: () => toast({ title: "Data Export", description: "Your data export will be ready within 24 hours." }),
-          type: 'button'
+          action: () => {},
+          type: 'custom',
+          component: 'data-export'
         }
       ]
     },
@@ -299,24 +312,27 @@ const Settings = () => {
           title: 'Payment Method',
           description: 'Update your billing information',
           icon: <CreditCard className="w-4 h-4" />,
-          action: () => navigate('/membership'),
-          type: 'navigation'
+          action: () => {},
+          type: 'custom',
+          component: 'payment-method'
         },
         {
           id: 'subscription',
           title: 'Manage Subscription',
           description: 'Change or cancel your plan',
           icon: <SettingsIcon className="w-4 h-4" />,
-          action: () => navigate('/membership'),
-          type: 'navigation'
+          action: () => {},
+          type: 'custom',
+          component: 'subscription'
         },
         {
           id: 'billing-history',
           title: 'Billing History',
           description: 'View your payment history',
           icon: <FileText className="w-4 h-4" />,
-          action: () => navigate('/membership'),
-          type: 'navigation'
+          action: () => {},
+          type: 'custom',
+          component: 'billing-history'
         }
       ]
     },
@@ -332,8 +348,9 @@ const Settings = () => {
           title: 'Help Center',
           description: 'Browse our knowledge base',
           icon: <HelpCircle className="w-4 h-4" />,
-          action: () => window.open('https://help.luvlang.com', '_blank'),
-          type: 'navigation'
+          action: () => {},
+          type: 'custom',
+          component: 'help-center'
         },
         {
           id: 'contact-support',
@@ -364,8 +381,9 @@ const Settings = () => {
           title: 'Delete Account',
           description: 'Permanently delete your account',
           icon: <Trash2 className="w-4 h-4" />,
-          action: () => toast({ title: "Account Deletion", description: "Please contact support to delete your account." }),
-          type: 'button'
+          action: () => {},
+          type: 'custom',
+          component: 'delete-account'
         }
       ]
     }
@@ -382,50 +400,90 @@ const Settings = () => {
 
   const activeSettings = settingsCategories.find(cat => cat.id === activeCategory);
 
+  const [expandedItem, setExpandedItem] = useState<string | null>(null);
+
   const renderSettingItem = (item: SettingItem) => {
-    // Handle custom components
-    if (item.type === 'custom') {
-      if (item.component === 'profile-edit') {
-        return <ProfileEditCard key={item.id} />;
-      }
-      if (item.component === 'photo-management') {
-        return <SimpleWorkingUpload key={item.id} />;
-      }
+    const isExpanded = expandedItem === item.id;
+    
+    // Handle custom components - show in expanded state
+    if (item.type === 'custom' && isExpanded) {
+      return (
+        <div key={item.id} className="col-span-full">
+          <div className="mb-4">
+            <Button
+              onClick={() => setExpandedItem(null)}
+              variant="outline"
+              size="sm"
+              className="border-purple-500/50 text-purple-300 hover:bg-purple-500/20"
+            >
+              <ChevronDown className="w-4 h-4 mr-2 rotate-90" />
+              Back to {activeSettings?.title}
+            </Button>
+          </div>
+          {item.component === 'profile-edit' && <ProfileEditCard />}
+          {item.component === 'photo-management' && <SimpleWorkingUpload />}
+          {item.component === 'change-password' && <ChangePasswordForm />}
+          {item.component === 'two-factor' && <TwoFactorAuth />}
+          {item.component === 'login-activity' && <LoginActivity />}
+          {item.component === 'data-export' && <DataExport />}
+          {item.component === 'payment-method' && <PaymentMethodManager />}
+          {item.component === 'subscription' && <SubscriptionManager />}
+          {item.component === 'billing-history' && <BillingHistory />}
+          {item.component === 'help-center' && <HelpCenter />}
+          {item.component === 'delete-account' && <AccountDeletion />}
+        </div>
+      );
+    }
+
+    // Skip rendering if another item is expanded
+    if (expandedItem && expandedItem !== item.id) {
+      return null;
     }
 
     return (
-      <Card 
-        key={item.id} 
-        className="bg-gradient-to-br from-purple-600/90 to-pink-600/80 backdrop-blur-sm border-purple-400/50 hover:border-pink-300/70 transition-all duration-300 group cursor-pointer hover:shadow-xl hover:shadow-purple-400/30 hover:scale-[1.02] hover:-translate-y-1 shadow-lg" 
-        onClick={item.action}
+      <button
+        key={item.id}
+        onClick={() => {
+          if (item.type === 'custom') {
+            setExpandedItem(item.id);
+          } else {
+            item.action();
+          }
+        }}
+        className="group relative overflow-hidden rounded-xl p-4 text-left transition-all duration-300 hover:scale-[1.02] bg-slate-800/40 hover:bg-slate-700/60 border border-slate-600/30 hover:border-purple-400/50 shadow-lg hover:shadow-xl backdrop-blur-sm"
       >
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 flex-1">
-              <div className="w-12 h-12 bg-gradient-to-r from-white/30 to-purple-200/40 rounded-xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg backdrop-blur-sm">
-                <div className="text-white group-hover:text-purple-100 transition-colors">
-                  {item.icon}
-                </div>
-              </div>
-              <div className="flex-1">
-                <h4 className="font-semibold text-white group-hover:text-purple-100 transition-colors text-base">{item.title}</h4>
-                <p className="text-white/90 group-hover:text-white mt-1 transition-colors font-medium">{item.description}</p>
-              </div>
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-all duration-300">
+            <div className="text-purple-400 group-hover:text-purple-300 transition-colors">
+              {item.icon}
             </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="font-medium text-white group-hover:text-purple-200 transition-colors text-sm truncate">
+              {item.title}
+            </h4>
+            <p className="text-slate-400 group-hover:text-slate-300 text-xs mt-0.5 line-clamp-1">
+              {item.description}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
             {item.type === 'switch' && (
               <Switch 
                 checked={item.value || false}
                 onCheckedChange={(checked) => item.action()}
-                className="ml-4 data-[state=checked]:bg-purple-500"
+                className="data-[state=checked]:bg-purple-500 scale-75"
                 onClick={(e) => e.stopPropagation()}
               />
             )}
             {item.type === 'navigation' && (
-              <ExternalLink className="w-5 h-5 text-slate-400 group-hover:text-purple-400 transition-colors ml-4 group-hover:scale-110" />
+              <ExternalLink className="w-3 h-3 text-slate-500 group-hover:text-purple-400 transition-colors" />
+            )}
+            {(item.type === 'button' || item.type === 'custom') && (
+              <ChevronDown className="w-3 h-3 text-slate-500 group-hover:text-purple-400 transition-colors rotate-[-90deg]" />
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </button>
     );
   };
 
@@ -528,6 +586,7 @@ const Settings = () => {
                       onClick={() => {
                         setActiveCategory(category.id);
                         setIsSidebarOpen(false);
+                        setExpandedItem(null);
                       }}
                       className={`w-full group relative overflow-hidden rounded-xl p-4 text-left transition-all duration-500 hover:scale-[1.02] hover:shadow-lg ${
                         activeCategory === category.id
@@ -567,26 +626,6 @@ const Settings = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-9">
-            {/* DEBUG PHOTO UPLOAD - REMOVE AFTER TESTING */}
-            <Card className="mb-6 bg-red-500/10 border-red-500/50">
-              <CardHeader>
-                <CardTitle className="text-red-400">🔧 DEBUG: Photo Upload Test</CardTitle>
-                <CardDescription className="text-red-300">
-                  This is a test upload button to debug the photo upload issue. Click this to test!
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <SimplePhotoUploadButton 
-                  onPhotoUploaded={(url) => {
-                    toast({
-                      title: "SUCCESS!",
-                      description: `Photo uploaded: ${url}`,
-                    });
-                  }}
-                  className="max-w-md"
-                />
-              </CardContent>
-            </Card>
             
             {activeSettings && (
               <div className="space-y-6">
@@ -599,8 +638,8 @@ const Settings = () => {
                   <p className="text-white font-medium text-lg max-w-2xl mx-auto">{activeSettings.description}</p>
                 </div>
 
-                {/* Settings Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Settings List */}
+                <div className={`space-y-3 ${expandedItem ? '' : 'max-w-4xl mx-auto'}`}>
                   {activeSettings.items.map(renderSettingItem)}
                 </div>
 

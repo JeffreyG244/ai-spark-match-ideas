@@ -42,7 +42,7 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get user data from users table
+    // Get user data from users table - FIXED: Using consolidated users table
     console.log('Fetching user data...');
     const { data: user, error: userError } = await supabaseClient
       .from('users')
@@ -58,21 +58,25 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Use user data or create test data
-    const userData = user || {
-      id: user_id,
-      first_name: 'Test',
-      last_name: 'User',
-      age: 30,
-      city: 'San Francisco',
-      state: 'CA',
-      interests: ['Technology', 'Business'],
-      bio: 'Test user for webhook testing'
-    };
+    // CRITICAL FIX: Don't use fake data - require real user data
+    if (!user) {
+      console.error('No user found for ID:', user_id);
+      return new Response(
+        JSON.stringify({ 
+          error: 'User not found', 
+          details: `No user record exists for ID: ${user_id}. User may need to complete profile setup.`,
+          user_id: user_id,
+          suggestion: 'User should log in and complete their profile'
+        }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const userData = user;
 
     console.log('User data found:', userData.first_name, userData.last_name);
 
-    // Prepare comprehensive webhook payload
+    // Prepare comprehensive webhook payload - FIXED: Using real consolidated user data
     const webhookData: ProfileData = {
       user_id: user_id,
       name: `${userData.first_name} ${userData.last_name}`,
@@ -84,25 +88,33 @@ const handler = async (req: Request): Promise<Response> => {
           user_id: user_id,
           first_name: userData.first_name,
           last_name: userData.last_name,
-          age: userData.age || 30,
-          city: userData.city || 'Test City',
-          state: userData.state || 'CA',
-          bio: userData.bio || 'Professional seeking meaningful connections',
+          age: userData.age,
+          city: userData.city,
+          state: userData.state,
+          bio: userData.bio,
+          family_goals: userData.family_goals,
+          lifestyle_preference: userData.lifestyle_preference,
+          values: userData.values,
           industry: userData.industry,
           job_title: userData.job_title,
-          interests: userData.interests || ['Technology', 'Business']
+          interests: userData.interests || [],
+          verified: userData.verified || false
         },
-        compatibility: {},
+        compatibility: {
+          personality_answers: userData.personality_answers || {}
+        },
         preferences: {
-          age_range: [userData.age_min || 25, userData.age_max || 45],
-          location: `${userData.city || 'Test City'}, ${userData.state || 'CA'}`,
-          interests: userData.interests || ['Technology', 'Business'],
-          deal_breakers: userData.deal_breakers || []
+          age_range: [userData.age_min || 18, userData.age_max || 65],
+          location: `${userData.city || ''}, ${userData.state || ''}`,
+          interests: userData.interests || [],
+          deal_breakers: userData.deal_breakers || ''
         },
         user_metadata: {
           email: userData.email,
           created_at: userData.created_at,
-          subscription_tier: userData.subscription_tier || 'free'
+          updated_at: userData.updated_at,
+          subscription_tier: userData.subscription_tier || 'free',
+          photos: userData.photos || []
         }
       }
     };
