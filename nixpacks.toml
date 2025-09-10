@@ -1,11 +1,10 @@
-[variables]
-NIXPACKS_NO_DEFAULT_CACHE_DIR = '1'
+providers = ['node']
 
-[providers]
-node = true
+[variables]
+NODE_ENV = 'production'
 
 [phases.setup]
-nixPkgs = ['nodejs-18_x', 'npm']
+nixPkgs = ['nodejs-18_x', 'npm-9_x']
 
 [phases.install]  
 cmds = ['cd railway-deploy && npm ci']
