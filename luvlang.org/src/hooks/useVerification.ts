@@ -49,7 +49,7 @@ export const useVerification = () => {
     try {
       const { data, error } = await supabase
         .from('users')
-        .select('phone_verified, photo_verified, identity_verified, phone_verified_at, photo_verified_at, identity_verified_at')
+        .select('phone_verified, photo_verified, identity_verified as email_verified, phone_verified_at, photo_verified_at, identity_verified_at as email_verified_at')
         .eq('id', user.id)
         .single();
 
@@ -58,14 +58,7 @@ export const useVerification = () => {
         return;
       }
 
-      setVerificationStatus(data ? {
-        phone_verified: data.phone_verified || false,
-        photo_verified: data.photo_verified || false,
-        email_verified: data.identity_verified || false,
-        phone_verified_at: data.phone_verified_at,
-        photo_verified_at: data.photo_verified_at,
-        email_verified_at: data.identity_verified_at
-      } : {
+      setVerificationStatus(data || {
         phone_verified: false,
         photo_verified: false,
         email_verified: false
@@ -157,7 +150,6 @@ export const useVerification = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to send verification code",
-        variant: "destructive",
       });
       return false;
     } finally {
@@ -188,7 +180,6 @@ export const useVerification = () => {
       toast({
         title: "Error",
         description: error.message || "Invalid verification code",
-        variant: "destructive",
       });
       return false;
     } finally {
@@ -223,7 +214,6 @@ export const useVerification = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to upload document",
-        variant: "destructive",
       });
       return false;
     } finally {
@@ -257,7 +247,6 @@ export const useVerification = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to add social media profile",
-        variant: "destructive",
       });
       return false;
     } finally {
