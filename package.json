@@ -8,7 +8,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node server.js",
+    "start": "cd railway-deploy && node server.js",
     "validate": "echo 'Validation passed'"
   },
   "dependencies": {
