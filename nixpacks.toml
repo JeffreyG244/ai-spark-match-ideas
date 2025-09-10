@@ -8,7 +8,7 @@ node = true
 nixPkgs = ['nodejs-18_x', 'npm']
 
 [phases.install]  
-cmds = ['npm ci']
+cmds = ['cd railway-deploy && npm ci']
 
 [start]
-cmd = 'node server.js'
+cmd = 'cd railway-deploy && node server.js'
