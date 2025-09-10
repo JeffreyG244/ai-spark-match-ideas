@@ -9,5 +9,8 @@ nixPkgs = ['nodejs-18_x', 'npm-9_x']
 [phases.install]  
 cmds = ['cd railway-deploy && npm ci']
 
+[phases.build]
+cmds = ['echo "No build step needed for Node.js server"']
+
 [start]
 cmd = 'cd railway-deploy && node server.js'
