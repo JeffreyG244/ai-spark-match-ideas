@@ -1006,47 +1006,99 @@ export type Database = {
         }
         Relationships: []
       }
-      phone_verifications: {
+      payments: {
         Row: {
-          attempts: number | null
-          code_expires_at: string | null
+          amount: number | null
+          billing_cycle: string | null
           created_at: string | null
+          currency: string | null
           id: string
-          max_attempts: number | null
-          phone_number: string
+          payer_email: string | null
+          payment_provider: string
+          payment_provider_id: string
+          plan_type: string | null
+          processed_at: string | null
+          raw_data: Json | null
+          status: string
           updated_at: string | null
-          user_id: string
-          verification_code: string | null
-          verification_code_hash: string | null
-          verified_at: string | null
+          user_id: string | null
         }
         Insert: {
-          attempts?: number | null
-          code_expires_at?: string | null
+          amount?: number | null
+          billing_cycle?: string | null
           created_at?: string | null
+          currency?: string | null
           id?: string
-          max_attempts?: number | null
-          phone_number: string
+          payer_email?: string | null
+          payment_provider?: string
+          payment_provider_id: string
+          plan_type?: string | null
+          processed_at?: string | null
+          raw_data?: Json | null
+          status?: string
           updated_at?: string | null
-          user_id: string
-          verification_code?: string | null
-          verification_code_hash?: string | null
-          verified_at?: string | null
+          user_id?: string | null
         }
         Update: {
-          attempts?: number | null
-          code_expires_at?: string | null
+          amount?: number | null
+          billing_cycle?: string | null
           created_at?: string | null
+          currency?: string | null
           id?: string
-          max_attempts?: number | null
-          phone_number?: string
+          payer_email?: string | null
+          payment_provider?: string
+          payment_provider_id?: string
+          plan_type?: string | null
+          processed_at?: string | null
+          raw_data?: Json | null
+          status?: string
           updated_at?: string | null
-          user_id?: string
-          verification_code?: string | null
-          verification_code_hash?: string | null
-          verified_at?: string | null
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      phone_verifications: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          id: string
+          phone_number: string
+          user_id: string | null
+          verification_code: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          phone_number: string
+          user_id?: string | null
+          verification_code: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          phone_number?: string
+          user_id?: string | null
+          verification_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phone_verifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       professional_profiles: {
         Row: {
@@ -1577,91 +1629,43 @@ export type Database = {
       }
       user_verifications: {
         Row: {
-          background_check_verified: boolean | null
-          background_check_verified_at: string | null
-          company_verified: boolean | null
-          company_verified_at: string | null
           created_at: string | null
-          education_verified: boolean | null
-          education_verified_at: string | null
-          email_verified: boolean | null
-          email_verified_at: string | null
           id: string
-          income_verified: boolean | null
-          income_verified_at: string | null
-          linkedin_verified: boolean | null
-          linkedin_verified_at: string | null
-          phone_number: string | null
-          phone_verified: boolean | null
-          phone_verified_at: string | null
-          photo_verified: boolean | null
-          photo_verified_at: string | null
-          social_media_verified: boolean | null
-          social_media_verified_at: string | null
+          metadata: Json | null
+          rejection_reason: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string | null
           updated_at: string | null
           user_id: string | null
-          verification_documents: Json | null
-          verification_notes: string | null
-          video_verified: boolean | null
-          video_verified_at: string | null
+          verification_type: string
+          verified_at: string | null
         }
         Insert: {
-          background_check_verified?: boolean | null
-          background_check_verified_at?: string | null
-          company_verified?: boolean | null
-          company_verified_at?: string | null
           created_at?: string | null
-          education_verified?: boolean | null
-          education_verified_at?: string | null
-          email_verified?: boolean | null
-          email_verified_at?: string | null
           id?: string
-          income_verified?: boolean | null
-          income_verified_at?: string | null
-          linkedin_verified?: boolean | null
-          linkedin_verified_at?: string | null
-          phone_number?: string | null
-          phone_verified?: boolean | null
-          phone_verified_at?: string | null
-          photo_verified?: boolean | null
-          photo_verified_at?: string | null
-          social_media_verified?: boolean | null
-          social_media_verified_at?: string | null
+          metadata?: Json | null
+          rejection_reason?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
           updated_at?: string | null
           user_id?: string | null
-          verification_documents?: Json | null
-          verification_notes?: string | null
-          video_verified?: boolean | null
-          video_verified_at?: string | null
+          verification_type: string
+          verified_at?: string | null
         }
         Update: {
-          background_check_verified?: boolean | null
-          background_check_verified_at?: string | null
-          company_verified?: boolean | null
-          company_verified_at?: string | null
           created_at?: string | null
-          education_verified?: boolean | null
-          education_verified_at?: string | null
-          email_verified?: boolean | null
-          email_verified_at?: string | null
           id?: string
-          income_verified?: boolean | null
-          income_verified_at?: string | null
-          linkedin_verified?: boolean | null
-          linkedin_verified_at?: string | null
-          phone_number?: string | null
-          phone_verified?: boolean | null
-          phone_verified_at?: string | null
-          photo_verified?: boolean | null
-          photo_verified_at?: string | null
-          social_media_verified?: boolean | null
-          social_media_verified_at?: string | null
+          metadata?: Json | null
+          rejection_reason?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string | null
           updated_at?: string | null
           user_id?: string | null
-          verification_documents?: Json | null
-          verification_notes?: string | null
-          video_verified?: boolean | null
-          video_verified_at?: string | null
+          verification_type?: string
+          verified_at?: string | null
         }
         Relationships: [
           {
@@ -1700,8 +1704,13 @@ export type Database = {
           fitness_level: string | null
           gender: string | null
           graduation_year: number | null
+          green_flags: string | null
           hobbies: string[] | null
           id: string
+          identity_submitted_at: string | null
+          identity_verification_status: string | null
+          identity_verified: boolean | null
+          identity_verified_at: string | null
           industry: string | null
           interests: string[] | null
           investment_interests: string[] | null
@@ -1712,6 +1721,7 @@ export type Database = {
           last_active: string | null
           last_name: string
           latitude: number | null
+          life_goals: string | null
           lifestyle_preference: string | null
           linkedin_url: string | null
           longitude: number | null
@@ -1727,8 +1737,13 @@ export type Database = {
           music_taste: string[] | null
           networking_events: boolean | null
           perfect_date: string | null
+          personality_answers: Json | null
           personality_traits: string[] | null
           phone_number: string | null
+          phone_verified: boolean | null
+          phone_verified_at: string | null
+          photo_verified: boolean | null
+          photo_verified_at: string | null
           photos: string[] | null
           photos_updated_at: string | null
           preferred_industries: string[] | null
@@ -1745,8 +1760,11 @@ export type Database = {
           trending_score: number | null
           university: string | null
           updated_at: string | null
+          values: string | null
           verification_date: string | null
+          verification_photo_url: string | null
           verification_types: string[] | null
+          verified: boolean | null
           weekend_availability: boolean | null
           work_location: string | null
           work_schedule: string | null
@@ -1777,8 +1795,13 @@ export type Database = {
           fitness_level?: string | null
           gender?: string | null
           graduation_year?: number | null
+          green_flags?: string | null
           hobbies?: string[] | null
           id?: string
+          identity_submitted_at?: string | null
+          identity_verification_status?: string | null
+          identity_verified?: boolean | null
+          identity_verified_at?: string | null
           industry?: string | null
           interests?: string[] | null
           investment_interests?: string[] | null
@@ -1789,6 +1812,7 @@ export type Database = {
           last_active?: string | null
           last_name: string
           latitude?: number | null
+          life_goals?: string | null
           lifestyle_preference?: string | null
           linkedin_url?: string | null
           longitude?: number | null
@@ -1804,8 +1828,13 @@ export type Database = {
           music_taste?: string[] | null
           networking_events?: boolean | null
           perfect_date?: string | null
+          personality_answers?: Json | null
           personality_traits?: string[] | null
           phone_number?: string | null
+          phone_verified?: boolean | null
+          phone_verified_at?: string | null
+          photo_verified?: boolean | null
+          photo_verified_at?: string | null
           photos?: string[] | null
           photos_updated_at?: string | null
           preferred_industries?: string[] | null
@@ -1822,8 +1851,11 @@ export type Database = {
           trending_score?: number | null
           university?: string | null
           updated_at?: string | null
+          values?: string | null
           verification_date?: string | null
+          verification_photo_url?: string | null
           verification_types?: string[] | null
+          verified?: boolean | null
           weekend_availability?: boolean | null
           work_location?: string | null
           work_schedule?: string | null
@@ -1854,8 +1886,13 @@ export type Database = {
           fitness_level?: string | null
           gender?: string | null
           graduation_year?: number | null
+          green_flags?: string | null
           hobbies?: string[] | null
           id?: string
+          identity_submitted_at?: string | null
+          identity_verification_status?: string | null
+          identity_verified?: boolean | null
+          identity_verified_at?: string | null
           industry?: string | null
           interests?: string[] | null
           investment_interests?: string[] | null
@@ -1866,6 +1903,7 @@ export type Database = {
           last_active?: string | null
           last_name?: string
           latitude?: number | null
+          life_goals?: string | null
           lifestyle_preference?: string | null
           linkedin_url?: string | null
           longitude?: number | null
@@ -1881,8 +1919,13 @@ export type Database = {
           music_taste?: string[] | null
           networking_events?: boolean | null
           perfect_date?: string | null
+          personality_answers?: Json | null
           personality_traits?: string[] | null
           phone_number?: string | null
+          phone_verified?: boolean | null
+          phone_verified_at?: string | null
+          photo_verified?: boolean | null
+          photo_verified_at?: string | null
           photos?: string[] | null
           photos_updated_at?: string | null
           preferred_industries?: string[] | null
@@ -1899,8 +1942,11 @@ export type Database = {
           trending_score?: number | null
           university?: string | null
           updated_at?: string | null
+          values?: string | null
           verification_date?: string | null
+          verification_photo_url?: string | null
           verification_types?: string[] | null
+          verified?: boolean | null
           weekend_availability?: boolean | null
           work_location?: string | null
           work_schedule?: string | null
@@ -2255,6 +2301,10 @@ export type Database = {
         Returns: boolean
       }
       clean_orphaned_photos: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_phone_verifications: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
