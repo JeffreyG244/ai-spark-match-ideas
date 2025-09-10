@@ -1,11 +1,14 @@
+[variables]
+NIXPACKS_NO_DEFAULT_CACHE_DIR = '1'
+
+[providers]
+node = true
+
 [phases.setup]
-nixPkgs = ['nodejs-18_x']
+nixPkgs = ['nodejs-18_x', 'npm']
 
-[phases.install]
-cmds = ['npm install']
-
-[phases.build]
-cmds = ['echo "No build step needed"']
+[phases.install]  
+cmds = ['npm ci']
 
 [start]
 cmd = 'node server.js'

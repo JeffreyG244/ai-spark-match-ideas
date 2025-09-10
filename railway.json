@@ -1,10 +1,11 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "nixpacks"
+    "builder": "nixpacks",
+    "buildCommand": "cd railway-deploy && npm ci"
   },
   "deploy": {
-    "startCommand": "node railway-deploy/server.js"
+    "startCommand": "cd railway-deploy && node server.js"
   },
   "variables": {
     "NODE_ENV": "production"
