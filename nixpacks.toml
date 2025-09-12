@@ -10,7 +10,7 @@ nixPkgs = ['nodejs-18_x', 'npm-9_x']
 cmds = ['npm ci']
 
 [phases.build]
-cmds = ['cp -r luvlang.org/dist ./public 2>/dev/null || echo "Using existing build"']
+cmds = ['cp -r dist public 2>/dev/null || echo "Using existing build"']
 
 [start]
 cmd = 'node server-fullstack.js'
