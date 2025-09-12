@@ -7,10 +7,10 @@ NODE_ENV = 'production'
 nixPkgs = ['nodejs-18_x', 'npm-9_x']
 
 [phases.install]  
-cmds = ['cd railway-deploy && npm ci']
+cmds = ['npm ci', 'cd luvlang.org && npm ci && npm run build']
 
 [phases.build]
 cmds = ['echo "No build step needed for Node.js server"']
 
 [start]
-cmd = 'cd railway-deploy && node server.js'
+cmd = 'node server-fullstack.js'
