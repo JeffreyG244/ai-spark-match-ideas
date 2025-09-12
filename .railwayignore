@@ -1,0 +1,8 @@
+Dockerfile*
+.dockerignore
+docker-compose*
+.docker
+railway-deploy/
+luvlang.org/
+.netlify/
+node_modules/

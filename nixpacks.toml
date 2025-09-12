@@ -7,7 +7,7 @@ NODE_ENV = 'production'
 nixPkgs = ['nodejs-18_x', 'npm-9_x']
 
 [phases.install]  
-cmds = ['npm ci']
+cmds = ['rm -f package-lock.json', 'npm install --production']
 
 [phases.build]
 cmds = ['cp -r dist public 2>/dev/null || echo "Using existing build"']
