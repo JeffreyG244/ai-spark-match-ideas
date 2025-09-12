@@ -1,8 +1,10 @@
-Dockerfile*
-.dockerignore
-docker-compose*
-.docker
+# Allow Docker files for Railway
+# Dockerfile*
+# .dockerignore
+
+# Ignore old deployment artifacts
 railway-deploy/
 luvlang.org/
 .netlify/
 node_modules/
+dist/
