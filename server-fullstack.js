@@ -28,8 +28,24 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend files
-app.use(express.static(path.join(__dirname, 'luvlang.org', 'dist')));
+// Serve static frontend files - try multiple paths
+const frontendPaths = [
+  path.join(__dirname, 'public'),
+  path.join(__dirname, 'luvlang.org', 'dist'),
+  path.join(__dirname, 'dist')
+];
+
+for (const frontendPath of frontendPaths) {
+  try {
+    if (require('fs').existsSync(frontendPath)) {
+      app.use(express.static(frontendPath));
+      console.log(`✅ Serving frontend from: ${frontendPath}`);
+      break;
+    }
+  } catch (e) {
+    console.log(`❌ Frontend path not found: ${frontendPath}`);
+  }
+}
 
 // API Routes (existing backend functionality)
 app.get('/api/health', (req, res) => {
@@ -128,12 +144,43 @@ app.post('/api/webhook/matching', async (req, res) => {
 
 // Legacy endpoint for backward compatibility (redirects to React app)
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'luvlang.org', 'dist', 'index.html'));
+  const indexPaths = [
+    path.join(__dirname, 'public', 'index.html'),
+    path.join(__dirname, 'luvlang.org', 'dist', 'index.html'),
+    path.join(__dirname, 'dist', 'index.html')
+  ];
+  
+  for (const indexPath of indexPaths) {
+    if (require('fs').existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+  }
+  
+  // Fallback if no frontend found
+  res.json({
+    service: 'LuvLang Full-Stack',
+    status: 'Frontend building...',
+    message: 'React app will be available shortly',
+    api: 'Backend API working at /api/*'
+  });
 });
 
 // Serve React app for all non-API routes
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'luvlang.org', 'dist', 'index.html'));
+  const indexPaths = [
+    path.join(__dirname, 'public', 'index.html'),
+    path.join(__dirname, 'luvlang.org', 'dist', 'index.html'),
+    path.join(__dirname, 'dist', 'index.html')
+  ];
+  
+  for (const indexPath of indexPaths) {
+    if (require('fs').existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+  }
+  
+  // Fallback - redirect to API health
+  res.redirect('/api/health');
 });
 
 // Error handling middleware

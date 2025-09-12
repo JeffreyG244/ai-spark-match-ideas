@@ -7,10 +7,10 @@ NODE_ENV = 'production'
 nixPkgs = ['nodejs-18_x', 'npm-9_x']
 
 [phases.install]  
-cmds = ['npm ci', 'cd luvlang.org && npm ci && npm run build']
+cmds = ['npm ci']
 
 [phases.build]
-cmds = ['echo "No build step needed for Node.js server"']
+cmds = ['cp -r luvlang.org/dist ./public 2>/dev/null || echo "Using existing build"']
 
 [start]
 cmd = 'node server-fullstack.js'
