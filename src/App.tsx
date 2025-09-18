@@ -80,6 +80,8 @@ function App() {
                    <Routes>
                      <Route path="/" element={<AuthGuard requireAuth={false}><Index /></AuthGuard>} />
                      <Route path="/auth" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
+                     <Route path="/login" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
+                     <Route path="/signup" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
                      <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
                      <Route path="/discover" element={<AuthGuard><Discover /></AuthGuard>} />
                      <Route path="/matches" element={<AuthGuard><Matches /></AuthGuard>} />
@@ -91,6 +93,8 @@ function App() {
                      <Route path="/membership" element={<AuthGuard><Membership /></AuthGuard>} />
                      <Route path="/checkout" element={<AuthGuard><Checkout /></AuthGuard>} />
                      <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
+                     <Route path="/security" element={<AuthGuard><Settings /></AuthGuard>} />
+                     <Route path="/profile" element={<AuthGuard><Settings /></AuthGuard>} />
                     <Route path="/legal" element={<Legal />} />
                     <Route path="/how-it-works" element={<HowItWorks />} />
                     <Route path="/verification" element={<Verification />} />
