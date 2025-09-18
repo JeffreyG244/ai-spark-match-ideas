@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "deploy": "netlify deploy --prod",
-    "start": "netlify dev --port 5174"
+    "start": "node server.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

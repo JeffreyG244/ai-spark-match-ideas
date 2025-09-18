@@ -18,26 +18,32 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            // Vendor chunks
-            vendor: ['react', 'react-dom'],
-            'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
-            'vendor-query': ['@tanstack/react-query'],
-            'vendor-router': ['react-router-dom'],
-            'vendor-forms': ['react-hook-form', '@hookform/resolvers'],
-            'vendor-supabase': ['@supabase/supabase-js'],
-          },
+    outDir: 'dist',
+    assetsDir: 'assets',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks for better caching
+          vendor: ['react', 'react-dom'],
+          'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
+          'vendor-query': ['@tanstack/react-query'],
+          'vendor-router': ['react-router-dom'],
+          'vendor-forms': ['react-hook-form', '@hookform/resolvers'],
+          'vendor-supabase': ['@supabase/supabase-js'],
         },
+        // Optimize asset filenames for better caching
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
       },
-      target: 'es2020',
-      minify: 'esbuild',
-      cssMinify: true,
-      chunkSizeWarningLimit: 1000,
-      reportCompressedSize: false, // Faster builds
-      sourcemap: false, // Smaller files for production
     },
+    target: 'es2020',
+    minify: 'esbuild',
+    cssMinify: true,
+    chunkSizeWarningLimit: 1000,
+    reportCompressedSize: false, // Faster builds
+    sourcemap: false, // Smaller files for production
+  },
     optimizeDeps: {
       include: ['react', 'react-dom', '@tanstack/react-query'],
       force: true,
