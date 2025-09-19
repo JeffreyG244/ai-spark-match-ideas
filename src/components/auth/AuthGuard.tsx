@@ -90,6 +90,9 @@ const AuthGuard = ({ children, requireAuth = true }: AuthGuardProps) => {
         navigate('/auth');
       } else if (!requireAuth && user && location.pathname === '/auth') {
         navigate('/dashboard');
+      } else if (!requireAuth && user && location.pathname === '/') {
+        // Allow authenticated users to see the landing page - don't redirect
+        return;
       }
     }
   }, [user, loading, requireAuth, navigate, location.pathname]);
