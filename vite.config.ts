@@ -23,13 +23,13 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          // Vendor chunks for better caching
-          vendor: ['react', 'react-dom'],
-          'vendor-ui': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
-          'vendor-query': ['@tanstack/react-query'],
-          'vendor-router': ['react-router-dom'],
-          'vendor-forms': ['react-hook-form', '@hookform/resolvers'],
-          'vendor-supabase': ['@supabase/supabase-js'],
+          // Critical chunks for faster initial load
+          'react-vendor': ['react', 'react-dom'],
+          'router': ['react-router-dom'], 
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
+          'query-vendor': ['@tanstack/react-query'],
+          'form-vendor': ['react-hook-form', '@hookform/resolvers'],
+          'supabase-vendor': ['@supabase/supabase-js'],
         },
         // Optimize asset filenames for better caching
         assetFileNames: 'assets/[name]-[hash][extname]',
@@ -43,6 +43,10 @@ export default defineConfig(({ mode }) => ({
     chunkSizeWarningLimit: 1000,
     reportCompressedSize: false, // Faster builds
     sourcemap: false, // Smaller files for production
+    cssCodeSplit: true, // Enable CSS code splitting for better loading
+    modulePreload: {
+      polyfill: false // Disable polyfill for faster loading on modern browsers
+    },
   },
     optimizeDeps: {
       include: ['react', 'react-dom', '@tanstack/react-query'],

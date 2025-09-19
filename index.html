@@ -7,9 +7,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Performance optimizations -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://js.hcaptcha.com">
-    <link rel="dns-prefetch" href="https://api.supabase.io">
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://js.hcaptcha.com" crossorigin>
+    <link rel="dns-prefetch" href="https://api.supabase.co">
+    <link rel="dns-prefetch" href="https://supabase.co">
+    <link rel="modulepreload" href="/src/main.tsx">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" as="style" href="/src/index.css">
+    <link rel="preload" as="script" href="/src/main.tsx" crossorigin>
     
     <!-- Critical CSS will be inlined by Vite -->
     <meta name="theme-color" content="#6366f1">
