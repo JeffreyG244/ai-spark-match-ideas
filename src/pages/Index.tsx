@@ -59,7 +59,7 @@ const Index = () => {
             Find Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Executive Match</span> ✨
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            AI-powered connections for C-suite executives and senior professionals. Premium matching for those who demand excellence in life and love.
+            🚀 NOW LIVE: AI-powered connections for C-suite executives and senior professionals. Premium matching for those who demand excellence in life and love.
           </p>
           <div className="flex gap-4 justify-center">
             <Button size="lg" onClick={() => navigate("/auth")} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg px-8 py-4 text-lg">
