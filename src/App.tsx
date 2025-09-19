@@ -57,13 +57,15 @@ const AccountSuspension = lazy(() => import("./pages/legal/AccountSuspension"));
 const queryClient = new QueryClient();
 // Force rebuild
 
-import { EnhancedSecurityProvider } from '@/components/profile/EnhancedSecurityProvider';
-import SecureSessionManager from '@/components/security/SecureSessionManager';
-import { AlertProvider } from '@/components/providers/AlertProvider';
-import AuthGuard from '@/components/auth/AuthGuard';
+// Lazy load security and non-critical components for better performance
+const EnhancedSecurityProvider = lazy(() => import('@/components/profile/EnhancedSecurityProvider').then(m => ({ default: m.EnhancedSecurityProvider })));
+const SecureSessionManager = lazy(() => import('@/components/security/SecureSessionManager'));
+const AlertProvider = lazy(() => import('@/components/providers/AlertProvider').then(m => ({ default: m.AlertProvider })));
+const AuthGuard = lazy(() => import('@/components/auth/AuthGuard'));
+const CallReceiver = lazy(() => import('@/components/calling/CallReceiver').then(m => ({ default: m.CallReceiver })));
+
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { CallReceiver } from '@/components/calling/CallReceiver';
 
 function App() {
   return (
@@ -71,9 +73,10 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
-            <SecureSessionManager />
-            <EnhancedSecurityProvider>
-              <AlertProvider>
+            <Suspense fallback={<LoadingSpinner size="sm" />}>
+              <SecureSessionManager />
+              <EnhancedSecurityProvider>
+                <AlertProvider>
                 <Router>
                 <div className="min-h-screen bg-gradient-to-br from-background to-muted">
                   <Suspense fallback={<LoadingSpinner size="lg" />}>
@@ -127,13 +130,16 @@ function App() {
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   </Suspense>
-                  <CallReceiver />
+                  <Suspense fallback={null}>
+                    <CallReceiver />
+                  </Suspense>
                   <Toaster />
                   <Sonner />
                 </div>
                 </Router>
-              </AlertProvider>
-            </EnhancedSecurityProvider>
+                </AlertProvider>
+              </EnhancedSecurityProvider>
+            </Suspense>
           </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>

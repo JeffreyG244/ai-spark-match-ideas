@@ -22,14 +22,43 @@ export default defineConfig(({ mode }) => ({
     assetsDir: 'assets',
     rollupOptions: {
       output: {
-        manualChunks: {
-          // Critical chunks for faster initial load
-          'react-vendor': ['react', 'react-dom'],
-          'router': ['react-router-dom'], 
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-tabs'],
-          'query-vendor': ['@tanstack/react-query'],
-          'form-vendor': ['react-hook-form', '@hookform/resolvers'],
-          'supabase-vendor': ['@supabase/supabase-js'],
+        manualChunks: (id) => {
+          // React core - always needed
+          if (id.includes('react') || id.includes('react-dom')) {
+            return 'react-core';
+          }
+          // Router - only load when routing is needed
+          if (id.includes('react-router')) {
+            return 'router';
+          }
+          // UI components - split by usage
+          if (id.includes('@radix-ui')) {
+            return 'ui-components';
+          }
+          // Query client - only when data fetching is needed
+          if (id.includes('@tanstack/react-query')) {
+            return 'query-client';
+          }
+          // Forms - only when forms are used
+          if (id.includes('react-hook-form') || id.includes('@hookform')) {
+            return 'forms';
+          }
+          // Supabase auth - separate from main supabase
+          if (id.includes('@supabase/supabase-js') && id.includes('auth')) {
+            return 'supabase-auth';
+          }
+          // Supabase core - only load when database is accessed
+          if (id.includes('@supabase/supabase-js')) {
+            return 'supabase-core';
+          }
+          // Security and monitoring - defer loading
+          if (id.includes('security') || id.includes('monitoring') || id.includes('audit')) {
+            return 'security-vendor';
+          }
+          // Utilities
+          if (id.includes('lodash') || id.includes('date-fns') || id.includes('uuid')) {
+            return 'utils';
+          }
         },
         // Optimize asset filenames for better caching
         assetFileNames: 'assets/[name]-[hash][extname]',
