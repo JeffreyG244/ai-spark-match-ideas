@@ -57,13 +57,12 @@ const AccountSuspension = lazy(() => import("./pages/legal/AccountSuspension"));
 const queryClient = new QueryClient();
 // Force rebuild
 
-// Lazy load security and non-critical components for better performance
-const EnhancedSecurityProvider = lazy(() => import('@/components/profile/EnhancedSecurityProvider').then(m => ({ default: m.EnhancedSecurityProvider })));
-const SecureSessionManager = lazy(() => import('@/components/security/SecureSessionManager'));
-const AlertProvider = lazy(() => import('@/components/providers/AlertProvider').then(m => ({ default: m.AlertProvider })));
-const AuthGuard = lazy(() => import('@/components/auth/AuthGuard'));
-const CallReceiver = lazy(() => import('@/components/calling/CallReceiver').then(m => ({ default: m.CallReceiver })));
-
+// Import critical components directly (not lazy loaded)
+import { EnhancedSecurityProvider } from '@/components/profile/EnhancedSecurityProvider';
+import SecureSessionManager from '@/components/security/SecureSessionManager';
+import { AlertProvider } from '@/components/providers/AlertProvider';
+import AuthGuard from '@/components/auth/AuthGuard';
+import { CallReceiver } from '@/components/calling/CallReceiver';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
@@ -73,73 +72,68 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
-            <Suspense fallback={<LoadingSpinner size="sm" />}>
-              <SecureSessionManager />
-              <EnhancedSecurityProvider>
-                <AlertProvider>
+            <SecureSessionManager />
+            <EnhancedSecurityProvider>
+              <AlertProvider>
                 <Router>
-                <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-                  <Suspense fallback={<LoadingSpinner size="lg" />}>
-                   <Routes>
-                     <Route path="/" element={<AuthGuard requireAuth={false}><Index /></AuthGuard>} />
-                     <Route path="/auth" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
-                     <Route path="/login" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
-                     <Route path="/signup" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
-                     <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
-                     <Route path="/discover" element={<AuthGuard><Discover /></AuthGuard>} />
-                     <Route path="/matches" element={<AuthGuard><Matches /></AuthGuard>} />
-                     <Route path="/professional-matches" element={<AuthGuard><ProfessionalMatches /></AuthGuard>} />
-                     <Route path="/professional-profile" element={<AuthGuard><ProfessionalProfile /></AuthGuard>} />
-                     <Route path="/professional-interests" element={<AuthGuard><ProfessionalInterests /></AuthGuard>} />
-                     <Route path="/daily-matches" element={<AuthGuard><DailyMatches /></AuthGuard>} />
-                     <Route path="/messages" element={<AuthGuard><Messages /></AuthGuard>} />
-                     <Route path="/membership" element={<AuthGuard><Membership /></AuthGuard>} />
-                     <Route path="/checkout" element={<AuthGuard><Checkout /></AuthGuard>} />
-                     <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
-                     <Route path="/security" element={<AuthGuard><Settings /></AuthGuard>} />
-                     <Route path="/profile" element={<AuthGuard><Settings /></AuthGuard>} />
-                    <Route path="/legal" element={<Legal />} />
-                    <Route path="/how-it-works" element={<HowItWorks />} />
-                    <Route path="/verification" element={<Verification />} />
-                    <Route path="/verification-center" element={<AuthGuard><VerificationCenter /></AuthGuard>} />
-                    <Route path="/safety" element={<Safety />} />
-                    <Route path="/analytics" element={<Analytics />} />
-                    <Route path="/success-stories" element={<SuccessStories />} />
-                    <Route path="/moderation" element={<Moderation />} />
-                     <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
-                     <Route path="/executive-profile" element={<AuthGuard><ExecutiveProfile /></AuthGuard>} />
-                     
-                     
-                    <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
-                    <Route path="/legal/terms-of-service" element={<TermsOfService />} />
-                    <Route path="/legal/community-guidelines" element={<CommunityGuidelines />} />
-                    <Route path="/legal/safety-guidelines" element={<SafetyGuidelines />} />
-                    <Route path="/legal/cookie-policy" element={<CookiePolicy />} />
-                    <Route path="/legal/gdpr" element={<GDPR />} />
-                    <Route path="/legal/ccpa" element={<CCPA />} />
-                    <Route path="/legal/data-retention" element={<DataRetention />} />
-                    <Route path="/legal/intellectual-property" element={<IntellectualProperty />} />
-                    <Route path="/legal/content-moderation-policy" element={<ContentModerationPolicy />} />
-                    <Route path="/legal/age-verification-policy" element={<AgeVerificationPolicy />} />
-                    <Route path="/legal/identity-verification-policy" element={<IdentityVerificationPolicy />} />
-                    <Route path="/legal/photo-verification" element={<PhotoVerification />} />
-                    <Route path="/legal/blocking-reporting-policy" element={<BlockingReportingPolicy />} />
-                    <Route path="/legal/message-monitoring" element={<MessageMonitoring />} />
-                    <Route path="/legal/romance-scam-prevention" element={<RomanceScamPrevention />} />
-                    <Route path="/legal/account-suspension" element={<AccountSuspension />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  </Suspense>
-                  <Suspense fallback={null}>
+                  <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+                    <Suspense fallback={<LoadingSpinner size="lg" />}>
+                      <Routes>
+                        <Route path="/" element={<AuthGuard requireAuth={false}><Index /></AuthGuard>} />
+                        <Route path="/auth" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
+                        <Route path="/login" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
+                        <Route path="/signup" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
+                        <Route path="/dashboard" element={<AuthGuard><Dashboard /></AuthGuard>} />
+                        <Route path="/discover" element={<AuthGuard><Discover /></AuthGuard>} />
+                        <Route path="/matches" element={<AuthGuard><Matches /></AuthGuard>} />
+                        <Route path="/professional-matches" element={<AuthGuard><ProfessionalMatches /></AuthGuard>} />
+                        <Route path="/professional-profile" element={<AuthGuard><ProfessionalProfile /></AuthGuard>} />
+                        <Route path="/professional-interests" element={<AuthGuard><ProfessionalInterests /></AuthGuard>} />
+                        <Route path="/daily-matches" element={<AuthGuard><DailyMatches /></AuthGuard>} />
+                        <Route path="/messages" element={<AuthGuard><Messages /></AuthGuard>} />
+                        <Route path="/membership" element={<AuthGuard><Membership /></AuthGuard>} />
+                        <Route path="/checkout" element={<AuthGuard><Checkout /></AuthGuard>} />
+                        <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
+                        <Route path="/security" element={<AuthGuard><Settings /></AuthGuard>} />
+                        <Route path="/profile" element={<AuthGuard><Settings /></AuthGuard>} />
+                        <Route path="/legal" element={<Legal />} />
+                        <Route path="/how-it-works" element={<HowItWorks />} />
+                        <Route path="/verification" element={<Verification />} />
+                        <Route path="/verification-center" element={<AuthGuard><VerificationCenter /></AuthGuard>} />
+                        <Route path="/safety" element={<Safety />} />
+                        <Route path="/analytics" element={<Analytics />} />
+                        <Route path="/success-stories" element={<SuccessStories />} />
+                        <Route path="/moderation" element={<Moderation />} />
+                        <Route path="/executive-dashboard" element={<ExecutiveDashboard />} />
+                        <Route path="/executive-profile" element={<AuthGuard><ExecutiveProfile /></AuthGuard>} />
+                        
+                        <Route path="/legal/privacy-policy" element={<PrivacyPolicy />} />
+                        <Route path="/legal/terms-of-service" element={<TermsOfService />} />
+                        <Route path="/legal/community-guidelines" element={<CommunityGuidelines />} />
+                        <Route path="/legal/safety-guidelines" element={<SafetyGuidelines />} />
+                        <Route path="/legal/cookie-policy" element={<CookiePolicy />} />
+                        <Route path="/legal/gdpr" element={<GDPR />} />
+                        <Route path="/legal/ccpa" element={<CCPA />} />
+                        <Route path="/legal/data-retention" element={<DataRetention />} />
+                        <Route path="/legal/intellectual-property" element={<IntellectualProperty />} />
+                        <Route path="/legal/content-moderation-policy" element={<ContentModerationPolicy />} />
+                        <Route path="/legal/age-verification-policy" element={<AgeVerificationPolicy />} />
+                        <Route path="/legal/identity-verification-policy" element={<IdentityVerificationPolicy />} />
+                        <Route path="/legal/photo-verification" element={<PhotoVerification />} />
+                        <Route path="/legal/blocking-reporting-policy" element={<BlockingReportingPolicy />} />
+                        <Route path="/legal/message-monitoring" element={<MessageMonitoring />} />
+                        <Route path="/legal/romance-scam-prevention" element={<RomanceScamPrevention />} />
+                        <Route path="/legal/account-suspension" element={<AccountSuspension />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </Suspense>
                     <CallReceiver />
-                  </Suspense>
-                  <Toaster />
-                  <Sonner />
-                </div>
+                    <Toaster />
+                    <Sonner />
+                  </div>
                 </Router>
-                </AlertProvider>
-              </EnhancedSecurityProvider>
-            </Suspense>
+              </AlertProvider>
+            </EnhancedSecurityProvider>
           </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
