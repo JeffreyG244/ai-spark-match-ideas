@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luvlang - Working Test</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a, #581c87, #0f172a);
+            color: white;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .working-box {
+            background: rgba(147, 51, 234, 0.2);
+            border: 1px solid rgba(147, 51, 234, 0.5);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        .upload-button {
+            background: #7c3aed;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        .upload-button:hover {
+            background: #6d28d9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="font-size: 48px; margin-bottom: 20px;">🔥 LUVLANG WORKING!</h1>
+        <h2 style="font-size: 24px; margin-bottom: 40px;">Professional Photo Upload Platform</h2>
+        
+        <div class="working-box">
+            <h3>✅ Website Status: WORKING</h3>
+            <p style="font-size: 18px; margin-bottom: 20px;">
+                If you can see this page, the server and deployment are working perfectly.
+            </p>
+            <p style="font-size: 16px; color: #c084fc;">
+                Ready to add photo upload functionality step by step.
+            </p>
+            
+            <div style="margin-top: 30px;">
+                <input type="file" id="photoInput" accept="image/*" style="display: none;">
+                <button class="upload-button" onclick="testUpload()">
+                    📸 Test Photo Upload
+                </button>
+                <button class="upload-button" onclick="testReact()">
+                    ⚛️ Test React Issue
+                </button>
+            </div>
+            
+            <div id="status" style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                <p><strong>System Status:</strong></p>
+                <p id="server-status">✅ Server: Working</p>
+                <p id="upload-status">📸 Upload: Ready for testing</p>
+                <p id="react-status">⚛️ React: Investigating issues</p>
+            </div>
+        </div>
+        
+        <div class="working-box">
+            <h3>🎯 Executive Dating Platform</h3>
+            <p>Premium photo upload for C-suite professionals</p>
+            <p>AI-powered matching • Verified executives • Secure uploads</p>
+        </div>
+    </div>
+
+    <script>
+        function testUpload() {
+            document.getElementById('photoInput').click();
+            document.getElementById('upload-status').textContent = '📸 Upload: Testing file selection...';
+        }
+        
+        function testReact() {
+            document.getElementById('react-status').textContent = '⚛️ React: The React app is not mounting due to component or import issues. HTML version works fine.';
+        }
+        
+        document.getElementById('photoInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                document.getElementById('upload-status').textContent = `📸 Upload: Selected ${file.name} (${(file.size/1024/1024).toFixed(2)}MB)`;
+            }
+        });
+        
+        // Auto-update status
+        setTimeout(() => {
+            document.getElementById('react-status').textContent = '⚛️ React: Issue identified - React components not rendering on production';
+        }, 2000);
+    </script>
+</body>
+</html>
