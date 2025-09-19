@@ -56,7 +56,7 @@ const Index = () => {
         {/* Hero Section */}
         <div className="text-center mb-20">
           <h1 className="text-6xl font-bold text-white mb-6">
-            Find Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Executive Match</span>
+            Find Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">Executive Match</span> ✨
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
             AI-powered connections for C-suite executives and senior professionals. Premium matching for those who demand excellence in life and love.
