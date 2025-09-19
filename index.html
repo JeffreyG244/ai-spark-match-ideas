@@ -12,13 +12,17 @@
     <link rel="preconnect" href="https://js.hcaptcha.com" crossorigin>
     <link rel="dns-prefetch" href="https://api.supabase.co">
     <link rel="dns-prefetch" href="https://supabase.co">
+    
+    <!-- Critical CSS loaded synchronously -->
+    <link rel="stylesheet" href="/src/critical.css">
+    
+    <!-- Async load non-critical CSS -->
+    <link rel="preload" href="/src/index.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="/src/index.css"></noscript>
+    
+    <!-- Preload critical script -->
     <link rel="modulepreload" href="/src/main.tsx">
     
-    <!-- Preload critical resources -->
-    <link rel="preload" as="style" href="/src/index.css">
-    <link rel="preload" as="script" href="/src/main.tsx" crossorigin>
-    
-    <!-- Critical CSS will be inlined by Vite -->
     <meta name="theme-color" content="#6366f1">
     
     <title>Luvlang</title>
