@@ -19,4 +19,4 @@ app.use((req, res) => {
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
-});
+});// Force Railway rebuild: Fri Sep 19 12:03:03 CDT 2025
