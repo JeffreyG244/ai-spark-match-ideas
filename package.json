@@ -8,7 +8,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "node server-fullstack.js",
+    "start": "node server.js",
     "validate": "echo 'Validation passed'"
   },
   "dependencies": {
