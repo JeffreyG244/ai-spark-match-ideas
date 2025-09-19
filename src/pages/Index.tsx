@@ -9,12 +9,12 @@ const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Fix: Move navigation to useEffect to prevent render-time navigation
-  React.useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
-    }
-  }, [user, navigate]);
+  // Disabled auto-redirect so visitors can see the landing page
+  // React.useEffect(() => {
+  //   if (user) {
+  //     navigate("/dashboard");
+  //   }
+  // }, [user, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
