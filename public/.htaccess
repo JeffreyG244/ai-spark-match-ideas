@@ -12,17 +12,28 @@ Header always set X-Content-Type-Options nosniff
 Header always set X-XSS-Protection "1; mode=block"
 Header always set Referrer-Policy strict-origin-when-cross-origin
 
-# Cache static assets for better performance
-<FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$">
+# Cache static assets for better performance - Enhanced
+<FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg|webp|avif|woff|woff2|ttf|eot)$">
     ExpiresActive On
     ExpiresDefault "access plus 1 year"
-    Header append Cache-Control "immutable"
+    Header set Cache-Control "public, max-age=31536000, immutable"
 </FilesMatch>
 
-# Cache HTML files for shorter time
+# Cache HTML files for shorter time with revalidation
 <FilesMatch "\.(html|htm)$">
     ExpiresActive On
     ExpiresDefault "access plus 1 hour"
+    Header set Cache-Control "public, max-age=3600, must-revalidate"
+</FilesMatch>
+
+# Specific cache settings for hashed assets (longer cache)
+<FilesMatch ".*\.[a-f0-9]{8}\.(css|js)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+</FilesMatch>
+
+# Images with content-based hashing
+<FilesMatch ".*\.[a-f0-9]{8}\.(png|jpg|jpeg|gif|webp|svg)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
 </FilesMatch>
 
 # Compress assets

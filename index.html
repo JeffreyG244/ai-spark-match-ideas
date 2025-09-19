@@ -13,6 +13,10 @@
     <link rel="dns-prefetch" href="https://api.supabase.co">
     <link rel="dns-prefetch" href="https://supabase.co">
     
+    <!-- Cache optimization hints -->
+    <meta http-equiv="Cache-Control" content="public, max-age=31536000, immutable">
+    <meta name="robots" content="index, follow">
+    
     <!-- Critical CSS loaded synchronously -->
     <link rel="stylesheet" href="/src/critical.css">
     
@@ -27,6 +31,16 @@
     
     <title>Luvlang</title>
     <!-- hCaptcha will be loaded dynamically only when needed -->
+    
+    <!-- Register service worker for better caching -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .catch(() => {});
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
