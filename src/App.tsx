@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Suspense, lazy } from "react";
+import React from "react";
 
 // Lazy load pages for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -71,11 +72,11 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <AuthProvider>
-            <SecureSessionManager />
-            <EnhancedSecurityProvider>
-              <AlertProvider>
-                <Router>
+          <Router>
+            <AuthProvider>
+              <SecureSessionManager />
+              <EnhancedSecurityProvider>
+                <AlertProvider>
                   <div className="min-h-screen bg-gradient-to-br from-background to-muted">
                     <Suspense fallback={<LoadingSpinner size="lg" />}>
                       <Routes>
@@ -131,10 +132,10 @@ function App() {
                     <Toaster />
                     <Sonner />
                   </div>
-                </Router>
-              </AlertProvider>
-            </EnhancedSecurityProvider>
-          </AuthProvider>
+                </AlertProvider>
+              </EnhancedSecurityProvider>
+            </AuthProvider>
+          </Router>
         </TooltipProvider>
       </QueryClientProvider>
     </ErrorBoundary>
