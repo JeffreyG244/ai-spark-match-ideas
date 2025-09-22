@@ -2282,7 +2282,7 @@ export type Database = {
           | Record<PropertyKey, never>
           | { p_headers?: Json; p_payload?: Json; p_workflow_id: string }
           | { webhook_url: string }
-        Returns: Json
+        Returns: string
       }
       can_send_message: {
         Args: { recipient_id: string; sender_id: string }
@@ -2334,7 +2334,7 @@ export type Database = {
           | { p_user_id: string }
           | { photo_url: string }
           | { photo_url: string; user_uuid: string }
-        Returns: string[]
+        Returns: undefined
       }
       disablelongtransactions: {
         Args: Record<PropertyKey, never>
@@ -2841,7 +2841,7 @@ export type Database = {
         Args:
           | { tbl_oid: unknown; use_typmod?: boolean }
           | { use_typmod?: boolean }
-        Returns: string
+        Returns: number
       }
       postgis_addbbox: {
         Args: { "": unknown }
@@ -4128,7 +4128,7 @@ export type Database = {
           | { file_name: string; file_path: string; user_id: string }
           | { new_photo_url: string; user_uuid: string }
           | { p_content_type: string; p_photo_data: string; p_user_id: string }
-        Returns: undefined
+        Returns: string
       }
       upsert_user_presence: {
         Args: { p_is_online: boolean; p_user_id: string }
