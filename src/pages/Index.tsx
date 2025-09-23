@@ -24,6 +24,7 @@ const Index = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Logo size="lg" showText={true} />
+              <span className="text-xs text-purple-300 bg-purple-900/50 px-2 py-1 rounded-full">v4.1 Pipeline Test</span>
               <div className="hidden md:flex items-center space-x-6 ml-8">
                 <Button variant="ghost" onClick={() => navigate("/how-it-works")} className="text-white hover:bg-white/10">
                   How It Works

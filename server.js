@@ -28,9 +28,10 @@ app.use(express.static(path.join(__dirname, 'dist'), {
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
-    version: 'LuvLang Professional v4.0',
+    version: 'LuvLang Professional v4.1 - Pipeline Test',
     timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'development'
+    env: process.env.NODE_ENV || 'development',
+    deploymentTest: 'Active - ' + new Date().toISOString()
   });
 });
 
