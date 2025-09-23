@@ -35,7 +35,7 @@ app.get('/health', (req, res) => {
 });
 
 // Handle React Router - serve index.html for all routes
-app.get('/*', (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'), (err) => {
     if (err) {
       console.error('Error serving index.html:', err);
