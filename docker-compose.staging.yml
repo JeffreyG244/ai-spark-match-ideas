@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  luvlang-staging:
+    build:
+      context: .
+      dockerfile: Dockerfile.staging
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=staging
+      - VITE_ENVIRONMENT=staging
+    env_file:
+      - .env.staging
+    volumes:
+      - ./dist:/app/dist
+    restart: unless-stopped
+    container_name: luvlang-staging
+
+networks:
+  default:
+    name: luvlang-network

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # LuvLang Deployment Helper Script
-# Usage: ./deploy.sh [quick|full|check]
+# Usage: ./deploy.sh [quick|full|check|staging|staging-check]
 
 set -e
 
@@ -97,6 +97,41 @@ show_logs() {
     fi
 }
 
+# Function to deploy to staging
+staging_deploy() {
+    print_status "Starting staging deployment..."
+
+    # Build for staging
+    print_status "Building for staging..."
+    npm run build:staging
+
+    # Start staging Docker container
+    print_status "Starting staging Docker container..."
+    docker-compose -f docker-compose.staging.yml up -d --build
+
+    print_success "Staging deployment complete!"
+    print_status "Staging available at: http://localhost:3001"
+    print_status "Check staging with: './deploy.sh staging-check'"
+}
+
+# Function to check staging environment
+staging_check() {
+    print_status "Checking staging environment..."
+
+    echo "Local staging (Docker):"
+    if curl -s --max-time 10 http://localhost:3001/health >/dev/null 2>&1; then
+        print_success "Local staging is healthy"
+        curl -s http://localhost:3001/health | jq . 2>/dev/null || echo "Health check succeeded"
+    else
+        print_warning "Local staging not responding (container might not be running)"
+        echo "Start with: ./deploy.sh staging"
+    fi
+
+    echo ""
+    echo "Netlify staging:"
+    print_status "Check Netlify deploy status at: https://app.netlify.com/"
+}
+
 # Main script logic
 case "${1:-help}" in
     "full")
@@ -108,6 +143,12 @@ case "${1:-help}" in
     "check")
         check_health
         ;;
+    "staging")
+        staging_deploy
+        ;;
+    "staging-check")
+        staging_check
+        ;;
     "logs")
         show_logs
         ;;
@@ -117,15 +158,18 @@ case "${1:-help}" in
         echo "Usage: $0 [command]"
         echo ""
         echo "Commands:"
-        echo "  full    - Build, commit, and deploy (recommended)"
-        echo "  quick   - Just commit and deploy (no build)"
-        echo "  check   - Check health of both sites"
-        echo "  logs    - Show Railway deployment logs"
-        echo "  help    - Show this help message"
+        echo "  full          - Build, commit, and deploy to production (recommended)"
+        echo "  quick         - Just commit and deploy to production (no build)"
+        echo "  check         - Check health of production sites"
+        echo "  staging       - Deploy to staging environment (Netlify + Docker)"
+        echo "  staging-check - Check staging environment"
+        echo "  logs          - Show Railway deployment logs"
+        echo "  help          - Show this help message"
         echo ""
         echo "Examples:"
-        echo "  $0 full    # Full deployment with build"
-        echo "  $0 quick   # Quick deploy without build"
-        echo "  $0 check   # Check if sites are working"
+        echo "  $0 full           # Full production deployment"
+        echo "  $0 staging        # Deploy to staging for preview"
+        echo "  $0 staging-check  # Check staging environment"
+        echo "  $0 check          # Check production sites"
         ;;
 esac
