@@ -48,23 +48,24 @@ check_site_health() {
 
     # Main site
     echo -n "luvlang.org: "
-    if curl -s --max-time 10 https://luvlang.org/health >/dev/null 2>&1; then
-        echo -e "${GREEN}✓ ONLINE${NC}"
-        HEALTH=$(curl -s https://luvlang.org/health | jq -r '.status // "unknown"' 2>/dev/null)
-        VERSION=$(curl -s https://luvlang.org/health | jq -r '.version // "unknown"' 2>/dev/null)
-        echo "  Status: $HEALTH | Version: $VERSION"
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://luvlang.org 2>/dev/null || echo "timeout")
+    if [[ "$HTTP_CODE" == "200" ]]; then
+        echo -e "${GREEN}✓ ONLINE (HTTP $HTTP_CODE)${NC}"
+        echo "  LuvLang Professional dating platform"
     else
-        echo -e "${RED}✗ OFFLINE${NC}"
+        echo -e "${RED}✗ OFFLINE (HTTP $HTTP_CODE)${NC}"
     fi
 
     # Railway service
     echo -n "Railway (58crefe0): "
-    if curl -s --max-time 10 https://58crefe0.up.railway.app/health >/dev/null 2>&1; then
+    if curl -s --max-time 10 https://58crefe0.up.railway.app/health | jq . >/dev/null 2>&1; then
         echo -e "${GREEN}✓ ONLINE${NC}"
         HEALTH=$(curl -s https://58crefe0.up.railway.app/health | jq -r '.status // "unknown"' 2>/dev/null)
-        echo "  Status: $HEALTH"
+        VERSION=$(curl -s https://58crefe0.up.railway.app/health | jq -r '.version // "unknown"' 2>/dev/null)
+        echo "  Status: $HEALTH | Version: $VERSION"
     else
-        echo -e "${YELLOW}⚠ BUILDING/OFFLINE${NC}"
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://58crefe0.up.railway.app 2>/dev/null || echo "timeout")
+        echo -e "${YELLOW}⚠ BUILDING/OFFLINE (HTTP $HTTP_CODE)${NC}"
     fi
     echo ""
 }

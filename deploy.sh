@@ -34,18 +34,21 @@ check_health() {
     print_status "Checking site health..."
 
     echo "Main site (luvlang.org):"
-    if curl -s https://luvlang.org/health | jq . 2>/dev/null; then
-        print_success "luvlang.org is healthy"
+    HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" https://luvlang.org)
+    if [[ "$HTTP_CODE" == "200" ]]; then
+        print_success "luvlang.org is online (HTTP $HTTP_CODE)"
     else
-        print_error "luvlang.org health check failed"
+        print_error "luvlang.org returned HTTP $HTTP_CODE"
     fi
 
     echo ""
     echo "Railway service:"
-    if curl -s https://58crefe0.up.railway.app/health | jq . 2>/dev/null; then
+    if curl -s --max-time 10 https://58crefe0.up.railway.app/health | jq . 2>/dev/null; then
         print_success "Railway service is healthy"
     else
-        print_warning "Railway service health check failed (this is expected if still building)"
+        print_warning "Railway service not responding (may be building or down)"
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://58crefe0.up.railway.app 2>/dev/null || echo "timeout")
+        echo "Railway HTTP status: $HTTP_CODE"
     fi
 }
 

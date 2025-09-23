@@ -12,8 +12,8 @@
     "validate": "echo 'Validation passed'",
     "deploy": "npm run build && git add . && git commit -m 'Deploy: $(date)' && git push",
     "quick-deploy": "git add . && git commit -m 'Quick deploy' && git push",
-    "check-site": "curl -s https://luvlang.org/health | jq .",
-    "check-railway": "curl -s https://58crefe0.up.railway.app/health | jq .",
+    "check-site": "curl -s -o /dev/null -w '%{http_code}' https://luvlang.org && echo ' - luvlang.org'",
+    "check-railway": "curl -s https://58crefe0.up.railway.app/health | jq . 2>/dev/null || echo 'Railway service not responding'",
     "full-check": "npm run check-site && npm run check-railway",
     "logs": "railway logs --service=58crefe0",
     "railway-status": "railway status"
