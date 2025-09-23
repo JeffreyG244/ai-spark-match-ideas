@@ -10,8 +10,9 @@ const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Force show landing page - log for debugging
+  // Force show landing page - verify deployment
   React.useEffect(() => {
+    console.log('LANDING PAGE DEPLOYED - v2.0:', new Date().toISOString());
     console.log('INDEX PAGE LOADING - user:', user);
     console.log('Current path:', window.location.pathname);
   }, [user]);
