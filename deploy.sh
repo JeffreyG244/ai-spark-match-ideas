@@ -105,31 +105,32 @@ staging_deploy() {
     print_status "Building for staging..."
     npm run build:staging
 
-    # Start staging Docker container
-    print_status "Starting staging Docker container..."
-    docker-compose -f docker-compose.staging.yml up -d --build
+    # Start local preview server
+    print_status "Starting local preview server..."
+    echo "Preview server will start on http://localhost:4173"
+    echo "Press Ctrl+C to stop the server"
+    echo ""
+    npm run preview
 
     print_success "Staging deployment complete!"
-    print_status "Staging available at: http://localhost:3001"
-    print_status "Check staging with: './deploy.sh staging-check'"
 }
 
 # Function to check staging environment
 staging_check() {
     print_status "Checking staging environment..."
 
-    echo "Local staging (Docker):"
-    if curl -s --max-time 10 http://localhost:3001/health >/dev/null 2>&1; then
-        print_success "Local staging is healthy"
-        curl -s http://localhost:3001/health | jq . 2>/dev/null || echo "Health check succeeded"
+    echo "Local preview server:"
+    if curl -s --max-time 5 http://localhost:4173 >/dev/null 2>&1; then
+        print_success "Local preview server is running on http://localhost:4173"
     else
-        print_warning "Local staging not responding (container might not be running)"
+        print_warning "Local preview server not running"
         echo "Start with: ./deploy.sh staging"
     fi
 
     echo ""
     echo "Netlify staging:"
     print_status "Check Netlify deploy status at: https://app.netlify.com/"
+    echo "Your free Netlify URL will be: https://[random-name].netlify.app"
 }
 
 # Main script logic

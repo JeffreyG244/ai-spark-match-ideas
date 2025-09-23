@@ -1,12 +1,12 @@
 # Staging Dockerfile for LuvLang
-FROM node:18-alpine
+FROM node:18
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Clean install dependencies
 RUN npm install
 
 # Copy source code
