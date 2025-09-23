@@ -80,7 +80,7 @@ function App() {
                   <div className="min-h-screen bg-gradient-to-br from-background to-muted">
                     <Suspense fallback={<LoadingSpinner size="lg" />}>
                       <Routes>
-                        <Route path="/" element={<AuthGuard requireAuth={false}><Index /></AuthGuard>} />
+                        <Route path="/" element={<Index />} />
                         <Route path="/auth" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
                         <Route path="/login" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />
                         <Route path="/signup" element={<AuthGuard requireAuth={false}><Auth /></AuthGuard>} />

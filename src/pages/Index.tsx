@@ -10,6 +10,12 @@ const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Force show landing page - log for debugging
+  React.useEffect(() => {
+    console.log('INDEX PAGE LOADING - user:', user);
+    console.log('Current path:', window.location.pathname);
+  }, [user]);
+
   // Disabled auto-redirect so visitors can see the landing page
   // React.useEffect(() => {
   //   if (user) {
