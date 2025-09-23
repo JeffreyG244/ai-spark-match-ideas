@@ -9,7 +9,14 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node server.js",
-    "validate": "echo 'Validation passed'"
+    "validate": "echo 'Validation passed'",
+    "deploy": "npm run build && git add . && git commit -m 'Deploy: $(date)' && git push",
+    "quick-deploy": "git add . && git commit -m 'Quick deploy' && git push",
+    "check-site": "curl -s https://luvlang.org/health | jq .",
+    "check-railway": "curl -s https://58crefe0.up.railway.app/health | jq .",
+    "full-check": "npm run check-site && npm run check-railway",
+    "logs": "railway logs --service=58crefe0",
+    "railway-status": "railway status"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
