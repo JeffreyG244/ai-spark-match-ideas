@@ -4,6 +4,7 @@ import { Heart, Crown, Briefcase, Coffee, Shield, Sparkles, Calendar } from "luc
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Logo from '@/components/ui/logo';
+import EnvDebug from '@/components/EnvDebug';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -153,6 +154,7 @@ const Index = () => {
           </Button>
         </div>
       </div>
+      <EnvDebug />
     </div>
   );
 };
